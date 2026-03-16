@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookSwap - Feasibility Study</title>
+<style>
+  :root {
+    --blue: #1B4F72;
+    --blue-light: #D6EAF8;
+    --blue-mid: #2980B9;
+    --dark: #2C3E50;
+    --green: #27AE60;
+    --green-light: #D5F5E3;
+    --orange: #E67E22;
+    --orange-light: #FDEBD0;
+    --red: #C0392B;
+    --red-light: #FADBD8;
+    --gray: #7F8C8D;
+    --gray-light: #F8F9FA;
+    --text: #333;
+    --text-light: #666;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+    --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); line-height: 1.7; background: #fff; }
+
+  /* ---- NAV ---- */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    transition: var(--transition);
+  }
+  .nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; height: 64px;
+  }
+  .nav-logo { font-weight: 700; font-size: 1.2rem; color: var(--blue); display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .nav-logo svg { width: 28px; height: 28px; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    text-decoration: none; color: var(--text-light); font-size: 0.85rem; font-weight: 500;
+    padding: 6px 14px; border-radius: 8px; transition: var(--transition);
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--blue); background: var(--blue-light); }
+  .mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+  .mobile-toggle span { display: block; width: 22px; height: 2px; background: var(--dark); margin: 5px 0; transition: var(--transition); }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1B4F72 0%, #2980B9 50%, #1ABC9C 100%);
+    position: relative; overflow: hidden; padding: 80px 24px;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-content { text-align: center; color: #fff; position: relative; z-index: 1; max-width: 700px; }
+  .hero-badge {
+    display: inline-block; padding: 6px 18px; border-radius: 20px;
+    background: rgba(255,255,255,0.15); font-size: 0.85rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;
+    backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);
+  }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+  .hero p { font-size: 1.15rem; opacity: 0.9; margin-bottom: 36px; line-height: 1.8; }
+  .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { font-size: 2rem; font-weight: 800; display: block; }
+  .hero-stat .label { font-size: 0.8rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 1px; }
+  .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.6); font-size: 0.8rem; display: flex; flex-direction: column;
+    align-items: center; gap: 8px; animation: bounce 2s infinite;
+  }
+  @keyframes bounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+  /* ---- SECTIONS ---- */
+  .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-alt { background: var(--gray-light); }
+  .section-alt .section { padding: 80px 24px; }
+  .section-header { text-align: center; margin-bottom: 48px; }
+  .section-header h2 { font-size: 2rem; color: var(--dark); font-weight: 700; margin-bottom: 12px; }
+  .section-header p { color: var(--text-light); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+  .section-num { display: inline-block; color: var(--blue-mid); font-weight: 700; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+
+  /* ---- VERDICT BANNER ---- */
+  .verdict-banner {
+    background: linear-gradient(135deg, var(--green), #1ABC9C); color: #fff;
+    padding: 48px; border-radius: var(--radius); text-align: center; margin-bottom: 48px;
+    box-shadow: 0 8px 30px rgba(39,174,96,0.3);
+  }
+  .verdict-banner h3 { font-size: 1.6rem; margin-bottom: 12px; }
+  .verdict-banner p { opacity: 0.92; max-width: 700px; margin: 0 auto; font-size: 1.05rem; }
+
+  /* ---- KEY FINDINGS ---- */
+  .findings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 32px; }
+  .finding-card {
+    background: #fff; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+    border-left: 4px solid var(--blue-mid); transition: var(--transition); cursor: default;
+  }
+  .finding-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+  .finding-card .icon { font-size: 1.8rem; margin-bottom: 12px; }
+  .finding-card h4 { color: var(--dark); font-size: 0.95rem; margin-bottom: 8px; }
+  .finding-card p { color: var(--text-light); font-size: 0.88rem; line-height: 1.6; }
+
+  /* ---- COMPETITOR TABLE ---- */
+  .competitor-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .comp-tab {
+    padding: 8px 20px; border: 2px solid #e0e0e0; border-radius: 8px;
+    background: #fff; cursor: pointer; font-size: 0.88rem; font-weight: 600;
+    color: var(--text-light); transition: var(--transition);
+  }
+  .comp-tab:hover { border-color: var(--blue-mid); color: var(--blue); }
+  .comp-tab.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+  .comp-cards { display: grid; gap: 20px; }
+  .comp-card {
+    background: #fff; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+    display: none; animation: fadeIn 0.3s ease;
+  }
+  .comp-card.visible { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .comp-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .comp-card-header h3 { font-size: 1.3rem; color: var(--dark); }
+  .status-badge { padding: 4px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .status-active { background: var(--green-light); color: var(--green); }
+  .status-niche { background: var(--orange-light); color: var(--orange); }
+  .status-defunct { background: var(--red-light); color: var(--red); }
+  .comp-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
+  .comp-meta-item { padding: 14px; background: var(--gray-light); border-radius: 8px; }
+  .comp-meta-item .label { font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .comp-meta-item .value { font-size: 0.92rem; color: var(--dark); font-weight: 500; }
+
+  /* ---- DIFF TABLE ---- */
+  .diff-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .diff-table th { background: var(--blue); color: #fff; padding: 14px 18px; text-align: left; font-size: 0.85rem; font-weight: 600; }
+  .diff-table td { padding: 14px 18px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table tr:hover td { background: #f0f7ff; }
+  .diff-table .check { color: var(--green); font-weight: 700; font-size: 1.1rem; }
+  .diff-table .cross { color: var(--red); font-weight: 700; font-size: 1.1rem; }
+  .diff-table .feature-name { font-weight: 600; color: var(--dark); }
+
+  /* ---- TECH STACK ---- */
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .tech-card {
+    background: #fff; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow);
+    transition: var(--transition); border: 1px solid transparent; cursor: default;
+  }
+  .tech-card:hover { border-color: var(--blue-mid); transform: translateY(-2px); }
+  .tech-card .tech-icon { font-size: 1.6rem; margin-bottom: 10px; }
+  .tech-card h4 { color: var(--dark); font-size: 0.95rem; margin-bottom: 4px; }
+  .tech-card .tech-name { color: var(--blue-mid); font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+  .tech-card p { color: var(--text-light); font-size: 0.85rem; line-height: 1.6; }
+
+  /* ---- POSTGIS VISUAL ---- */
+  .postgis-demo {
+    background: #fff; border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow);
+    margin-top: 32px; text-align: center;
+  }
+  .postgis-demo h3 { color: var(--dark); margin-bottom: 8px; }
+  .postgis-demo p { color: var(--text-light); font-size: 0.92rem; margin-bottom: 20px; }
+  .radius-slider-wrap { max-width: 400px; margin: 0 auto 20px; }
+  .radius-slider-wrap label { font-weight: 600; color: var(--dark); font-size: 0.9rem; }
+  .radius-slider {
+    width: 100%; -webkit-appearance: none; appearance: none; height: 6px;
+    background: #ddd; border-radius: 3px; outline: none; margin-top: 8px;
+  }
+  .radius-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--blue-mid); cursor: pointer; }
+  .map-canvas { width: 100%; max-width: 500px; height: 340px; margin: 0 auto; position: relative; background: #EBF5FB; border-radius: 12px; overflow: hidden; }
+  .map-canvas svg { width: 100%; height: 100%; }
+  .map-label { font-size: 0.85rem; color: var(--gray); margin-top: 12px; }
+
+  /* ---- RISK CARDS ---- */
+  .risk-grid { display: grid; gap: 16px; }
+  .risk-card {
+    background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    cursor: pointer; transition: var(--transition);
+  }
+  .risk-card:hover { box-shadow: var(--shadow-hover); }
+  .risk-header {
+    padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; user-select: none;
+  }
+  .risk-header-left { display: flex; align-items: center; gap: 12px; }
+  .risk-level {
+    padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+  }
+  .risk-high .risk-level { background: var(--red-light); color: var(--red); }
+  .risk-medium .risk-level { background: var(--orange-light); color: var(--orange); }
+  .risk-low .risk-level { background: var(--green-light); color: var(--green); }
+  .risk-header h4 { font-size: 1rem; color: var(--dark); }
+  .risk-chevron { transition: var(--transition); color: var(--gray); font-size: 1.2rem; flex-shrink: 0; }
+  .risk-card.open .risk-chevron { transform: rotate(180deg); }
+  .risk-body { padding: 0 24px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+  .risk-card.open .risk-body { max-height: 300px; padding: 0 24px 20px; }
+  .risk-body p { color: var(--text-light); font-size: 0.92rem; line-height: 1.7; }
+
+  /* ---- MONETIZATION ---- */
+  .money-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .money-card {
+    background: #fff; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow);
+    border-top: 4px solid var(--blue-mid); transition: var(--transition);
+  }
+  .money-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .money-card h4 { color: var(--dark); margin-bottom: 8px; }
+  .money-card p { color: var(--text-light); font-size: 0.88rem; line-height: 1.6; }
+  .money-card .tag { display: inline-block; margin-top: 10px; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+  .tag-recommended { background: var(--green-light); color: var(--green); }
+  .tag-supplemental { background: var(--blue-light); color: var(--blue); }
+  .tag-later { background: var(--orange-light); color: var(--orange); }
+
+  /* ---- COST COUNTER ---- */
+  .cost-banner {
+    background: linear-gradient(135deg, var(--dark), var(--blue));
+    color: #fff; border-radius: var(--radius); padding: 40px; text-align: center;
+    margin-top: 32px;
+  }
+  .cost-banner h3 { font-size: 1.2rem; margin-bottom: 8px; opacity: 0.85; font-weight: 400; }
+  .cost-amount { font-size: 3.5rem; font-weight: 800; margin-bottom: 8px; }
+  .cost-amount span { font-size: 1.2rem; font-weight: 400; opacity: 0.7; }
+  .cost-note { font-size: 0.9rem; opacity: 0.75; }
+  .cost-items { display: flex; justify-content: center; gap: 24px; margin-top: 24px; flex-wrap: wrap; }
+  .cost-item { text-align: center; min-width: 100px; }
+  .cost-item .amt { font-size: 1.1rem; font-weight: 700; }
+  .cost-item .desc { font-size: 0.75rem; opacity: 0.7; }
+
+  /* ---- TIMELINE ---- */
+  .timeline { position: relative; padding-left: 40px; margin-top: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, var(--blue-mid), var(--green)); border-radius: 2px; }
+  .timeline-item { position: relative; margin-bottom: 28px; }
+  .timeline-dot {
+    position: absolute; left: -33px; top: 4px; width: 20px; height: 20px;
+    border-radius: 50%; background: #fff; border: 3px solid var(--blue-mid);
+    z-index: 1; transition: var(--transition);
+  }
+  .timeline-item:hover .timeline-dot { background: var(--blue-mid); transform: scale(1.2); }
+  .timeline-content {
+    background: #fff; padding: 20px 24px; border-radius: var(--radius);
+    box-shadow: var(--shadow); transition: var(--transition);
+  }
+  .timeline-item:hover .timeline-content { box-shadow: var(--shadow-hover); transform: translateX(4px); }
+  .timeline-step { color: var(--blue-mid); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .timeline-content h4 { color: var(--dark); margin-bottom: 6px; }
+  .timeline-content p { color: var(--text-light); font-size: 0.88rem; line-height: 1.6; }
+
+  /* ---- METRICS ---- */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 32px; }
+  .metric-card {
+    background: #fff; padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow);
+    text-align: center; transition: var(--transition);
+  }
+  .metric-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .metric-card .metric-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .metric-card h4 { color: var(--dark); font-size: 0.9rem; margin-bottom: 4px; }
+  .metric-card p { color: var(--text-light); font-size: 0.8rem; }
+
+  /* ---- SCORECARD ---- */
+  .scorecard { margin-top: 32px; }
+  .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .score-label { width: 180px; font-weight: 600; color: var(--dark); font-size: 0.92rem; flex-shrink: 0; }
+  .score-bar-bg { flex: 1; min-width: 200px; height: 28px; background: #eee; border-radius: 14px; overflow: hidden; position: relative; }
+  .score-bar {
+    height: 100%; border-radius: 14px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1);
+    width: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px;
+    font-size: 0.78rem; font-weight: 700; color: #fff;
+  }
+  .score-bar.green { background: linear-gradient(90deg, #27AE60, #2ECC71); }
+  .score-bar.blue { background: linear-gradient(90deg, #2980B9, #3498DB); }
+  .score-bar.orange { background: linear-gradient(90deg, #E67E22, #F39C12); }
+  .score-bar.red { background: linear-gradient(90deg, #C0392B, #E74C3C); }
+  .score-value { width: 50px; text-align: right; font-weight: 700; color: var(--dark); font-size: 0.92rem; }
+
+  /* ---- CONCLUSION ---- */
+  .conclusion-box {
+    background: linear-gradient(135deg, #1B4F72, #2980B9);
+    color: #fff; border-radius: var(--radius); padding: 48px; margin-top: 32px;
+    box-shadow: 0 8px 30px rgba(27,79,114,0.3);
+  }
+  .conclusion-box h3 { font-size: 1.4rem; margin-bottom: 16px; }
+  .conclusion-box p { opacity: 0.92; font-size: 1rem; line-height: 1.8; margin-bottom: 12px; }
+  .conclusion-box strong { color: #fff; }
+
+  /* ---- FOOTER ---- */
+  .footer { background: var(--dark); color: rgba(255,255,255,0.6); padding: 32px 24px; text-align: center; font-size: 0.85rem; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .nav-links { display: none; position: absolute; top: 64px; left: 0; right: 0; background: #fff; flex-direction: column; padding: 12px; box-shadow: var(--shadow); }
+    .nav-links.open { display: flex; }
+    .mobile-toggle { display: block; }
+    .hero-stats { gap: 20px; }
+    .hero-stat .num { font-size: 1.5rem; }
+    .section { padding: 48px 16px; }
+    .diff-table { font-size: 0.82rem; }
+    .diff-table th, .diff-table td { padding: 10px 12px; }
+    .cost-amount { font-size: 2.5rem; }
+    .score-label { width: 140px; }
+  }
+
+  /* ---- ANIMATIONS ---- */
+  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      BookSwap
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#findings">Findings</a>
+      <a href="#competitors">Competitors</a>
+      <a href="#market">Market</a>
+      <a href="#tech">Tech Stack</a>
+      <a href="#risks">Risks</a>
+      <a href="#business">Business</a>
+      <a href="#plan">Action Plan</a>
+    </div>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Feasibility Study</div>
+    <h1>Peer-to-Peer Book Exchange Platform</h1>
+    <p>A location-based community where book lovers swap physical books with nearby readers &mdash; no fees, no deadlines, just shared stories.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="num" data-count="6">0</span><span class="label">Competitors Analyzed</span></div>
+      <div class="hero-stat"><span class="num" data-count="8">0</span><span class="label">Tech Components</span></div>
+      <div class="hero-stat"><span class="num" data-count="200">0</span><span class="label">Est. Monthly Cost ($)</span></div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    Scroll to explore
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- KEY FINDINGS -->
+<section id="findings">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">01 &mdash; Executive Summary</span>
+      <h2>Key Findings</h2>
+      <p>The idea is viable and fills a genuine gap. Here's what the research uncovered.</p>
+    </div>
+    <div class="verdict-banner fade-up">
+      <h3>Verdict: Conditional GO</h3>
+      <p>The concept addresses a real need. Success hinges on solving the cold-start problem with a disciplined city-by-city launch strategy.</p>
+    </div>
+    <div class="findings-grid">
+      <div class="finding-card fade-up">
+        <div class="icon">&#128214;</div>
+        <h4>No Dominant Player</h4>
+        <p>No platform has cracked local P2P book exchange at scale. The space is wide open for a well-executed product.</p>
+      </div>
+      <div class="finding-card fade-up">
+        <div class="icon">&#128205;</div>
+        <h4>Location is Key</h4>
+        <p>PostGIS with PostgreSQL is battle-tested for proximity matching, used by Uber, Lyft, and Tinder.</p>
+      </div>
+      <div class="finding-card fade-up">
+        <div class="icon">&#9888;&#65039;</div>
+        <h4>Cold Start Risk</h4>
+        <p>Every failed competitor struggled with user density, not demand. This is the #1 challenge to solve.</p>
+      </div>
+      <div class="finding-card fade-up">
+        <div class="icon">&#128161;</div>
+        <h4>Strong Differentiators</h4>
+        <p>Your "book partner" model, flexible timelines, and value-matched swaps address gaps competitors missed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPETITORS -->
+<div class="section-alt" id="competitors">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">02 &mdash; Competitive Landscape</span>
+      <h2>Who's Already Out There</h2>
+      <p>Several platforms have attempted variations of the P2P book exchange model. Here's what we found.</p>
+    </div>
+
+    <div class="competitor-tabs fade-up">
+      <button class="comp-tab active" data-comp="all">All</button>
+      <button class="comp-tab" data-comp="active">Active</button>
+      <button class="comp-tab" data-comp="niche">Niche</button>
+      <button class="comp-tab" data-comp="defunct">Defunct</button>
+    </div>
+
+    <div class="comp-cards">
+      <div class="comp-card visible" data-status="active">
+        <div class="comp-card-header">
+          <h3>SwappyBooks</h3>
+          <span class="status-badge status-active">Active (iOS)</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">A Tinder-like book swapping app. Scan ISBN, browse nearby books by swiping, and chat when you match.</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Swipe-to-match, no registration</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">Nearby users (GPS-based)</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Low user base limits discoverability</div></div>
+        </div>
+      </div>
+      <div class="comp-card visible" data-status="active">
+        <div class="comp-card-header">
+          <h3>Readzle</h3>
+          <span class="status-badge status-active">Active (2024+)</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">Neighborhood book-sharing with a local catalog, reading goals, and community features. Closest to your vision.</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Local catalog, lending &amp; sharing</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">Neighborhood-level matching</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Gaining traction with community features</div></div>
+        </div>
+      </div>
+      <div class="comp-card visible" data-status="niche">
+        <div class="comp-card-header">
+          <h3>PaperBackSwap</h3>
+          <span class="status-badge status-niche">Active (Paid)</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">Points-based postal exchange with 5M+ titles. Recently moved to a paid model ($15&ndash;$25/yr).</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Points system, mail-based swaps</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">No &mdash; US mail only</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Sustainable but loses local/social aspect</div></div>
+        </div>
+      </div>
+      <div class="comp-card visible" data-status="niche">
+        <div class="comp-card-header">
+          <h3>Inventaire.io</h3>
+          <span class="status-badge status-niche">Active (Niche)</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">Open-source book inventory platform. Give, lend, or sell. Contributes to linked open data on resources.</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Open-source inventory + exchange</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">Partial</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Tech-savvy audience, open data focus</div></div>
+        </div>
+      </div>
+      <div class="comp-card visible" data-status="defunct">
+        <div class="comp-card-header">
+          <h3>BookMooch</h3>
+          <span class="status-badge status-defunct">Defunct</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">Pioneering points-based global book swapping platform. Lost Amazon API access; founder abandoned the project.</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Points-based global postal exchange</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">No &mdash; mail-based</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Dependency on Amazon API was fatal</div></div>
+        </div>
+      </div>
+      <div class="comp-card visible" data-status="defunct">
+        <div class="comp-card-header">
+          <h3>Bookup</h3>
+          <span class="status-badge status-defunct">Defunct</span>
+        </div>
+        <p style="color:var(--text-light); font-size:0.92rem; margin-bottom:12px;">Location-based print book swapping for iOS. Closest predecessor to your concept but couldn't sustain a user base.</p>
+        <div class="comp-meta">
+          <div class="comp-meta-item"><div class="label">Model</div><div class="value">Location-based swap, free</div></div>
+          <div class="comp-meta-item"><div class="label">Location</div><div class="value">Yes &mdash; local area</div></div>
+          <div class="comp-meta-item"><div class="label">Key Insight</div><div class="value">Failed at user density, not at concept</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;" class="fade-up">
+      <h3 style="color:var(--dark); font-size:1.2rem; margin-bottom:20px;">Your Platform vs. Competitors</h3>
+      <div style="overflow-x:auto;">
+      <table class="diff-table">
+        <thead><tr>
+          <th>Feature</th><th>Your Platform</th><th>SwappyBooks</th><th>Readzle</th><th>PaperBackSwap</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="feature-name">Direct 1:1 swap</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">No return deadline</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">Book partner approval</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">Value-matched exchange</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">PostGIS location</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">In-app messaging</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">Book photos</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+          <tr><td class="feature-name">Web + mobile</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+          <tr><td class="feature-name">Terms acceptance</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKET -->
+<section id="market">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">03 &mdash; Market Analysis</span>
+      <h2>Is There Demand?</h2>
+      <p>Signals from existing markets and reader behavior strongly suggest yes.</p>
+    </div>
+    <div class="findings-grid">
+      <div class="finding-card fade-up" style="border-left-color: var(--green);">
+        <div class="icon">&#128218;</div>
+        <h4>500M+ Digital Library Checkouts</h4>
+        <p>US libraries saw over 500 million digital checkouts in 2023, proving massive demand for free or low-cost book access.</p>
+      </div>
+      <div class="finding-card fade-up" style="border-left-color: var(--green);">
+        <div class="icon">&#127968;</div>
+        <h4>170K+ Little Free Libraries</h4>
+        <p>Over 170,000 registered book-sharing boxes globally. People love sharing physical books in their communities.</p>
+      </div>
+      <div class="finding-card fade-up" style="border-left-color: var(--green);">
+        <div class="icon">&#128101;</div>
+        <h4>150M+ Goodreads Users</h4>
+        <p>The reading community is massive and digitally active. They're already online &mdash; they just need a swapping tool.</p>
+      </div>
+      <div class="finding-card fade-up" style="border-left-color: var(--green);">
+        <div class="icon">&#127793;</div>
+        <h4>Sustainability Tailwinds</h4>
+        <p>Growing consumer preference for reuse over new purchases. The second-hand book market is valued at $3&ndash;4B in the US alone.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;" class="fade-up">
+      <h3 style="color:var(--dark); font-size:1.2rem; margin-bottom:16px;">Target Audience</h3>
+      <div class="findings-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div style="background:#fff; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); text-align:center;">
+          <div style="font-size:2rem; margin-bottom:8px;">&#128218;</div>
+          <div style="font-weight:600; color:var(--dark); font-size:0.92rem;">Avid Readers</div>
+          <div style="color:var(--text-light); font-size:0.82rem;">10+ books/year, shelves of read books</div>
+        </div>
+        <div style="background:#fff; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); text-align:center;">
+          <div style="font-size:2rem; margin-bottom:8px;">&#127891;</div>
+          <div style="font-weight:600; color:var(--dark); font-size:0.92rem;">Students</div>
+          <div style="color:var(--text-light); font-size:0.82rem;">Cost-conscious, high reading volume</div>
+        </div>
+        <div style="background:#fff; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); text-align:center;">
+          <div style="font-size:2rem; margin-bottom:8px;">&#9752;&#65039;</div>
+          <div style="font-weight:600; color:var(--dark); font-size:0.92rem;">Eco-Conscious</div>
+          <div style="color:var(--text-light); font-size:0.82rem;">Prefer reuse over buying new</div>
+        </div>
+        <div style="background:#fff; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); text-align:center;">
+          <div style="font-size:2rem; margin-bottom:8px;">&#128587;</div>
+          <div style="font-weight:600; color:var(--dark); font-size:0.92rem;">Community Seekers</div>
+          <div style="color:var(--text-light); font-size:0.82rem;">Enjoy meeting locals with shared interests</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<div class="section-alt" id="tech">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">04 &mdash; Technical Feasibility</span>
+      <h2>Can We Build It?</h2>
+      <p>Every component has well-established, battle-tested solutions. Technical risk is low.</p>
+    </div>
+
+    <div class="tech-grid fade-up">
+      <div class="tech-card">
+        <div class="tech-icon">&#128451;</div>
+        <h4>Database</h4>
+        <div class="tech-name">PostgreSQL + PostGIS</div>
+        <p>Industry standard for location apps. Used by ride-sharing, delivery, and dating platforms.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#9881;&#65039;</div>
+        <h4>Backend API</h4>
+        <div class="tech-name">Node.js or Python (FastAPI)</div>
+        <p>REST or GraphQL. Both work well with PostGIS and have large ecosystems.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#127760;</div>
+        <h4>Web App</h4>
+        <div class="tech-name">React / Next.js</div>
+        <p>Rich ecosystem, large talent pool, server-side rendering for SEO.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#128241;</div>
+        <h4>Mobile App</h4>
+        <div class="tech-name">React Native or Flutter</div>
+        <p>Cross-platform from single codebase. Share logic with web app.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#128274;</div>
+        <h4>Authentication</h4>
+        <div class="tech-name">Supabase Auth / Auth0</div>
+        <p>OAuth2 + email/password. Handles JWT tokens securely out of the box.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#128172;</div>
+        <h4>Real-time Chat</h4>
+        <div class="tech-name">WebSockets (Socket.io)</div>
+        <p>Powers the book partner messaging feature for arranging meetups.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#128247;</div>
+        <h4>Image Storage</h4>
+        <div class="tech-name">AWS S3 / Cloudflare R2</div>
+        <p>Store book photos with CDN delivery for fast loading worldwide.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">&#9729;&#65039;</div>
+        <h4>Hosting</h4>
+        <div class="tech-name">Vercel + Railway + Supabase</div>
+        <p>Cost-effective for MVP. Easy to scale as user base grows.</p>
+      </div>
+    </div>
+
+    <!-- PostGIS Demo -->
+    <div class="postgis-demo fade-up">
+      <h3>How PostGIS Location Matching Works</h3>
+      <p>Users set their search radius. PostGIS finds all book listings within that distance using spatial indexes.</p>
+      <div class="radius-slider-wrap">
+        <label>Search radius: <strong id="radiusValue">5</strong> km</label><br>
+        <input type="range" class="radius-slider" id="radiusSlider" min="1" max="25" value="5">
+      </div>
+      <div class="map-canvas" id="mapCanvas">
+        <svg viewBox="0 0 500 340" id="mapSvg">
+          <!-- Grid -->
+          <defs>
+            <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#cde" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="500" height="340" fill="url(#grid)"/>
+          <!-- Radius circle -->
+          <circle id="radiusCircle" cx="250" cy="170" r="60" fill="rgba(41,128,185,0.12)" stroke="#2980B9" stroke-width="2" stroke-dasharray="6,4"/>
+          <!-- Nearby books -->
+          <g id="bookDots"></g>
+          <!-- Center user -->
+          <circle cx="250" cy="170" r="8" fill="#2980B9" stroke="#fff" stroke-width="2"/>
+          <text x="250" y="198" text-anchor="middle" font-size="11" fill="#2C3E50" font-weight="600">You</text>
+        </svg>
+      </div>
+      <div class="map-label" id="mapLabel">Showing <strong>3</strong> books within 5 km</div>
+    </div>
+
+    <!-- Feasibility scorecard -->
+    <div style="margin-top:48px;" class="fade-up">
+      <h3 style="color:var(--dark); font-size:1.2rem; margin-bottom:24px;">Technical Feasibility Scorecard</h3>
+      <div class="scorecard">
+        <div class="score-row"><span class="score-label">Database & PostGIS</span><div class="score-bar-bg"><div class="score-bar green" data-width="95">95%</div></div><span class="score-value">95%</span></div>
+        <div class="score-row"><span class="score-label">Auth & Security</span><div class="score-bar-bg"><div class="score-bar green" data-width="90">90%</div></div><span class="score-value">90%</span></div>
+        <div class="score-row"><span class="score-label">Cross-Platform Apps</span><div class="score-bar-bg"><div class="score-bar blue" data-width="85">85%</div></div><span class="score-value">85%</span></div>
+        <div class="score-row"><span class="score-label">Real-time Messaging</span><div class="score-bar-bg"><div class="score-bar blue" data-width="88">88%</div></div><span class="score-value">88%</span></div>
+        <div class="score-row"><span class="score-label">Image Handling</span><div class="score-bar-bg"><div class="score-bar green" data-width="92">92%</div></div><span class="score-value">92%</span></div>
+        <div class="score-row"><span class="score-label">MVP Buildability</span><div class="score-bar-bg"><div class="score-bar green" data-width="90">90%</div></div><span class="score-value">90%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RISKS -->
+<section id="risks">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">05 &mdash; Risks & Challenges</span>
+      <h2>What Could Go Wrong</h2>
+      <p>Every startup has risks. Knowing them upfront is your advantage. Click each to expand.</p>
+    </div>
+    <div class="risk-grid fade-up">
+      <div class="risk-card risk-high open">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">High</span><h4>The Chicken-and-Egg Problem</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>Users won't join if there are no books nearby, and there won't be books without users. Every defunct competitor failed here. You need a concentrated launch strategy &mdash; saturate one city/neighborhood before expanding. Target: 200+ books visible within a user's radius on first visit.</p></div>
+      </div>
+      <div class="risk-card risk-high">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">High</span><h4>User Density Requirements</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>A location-based platform needs enough users per geographic area to generate matches. If a user opens the app and sees zero books within 10km, they'll uninstall immediately. You cannot launch "nationwide" &mdash; you need hyper-local growth, city by city, starting with university towns or dense urban neighborhoods.</p></div>
+      </div>
+      <div class="risk-card risk-medium">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">Medium</span><h4>Trust & Safety for In-Person Meetups</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>Users are meeting strangers in person. You need: identity verification, clear safety guidelines (public places only), a reporting/blocking system, and terms of service limiting liability. The "book partner" approval step helps, but isn't sufficient alone. Consider integrating safe meeting spot suggestions (cafes, libraries).</p></div>
+      </div>
+      <div class="risk-card risk-medium">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">Medium</span><h4>Book Loss & Condition Disputes</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>What happens when someone doesn't return a book? The similar-value swap concept mitigates this (both parties have skin in the game), but you'll need a dispute resolution process and clear terms. Implement a standardized condition rating system with required photos to set expectations.</p></div>
+      </div>
+      <div class="risk-card risk-medium">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">Medium</span><h4>User Retention</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>Users may complete a few swaps then disengage. You need features that keep them coming back: new arrivals notifications, reading challenges, wishlist alerts, community book clubs, and a reputation/badge system that rewards active participants.</p></div>
+      </div>
+      <div class="risk-card risk-low">
+        <div class="risk-header">
+          <div class="risk-header-left"><span class="risk-level">Low</span><h4>Data Privacy (GDPR/CCPA)</h4></div>
+          <span class="risk-chevron">&#9660;</span>
+        </div>
+        <div class="risk-body"><p>Location data is sensitive. Implement privacy-by-design from day one: store approximate locations (neighborhood centroid, not exact address), require clear consent flows, and provide data deletion capabilities. This is manageable with good engineering practices.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSINESS MODEL -->
+<div class="section-alt" id="business">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">06 &mdash; Business Model</span>
+      <h2>How to Make It Sustainable</h2>
+      <p>Start free to build critical mass. Add monetization once you have product-market fit.</p>
+    </div>
+    <div class="money-grid fade-up">
+      <div class="money-card">
+        <h4>Freemium Membership</h4>
+        <p>Free basic usage. Premium unlocks unlimited listings, priority matching, extended swap history, and reading analytics.</p>
+        <span class="tag tag-recommended">Recommended &mdash; Start Here</span>
+      </div>
+      <div class="money-card">
+        <h4>Promoted Listings</h4>
+        <p>Users pay a small fee to boost visibility of their books in search results. Non-intrusive, works at scale.</p>
+        <span class="tag tag-supplemental">Supplemental Revenue</span>
+      </div>
+      <div class="money-card">
+        <h4>Affiliate Links</h4>
+        <p>If a book isn't available for swap, suggest buying it via affiliate links to bookstores. Earns commission on referrals.</p>
+        <span class="tag tag-supplemental">Supplemental Revenue</span>
+      </div>
+      <div class="money-card">
+        <h4>Community Events</h4>
+        <p>Organize local book swap meetups. Charge for premium event access or attract local bookshop sponsorships.</p>
+        <span class="tag tag-later">Phase 2 &mdash; After Growth</span>
+      </div>
+      <div class="money-card">
+        <h4>Transaction Fee</h4>
+        <p>A small fee per successful exchange to cover platform costs. Fair "pay for value" model.</p>
+        <span class="tag tag-later">Phase 2 &mdash; After Growth</span>
+      </div>
+    </div>
+
+    <div class="cost-banner fade-up">
+      <h3>Estimated MVP Running Cost</h3>
+      <div class="cost-amount">&lt; $200 <span>/ month</span></div>
+      <div class="cost-note">Making this very low-risk to prototype</div>
+      <div class="cost-items">
+        <div class="cost-item"><div class="amt">$0&ndash;50</div><div class="desc">Hosting & DB</div></div>
+        <div class="cost-item"><div class="amt">$15&ndash;30</div><div class="desc">Domain + SSL / yr</div></div>
+        <div class="cost-item"><div class="amt">$99</div><div class="desc">Apple Dev / yr</div></div>
+        <div class="cost-item"><div class="amt">$25</div><div class="desc">Google Play (once)</div></div>
+        <div class="cost-item"><div class="amt">$0</div><div class="desc">Push Notifications</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION PLAN -->
+<section id="plan">
+  <div class="section">
+    <div class="section-header fade-up">
+      <span class="section-num">07 &mdash; Recommended Action Plan</span>
+      <h2>What to Do Next</h2>
+      <p>A step-by-step roadmap from idea validation to MVP launch.</p>
+    </div>
+
+    <div class="timeline fade-up">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 1 &mdash; Validate</div>
+          <h4>Validate Demand Before Building</h4>
+          <p>Create a landing page describing the concept. Run targeted ads in one city to gauge interest. Target: 500+ email signups before writing any code. Cost: ~$100&ndash;300 in ads.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 2 &mdash; Start Small</div>
+          <h4>Build a Web-Only MVP</h4>
+          <p>Skip the mobile app initially. A responsive web app is faster to build, easier to iterate, and doesn't require app store approval. Add native apps after finding product-market fit.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 3 &mdash; Focus</div>
+          <h4>Pick One Launch City</h4>
+          <p>Choose a city with strong reading culture, good population density, and where you have personal connections for seeding inventory. University towns are ideal first markets.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 4 &mdash; Seed</div>
+          <h4>Seed the Marketplace Yourself</h4>
+          <p>List 50&ndash;100 of your own books. Recruit 20&ndash;30 friends and family to do the same. A new user should see at least 200+ books within their area on their first visit.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 5 &mdash; Community</div>
+          <h4>Partner with Local Book Communities</h4>
+          <p>Book clubs, university reading groups, library events, and Little Free Library stewards are your early adopters. Attend their events, offer to organize swap meetups.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="timeline-step">Step 6 &mdash; Iterate</div>
+          <h4>Build Iteratively in Phases</h4>
+          <p><strong>Phase 1:</strong> Book listing + search + partner request + messaging. <strong>Phase 2:</strong> Location matching + photos + notifications. <strong>Phase 3:</strong> Ratings, reading lists, community features.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;" class="fade-up">
+      <h3 style="color:var(--dark); font-size:1.2rem; margin-bottom:16px;">Key Metrics to Track</h3>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-icon">&#128200;</div><h4>Books / km&sup2;</h4><p>Listing density in your target area</p></div>
+        <div class="metric-card"><div class="metric-icon">&#127919;</div><h4>Match Rate</h4><p>% of users who find a book they want</p></div>
+        <div class="metric-card"><div class="metric-icon">&#129309;</div><h4>Conversion Rate</h4><p>% of requests leading to a swap</p></div>
+        <div class="metric-card"><div class="metric-icon">&#128257;</div><h4>Retention</h4><p>% completing a 2nd swap in 60 days</p></div>
+        <div class="metric-card"><div class="metric-icon">&#9201;&#65039;</div><h4>Time to First Match</h4><p>How fast new users find a partner</p></div>
+      </div>
+    </div>
+
+    <!-- Conclusion -->
+    <div class="conclusion-box fade-up">
+      <h3>The Bottom Line</h3>
+      <p>Your peer-to-peer book exchange concept is a sound idea that addresses a real need. The technical implementation is straightforward and low-cost. Your differentiators &mdash; the book partner model, flexible timelines, value-matched exchanges &mdash; address genuine gaps left by existing competitors.</p>
+      <p><strong>The critical success factor is not the product itself, but the go-to-market strategy.</strong> Focus ruthlessly on building density in one area before expanding. If you can make the platform feel "alive" with 500+ books and 100+ active users in a single city, you have a proof of concept that can be replicated.</p>
+      <p>This is a project worth pursuing &mdash; with the understanding that the hard work is community building, not coding.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>BookSwap Feasibility Study &bull; February 2026 &bull; Prepared for thrilled</p>
+</footer>
+
+<script>
+// ---- NAV SCROLL ----
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 20); });
+
+// ---- MOBILE MENU ----
+document.getElementById('mobileToggle').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
+});
+
+// ---- ACTIVE NAV LINK ----
+const sections = document.querySelectorAll('section[id], div.section-alt[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+// ---- HERO COUNTER ----
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count);
+    const duration = 1500;
+    const start = performance.now();
+    function update(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(ease * target);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  });
+}
+animateCounters();
+
+// ---- FADE UP ON SCROLL ----
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// ---- SCORE BARS ----
+const scoreObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.score-bar').forEach(bar => { bar.style.width = bar.dataset.width + '%'; });
+      scoreObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.scorecard').forEach(el => scoreObserver.observe(el));
+
+// ---- COMPETITOR FILTER ----
+document.querySelectorAll('.comp-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.comp-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const filter = tab.dataset.comp;
+    document.querySelectorAll('.comp-card').forEach(card => {
+      if (filter === 'all' || card.dataset.status === filter) {
+        card.classList.add('visible');
+      } else {
+        card.classList.remove('visible');
+      }
+    });
+  });
+});
+
+// ---- RISK ACCORDION ----
+document.querySelectorAll('.risk-card').forEach(card => {
+  card.querySelector('.risk-header').addEventListener('click', () => {
+    card.classList.toggle('open');
+  });
+});
+
+// ---- POSTGIS MAP DEMO ----
+const books = [
+  {x:180,y:120,t:'The Alchemist'},{x:310,y:95,t:'Sapiens'},{x:160,y:210,t:'Dune'},
+  {x:340,y:200,t:'1984'},{x:280,y:260,t:'Educated'},{x:200,y:280,t:'Atomic Habits'},
+  {x:370,y:130,t:'Project Hail Mary'},{x:120,y:160,t:'The Hobbit'},{x:400,y:240,t:'Circe'},
+  {x:220,y:60,t:'Klara and the Sun'},{x:100,y:260,t:'Piranesi'},{x:430,y:170,t:'Recursion'},
+  {x:260,y:300,t:'The Martian'},{x:140,y:80,t:'Anxious People'},{x:380,y:290,t:'Daisy Jones'},
+];
+const cx=250, cy=170;
+
+function updateMap(radius) {
+  const r = radius * 12;
+  document.getElementById('radiusCircle').setAttribute('r', r);
+  const dotsGroup = document.getElementById('bookDots');
+  dotsGroup.innerHTML = '';
+  let count = 0;
+  books.forEach(b => {
+    const dist = Math.sqrt((b.x-cx)**2 + (b.y-cy)**2);
+    const inside = dist <= r;
+    if (inside) count++;
+    const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx', b.x); dot.setAttribute('cy', b.y);
+    dot.setAttribute('r', inside ? 6 : 4);
+    dot.setAttribute('fill', inside ? '#27AE60' : '#BDC3C7');
+    dot.setAttribute('stroke', inside ? '#fff' : 'none');
+    dot.setAttribute('stroke-width', inside ? 1.5 : 0);
+    dot.style.transition = 'all 0.3s ease';
+    dotsGroup.appendChild(dot);
+    if (inside) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x', b.x); text.setAttribute('y', b.y - 10);
+      text.setAttribute('text-anchor', 'middle'); text.setAttribute('font-size', '8');
+      text.setAttribute('fill', '#2C3E50'); text.setAttribute('font-weight', '500');
+      text.textContent = b.t;
+      dotsGroup.appendChild(text);
+    }
+  });
+  document.getElementById('mapLabel').innerHTML = `Showing <strong>${count}</strong> book${count!==1?'s':''} within ${radius} km`;
+}
+
+document.getElementById('radiusSlider').addEventListener('input', e => {
+  const v = e.target.value;
+  document.getElementById('radiusValue').textContent = v;
+  updateMap(parseInt(v));
+});
+updateMap(5);
+</script>
+</body>
+</html>
