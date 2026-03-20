@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=72", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "bookswap"
+version = "0.1.0"
+description = "An app for booklovers to save on buying new books everytime they want read new books"
+authors = [
+    { name = "Gideon Nimoh", email = "gnimoh001@gmail.com" },
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "MIT" }
+dependencies = [
+    "nimoh-be-django-base>=0.9.1",
+
+    "nimoh-be-django-base[channels]>=0.9.1",
+
+
+    "nimoh-be-django-base[monitoring]>=0.9.1",
+
+
+    "nimoh-be-django-base[social]>=0.9.1",
+
+    "gunicorn>=22.0",
+    "django-environ>=0.11",
+
+    "psycopg[binary]>=3.2",
+
+    "whitenoise>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-django>=4.8",
+    "factory-boy>=3.3",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "bookswap.config.settings.test"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--tb=short -q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "S", "B", "C4", "DTZ", "T20", "RUF"]
+ignore = ["S101", "S105", "S106"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*" = ["E501", "RUF012"]
+"*/tests/*" = ["S"]
+"conftest.py" = ["S"]
+
+[tool.ruff.format]
+quote-style = "double"

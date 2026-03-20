@@ -1,0 +1,134 @@
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.root {
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border-subtle);
+
+    .nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .navBrand {
+            margin: 0;
+            font-size: func.font-size('xl');
+            font-weight: func.font-weight('semibold');
+            color: var(--brand);
+            text-decoration: none;
+        }
+
+        .navLinks {
+            @include mixin.bare-list;
+
+            display: flex;
+            gap: func.spacing('4');
+
+            li {
+                a {
+                    display: flex;
+                    gap: func.spacing('2');
+                    text-decoration: none;
+                    color: var(--text-2);
+                    font-weight: func.font-weight('medium');
+                    transition: func.transition('fast');
+
+                    &:hover {
+                        color: var(--brand);
+                    }
+
+                    &.active {
+                        color: var(--brand);
+                    }
+                }
+            }
+        }
+    }
+}
+
+.themeActions {
+    display: flex;
+    align-items: center;
+    gap: func.spacing('1');
+}
+
+.themeToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4ch;
+    padding: func.spacing('2') func.spacing('3');
+    border-radius: var(--radius-2, 0.375rem);
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: func.transition('fast');
+    line-height: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+
+    &:hover {
+        background: var(--surface-3);
+        color: var(--text-1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
+}
+
+.themeDefault {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-2, 0.375rem);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-3, var(--text-2));
+    cursor: pointer;
+    transition: func.transition('fast');
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 0;
+
+    &:hover {
+        background: var(--surface-3);
+        border-color: var(--border-subtle);
+        color: var(--text-1);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+    }
+}
+
+.themeDefaultActive {
+    color: var(--brand);
+    border-color: var(--border-subtle);
+}
+
+.themeLabel {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+// Responsive design
+@include mixin.bp-max('tablet') {
+    .root {
+        .nav {
+            flex-direction: column;
+            gap: func.spacing('4');
+            text-align: center;
+        }
+
+        .navLinks {
+            gap: func.spacing('2');
+        }
+    }
+}

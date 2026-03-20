@@ -1,0 +1,63 @@
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: func.spacing('3');
+  padding: func.spacing('3') func.spacing('4');
+  background: func.color('primary');
+  color: func.color('white');
+  font-size: func.font-size('sm');
+  font-weight: func.font-weight('semibold');
+
+  @include mixin.motion-safe {
+    animation: slide-up 0.3s ease;
+  }
+}
+
+.message {
+  flex: 0 1 auto;
+}
+
+.action {
+  @include mixin.bare-button;
+  padding: func.spacing('1') func.spacing('3');
+  background: func.color('white');
+  color: func.color('primary');
+  border-radius: func.border-radius('sm');
+  font-weight: func.font-weight('semibold');
+  font-size: func.font-size('sm');
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.dismiss {
+  @include mixin.bare-button;
+  padding: func.spacing('1');
+  color: func.color('white');
+  font-size: 1rem;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,185 @@
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.root {
+    min-width: 100%;
+    margin: 0 auto;
+    padding: func.spacing('6');
+}
+
+.header {
+    text-align: center;
+    margin-bottom: func.spacing('12');
+
+    h1 {
+        font-size: func.font-size('4xl');
+        font-weight: func.font-weight('bold');
+        color: func.color('primary');
+        margin-bottom: func.spacing('4');
+    }
+
+    p {
+        font-size: func.font-size('lg');
+        color: func.color('secondary');
+        margin-bottom: func.spacing('2');
+        @include mixin.centered-prose;
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: func.spacing('12');
+}
+
+.section {
+    h2 {
+        font-size: func.font-size('3xl');
+        font-weight: func.font-weight('bold');
+        color: func.color('primary');
+        margin-bottom: func.spacing('4');
+    }
+
+    > p {
+        font-size: func.font-size('lg');
+        color: func.color('secondary');
+        margin-bottom: func.spacing('8');
+    }
+}
+
+.subsection {
+    margin-bottom: func.spacing('10');
+
+    h3 {
+        font-size: func.font-size('2xl');
+        font-weight: func.font-weight('semibold');
+        color: func.color('text-primary');
+        margin-bottom: func.spacing('3');
+    }
+
+    > p {
+        font-size: func.font-size('base');
+        color: func.color('secondary');
+        margin-bottom: func.spacing('6');
+    }
+}
+
+.buttonGrid {
+    @include mixin.auto-grid($gap-key: '6');
+}
+
+.buttonExample {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: func.spacing('3');
+    padding: func.spacing('4');
+    border: 1px solid func.color('primary-light');
+    border-radius: func.border-radius('md');
+    background-color: func.color('bg-card');
+
+    h4 {
+        font-size: func.font-size('base');
+        font-weight: func.font-weight('medium');
+        color: func.color('text-primary');
+        margin: 0;
+    }
+}
+
+.fullWidthGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: func.spacing('6');
+    max-width: 600px;
+}
+
+.interactiveGrid {
+    @include mixin.auto-grid(200px, '6');
+}
+
+.accessibilityList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    @include mixin.auto-grid(300px, '2');
+
+    li {
+        position: relative;
+        padding-left: func.spacing('4');
+        font-size: func.font-size('base');
+        color: func.color('secondary');
+
+        &::before {
+            content: '-';
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: func.font-weight('bold');
+        }
+    }
+}
+
+@include mixin.bp-max('tablet') {
+    .root {
+        padding: func.spacing('4') func.spacing('3');
+    }
+
+    .header {
+        margin-bottom: func.spacing('8');
+
+        h1 {
+            font-size: func.font-size('3xl');
+        }
+
+        p {
+            font-size: func.font-size('base');
+        }
+    }
+
+    .content {
+        gap: func.spacing('8');
+    }
+
+    .section {
+        h2 {
+            font-size: func.font-size('2xl');
+        }
+    }
+
+    .subsection {
+        h3 {
+            font-size: func.font-size('xl');
+        }
+    }
+
+    .buttonGrid {
+        grid-template-columns: 1fr;
+        gap: func.spacing('4');
+    }
+
+    .buttonExample {
+        padding: func.spacing('3');
+    }
+
+    .interactiveGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .accessibilityList {
+        grid-template-columns: 1fr;
+    }
+}
+
+@include mixin.bp-max('mobile') {
+    .root {
+        padding: func.spacing('3') func.spacing('2');
+    }
+
+    .header {
+        margin-bottom: func.spacing('8');
+
+        h1 {
+            font-size: func.font-size('2xl');
+        }
+    }
+}

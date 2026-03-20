@@ -1,0 +1,43 @@
+# Dependencies (reinstalled inside container)
+node_modules
+
+# Build output (built inside container)
+dist
+
+# Version control
+.git
+.gitignore
+
+# CI / GitHub configuration
+.github
+
+# Environment files — never bake secrets into image layers
+.env
+.env.*
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Editor / OS artefacts
+.DS_Store
+.vscode
+.idea
+*.log
+
+# Documentation (not needed inside the image)
+*.md
+*.local.md
+
+# Test output
+coverage
+playwright-report
+
+# Yarn offline cache & install state
+.yarn/cache
+.yarn/install-state.gz
+
+# Docker files (not needed inside the image)
+.dockerignore
+docker-compose*.yml
+Dockerfile

@@ -1,0 +1,274 @@
+@use 'sass:color';
+
+/* =========================================================================
+   Design Tokens
+   -------------------------------------------------------------------------
+   All token maps (colors, spacing, etc.) end with !default so they can be
+   overridden in a consuming project or theme.
+
+   Important:
+   - If you re-declare a map (e.g. $colors: (...);), you replace the entire map
+     and lose any keys not redefined.
+   - If you want to override only certain keys (e.g. just "primary"), merge
+     with the base map instead:
+
+       @use 'sass:map';
+       @use 'abstracts/variables' as lib;
+
+       $colors: map.merge(
+         lib.$colors,
+         (
+           'primary': #ff5722,
+           'secondary': #009688
+         )
+       );
+
+     → This keeps the rest of the default keys (e.g. "success", "warning") intact.
+   ========================================================================= */
+
+/* Colors */
+$colors: (
+    // ==========================================================================
+    // PALETTE — RAW COLORS (NO VARS)
+    // ==========================================================================
+
+    // Whites & Blacks
+    'white': #fff,
+    'whiteish': #F7F7FA,
+    'bg': var(--surface-1),
+
+    'black': #000,
+    'blackish': #252525,
+
+    // Grays
+    'gray-50': #F7F7FA,
+    'gray-200': #e0e0e0,
+    'gray-400': #9ca3af,
+    'gray-500': #6c757d,
+    'gray-700': #333,
+    'gray-800': #1f2937,
+    'gray-900': #252525,
+    'gray-950': #121212,
+
+    // Blues
+    'blue-100': #D2D7E2,
+    'blue-400': #6c85d3,
+    'blue-500': #415385,
+    'blue-900': #2c3e50,
+
+    // Teals
+    'teal-100': #b2dfdb,
+    'teal-500': #009688,
+    'teal-900': #004d40,
+
+    // Greens
+    'green-100': #D3EBD5,
+    'green-500': #22992E,
+    'green-900': #1b5e20,
+
+    // Yellows
+    'yellow-100': #FFF2D2,
+    'yellow-500': #FFBF1F,
+    'yellow-900': #f57f17,
+
+    // Reds
+    'red-100': #F3D4D1,
+    'red-500': #C52A1A,
+    'red-900': #b71c1c,
+
+    // Extended Palette
+    'accent': #f43f5e,
+    'info': #17a2b8,
+    'danger': #dc3545,
+    'light': #f8f9fa,
+    'dark': #343a40,
+
+    'muted': #6c757d,
+    'muted-foreground': hsl(222deg 10% 40%),
+    'muted-background': hsl(24deg 10% 88%),
+
+    'charcoal': #1A1F2C,
+    'cream': #F8F5F2,
+    'terracotta': #D9826F,
+    'softgray': #E8E4E1,
+
+    // ==========================================================================
+    // SEMANTIC — REFERENCES CSS VARIABLES (THEME-AWARE)
+    // ==========================================================================
+
+    // Core Semantic Colors
+    // --color-primary / primary-light / primary-dark are compat aliases in _base.scss
+    // pointing at --brand / --surface-3 / brand-dark
+    'primary': var(--color-primary),
+    'primary-light': var(--color-primary-light),
+    'primary-dark': var(--color-primary-dark),
+
+    // --color-secondary* compat aliases: --text-2 / --surface-2 / --surface-4
+    'secondary': var(--color-secondary),
+    'secondary-light': var(--color-secondary-light),
+    'secondary-dark': var(--color-secondary-dark),
+
+    // No separate tertiary in the new system — mapped to brand accent surface stops
+    'tertiary': var(--brand),
+    'tertiary-light': var(--surface-3),
+    'tertiary-dark': var(--surface-4),
+
+    // Semantic States — _base.scss uses --*-color naming (not --color-*)
+    'success': var(--success-color),
+    'success-light': var(--success-color-light),
+    'success-dark': var(--success-color-dark),
+
+    'warning': var(--warning-color),
+    'warning-light': var(--warning-color-light),
+    'warning-dark': var(--warning-color-text),
+
+    'error': var(--error-color),
+    'error-light': var(--error-color-light),
+    'error-dark': var(--error-color-dark),
+
+    // Semantic Backgrounds — compat aliases in _base.scss (--bg-body → --surface-1 etc.)
+    'bg-body': var(--bg-body),
+    'bg-card': var(--bg-card),
+    'bg-primary': var(--brand),
+    'bg-secondary': var(--surface-3),
+
+    // Semantic Text — --text-main compat alias exists; others mapped directly
+    'text-main': var(--text-main),
+    'text-inverted': var(--surface-1),
+    'text-primary': var(--text-1),
+    'text-secondary': var(--text-2),
+
+    // Semantic Borders — compat aliases in _base.scss
+    'border-subtle': var(--border-subtle),
+    'border-focus': var(--border-focus)
+) !default;
+
+/* Spacing (rem-based; 1rem = 16px by default)
+   Tip: keep utilities/components rem-first; convert to px only when needed. */
+$spacing: (
+    '0': 0rem,        // 0px
+    '0.5': 0.125rem,  // 2px
+    '1': 0.25rem,     // 4px
+    '1.5': 0.375rem,  // 6px
+    '2': 0.5rem,      // 8px
+    '2.5': 0.625rem,  // 10px
+    '3': 0.75rem,     // 12px
+    '3.5': 0.875rem,  // 14px
+    '4': 1rem,        // 16px
+    '5': 1.25rem,     // 20px
+    '6': 1.5rem,      // 24px
+    '7': 1.75rem,     // 28px
+    '8': 2rem,        // 32px
+    '9': 2.25rem,     // 36px
+    '10': 2.5rem,     // 40px
+    '11': 2.75rem,    // 44px
+    '12': 3rem,       // 48px
+    '13': 3.375rem,   // 54px
+    '14': 3.5rem,     // 56px
+    '15': 3.75rem,    // 60px
+    '16': 4rem,       // 64px
+    '17': 4.5rem,     // 72px
+    '20': 5rem,       // 80px
+    '21': 5.125rem,   // 82px
+    '21.5': 5.5rem,   // 88px
+    '24': 6rem,       // 96px
+    '28': 7rem,       // 112px
+    '32': 8rem,       // 128px
+    '36': 9rem,       // 144px
+    '40': 10rem,      // 160px
+    '44': 11rem,      // 176px
+    '48': 12rem,      // 192px
+    '52': 13rem,      // 208px
+    '56': 14rem,      // 224px
+    '60': 15rem,      // 240px
+    '64': 16rem,      // 256px
+    '72': 18rem,      // 288px
+    '80': 20rem,      // 320px
+    '96': 24rem       // 384px
+) !default;
+
+/* Breakpoints
+   Use in mixins as `bp-min('tablet')` / `bp-max('desktop')`. */
+$breakpoints: (
+    'xs-mobile': 480px,
+    'mobile': 640px,
+    'tablet': 768px,
+    'desktop': 1024px,
+    'large-desktop': 1280px,
+    'xl-desktop': 1400px
+) !default;
+
+/* Typography */
+$fonts: (
+    'default': #{"Helvetica Neue", "Helvetica", "Arial", "Lucida Grande", sans-serif},
+    'mono': #{Monaco, Menlo, "Ubuntu Mono", monospace}
+) !default;
+
+$font-sizes: (
+    'xs': 0.75rem,    // 12px
+    'sm': 0.875rem,   // 14px
+    'base': 1rem,     // 16px
+    'lg': 1.125rem,   // 18px
+    'xl': 1.25rem,    // 20px
+    '2xl': 1.5rem,    // 24px
+    '3xl': 1.875rem,  // 30px
+    '4xl': 2.25rem,   // 36px
+    '5xl': 3rem,      // 48px
+    '6xl': 3.75rem,   // 60px
+    '7xl': 4.5rem,    // 72px
+    '8xl': 6rem,      // 96px
+    '9xl': 8rem       // 128px
+) !default;
+
+$font-weights: (
+    'light': 300,
+    'regular': 400,
+    'medium': 500,
+    'semibold': 600,
+    'bold': 700,
+    'extrabold': 900
+) !default;
+
+/* Shadows */
+$shadows: (
+    'sm': 0 2px 10px rgb(0 0 0 / 0.1),
+    'md': 0 4px 20px rgb(0 0 0 / 0.08),
+    'lg': 0 8px 30px rgb(0 0 0 / 0.12),
+    'xl': 0 8px 40px rgb(0 0 0 / 0.1),
+    'text': 2px 2px 4px rgb(0 0 0 / 0.1)
+) !default;
+
+/* Radius */
+$border-radius: (
+    'none': 0,
+    'sm': 4px,
+    'md': 6px,
+    'lg': 8px,
+    'xl': 12px,
+    '2xl': 16px,
+    'round': 50%,
+    'pill': 100vmax
+) !default;
+
+/* Transitions
+   Timing functions use Open Props easing vars (--ease-3 = smooth ease-in-out).
+   Consumers can override individual entries by merging this map:
+     @use 'sass:map';
+     $transitions: map.merge(lib.$transitions, ('fast': 0.15s var(--ease-spring-1)));
+*/
+$transitions: (
+    'fast': 0.2s var(--ease-3),
+    'normal': 0.3s var(--ease-3),
+    'slow': 0.5s var(--ease-3)
+) !default;
+
+/* Z-index (layering scale) */
+$z-index: (
+    'dropdown': 1000,
+    'sticky': 1020,
+    'fixed': 1030,
+    'modal-backdrop': 1040,
+    'modal': 1050,
+    'popover': 1060,
+    'tooltip': 1070
+) !default;

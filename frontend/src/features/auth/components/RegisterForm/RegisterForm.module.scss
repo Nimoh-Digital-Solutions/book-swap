@@ -1,0 +1,303 @@
+.root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--auth-brand-deep);
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── Role toggle ─────────────────────────────────────────────────────────── */
+
+.roleToggle {
+  display: flex;
+  padding: 0.375rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.roleBtn {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  transition: color 0.15s ease;
+  z-index: 1;
+
+  &:hover {
+    color: #334155;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--auth-brand-lime);
+    outline-offset: -2px;
+  }
+}
+
+.roleBtnActive {
+  color: #fff;
+}
+
+.roleIndicator {
+  position: absolute;
+  inset: 0;
+  background-color: var(--auth-brand-deep);
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+  z-index: -1;
+}
+
+.roleBtnLabel {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nameRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.overflow {
+  overflow: hidden;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--auth-brand-deep);
+}
+
+.optional {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &:focus-within .inputIcon {
+    color: var(--auth-brand-deep);
+  }
+}
+
+.inputIcon {
+  position: absolute;
+  left: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: #94a3b8;
+  pointer-events: none;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.875rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--auth-brand-deep);
+  }
+}
+
+.inputError {
+  border-color: #ef4444;
+
+  &:focus {
+    box-shadow: 0 0 0 2px #ef4444;
+  }
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin: 0;
+}
+
+/* ── Legal checkboxes ─────────────────────────────────────────────────────── */
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.checkbox {
+  margin-top: 0.1rem;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--auth-brand-deep);
+  cursor: pointer;
+}
+
+.legalLink {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--auth-brand-deep);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* ── Server error ─────────────────────────────────────────────────────────── */
+
+.serverError {
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  background: rgb(239 68 68 / 0.08);
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ── Submit button ────────────────────────────────────────────────────────── */
+
+.submitBtn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--auth-brand-deep);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 4px 16px rgb(29 21 50 / 0.2);
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--auth-brand-lime);
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+/* ── Toggle prompt ────────────────────────────────────────────────────────── */
+
+.togglePrompt {
+  text-align: center;
+  font-size: 0.9375rem;
+  color: #475569;
+  font-weight: 500;
+  margin: 0;
+}
+
+.toggleLink {
+  background: none;
+  border: none;
+  color: var(--auth-brand-deep);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2px;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--auth-brand-lime);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}

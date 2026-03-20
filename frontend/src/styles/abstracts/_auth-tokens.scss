@@ -1,0 +1,20 @@
+/* =========================================================================
+   Auth Design Tokens
+   -------------------------------------------------------------------------
+   CSS custom properties for the auth split-panel layout.
+   Sourced from the auth-app prototype (auth-app/src/index.css).
+   Used by SCSS Modules in src/features/auth/**.
+   ========================================================================= */
+
+:root {
+  --auth-brand-deep: #1d1532;           // deep purple-navy — dark panel background
+  --auth-brand-lime: #6dec13;           // vivid lime — CTA buttons, accent highlights
+  --auth-bg-light: #f8f7f2;             // warm off-white — form panel background
+  --auth-text-on-dark: #fff;
+  --auth-text-muted: rgb(255 255 255 / 0.6);
+  --auth-text-subtle: rgb(255 255 255 / 0.38);
+  --auth-border-glass: rgb(255 255 255 / 0.1);
+  --auth-bg-glass: rgb(255 255 255 / 0.05);
+  --auth-panel-transition-duration: 0.6s;
+  --auth-panel-transition-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}

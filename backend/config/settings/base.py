@@ -1,0 +1,175 @@
+"""
+bookswap — base settings.
+
+All environment-specific settings (development, production, test) inherit
+from this module.  Use python-environ to populate values from the .env file.
+"""
+from __future__ import annotations
+
+import pathlib
+import environ
+from nimoh_base.conf import NimohBaseSettings
+
+# ── Environment variables ─────────────────────────────────────────────────────
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, []),
+    DATABASE_URL=(str, ''),
+    REDIS_URL=(str, 'redis://localhost:6379/0'),
+    SECRET_KEY=(str, 'IG)x_Jcqvsm^0&CCb=NK^oADJII186)0pSZ&=BhWn98XR$O&t_'),
+)
+
+# Resolve project root (two levels up from config/settings/) and load .env
+_PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+env.read_env(str(_PROJECT_ROOT / '.env'))
+
+# ── Core ──────────────────────────────────────────────────────────────────────
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = env('DEBUG')
+ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+
+ROOT_URLCONF = 'config.urls'
+WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+USE_TZ = True
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+
+# ── NIMOH_BASE configuration ──────────────────────────────────────────────────
+NIMOH_BASE = {
+    # Required
+    'SITE_NAME': 'bookswap',
+    'SUPPORT_EMAIL': env('SUPPORT_EMAIL', default='support@bookswap.example'),
+    'NOREPLY_EMAIL': env('NOREPLY_EMAIL', default='noreply@bookswap.example'),
+    # Optional
+    'SERVER_HEADER': '',
+    'PASSWORD_CHECKER_USER_AGENT': 'Django-Password-Validator',
+    'CELERY_APP_NAME': 'bookswap',
+    'CACHE_KEY_PREFIX': 'bookswap',
+    'MOBILE_APP_IDENTIFIERS': [],
+    'ENABLE_MONITORING_PERSISTENCE': True,
+    # Set to False to skip the Celery worker check in /api/v1/health/.
+    # Disable when running without a Celery worker (local dev without Docker Celery).
+    'HEALTH_CHECK_CELERY': env.bool('HEALTH_CHECK_CELERY', default=True),
+}
+
+# ── AUTH ──────────────────────────────────────────────────────────────────────
+# bookswap.users.User subclasses AbstractNimohUser — add custom fields here.
+AUTH_USER_MODEL = 'nimoh_auth.User'
+
+# ── Installed apps ────────────────────────────────────────────────────────────
+INSTALLED_APPS = NimohBaseSettings.get_base_apps(
+    include_monitoring=True,
+    include_privacy=True,
+) + [
+    # Project apps
+    'bookswap',
+]
+
+# ── Middleware ────────────────────────────────────────────────────────────────
+MIDDLEWARE = NimohBaseSettings.get_base_middleware()
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+DATABASES = {
+    'default': env.db_url(
+        'DATABASE_URL',
+        default='postgresql://gnimoh001:root@localhost:5432/bookswap',
+    )
+}
+
+
+# ── Caches ────────────────────────────────────────────────────────────────────
+CACHES = NimohBaseSettings.get_base_caches(
+    redis_url=env('REDIS_URL'),
+    key_prefix=NIMOH_BASE['CACHE_KEY_PREFIX'],
+)
+
+# ── Templates ─────────────────────────────────────────────────────────────────
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            # Override nimoh_base email templates here, e.g.:
+            # BASE_DIR / 'templates',
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# ── Static / media ────────────────────────────────────────────────────────────
+STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = 'mediafiles/'
+
+# ── REST Framework ────────────────────────────────────────────────────────────
+REST_FRAMEWORK = NimohBaseSettings.get_base_rest_framework()
+
+SIMPLE_JWT = NimohBaseSettings.get_base_simple_jwt()
+
+# ── drf-spectacular ───────────────────────────────────────────────────────────
+SPECTACULAR_SETTINGS = NimohBaseSettings.get_base_spectacular_settings(
+    title='bookswap API',
+    description='An app for booklovers to save on buying new books everytime they want read new books',
+    version='1.0.0',
+)
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOGGING = NimohBaseSettings.get_base_logging(log_level='INFO')
+
+# ── Email ─────────────────────────────────────────────────────────────────────
+DEFAULT_FROM_EMAIL = NIMOH_BASE['NOREPLY_EMAIL']
+SERVER_EMAIL = NIMOH_BASE['NOREPLY_EMAIL']
+
+EMAIL_BACKEND = 'nimoh_base.core.email_backends.SendGridEmailBackend'
+SENDGRID_API_KEY = env('SENDGRID_API_KEY', default='')
+
+
+# ── Security ──────────────────────────────────────────────────────────────────
+# Applied via globals().update() so Django reads CSRF_COOKIE_HTTPONLY,
+# X_FRAME_OPTIONS, SECURE_CONTENT_TYPE_NOSNIFF, etc. directly.
+globals().update(NimohBaseSettings.get_base_security_settings(https=False))
+
+# Trusted proxy IPs — X-Forwarded-For is only honoured when the direct
+# connection comes from one of these addresses (or a RFC-1918 private range).
+# Set to your load-balancer / nginx container IPs in production.
+# Example: TRUSTED_PROXY_IPS=10.0.0.1,10.0.0.2
+TRUSTED_PROXY_IPS: list[str] = env.list('TRUSTED_PROXY_IPS', default=[])
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Applied via globals().update() so CORS_ALLOW_CREDENTIALS, CORS_ALLOW_HEADERS,
+# and CORS_EXPOSE_HEADERS are active (not just CORS_ALLOWED_ORIGINS).
+globals().update(NimohBaseSettings.get_base_cors())
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:3000'])
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+_REDIS_BASE = env('REDIS_URL', default='redis://localhost:6379').rsplit('/', 1)[0]
+# Applied via globals().update() so Celery's config_from_object(namespace='CELERY')
+# resolves CELERY_BROKER_URL, CELERY_TASK_SERIALIZER, etc. as top-level settings.
+globals().update(NimohBaseSettings.get_base_celery(
+    broker_url=env('CELERY_BROKER_URL', default=f'{_REDIS_BASE}/1'),
+    result_backend=env('CELERY_RESULT_BACKEND', default=f'{_REDIS_BASE}/2'),
+))
+CELERY_BEAT_SCHEDULE = NimohBaseSettings.get_base_celery_beat()
+
+
+
+# ── Channels ──────────────────────────────────────────────────────────────────
+CHANNEL_LAYERS = NimohBaseSettings.get_base_channels(
+    redis_url=env('REDIS_URL'),
+)
+

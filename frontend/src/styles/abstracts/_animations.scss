@@ -1,0 +1,57 @@
+/* =========================================================================
+   Basic Animations
+   - Wrapped in prefers-reduced-motion: no-preference so they are only
+     active when the user has NOT requested reduced motion.
+   - The global reset (_resets.scss) also strips animation-duration and
+     transition-duration for reduce, providing a double safety net.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+
+/* Subtle up/down pulse — useful for loading dots, hints */
+@keyframes bounce {
+    0%,
+    80%,
+    100% {
+        transform: translateY(0); opacity: 0.3;
+    }
+
+    40% {
+        transform: translateY(-8px); opacity: 1;
+    }
+}
+
+/* Spinning object — useful for loading spinner */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Slide-up fade in — entrance transitions */
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide-down fade out — exit transitions */
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(20px)
+    ; }
+}
+
+} /* end @media (prefers-reduced-motion: no-preference) */

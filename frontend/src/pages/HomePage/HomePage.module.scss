@@ -1,0 +1,215 @@
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.root {
+    // display: flex;
+    // align-items: flex-start;
+    // gap: 0rem 6rem;
+    // padding: func.spacing('6');
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    inline-size: 100%;
+    align-self: center;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.section {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 600px;
+    align-content: start;
+
+
+    &:nth-child(1) h2 {
+        padding-inline-start: var(--size-10);
+    }
+}
+
+.sectionTitle {
+    font-size: func.font-size('sm');
+    font-weight: func.font-weight('semibold');
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+}
+
+/* ── Surface samples ── */
+
+.surfaceSamples {
+    --tile: 30ch;
+
+    display: grid;
+    grid-template-columns: var(--tile) var(--tile);
+    grid-auto-rows: var(--tile);
+    gap: 1.5ch;
+    justify-content: center;
+
+    @media (width <= 480px) {
+        --tile: 38vw;
+    }
+}
+
+.surface {
+    border-radius: 1rem;
+    display: grid;
+    place-content: center;
+    font-size: 2.5rem;
+    font-weight: 200;
+
+    @include mixin.motion-safe {
+        transition: background-color 0.3s var(--ease-3, ease);
+    }
+}
+
+.surface1 {
+    background-color: var(--surface-1);
+    color: var(--text-2);
+}
+
+.surface2 {
+    background-color: var(--surface-2);
+    color: var(--text-2);
+}
+
+.surface3 {
+    background-color: var(--surface-3);
+    color: var(--text-1);
+}
+
+.surface4 {
+    background-color: var(--surface-4);
+    color: var(--text-1);
+}
+
+/* ── Text samples ── */
+
+.textSamples {
+    display: grid;
+    gap: 1.25ch;
+
+    h1 {
+        font-size: 2rem;
+        font-weight: 100;
+        display: inline-flex;
+        align-items: center;
+        gap: 1ch;
+    }
+
+    p {
+        max-inline-size: 38ch;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+}
+
+.text1 { color: var(--text-1); }
+.text2 { color: var(--text-2); }
+
+/* ── Colour swatches ── */
+
+.swatch {
+    display: inline-block;
+    flex-shrink: 0;
+    inline-size: 1.4ch;
+    block-size: 1.4ch;
+    border-radius: 50%;
+}
+
+.brandSwatch  { background-color: var(--brand); }
+.text1Swatch  { background-color: var(--text-1); }
+.text2Swatch  { background-color: var(--text-2); }
+
+/* ── Layered natural shadow ── */
+
+.radShadow {
+    border: 1px solid hsl(var(--brand-hue) 10% 50% / 15%);
+    box-shadow:
+        0 2.8px 2.2px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .03)),
+        0 6.7px 5.3px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .01)),
+        0 12.5px 10px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .02)),
+        0 22.3px 17.9px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .02)),
+        0 41.8px 33.4px hsl(var(--surface-shadow) / calc(var(--shadow-strength) + .03)),
+        0 100px 80px hsl(var(--surface-shadow) / var(--shadow-strength));
+}
+
+.heroTitle {
+    font-size: func.font-size('3xl');
+    font-weight: func.font-weight('bold');
+    margin-bottom: func.spacing('4');
+    color: func.color('primary');
+
+    @include mixin.bp-max('tablet') {
+        font-size: func.font-size('2xl');
+    }
+}
+
+.heroSubtitle {
+    font-size: func.font-size('lg');
+    color: func.color('secondary');
+    @include mixin.centered-prose;
+    line-height: 1.6;
+
+    @include mixin.bp-max('tablet') {
+        font-size: func.font-size('base');
+    }
+}
+
+.features {
+    @include mixin.card-block('6');
+
+    h2 {
+        text-align: center;
+        font-size: func.font-size('2xl');
+        margin-bottom: func.spacing('6');
+        color: func.color('primary');
+        font-weight: func.font-weight('semibold');
+
+        @include mixin.bp-max('tablet') {
+            font-size: func.font-size('xl');
+        }
+    }
+}
+
+.featuresGrid {
+    @include mixin.auto-grid;
+}
+
+.featureCard {
+    @include mixin.card-block;
+
+    h3 {
+        font-size: func.font-size('lg');
+        font-weight: func.font-weight('semibold');
+        margin-bottom: func.spacing('2');
+        color: func.color('primary');
+    }
+
+    p {
+        color: func.color('secondary');
+        line-height: 1.5;
+        margin: 0;
+    }
+}
+
+// Responsive design
+@include mixin.bp-max('tablet') {
+    .hero {
+        padding: func.spacing('4');
+    }
+
+    .features {
+        padding: func.spacing('4');
+    }
+
+    .featuresGrid {
+        grid-template-columns: 1fr;
+        gap: func.spacing('3');
+    }
+
+    .featureCard {
+        padding: func.spacing('3');
+    }
+}
+

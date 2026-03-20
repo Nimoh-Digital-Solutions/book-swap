@@ -1,0 +1,93 @@
+@use '@styles' as *;
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.root {
+    @include mixin.full-page-flex-col;
+}
+
+.errorSection {
+    @include mixin.card-block('6');
+    flex: 1;
+    text-align: center;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.errorContent {
+    @include mixin.card-block('6');
+    max-width: 500px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.errorCode {
+    font-size: func.font-size('6xl');
+    font-weight: func.font-weight('extrabold');
+    color: func.color('primary');
+    line-height: 1;
+    margin-bottom: func.spacing('4');
+
+    @include mixin.bp-max('tablet') {
+        font-size: func.font-size('4xl');
+    }
+}
+
+.errorTitle {
+    font-size: func.font-size('2xl');
+    color: func.color('primary');
+    margin-bottom: func.spacing('4');
+    font-weight: func.font-weight('semibold');
+
+    @include mixin.bp-max('tablet') {
+        font-size: func.font-size('xl');
+    }
+}
+
+.errorDescription {
+    font-size: func.font-size('lg');
+    color: func.color('secondary');
+    margin-bottom: func.spacing('6');
+    line-height: 1.6;
+}
+
+.backLink {
+    display: inline-block;
+    padding: func.spacing('2') func.spacing('4');
+    background: func.color('primary');
+    color: func.color('white');
+    border-radius: func.border-radius('sm');
+    text-decoration: none;
+    font-weight: func.font-weight('semibold');
+    font-size: func.font-size('sm');
+
+    @include mixin.motion-safe {
+        transition: background-color 0.2s ease;
+    }
+
+    &:hover {
+        background: func.shade(func.color('primary'), 10%);
+    }
+}
+
+.errorHelp {
+    p {
+        color: func.color('secondary');
+        font-size: func.font-size('sm');
+        margin: 0;
+    }
+}
+
+// Responsive design
+@include mixin.bp-max('tablet') {
+    .errorSection {
+        padding: func.spacing('4');
+        min-height: 50vh;
+    }
+
+    .errorContent {
+        padding: func.spacing('4');
+    }
+}

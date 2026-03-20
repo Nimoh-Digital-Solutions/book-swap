@@ -1,0 +1,44 @@
+{
+  "navigation": {
+    "mainLabel": "Main navigation",
+    "home": "Home",
+    "components": "Components"
+  },
+  "theme": {
+    "switchToDim": "Switch to dim mode",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "backToHome": "← Back to Home"
+  },
+  "auth": {
+    "pageTitle": "Sign in",
+    "welcomeBack": "Welcome back — enter your credentials below.",
+    "credentialLabel": "Email or Username",
+    "credentialRequired": "Email or username is required",
+    "password": "Password",
+    "submit": "Sign in",
+    "loading": "Signing in…",
+    "passwordMin": "Password must be at least 8 characters",
+    "unknownError": "An unexpected error occurred. Please try again.",
+    "registerTitle": "Create account",
+    "registerWelcome": "Fill in the details below to get started.",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "home": {
+    "surfaces": "Surfaces",
+    "typography": "Typography"
+  },
+  "error": {
+    "somethingWentWrong": "Something went wrong.",
+    "tryAgain": "Try again"
+  }
+}
