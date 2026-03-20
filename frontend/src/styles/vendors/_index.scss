@@ -1,0 +1,14 @@
+// Third-party styles
+//
+// open-props (CSS custom property primitives) is loaded globally via a JS
+// import in main.tsx so it is available as CSS custom properties on :root
+// across every component and stylesheet:
+//
+//   import 'open-props/style'; // → open-props.min.css
+//
+// Usage anywhere in SCSS or plain CSS:
+//   padding: var(--size-2) var(--size-4);
+//   transition: color var(--ease-3);
+//   box-shadow: var(--shadow-2);
+//
+// Full reference: https://open-props.style 

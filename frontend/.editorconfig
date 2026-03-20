@@ -1,0 +1,23 @@
+# EditorConfig — https://editorconfig.org
+# Ensures consistent indentation, line endings, and whitespace across all editors
+# (VS Code, WebStorm, Vim, etc.) regardless of whether Prettier is installed.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+# Markdown trailing whitespace is significant (hard line breaks), so preserve it.
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+# Make requires hard tabs.
+indent_style = tab

@@ -1,0 +1,11 @@
+@use '@styles/abstracts/functions' as func;
+
+.root {
+    text-align: center;
+    color: func.color('secondary');
+
+    p {
+        margin: 0;
+        font-size: func.font-size('sm');
+    }
+}

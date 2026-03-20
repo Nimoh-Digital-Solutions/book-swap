@@ -1,0 +1,107 @@
+services:
+  # Development environment with hot-reload
+  app:
+    image: node:22-alpine
+    container_name: ${APP_NAME:-bookswap}-fe-dev
+    # Dev containers run as root so yarn can write to the node_modules volume.
+    # The production image (app-prod) enforces non-root via nginx-unprivileged.
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - yarn_cache:/root/.yarn/berry/cache
+    ports:
+      - '3070:3000'
+    environment:
+      - NODE_ENV=development
+      - DOCKER=true
+
+      # Helps file watching reliability in some Docker setups (esp. Mac/Win)
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+
+      # Optional: enable PWA during dev in Docker
+      # - VITE_PWA=true
+
+    command: >-
+      sh -c "corepack enable
+      && corepack prepare yarn@4.12.0 --activate
+      && yarn install
+      && yarn dev"
+    stdin_open: true
+    tty: true
+    security_opt:
+      - no-new-privileges:true
+
+  # Production preview (multi-stage build -> nginx)
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${APP_NAME:-bookswap}-fe-prod
+    ports:
+      - '8150:8080'
+    restart: unless-stopped
+    environment:
+      # CSP connect-src value — include every origin the browser is allowed to
+      # connect to (API, WebSocket). Separate multiple origins with a space.
+      # Example for local stack: 'self' http://localhost:8000 ws://localhost:8000
+      - CSP_CONNECT_SRC='self'
+      # URL nginx uses to proxy /api/ and /ws/ to the backend.
+      # Must match the compose service name (or use host.docker.internal for host).
+      - BACKEND_URL=http://backend:8000
+
+    # Optional hardening (safe defaults for static nginx)
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      # nginx-unprivileged's entrypoint runs envsubst and writes processed
+      # config files to /etc/nginx/conf.d/ at start-up. Without this tmpfs
+      # mount the write fails on a read-only filesystem.
+      - /etc/nginx/conf.d
+      # Some nginx modules (e.g. gzip temp files) write to /tmp.
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  # -------------------------------------------------------------------------
+  # nimoh_base Django/DRF backend (optional)
+  # -------------------------------------------------------------------------
+  # Uncomment when running the full production stack locally.
+  # For day-to-day development, run the backend in its own terminal and set
+  # VITE_API_URL=http://localhost:8000 in .env.local instead — the Vite dev
+  # proxy handles /api/ and /ws/ without needing this service.
+  #
+  # backend:
+  #   build:
+  #     context: ../your-be-project   # path to your nimoh_base repo
+  #     dockerfile: Dockerfile
+  #   container_name: ${APP_NAME:-bookswap}-fe-api
+  #   ports:
+  #     - '8070:8000'
+  #   environment:
+  #     - DJANGO_SETTINGS_MODULE=config.settings.production
+  #     - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-changeme}@host.docker.internal:5432/${DB_NAME:-appdb}
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - SECRET_KEY=${SECRET_KEY:-change-me-in-prod}
+  #     - ALLOWED_HOSTS=localhost
+  #     - CORS_ALLOWED_ORIGINS=http://localhost:8080
+  #     - FRONTEND_URL=http://localhost:8080
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   restart: unless-stopped
+
+volumes:
+  yarn_cache:
+  # pg_data:  # Uncomment when using the backend + db services

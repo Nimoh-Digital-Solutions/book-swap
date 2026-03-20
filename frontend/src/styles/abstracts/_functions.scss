@@ -1,0 +1,91 @@
+@use 'sass:math';
+@use 'sass:meta';
+@use 'sass:color';
+@use 'variables' as var;
+@use 'utils' as util;
+
+/* =========================================================================
+   Design System Functions (thin wrappers)
+   - These read tokens from _variables via util.get()
+   - Keep API stable: color(), spacing(), font-size(), breakpoint(), etc.
+   ========================================================================= */
+
+/* Colors */
+@function color($key) {
+    @return util.get(var.$colors, $key, 'color', currentColor);
+}
+
+/// Lighten a color (tint)
+/// @param {Color|String} $color - The color to tint
+/// @param {Number} $percentage - The percentage of white to mix in (0-100%)
+@function tint($color, $percentage) {
+    @if meta.type-of($color) != 'color' {
+        @return color-mix(in srgb, #{$color}, white #{$percentage});
+    }
+
+    @return color.scale($color, $lightness: $percentage);
+}
+
+/// Darken a color (shade)
+/// @param {Color|String} $color - The color to shade
+/// @param {Number} $percentage - The percentage of black to mix in (0-100%)
+@function shade($color, $percentage) {
+    @if meta.type-of($color) != 'color' {
+        @return color-mix(in srgb, #{$color}, black #{$percentage});
+    }
+
+    @return color.scale($color, $lightness: - $percentage);
+}
+
+/* Spacing */
+@function spacing($key) {
+    @return util.get(var.$spacing, $key, 'spacing');
+}
+
+/// Spacing in px (assumes 1rem = 16px by default)
+@function spacing-px($key, $root-px: 16) {
+    $rem: spacing($key);
+    @if $rem == null {
+        @return null;
+    }
+
+    @return math.round($rem * $root-px);
+}
+
+/* Breakpoints */
+@function breakpoint($key) {
+    @return util.get(var.$breakpoints, $key, 'breakpoint');
+}
+
+/* Typography */
+@function font($key) {
+    @return util.get(var.$fonts, $key, 'font', var.$fonts['default']);
+}
+
+@function font-size($key) {
+    @return util.get(var.$font-sizes, $key, 'font-size');
+}
+
+@function font-weight($key) {
+    @return util.get(var.$font-weights, $key, 'font-weight');
+}
+
+/* Shadows */
+@function shadow($key) {
+    @return util.get(var.$shadows, $key, 'shadow');
+}
+
+/* Radius */
+@function border-radius($key) {
+    @return util.get(var.$border-radius, $key, 'border-radius');
+}
+
+/* Transitions */
+@function transition($key) {
+    @return util.get(var.$transitions, $key, 'transition');
+}
+
+/* Z-index */
+@function z-index($key) {
+    @return util.get(var.$z-index, $key, 'z-index');
+}

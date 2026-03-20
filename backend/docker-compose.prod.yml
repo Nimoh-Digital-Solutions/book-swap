@@ -1,0 +1,94 @@
+# bookswap — production Docker Compose
+# Usage: docker compose -f docker-compose.prod.yml up -d
+#
+# All secrets must be provided via environment variables (see .env.example).
+# Do NOT set literal secret values here.
+#
+# ⚠  LOCAL TESTING WITH A FRONTEND STACK
+#   When embedding this BE as a service inside the FE’s docker-compose for
+#   local testing (e.g. pointing FE nginx at `backend:8000`), change
+#   DJANGO_SETTINGS_MODULE to config.settings.development.
+#   Production settings enable SECURE_SSL_REDIRECT=True which causes
+#   301 → HTTPS redirect loops on plain HTTP localhost connections.
+#   Use production settings ONLY when TLS is terminated upstream.
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bookswap-be-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    # Set IMAGE_NAME to the registry image built by CI, e.g.:
+    #   IMAGE_NAME=ghcr.io/your-org/bookswap:$GIT_SHA make prod
+    # The default value lets you build and test locally without setting IMAGE_NAME.
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-web
+    build:
+      context: .
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
+      APP_VERSION: ${APP_VERSION:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
+
+    ports:
+      - "8070:8000"
+
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+
+
+  celery:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery
+    command: celery -A config.celery worker --loglevel=info
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-beat:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery-beat
+    command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+
+# ── Shared network ────────────────────────────────────────────────────────────
+# Uncomment to link this BE with a FE container stack on the same host.
+# Run `make network-create` first, then reference the same network in the FE
+# docker-compose so nginx can proxy to `web:8000`.
+# networks:
+#   default:
+#     name: bookswap-network
+#     external: true

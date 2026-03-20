@@ -1,0 +1,9 @@
+@use '@styles' as *;
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.app {
+    min-height: 100dvh;
+    font-family: #{func.font('default')};
+    @include mixin.font-smoothing();
+}

@@ -1,0 +1,31 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 1rem);
+  background-color: var(--surface-1);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-8, 2rem);
+  border-radius: var(--radius-3, 8px);
+  background-color: var(--surface-2);
+  box-shadow: var(--shadow-2);
+}
+
+.heading {
+  margin: 0 0 var(--space-1, 0.25rem);
+  font-size: var(--font-size-3xl, 1.875rem);
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.2;
+}
+
+.subheading {
+  margin: 0 0 var(--space-6, 1.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-2);
+}

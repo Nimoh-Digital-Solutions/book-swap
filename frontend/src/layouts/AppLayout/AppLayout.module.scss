@@ -1,0 +1,57 @@
+@use '@styles' as *;
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+
+.root {
+    @include mixin.full-page-flex-col;
+    padding: func.spacing('3');
+    gap: func.spacing('3');
+}
+
+// Layout pattern: Outer containers with inner content areas
+// Class selectors used intentionally (not bare tags) to prevent global style leakage
+// since CSS Modules does not scope bare HTML element selectors.
+.header,
+.main,
+.footer {
+    @include mixin.card-block;
+    max-width: func.breakpoint('xl-desktop');
+    margin-inline: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+
+
+    // TODO: Remove this once you are building a new application
+    // display: flex;
+    // place-content: center;
+    // place-items: center;
+}
+
+// Skip navigation link — visually hidden until focused.
+// Satisfies WCAG 2.1 SC 2.4.1 (Bypass Blocks, Level A).
+.skipLink {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 9999;
+    padding: func.spacing('2') func.spacing('3');
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: none;
+    border: 2px solid var(--color-primary);
+    border-radius: 0 0 4px;
+
+    @include mixin.motion-safe {
+        transition: top 0.1s ease;
+    }
+
+    &:focus {
+        top: 0;
+    }
+}

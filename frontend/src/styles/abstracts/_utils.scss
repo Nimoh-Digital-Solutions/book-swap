@@ -1,0 +1,36 @@
+@use 'sass:map';
+
+/* =========================================================================
+   Utils (Non-emitting helpers)
+   - Keep generic helpers here so _functions.scss can stay design-system focused.
+   ========================================================================= */
+
+/// Generic getter with optional fallback
+/// Usage: util.get($map, 'key', 'name', $fallback)
+@function get($map, $key, $name, $fallback: null) {
+    @if map.has-key($map, $key) {
+        @return map.get($map, $key);
+    }
+
+    @warn "Unknown #{$name} `#{$key}`";
+    @return $fallback;
+}
+
+/// Check if a key exists in a map
+@function exists($map, $key) {
+    @return map.has-key($map, $key);
+}
+
+/// Return keys of a map (handy for debugging)
+@function keys($map) {
+    @return map.keys($map);
+}
+
+/// Return values of a map (tooling/debugging)
+@function values($map) {
+    $vals: ();
+    @each $k, $v in $map {
+        $vals: append($vals, $v);
+    }
+    @return $vals;
+}

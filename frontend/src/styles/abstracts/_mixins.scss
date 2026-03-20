@@ -1,0 +1,180 @@
+@use 'functions' as func;
+
+/* =========================================================================
+   Mixins
+   - Small, composable building blocks.
+   - Prefer mixins for patterns; use functions for values.
+   ========================================================================= */
+
+/* Accessibility / Typography */
+@mixin font-smoothing($enabled: true) {
+    @if $enabled {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    } @else {
+        -webkit-font-smoothing: auto;
+        -moz-osx-font-smoothing: auto;
+    }
+}
+
+@mixin visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+}
+
+@mixin reduce-motion {
+    @media (prefers-reduced-motion: reduce) {
+        @content;
+    }
+}
+
+/// Wrap animations / transitions with this mixin so they only run when the
+/// user has NOT requested reduced motion.  Pairs with the global reset in
+/// `_resets.scss` which strips all motion for `prefers-reduced-motion: reduce`.
+@mixin motion-safe {
+    @media (prefers-reduced-motion: no-preference) {
+        @content;
+    }
+}
+
+@mixin focus-ring($offset: 2px) {
+    outline: none;
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: $offset;
+    }
+}
+
+/* UI Base */
+@mixin bare-button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    line-height: 1.1;
+    color: inherit;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+@mixin bare-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+        margin: 0;
+    }
+}
+
+@mixin styled-scrollbar($color: func.color('primary-light')) {
+    /* Firefox + some browsers */
+    scrollbar-color: $color transparent;
+    scrollbar-width: thin;
+
+    /* WebKit */
+    &::-webkit-scrollbar {
+        width: 10px; height: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: transparent; margin: 3px 0;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: $color;
+        border-right: 5px solid transparent;
+        background-clip: padding-box;
+    }
+}
+
+/* Layout / Breakpoints */
+@mixin bp-min($breakpoint) {
+    $val: func.breakpoint($breakpoint);
+    @if $val == null {
+        @warn "Unknown breakpoint `#{$breakpoint}`";
+    }
+    @else {
+        @media (min-width: $val) {
+            @content;
+        }
+    }
+}
+
+@mixin bp-max($breakpoint) {
+    $val: func.breakpoint($breakpoint);
+    @if $val == null {
+        @warn "Unknown breakpoint `#{$breakpoint}`";
+    }
+    @else {
+        @media (max-width: $val) {
+            @content;
+        }
+    }
+}
+
+/* Set CSS variable */
+@mixin set-var($name, $color-key) {
+    #{$name}: #{func.color($color-key)};
+}
+
+/* =========================================================================
+   Layout Patterns
+   Re-usable structural patterns extracted to eliminate copy-paste.
+   ========================================================================= */
+
+/// Full-viewport flex column shell (used for app root, 404, etc.)
+@mixin full-page-flex-col {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: func.color('bg');
+}
+
+/// Bordered card block with background, radius and padding
+@mixin card-block($padding-key: '4', $radius-key: 'sm') {
+    border: 1px solid func.color('primary-light');
+    background: func.color('bg');
+    border-radius: func.border-radius($radius-key);
+    padding: func.spacing($padding-key);
+}
+
+/// Auto-fitting responsive grid
+@mixin auto-grid($min-width: 250px, $gap-key: '4') {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+    gap: func.spacing($gap-key);
+}
+
+/// Horizontally centred prose block with max-width constraint
+@mixin centered-prose($max-width: 600px) {
+    max-width: $max-width;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* =========================================================================
+   Button Variants
+   ========================================================================= */
+
+/// Solid filled button with shade-based hover / active states
+@mixin filled-button-variant($color-key) {
+    background-color: func.color($color-key);
+    color: func.color('white');
+    border-color: func.color($color-key);
+
+    &:hover:not(:disabled, &.disabled) {
+        background-color: func.shade(func.color($color-key), 10%);
+        border-color: func.shade(func.color($color-key), 10%);
+    }
+
+    &:active:not(:disabled, &.disabled) {
+        background-color: func.shade(func.color($color-key), 15%);
+        border-color: func.shade(func.color($color-key), 15%);
+    }
+}

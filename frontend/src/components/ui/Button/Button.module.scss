@@ -1,0 +1,184 @@
+@use '@styles/abstracts/functions' as func;
+@use '@styles/abstracts/mixins' as mixin;
+@use '@styles/abstracts/animations' as *;
+
+/* =========================================================================
+   Button Component Styles
+   ========================================================================= */
+
+.root {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: func.spacing('2');
+    border: 2px solid transparent;
+    border-radius: func.border-radius('md');
+    font-weight: func.font-weight('medium');
+    cursor: pointer;
+    transition: func.transition('fast');
+    position: relative;
+    user-select: none;
+    white-space: nowrap;
+    outline: none;
+
+    .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* =========================================================================
+     Variant Styles
+     ========================================================================= */
+
+    /* Primary variant */
+    &--primary {
+        @include mixin.filled-button-variant('primary');
+    }
+
+    /* Secondary variant */
+    &--secondary {
+        @include mixin.filled-button-variant('secondary');
+    }
+
+    /* Tertiary variant */
+    &--tertiary {
+        @include mixin.filled-button-variant('tertiary');
+    }
+
+    /* Outline variant */
+    &--outline {
+        background-color: transparent;
+        color: func.color('primary');
+        border-color: func.color('primary');
+
+        &:hover:not(:disabled, &.disabled) {
+            background-color: func.color('primary');
+            color: func.color('white');
+        }
+
+        &:active:not(:disabled, &.disabled) {
+            background-color: func.shade(func.color('primary'), 10%);
+            border-color: func.shade(func.color('primary'), 10%);
+            color: func.color('white');
+        }
+    }
+
+    /* Ghost variant */
+    &--ghost {
+        background-color: transparent;
+        color: func.color('primary');
+        border-color: transparent;
+
+        &:hover:not(:disabled, &.disabled) {
+            background-color: func.color('primary-light');
+            color: func.color('primary');
+        }
+
+        &:active:not(:disabled, &.disabled) {
+            background-color: func.shade(func.color('primary-light'), 5%);
+        }
+    }
+
+    /* Danger variant */
+    &--danger {
+        @include mixin.filled-button-variant('error');
+    }
+
+    /* Success variant */
+    &--success {
+        @include mixin.filled-button-variant('success');
+    }
+
+    /* =========================================================================
+     Size Variants
+     ========================================================================= */
+
+    /* Small size */
+    &--sm {
+        padding: func.spacing('1.5') func.spacing('3');
+        font-size: func.font-size('sm');
+        min-height: 2rem;
+
+        .icon {
+            font-size: 0.875em;
+        }
+    }
+
+    /* Medium size */
+    &--md {
+        padding: func.spacing('2') func.spacing('4');
+        font-size: func.font-size('base');
+        min-height: 2.5rem;
+
+        .icon {
+            font-size: 1em;
+        }
+    }
+
+    /* Large size */
+    &--lg {
+        padding: func.spacing('3') func.spacing('6');
+        font-size: func.font-size('lg');
+        min-height: 3rem;
+
+        .icon {
+            font-size: 1.125em;
+        }
+    }
+
+    /* =========================================================================
+     States
+     ========================================================================= */
+
+    /* Focus styles for accessibility */
+    &:focus-visible {
+        outline: 2px solid func.color('primary');
+        outline-offset: 2px;
+    }
+
+    /* Disabled state */
+    &:disabled,
+    &.disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    /* Loading state */
+    &.loading {
+        cursor: wait;
+
+        .content {
+            opacity: 0.7;
+        }
+
+        .icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-right: func.spacing('1');
+
+            svg {
+                width: 1em;
+                height: 1em;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                opacity: 0.8;
+            }
+        }
+    }
+
+    /* Full width */
+    &.fullWidth {
+        width: 100%;
+    }
+}
