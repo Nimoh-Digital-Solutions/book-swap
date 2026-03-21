@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    name: "Backend — lint + test"
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: speaklinka_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint (ruff check)
+        run: ruff check .
+
+      - name: Lint (ruff format)
+        run: ruff format --check .
+
+      - name: Run tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          CELERY_TASK_ALWAYS_EAGER: "True"
+          REDIS_URL: redis://localhost:6379/0
+        run: python -m pytest --tb=short -q
+
+  # ── Frontend ───────────────────────────────────────────────────────────────
+  frontend:
+    name: "Frontend — type-check + lint + test"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Type-check
+        run: yarn type-check
+
+      - name: Lint (ESLint)
+        run: yarn lint
+
+      - name: Lint (Stylelint)
+        run: yarn stylelint
+
+      - name: Tests
+        run: yarn test:run
+
+      - name: Build
+        run: yarn build
+
+      - name: Check bundle size
+        run: |
+          # Find the main JS chunk and check its gzipped size (PRD target: ≤ 200 KB)
+          MAIN_CHUNK=$(find dist/assets -name 'index-*.js' -o -name 'main-*.js' | head -1)
+          if [ -z "$MAIN_CHUNK" ]; then
+            echo "⚠️  No main JS chunk found — looking for largest JS file"
+            MAIN_CHUNK=$(ls -S dist/assets/*.js 2>/dev/null | head -1)
+          fi
+          if [ -z "$MAIN_CHUNK" ]; then
+            echo "❌ No JS files found in dist/assets/"
+            exit 1
+          fi
+          RAW_KB=$(du -k "$MAIN_CHUNK" | cut -f1)
+          GZIP_BYTES=$(gzip -c "$MAIN_CHUNK" | wc -c)
+          GZIP_KB=$((GZIP_BYTES / 1024))
+          echo "Main chunk: $MAIN_CHUNK"
+          echo "  Raw:    ${RAW_KB} KB"
+          echo "  Gzipped: ${GZIP_KB} KB"
+          if [ "$GZIP_KB" -gt 200 ]; then
+            echo "❌ Bundle exceeds 200 KB gzipped limit (${GZIP_KB} KB)"
+            exit 1
+          fi
+          echo "✅ Bundle size OK (${GZIP_KB} KB gzipped, limit 200 KB)"
