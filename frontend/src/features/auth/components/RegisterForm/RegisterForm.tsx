@@ -52,6 +52,7 @@ const registerSchema = z
     username: z.string().min(3, 'Username must be at least 3 characters').max(30),
     email: z.string().email('Please enter a valid email address'),
     display_name: z.string().max(100).optional(),
+    date_of_birth: z.string().min(1, 'Date of birth is required'),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters')
@@ -69,7 +70,22 @@ const registerSchema = z
   .refine(data => data.password === data.password_confirm, {
     message: 'Passwords do not match',
     path: ['password_confirm'],
-  });
+  })
+  .refine(
+    data => {
+      const dob = new Date(data.date_of_birth);
+      const now = new Date();
+      const age = now.getFullYear() - dob.getFullYear();
+      const monthDiff = now.getMonth() - dob.getMonth();
+      const dayDiff = now.getDate() - dob.getDate();
+      const adjustedAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+      return adjustedAge >= 16;
+    },
+    {
+      message: 'You must be at least 16 years old to use BookSwap',
+      path: ['date_of_birth'],
+    },
+  );
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
@@ -108,6 +124,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
       email: values.email,
       password: values.password,
       password_confirm: values.password_confirm,
+      date_of_birth: values.date_of_birth,
       privacy_policy_accepted: values.privacy_policy_accepted as boolean,
       terms_of_service_accepted: values.terms_of_service_accepted as boolean,
     };
