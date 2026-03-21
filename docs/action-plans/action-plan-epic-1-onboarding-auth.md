@@ -12,18 +12,18 @@
 | ID | Title | Priority | Status | Notes |
 |----|-------|----------|--------|-------|
 | US-101 | Landing Page Value Proposition | P0 | ❌ Pending | HomePage is a design-system demo (surfaces/typography), not a product landing page |
-| US-102 | Email Registration | P0 | ⚠️ Partial | Phase 1 done: User model has `date_of_birth` field for age gate + domain fields. Still missing: DOB in RegisterForm, email verification UI, password validation rules per spec |
-| US-103 | OAuth Login (Google & Apple) | P0 | ❌ Pending | No OAuth integration on frontend or backend. nimoh-base supports python-social-auth but not configured |
+| US-102 | Email Registration | P0 | ⚠️ Partial | Phase 1–3 done: User model + `BookswapRegisterSerializer` with DOB age gate (16+), DOB added to RegisterForm + Zod schema with age ≥16 validation. Still missing: email verification UI, password validation rules per spec |
+| US-103 | OAuth Login (Google & Apple) | P0 | ⚠️ Partial | Phase 2 done: python-social-auth configured (Google+Apple backends, PSA pipeline, social URLs, done view). Still missing: frontend OAuth buttons + token exchange flow |
 | US-104 | Secure Login | P0 | ⚠️ Partial | Phase 1 done: User model has `auth_provider` field for OAuth detection. Still missing: rate limiting (5 attempts / 10 min lockout), OAuth-only account detection logic |
-| US-105 | Onboarding — Location Setup | P0 | ⚠️ Partial | Phase 1 done: PostGIS enabled, PointField(srid=4326) + neighborhood + preferred_radius + onboarding_completed on User model, GiST index. Still missing: onboarding flow UI, geocoding integration, API endpoints |
+| US-105 | Onboarding — Location Setup | P0 | ⚠️ Partial | Phase 1–3 done: PostGIS + model fields + SetLocationView + OnboardingCompleteView + grid-snap-on-read + frontend hooks (useSetLocation, useCompleteOnboarding) + locationSchema. Still missing: onboarding flow UI |
 | US-106 | Password Reset | P1 | ⚠️ Partial | Frontend has ForgotPasswordPage + apiEndpoints for reset/confirm. Backend nimoh-base has endpoints. Missing: password-reset-confirm page component, session invalidation on reset |
 
 ### Epic 2: User Profile
 
 | ID | Title | Priority | Status | Notes |
 |----|-------|----------|--------|-------|
-| US-201 | Create & Edit Profile | P0 | ⚠️ Partial | Phase 1 done: User model now has bio, avatar, preferred_genres, preferred_language, avg_rating, swap_count, rating_count fields. Still missing: profile pages, serializers, API endpoints |
-| US-202 | View Another User's Profile | P0 | ❌ Pending | No public profile page or API endpoint |
+| US-201 | Create & Edit Profile | P0 | ⚠️ Partial | Phase 1–3 done: User model + UserMeView GET/PATCH + serializers + 66 API tests + frontend hooks (useProfile, useUpdateProfile) + profileEditSchema + profileService. Still missing: frontend profile pages |
+| US-202 | View Another User's Profile | P0 | ⚠️ Partial | Phase 2–3 done: UserDetailView (GET /users/<uuid>/) with UserPublicSerializer + frontend usePublicProfile hook. Still missing: frontend public profile page |
 | US-203 | Account Deletion (GDPR) | P1 | ❌ Pending | No deletion flow, no soft-delete, no anonymization pipeline |
 
 ### Epic 3: Book Listing & Management
@@ -183,7 +183,10 @@ Epic 1 is the absolute foundation — every other epic depends on users being ab
 
 ---
 
-### Phase 2 — Backend API
+### Phase 2 — Backend API ✅ COMPLETE
+
+> **Completed**: 2026-03-21 · **Branch**: `feat/epic-1-phase-1-data-layer` · **Commit**: `9d12a75`
+> **Tests**: 114 passing (66 new + 48 Phase 1) · **Lint**: ruff clean
 
 **Goal**: Expose registration enhancements, profile CRUD, location setup, and OAuth endpoints through authenticated REST APIs.
 
@@ -229,7 +232,10 @@ Epic 1 is the absolute foundation — every other epic depends on users being ab
 
 ---
 
-### Phase 3 — Frontend Services & Hooks
+### Phase 3 — Frontend Services & Hooks ✅ COMPLETE
+
+> **Completed**: 2026-03-21 · **Branch**: `feat/epic-1-phase-1-data-layer` · **Commit**: `d623bd6`
+> **Tests**: 25 new passing (Vitest + MSW) · **Lint**: ESLint clean
 
 **Goal**: Wire the new API endpoints into the frontend data layer with TypeScript types, service wrappers, and TanStack Query hooks.
 
