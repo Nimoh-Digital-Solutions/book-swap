@@ -33,6 +33,8 @@ export interface RegisterPayload {
   last_name: string;
   /** Optional display name. */
   display_name?: string;
+  /** Date of birth for 16+ age gate. Format: YYYY-MM-DD. */
+  date_of_birth: string;
   /** User must accept privacy policy before registration. */
   privacy_policy_accepted: boolean;
   /** User must accept terms of service before registration. */

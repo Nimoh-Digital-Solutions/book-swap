@@ -20,6 +20,9 @@ const V1 = '/api/v1';
 /** Auth endpoints — login, register, session management. */
 const AUTH = `${V1}/auth` as const;
 
+/** User profile endpoints. */
+const USERS = `${V1}/users` as const;
+
 /** Health-check endpoint. */
 const HEALTH = `${V1}/health` as const;
 
@@ -46,6 +49,13 @@ export const API = {
       list: `${AUTH}/sessions/`,
       detail: (id: string) => `${AUTH}/sessions/${id}/`,
     },
+  },
+
+  users: {
+    me: `${USERS}/me/`,
+    meLocation: `${USERS}/me/location/`,
+    meOnboardingComplete: `${USERS}/me/onboarding/complete/`,
+    detail: (id: string) => `${USERS}/${id}/`,
   },
 
   health: `${HEALTH}/`,
