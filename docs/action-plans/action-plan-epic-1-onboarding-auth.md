@@ -11,18 +11,18 @@
 
 | ID | Title | Priority | Status | Notes |
 |----|-------|----------|--------|-------|
-| US-101 | Landing Page Value Proposition | P0 | ❌ Pending | HomePage is a design-system demo (surfaces/typography), not a product landing page |
-| US-102 | Email Registration | P0 | ⚠️ Partial | Phase 1–3 done: User model + `BookswapRegisterSerializer` with DOB age gate (16+), DOB added to RegisterForm + Zod schema with age ≥16 validation. Still missing: email verification UI, password validation rules per spec |
-| US-103 | OAuth Login (Google & Apple) | P0 | ⚠️ Partial | Phase 2 done: python-social-auth configured (Google+Apple backends, PSA pipeline, social URLs, done view). Still missing: frontend OAuth buttons + token exchange flow |
+| US-101 | Landing Page Value Proposition | P0 | ⚠️ Partial | Phase 4: full landing page with hero, How It Works, book grid, CTA. Still missing: live book counter (needs Epic 3), blurred browse (needs Epic 4) |
+| US-102 | Email Registration | P0 | ⚠️ Partial | Phase 1–4 done: full reg form (name, username, email, DOB 16+, password, legal checkboxes), Tailwind dark theme. Still missing: email verification UI pages |
+| US-103 | OAuth Login (Google & Apple) | P0 | ⚠️ Partial | Phase 2+4 done: backend PSA config + frontend Google/Apple buttons on login & register. Still missing: actual OAuth token exchange flow |
 | US-104 | Secure Login | P0 | ⚠️ Partial | Phase 1 done: User model has `auth_provider` field for OAuth detection. Still missing: rate limiting (5 attempts / 10 min lockout), OAuth-only account detection logic |
-| US-105 | Onboarding — Location Setup | P0 | ⚠️ Partial | Phase 1–3 done: PostGIS + model fields + SetLocationView + OnboardingCompleteView + grid-snap-on-read + frontend hooks (useSetLocation, useCompleteOnboarding) + locationSchema. Still missing: onboarding flow UI |
+| US-105 | Onboarding — Location Setup | P0 | ⚠️ Partial | Phase 1–4 done: backend + hooks + OnboardingPage (Step 2/2) with location input, privacy notice, skip. Still missing: map/geolocation, wire to API |
 | US-106 | Password Reset | P1 | ⚠️ Partial | Frontend has ForgotPasswordPage + apiEndpoints for reset/confirm. Backend nimoh-base has endpoints. Missing: password-reset-confirm page component, session invalidation on reset |
 
 ### Epic 2: User Profile
 
 | ID | Title | Priority | Status | Notes |
 |----|-------|----------|--------|-------|
-| US-201 | Create & Edit Profile | P0 | ⚠️ Partial | Phase 1–3 done: User model + UserMeView GET/PATCH + serializers + 66 API tests + frontend hooks (useProfile, useUpdateProfile) + profileEditSchema + profileService. Still missing: frontend profile pages |
+| US-201 | Create & Edit Profile | P0 | ⚠️ Partial | Phase 1–4 done: full stack + ProfilePage (stats, genres, bio, avatar). Still missing: edit profile form UI |
 | US-202 | View Another User's Profile | P0 | ⚠️ Partial | Phase 2–3 done: UserDetailView (GET /users/<uuid>/) with UserPublicSerializer + frontend usePublicProfile hook. Still missing: frontend public profile page |
 | US-203 | Account Deletion (GDPR) | P1 | ❌ Pending | No deletion flow, no soft-delete, no anonymization pipeline |
 
@@ -276,7 +276,9 @@ users: {
 
 ---
 
-### Phase 4 — Frontend UI
+### Phase 4 — Frontend UI ✅ COMPLETE
+
+> Committed: `e96780d` — 20 files, 1797 insertions, 47 new tests (all passing)
 
 **Goal**: Build the landing page, enhance registration, create onboarding flow, and add profile pages.
 
