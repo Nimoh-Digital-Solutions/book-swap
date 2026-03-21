@@ -4,6 +4,9 @@ from config.settings.base import *  # noqa: F403
 DEBUG = False
 TESTING = True
 
+# Disable nimoh-base HTTPS redirect middleware for tests
+NIMOH_BASE['FORCE_HTTPS'] = False  # noqa: F405
+
 # Use the same PostGIS engine as base.py; pytest-django creates a test_ prefixed DB
 DATABASES['default']['TEST'] = {  # type: ignore[index]  # noqa: F405
     'NAME': 'test_bookswap',

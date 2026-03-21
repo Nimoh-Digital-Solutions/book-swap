@@ -10,6 +10,11 @@ import pathlib
 
 import environ
 from nimoh_base.conf import NimohBaseSettings
+from nimoh_base.conf.social import (
+    get_social_auth_pipeline,
+    get_social_auth_settings,
+    get_social_installed_apps,
+)
 
 # ── Environment variables ─────────────────────────────────────────────────────
 env = environ.Env(
@@ -60,11 +65,31 @@ NIMOH_BASE = {
 # ── AUTH ──────────────────────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'bookswap.User'
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.apple.AppleIdAuth',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_PIPELINE = get_social_auth_pipeline()
+
+# Social auth redirect settings (frontend host allow-list)
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+globals().update(get_social_auth_settings(frontend_url=FRONTEND_URL))
+
+# Provider credentials — set in .env, leave blank until provisioned
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', default='')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', default='')
+SOCIAL_AUTH_APPLE_ID_CLIENT = env('SOCIAL_AUTH_APPLE_ID_CLIENT', default='')
+SOCIAL_AUTH_APPLE_ID_SECRET = env('SOCIAL_AUTH_APPLE_ID_SECRET', default='')
+SOCIAL_AUTH_APPLE_ID_TEAM = env('SOCIAL_AUTH_APPLE_ID_TEAM', default='')
+SOCIAL_AUTH_APPLE_ID_KEY = env('SOCIAL_AUTH_APPLE_ID_KEY', default='')
+
 # ── Installed apps ────────────────────────────────────────────────────────────
-INSTALLED_APPS = NimohBaseSettings.get_base_apps(  # noqa: RUF005
+INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     include_monitoring=True,
     include_privacy=True,
-) + [
+) + get_social_installed_apps() + [
     'django.contrib.gis',
     # Project apps
     'bookswap',
