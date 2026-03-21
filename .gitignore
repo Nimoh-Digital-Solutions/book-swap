@@ -4,7 +4,6 @@
 
 # Legacy / local-only directories — not part of the active codebase
 base-app/
-docs/
 .claude/
 app-audit.md
 
