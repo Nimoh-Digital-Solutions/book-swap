@@ -5,8 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { z } from 'zod';
 
-import styles from './ForgotPasswordForm.module.scss';
-
 // ---------------------------------------------------------------------------
 // Inline Zod resolver
 // ---------------------------------------------------------------------------
@@ -28,17 +26,11 @@ function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<
 // Props
 // ---------------------------------------------------------------------------
 export interface ForgotPasswordFormProps {
-  /** Called with the validated email on submission. */
   onSubmit: (email: string) => void | Promise<void>;
-  /** Navigates back to the login view. */
   onBack: () => void;
-  /** When true the submit button shows a loading state. */
   isLoading?: boolean;
-  /** Server-side error message. */
   serverError?: string | null;
-  /** When true the success confirmation panel is shown instead of the form. */
   isSuccess?: boolean;
-  /** The email that was submitted — shown in the success message. */
   submittedEmail?: string;
 }
 
@@ -51,15 +43,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 // ---------------------------------------------------------------------------
-// Component
+// Component — "The Archival Naturalist" dark-theme forgot password
 // ---------------------------------------------------------------------------
 
-/**
- * ForgotPasswordForm
- *
- * Single-field email form that requests a password reset link.
- * Renders a success confirmation panel when `isSuccess` is true.
- */
 export function ForgotPasswordForm({
   onSubmit,
   onBack,
@@ -78,74 +64,100 @@ export function ForgotPasswordForm({
 
   if (isSuccess) {
     return (
-      <div className={styles.successPanel} role="status" aria-live="polite">
-        <div className={styles.successIcon} aria-hidden="true">✉️</div>
-        <h1 className={styles.successTitle}>
+      <div className="flex flex-col items-center text-center gap-4 py-8" role="status" aria-live="polite">
+        <div className="text-5xl" aria-hidden="true">✉️</div>
+        <h1 className="text-2xl font-extrabold text-white">
           {t('auth.forgotPassword.successTitle', 'Check your email')}
         </h1>
-        <p className={styles.successBody}>
+        <p className="text-text-secondary max-w-[22rem]">
           {t('auth.forgotPassword.successBody', 'We sent a reset link to')}{' '}
-          <strong>{submittedEmail}</strong>.{' '}
-          {t('auth.forgotPassword.successHint', "It may take a minute to arrive. Don't forget to check your spam folder.")}
+          <strong className="text-white">{submittedEmail}</strong>.{' '}
+          {t(
+            'auth.forgotPassword.successHint',
+            "It may take a minute to arrive. Don't forget to check your spam folder.",
+          )}
         </p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="mt-4 text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          {t('auth.forgotPassword.backToLogin', 'Back to Login')}
+        </button>
       </div>
     );
   }
 
   return (
-    <form
-      className={styles.form}
-      onSubmit={handleSubmit(({ email }) => onSubmit(email))}
-      noValidate
-    >
-      <button type="button" onClick={onBack} className={styles.backBtn}>
-        <ArrowLeft aria-hidden="true" />
+    <div>
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-6 text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+      >
+        <ArrowLeft className="w-4 h-4" aria-hidden="true" />
         {t('auth.forgotPassword.backToLogin', 'Back to Login')}
       </button>
 
-      <div className={styles.heading}>
-        <h1 className={styles.title}>
-          {t('auth.forgotPassword.title', 'Forgot Password?')}
-        </h1>
-        <p className={styles.subtitle}>
-          {t('auth.forgotPassword.subtitle', "Enter your email and we'll send you instructions to reset your password.")}
-        </p>
-      </div>
-
-      <div className={styles.fieldGroup}>
-        <label className={styles.label} htmlFor="fp-email">
-          {t('auth.forgotPassword.emailLabel', 'Email Address')}
-        </label>
-        <div className={styles.inputWrapper}>
-          <Mail className={styles.inputIcon} aria-hidden="true" />
-          <input
-            id="fp-email"
-            type="email"
-            autoComplete="email"
-            placeholder="name@company.com"
-            className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-            {...register('email')}
-          />
-        </div>
-        {errors.email && (
-          <p className={styles.fieldError} role="alert">{errors.email.message}</p>
+      <h1 className="text-3xl font-bold text-white mb-2">
+        {t('auth.forgotPassword.title', 'Forgot Password?')}
+      </h1>
+      <p className="text-text-secondary mb-8">
+        {t(
+          'auth.forgotPassword.subtitle',
+          "Enter your email and we'll send you instructions to reset your password.",
         )}
-      </div>
+      </p>
 
-      {serverError && (
-        <p className={styles.serverError} role="alert">{serverError}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        aria-busy={isLoading}
-        className={styles.submitBtn}
+      <form
+        className="space-y-5"
+        onSubmit={handleSubmit(({ email }) => onSubmit(email))}
+        noValidate
       >
-        {isLoading
-          ? t('auth.forgotPassword.loading', 'Sending…')
-          : t('auth.forgotPassword.submit', 'Send Reset Link')}
-      </button>
-    </form>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="fp-email">
+            {t('auth.forgotPassword.emailLabel', 'Email Address')}
+          </label>
+          <div className="relative">
+            <input
+              id="fp-email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              className={`block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary ${
+                errors.email ? 'border-red-500' : 'border-border-dark'
+              }`}
+              {...register('email')}
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
+          </div>
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.email.message}</p>
+          )}
+        </div>
+
+        {serverError && (
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3" role="alert">
+            <p className="text-sm text-red-400">{serverError}</p>
+          </div>
+        )}
+
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={isLoading}
+            aria-busy={isLoading}
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60"
+          >
+            {isLoading
+              ? t('auth.forgotPassword.loading', 'Sending…')
+              : t('auth.forgotPassword.submit', 'Send Reset Link')}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

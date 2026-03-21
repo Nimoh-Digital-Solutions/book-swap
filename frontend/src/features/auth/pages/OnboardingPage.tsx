@@ -1,0 +1,171 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
+
+import { useDocumentTitle } from '@hooks';
+import { PATHS, routeMetadata } from '@routes/config/paths';
+import { Info, MapPin, Star } from 'lucide-react';
+
+/**
+ * OnboardingPage — "Step 2 of 2"
+ *
+ * Location setup page shown after registration.
+ * Part of the auth flow but rendered outside the AuthPage layout route
+ * since it has its own branding content.
+ */
+export function OnboardingPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [location, setLocation] = useState('');
+
+  useDocumentTitle(routeMetadata[PATHS.ONBOARDING].title);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Wire to profile update API (POST /api/v1/users/me/location/)
+    void navigate(PATHS.HOME, { replace: true });
+  };
+
+  return (
+    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+        {/* ── Branding panel ──────────────────────────────────── */}
+        <div className="md:w-5/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
+          <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
+
+          <div className="relative z-10">
+            <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
+              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
+            </Link>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+              Find Books <span className="text-primary italic">Near You</span>
+            </h1>
+            <p className="text-text-secondary text-lg leading-relaxed">
+              {t(
+                'onboarding.branding.subtitle',
+                'Set your location to discover books available for swap in your neighborhood and connect with local readers.',
+              )}
+            </p>
+          </div>
+
+          <div className="relative z-10 mt-12 md:mt-0">
+            <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
+              <div className="flex text-primary mb-3 gap-1" aria-label="5 stars">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
+                ))}
+              </div>
+              <p className="italic text-gray-200 mb-4">
+                &ldquo;Setting my neighborhood helped me find three amazing books just a 5-minute walk from my apartment!&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-background-dark text-sm font-bold border-2 border-primary">
+                  D
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-white">David Chen</p>
+                  <p className="text-xs text-text-secondary">Local Reader</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Form panel ──────────────────────────────────────── */}
+        <div className="md:w-7/12 bg-surface-dark p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-border-dark" aria-hidden="true">
+            <div className="h-full bg-primary w-full" />
+          </div>
+
+          {/* Mobile logo */}
+          <div className="md:hidden mb-8">
+            <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
+            </Link>
+          </div>
+
+          <div className="max-w-md mx-auto w-full relative z-10">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+              <span className="uppercase tracking-widest text-xs font-bold text-text-secondary">
+                {t('onboarding.step', 'Step 2 of 2')}
+              </span>
+              <Link
+                to={PATHS.HOME}
+                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                {t('onboarding.skip', 'Skip for now')}
+              </Link>
+            </div>
+
+            <h2 className="text-3xl font-bold text-white mb-2">
+              {t('onboarding.title', 'Where are you located?')}
+            </h2>
+            <p className="text-text-secondary mb-8">
+              {t('onboarding.subtitle', 'This helps us show you the closest available books.')}
+            </p>
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label
+                  className="block text-sm font-medium text-text-secondary mb-2"
+                  htmlFor="location"
+                >
+                  {t('onboarding.locationLabel', 'City, Neighborhood, or Zip Code')}
+                </label>
+                <div className="relative">
+                  <input
+                    id="location"
+                    type="text"
+                    placeholder={t('onboarding.locationPlaceholder', 'e.g. Amsterdam West, 1054')}
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 border border-border-dark rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary"
+                    aria-label={t('onboarding.locationLabel', 'City, Neighborhood, or Zip Code')}
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MapPin className="text-text-muted w-5 h-5" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Privacy info box */}
+              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex gap-3">
+                <Info className="text-primary w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="text-sm text-text-secondary">
+                  {t(
+                    'onboarding.privacyNote',
+                    'We only use your location to calculate distances to available books. Your exact address is never shared with other users.',
+                  )}
+                </p>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 flex justify-center py-3.5 px-4 border border-border-dark rounded-xl text-sm font-bold text-white bg-surface-dark hover:bg-border-dark transition-colors"
+                >
+                  {t('common.back', 'Back')}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-[2] flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover transition-colors"
+                >
+                  {t('onboarding.submit', 'Complete Setup')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

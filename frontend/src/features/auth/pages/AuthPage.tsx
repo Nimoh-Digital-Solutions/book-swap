@@ -1,11 +1,12 @@
+import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
-import { AuthBranding } from '../components/AuthBranding/AuthBranding';
 import type { AuthView } from '../components/AuthSplitPanel/AuthSplitPanel';
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm/ForgotPasswordForm';
@@ -15,7 +16,6 @@ import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth.service';
 import type { LoginPayload, RegisterPayload } from '../types/auth.types';
 
-// Spatial ordering used to determine slide direction: lower = left, higher = right.
 const VIEW_ORDER: Record<AuthView, number> = { register: -1, login: 0, forgot: 1 };
 
 function pathToView(pathname: string): AuthView {
@@ -24,28 +24,73 @@ function pathToView(pathname: string): AuthView {
   return 'login';
 }
 
-/**
- * AuthPage
- *
- * Single component that handles /login, /register, and /forgot-password routes.
- * By rendering as a shared layout route parent for all three paths it stays
- * mounted during navigation, allowing AuthSplitPanel's `motion.div layout`
- * animation to fire on every view change instead of being destroyed and
- * recreated on every route transition.
- *
- * Route tree:
- *   AuthRoutesWrapper
- *     AuthPage  ← stays mounted
- *       /login
- *       /register
- *       /forgot-password
- */
+// Per-view branding content for the split panel
+const BRANDING: Record<
+  AuthView,
+  {
+    title: ReactElement;
+    subtitle: string;
+    quote: string;
+    authorName: string;
+    authorDetails: string;
+    progress: number;
+  }
+> = {
+  login: {
+    title: (
+      <>
+        Welcome Back to the{' '}
+        <span className="text-primary italic">Community</span>
+      </>
+    ),
+    subtitle:
+      'Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam.',
+    quote:
+      "The quality of books I've found here is incredible. It feels like browsing a curated boutique, but everything is free to swap!",
+    authorName: 'Elena Rodriguez',
+    authorDetails: 'Member since 2022',
+    progress: 100,
+  },
+  register: {
+    title: (
+      <>
+        Welcome to the{' '}
+        <span className="text-primary italic">Community</span>
+      </>
+    ),
+    subtitle:
+      'Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam.',
+    quote:
+      "I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion.",
+    authorName: 'Sarah Jenkins',
+    authorDetails: 'Swapping since 2021',
+    progress: 50,
+  },
+  forgot: {
+    title: (
+      <>
+        Reset Your{' '}
+        <span className="text-primary italic">Password</span>
+      </>
+    ),
+    subtitle:
+      "No worries — it happens to the best of us. We'll help you get back to your books.",
+    quote:
+      'The support team got me back into my account in minutes. Fantastic community!',
+    authorName: 'David Park',
+    authorDetails: 'Member since 2023',
+    progress: 100,
+  },
+};
+
 export function AuthPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const view = pathToView(location.pathname);
+  const branding = BRANDING[view];
 
   useDocumentTitle(
     view === 'register'
@@ -55,10 +100,6 @@ export function AuthPage() {
         : routeMetadata[PATHS.LOGIN].title,
   );
 
-  // ── Direction tracking ─────────────────────────────────────────────────
-  // Use a ref so that updating direction before navigate() means the new
-  // direction value is already in place when React's next render runs the
-  // AnimatePresence exit/enter animations.
   const directionRef = useRef<1 | -1>(1);
 
   const navigateTo = (target: AuthView) => {
@@ -103,15 +144,13 @@ export function AuthPage() {
       setFpSubmittedEmail(email);
       setFpSuccess(true);
     } catch {
-      setFpError('Something went wrong. Please try again.');
+      setFpError(t('auth.forgotPassword.error', 'Something went wrong. Please try again.'));
     } finally {
       setFpLoading(false);
     }
   };
 
-  // ── Form content animation ─────────────────────────────────────────────
-  // Directional slide: direction 1 = new view enters from right / old exits left.
-  //                    direction -1 = new view enters from left / old exits right.
+  // ── Animated form transitions ──────────────────────────────────────────
   const formVariants = prefersReducedMotion
     ? {}
     : {
@@ -125,7 +164,12 @@ export function AuthPage() {
   return (
     <AuthSplitPanel
       view={view}
-      brandingContent={<AuthBranding view={view} />}
+      brandingTitle={branding.title}
+      brandingSubtitle={branding.subtitle}
+      quote={branding.quote}
+      authorName={branding.authorName}
+      authorDetails={branding.authorDetails}
+      progress={branding.progress}
       formContent={
         <AnimatePresence mode="wait" custom={directionRef.current}>
           {view === 'login' && (

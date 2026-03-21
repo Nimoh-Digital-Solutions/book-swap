@@ -24,6 +24,7 @@ export {
 export { AuthPage } from './pages/AuthPage';
 export { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 export { LoginPage } from './pages/LoginPage';
+export { OnboardingPage } from './pages/OnboardingPage';
 export { RegisterPage } from './pages/RegisterPage';
 export { authService } from './services/auth.service';
 export type { AuthStore } from './stores/authStore';

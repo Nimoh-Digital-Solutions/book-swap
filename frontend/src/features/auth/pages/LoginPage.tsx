@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
-import { AuthBranding } from '../components/AuthBranding/AuthBranding';
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
 import { LoginForm } from '../components/LoginForm/LoginForm';
 import { useAuth } from '../hooks/useAuth';
@@ -32,7 +31,16 @@ export function LoginPage() {
   return (
     <AuthSplitPanel
       view="login"
-      brandingContent={<AuthBranding view="login" />}
+      brandingTitle={
+        <>
+          Welcome Back to the{' '}
+          <span className="text-primary italic">Community</span>
+        </>
+      }
+      brandingSubtitle="Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam."
+      quote="The quality of books I've found here is incredible. It feels like browsing a curated boutique, but everything is free to swap!"
+      authorName="Elena Rodriguez"
+      authorDetails="Member since 2022"
       formContent={
         <LoginForm
           onSubmit={handleSubmit}

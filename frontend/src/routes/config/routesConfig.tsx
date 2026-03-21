@@ -34,6 +34,14 @@ const AuthRoutesWrapper = lazy(() =>
 
 const SettingsPage = lazy(() => import('@pages/SettingsPage/SettingsPage'));
 
+const OnboardingPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.OnboardingPage }))
+);
+
+const ProfilePage = lazy(() =>
+  import('@features/profile').then(m => ({ default: m.ProfilePage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -77,6 +85,14 @@ export const routes: RouteObject[] = [
           { path: PATHS.FORGOT_PASSWORD, element: null },
         ],
       },
+      {
+        path: PATHS.ONBOARDING,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <OnboardingPage />
+          </Suspense>
+        ),
+      },
     ],
   },
   // ---------------------------------------------------------------------------
@@ -105,6 +121,10 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.SETTINGS,
         element: <ProtectedPage component={SettingsPage} />,
+      },
+      {
+        path: PATHS.PROFILE,
+        element: <ProtectedPage component={ProfilePage} />,
       },
     ],
   },
