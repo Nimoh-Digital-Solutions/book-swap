@@ -64,8 +64,99 @@ const authHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Profile / User handlers
+// ---------------------------------------------------------------------------
+
+export const TEST_PROFILE = {
+  ...TEST_USER,
+  username: 'testuser',
+  date_of_birth: null,
+  bio: '',
+  avatar: null,
+  location: null,
+  neighborhood: '',
+  preferred_genres: [],
+  preferred_language: 'en' as const,
+  preferred_radius: 5,
+  avg_rating: '0.0',
+  swap_count: 0,
+  rating_count: 0,
+  auth_provider: 'email',
+  onboarding_completed: false,
+  email_verified: true,
+  member_since: '2025-01-01T00:00:00Z',
+};
+
+const profileHandlers = [
+  /** GET /api/v1/users/me/ — current user profile */
+  http.get('*/api/v1/users/me/', () => {
+    return HttpResponse.json(TEST_PROFILE);
+  }),
+
+  /** PATCH /api/v1/users/me/ — update profile */
+  http.patch('*/api/v1/users/me/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ ...TEST_PROFILE, ...body });
+  }),
+
+  /** POST /api/v1/users/me/location/ — set location */
+  http.post('*/api/v1/users/me/location/', async ({ request }) => {
+    const body = (await request.json()) as { latitude: number; longitude: number };
+    return HttpResponse.json({
+      location: { latitude: body.latitude, longitude: body.longitude },
+      neighborhood: 'Jordaan',
+    });
+  }),
+
+  /** POST /api/v1/users/me/onboarding/complete/ — mark onboarding done */
+  http.post('*/api/v1/users/me/onboarding/complete/', () => {
+    return HttpResponse.json({ onboarding_completed: true });
+  }),
+
+  /** GET /api/v1/users/:id/ — public profile */
+  http.get('*/api/v1/users/:id/', ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      username: 'publicuser',
+      first_name: 'Public',
+      last_name: 'User',
+      bio: '',
+      avatar: null,
+      neighborhood: 'De Pijp',
+      preferred_genres: [],
+      avg_rating: '0.0',
+      swap_count: 0,
+      rating_count: 0,
+      member_since: '2025-01-01T00:00:00Z',
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
+// Registration handler
+// ---------------------------------------------------------------------------
+
+const registrationHandlers = [
+  /** POST /api/v1/auth/register/ — create account */
+  http.post('*/api/v1/auth/register/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      {
+        user: {
+          id: 'usr_new_001',
+          email: body.email ?? 'new@example.com',
+          first_name: body.first_name ?? '',
+          last_name: body.last_name ?? '',
+        },
+      },
+      { status: 201 },
+    );
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
 /** Default MSW request handlers for all tests. */
-export const handlers = [...authHandlers];
+export const handlers = [...authHandlers, ...profileHandlers, ...registrationHandlers];

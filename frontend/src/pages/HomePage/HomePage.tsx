@@ -22,7 +22,7 @@ const BOOKS = [
     genre: 'Fantasy',
     time: '5h 20m',
     available: true,
-    owner: { initial: 'S', name: 'Sarah J.', gradient: 'from-blue-400 to-indigo-500' },
+    owner: { initial: 'S', name: 'Sarah J.' },
     cover: 'bg-gradient-to-b from-[#1A2B4C] to-[#0D1526]',
   },
   {
@@ -31,7 +31,7 @@ const BOOKS = [
     genre: 'Hist. Fiction',
     time: '12h 15m',
     available: false,
-    owner: { initial: 'M', name: 'Mark T.', gradient: 'from-emerald-400 to-teal-500' },
+    owner: { initial: 'M', name: 'Mark T.' },
     cover: 'bg-gradient-to-b from-[#7FB5D5] to-[#A3CBE3]',
   },
   {
@@ -40,7 +40,7 @@ const BOOKS = [
     genre: 'Romance',
     time: '8h 45m',
     available: false,
-    owner: { initial: 'E', name: 'Elena R.', gradient: 'from-rose-400 to-pink-500' },
+    owner: { initial: 'E', name: 'Elena R.' },
     cover: 'bg-[#1E4D4F]',
   },
   {
@@ -49,7 +49,7 @@ const BOOKS = [
     genre: 'Sci-Fi',
     time: '10h 30m',
     available: false,
-    owner: { initial: 'D', name: 'David K.', gradient: 'from-amber-400 to-orange-500' },
+    owner: { initial: 'D', name: 'David K.' },
     cover: 'bg-gradient-to-b from-[#0F2B2F] to-[#0A1A1C]',
   },
 ];
@@ -80,54 +80,33 @@ const HomePage = (): ReactElement => {
   useDocumentTitle(routeMetadata[PATHS.HOME].title);
 
   return (
-    <div className="min-h-screen bg-background-dark text-text-secondary font-sans selection:bg-primary selection:text-background-dark">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between px-6 py-5 max-w-7xl mx-auto border-b border-border-dark/50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
-            <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            {t('app.name', 'BookSwap')}
-          </span>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <a href="#how-it-works" className="hover:text-white transition-colors">
-            {t('home.nav.howItWorks', 'How it Works')}
-          </a>
-          <a href="#community" className="hover:text-white transition-colors">
-            {t('home.nav.community', 'Community')}
-          </a>
-        </div>
-        <Link
-          to={PATHS.LOGIN}
-          className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2 rounded-full font-bold text-sm transition-colors"
-        >
-          {t('home.nav.signIn', 'Sign In')}
-        </Link>
-      </nav>
-
-      {/* Hero Section */}
-      <main className="relative">
+    <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
+      {/* ── Hero Section ── */}
+      <section className="relative">
+        {/* Background Overlay */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 blur-[120px] rounded-full" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background-dark/80 to-background-dark" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#E4B643]/10 blur-[120px] rounded-full" />
+          <div
+            className="absolute inset-0 opacity-10 bg-center bg-no-repeat bg-cover"
+            style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2000&auto=format&fit=crop")' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#152018]/80 to-[#152018]" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-dark border border-border-dark text-primary text-xs font-semibold mb-8">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center" style={{ marginInline: 'auto' }}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
+            <span className="w-2 h-2 rounded-full bg-[#E4B643] animate-pulse" />
             {t('home.hero.badge', '15,248 Active Swappers in Amsterdam')}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
             {t('home.hero.titlePart1', 'Find your next')} <br />
-            <span className="text-primary">
+            <span className="text-[#E4B643]">
               {t('home.hero.titlePart2', 'great adventure.')}
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-[#8C9C92] mb-10 max-w-2xl mx-auto">
             {t(
               'home.hero.subtitle',
               'Search thousands of books available for trade in your local neighborhood.',
@@ -136,15 +115,15 @@ const HomePage = (): ReactElement => {
 
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto relative mb-6">
-            <div className="flex items-center bg-surface-dark border border-border-dark rounded-full p-2 pl-6 shadow-2xl focus-within:border-primary/50 transition-colors">
-              <Search className="w-5 h-5 text-text-secondary" aria-hidden="true" />
+            <div className="flex items-center bg-[#1A251D] border border-[#28382D] rounded-full p-2 pl-6 shadow-2xl focus-within:border-[#E4B643]/50 transition-colors">
+              <Search className="w-5 h-5 text-[#8C9C92]" aria-hidden="true" />
               <input
                 type="text"
                 placeholder={t('home.hero.searchPlaceholder', 'Search by title, author, or ISBN...')}
-                className="flex-1 bg-transparent border-none outline-none text-white px-4 placeholder-text-muted"
+                className="flex-1 bg-transparent border-none outline-none text-white px-4 placeholder-[#5A6A60]"
                 aria-label={t('home.hero.searchLabel', 'Search books')}
               />
-              <button className="bg-primary hover:bg-primary-hover text-background-dark px-8 py-3 rounded-full font-bold transition-colors">
+              <button className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-8 py-3 rounded-full font-bold transition-colors">
                 {t('home.hero.search', 'Search')}
               </button>
             </div>
@@ -152,35 +131,35 @@ const HomePage = (): ReactElement => {
 
           {/* Popular Tags */}
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-            <span className="text-text-muted font-medium mr-2">
+            <span className="text-[#5A6A60] font-medium mr-2">
               {t('home.hero.popularNow', 'Popular now:')}
             </span>
             {POPULAR_TAGS.map((tag) => (
               <button
                 key={tag}
-                className="px-4 py-1.5 rounded-full bg-surface-dark border border-border-dark hover:border-primary/50 hover:text-white transition-colors"
+                className="px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] hover:border-[#E4B643]/50 hover:text-white transition-colors"
               >
                 {tag}
               </button>
             ))}
           </div>
         </div>
-      </main>
+      </section>
 
-      {/* Recently Added Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* ── Recently Added Section ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" style={{ marginInline: 'auto' }}>
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">
               {t('home.recentlyAdded.title', 'Recently Added')}
             </h2>
-            <p className="text-text-secondary">
+            <p className="text-[#8C9C92]">
               {t('home.recentlyAdded.subtitle', 'Fresh arrivals from the community library.')}
             </p>
           </div>
           <Link
             to={PATHS.HOME}
-            className="text-primary font-semibold text-sm hover:text-white transition-colors flex items-center gap-1"
+            className="text-[#E4B643] font-semibold text-sm hover:text-white transition-colors flex items-center gap-1 no-underline"
           >
             {t('home.recentlyAdded.viewAll', 'View all books')}{' '}
             <ArrowRight className="w-4 h-4" />
@@ -191,11 +170,11 @@ const HomePage = (): ReactElement => {
           {BOOKS.map((book) => (
             <div
               key={book.title}
-              className="bg-surface-dark rounded-2xl p-4 border border-border-dark group hover:border-primary/30 transition-colors"
+              className="bg-[#1A251D] rounded-2xl p-4 border border-[#28382D] group hover:border-[#E4B643]/30 transition-colors"
             >
               <div className="bg-[#E8ECE9] rounded-xl p-4 flex justify-center items-center mb-4 h-64 relative">
                 {book.available && (
-                  <div className="absolute top-3 right-3 bg-primary text-background-dark text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10">
+                  <div className="absolute top-3 right-3 bg-[#E4B643] text-[#152018] text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10">
                     {t('home.book.available', 'Available')}
                   </div>
                 )}
@@ -211,28 +190,26 @@ const HomePage = (): ReactElement => {
                 </div>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-primary text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-[#E4B643] text-[10px] font-bold uppercase tracking-wider">
                   {book.genre}
                 </span>
-                <span className="flex items-center gap-1 text-xs text-text-muted">
+                <span className="flex items-center gap-1 text-xs text-[#5A6A60]">
                   <Clock className="w-3 h-3" /> {book.time}
                 </span>
               </div>
               <h3 className="text-white font-bold text-lg leading-tight mb-1">
                 {book.title}
               </h3>
-              <p className="text-sm text-text-secondary mb-4">{book.author}</p>
-              <div className="flex items-center justify-between pt-4 border-t border-border-dark">
+              <p className="text-sm text-[#8C9C92] mb-4">{book.author}</p>
+              <div className="flex items-center justify-between pt-4 border-t border-[#28382D]">
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`w-6 h-6 rounded-full bg-gradient-to-br ${book.owner.gradient} flex items-center justify-center text-white text-xs font-bold`}
-                  >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
                     {book.owner.initial}
                   </div>
                   <span className="text-xs text-white">{book.owner.name}</span>
                 </div>
                 <button
-                  className="text-primary hover:text-white transition-colors"
+                  className="text-[#E4B643] hover:text-white transition-colors"
                   aria-label={t('home.book.swap', 'Swap {{title}}', { title: book.title })}
                 >
                   <ArrowLeftRight className="w-4 h-4" />
@@ -243,10 +220,11 @@ const HomePage = (): ReactElement => {
         </div>
       </section>
 
-      {/* How it Works & Community Section */}
+      {/* ── How it Works & Community Section ── */}
       <section
         id="how-it-works"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
+        style={{ marginInline: 'auto' }}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left: How it Works */}
@@ -254,7 +232,7 @@ const HomePage = (): ReactElement => {
             <h2 className="text-3xl font-extrabold text-white mb-4">
               {t('home.howItWorks.title', 'How it Works')}
             </h2>
-            <p className="text-text-secondary mb-10">
+            <p className="text-[#8C9C92] mb-10">
               {t(
                 'home.howItWorks.subtitle',
                 'Start your reading journey in three simple steps.',
@@ -263,21 +241,21 @@ const HomePage = (): ReactElement => {
 
             <div className="relative">
               <div
-                className="absolute left-[15px] top-8 bottom-8 w-px bg-border-dark"
+                className="absolute left-[15px] top-8 bottom-8 w-px bg-[#28382D]"
                 aria-hidden="true"
               />
               <div className="space-y-8">
                 {STEPS.map((step, i) => (
                   <div key={step.title} className="flex gap-6 relative">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-background-dark border border-primary text-primary flex items-center justify-center font-bold text-sm z-10">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#152018] border border-[#E4B643] text-[#E4B643] flex items-center justify-center font-bold text-sm z-10">
                       {i + 1}
                     </div>
-                    <div className="bg-surface-dark border border-border-dark rounded-2xl p-6 flex-1">
+                    <div className="bg-[#1A251D] border border-[#28382D] rounded-2xl p-6 flex-1">
                       <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                        <step.icon className="w-5 h-5 text-primary" aria-hidden="true" />
+                        <step.icon className="w-5 h-5 text-[#E4B643]" aria-hidden="true" />
                         {step.title}
                       </h4>
-                      <p className="text-text-secondary text-sm leading-relaxed">
+                      <p className="text-[#8C9C92] text-sm leading-relaxed">
                         {step.description}
                       </p>
                     </div>
@@ -290,11 +268,11 @@ const HomePage = (): ReactElement => {
           {/* Right: Live Community */}
           <div
             id="community"
-            className="bg-surface-dark rounded-3xl p-8 border border-border-dark relative overflow-hidden"
+            className="bg-[#1A251D] rounded-3xl p-8 border border-[#28382D] relative overflow-hidden"
           >
             <div className="relative z-10">
               <div className="text-center mb-10">
-                <span className="text-primary text-[10px] font-bold uppercase tracking-widest mb-2 block">
+                <span className="text-[#E4B643] text-[10px] font-bold uppercase tracking-widest mb-2 block">
                   {t('home.community.label', 'Live Community')}
                 </span>
                 <h3 className="text-3xl font-extrabold text-white">
@@ -303,50 +281,49 @@ const HomePage = (): ReactElement => {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-background-dark rounded-2xl p-6 text-center border border-border-dark">
-                  <div className="text-3xl font-bold text-primary mb-1">12,408</div>
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+                <div className="bg-[#152018] rounded-2xl p-6 text-center border border-[#28382D]">
+                  <div className="text-3xl font-bold text-[#E4B643] mb-1">12,408</div>
+                  <div className="text-[10px] font-bold text-[#5A6A60] uppercase tracking-wider">
                     {t('home.community.booksAvailable', 'Books Available')}
                   </div>
                 </div>
-                <div className="bg-background-dark rounded-2xl p-6 text-center border border-border-dark">
-                  <div className="text-3xl font-bold text-primary mb-1">852</div>
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+                <div className="bg-[#152018] rounded-2xl p-6 text-center border border-[#28382D]">
+                  <div className="text-3xl font-bold text-[#E4B643] mb-1">852</div>
+                  <div className="text-[10px] font-bold text-[#5A6A60] uppercase tracking-wider">
                     {t('home.community.swapsThisWeek', 'Swaps This Week')}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 mb-8">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-border-dark">
-                  <div className="w-8 h-8 rounded-full bg-border-dark flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-4 h-4 text-text-secondary" aria-hidden="true" />
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
+                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
                   </div>
-                  <p className="text-sm text-text-secondary">
-                    <span className="text-primary font-bold">Emma</span> listed Dune in De
-                    Pijp.
+                  <p className="text-sm text-[#8C9C92]">
+                    <span className="text-[#E4B643] font-bold">Emma</span> listed Dune in De Pijp.
                   </p>
                 </div>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-border-dark">
-                  <div className="w-8 h-8 rounded-full bg-border-dark flex items-center justify-center flex-shrink-0">
-                    <ArrowLeftRight className="w-4 h-4 text-text-secondary" aria-hidden="true" />
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
+                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
+                    <ArrowLeftRight className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
                   </div>
-                  <p className="text-sm text-text-secondary">
-                    <span className="text-primary font-bold">Liam</span> &{' '}
-                    <span className="text-primary font-bold">Noah</span> just swapped books!
+                  <p className="text-sm text-[#8C9C92]">
+                    <span className="text-[#E4B643] font-bold">Liam</span> &{' '}
+                    <span className="text-[#E4B643] font-bold">Noah</span> just swapped books!
                   </p>
                 </div>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-border-dark">
-                  <div className="w-8 h-8 rounded-full bg-border-dark flex items-center justify-center flex-shrink-0">
-                    <Star className="w-4 h-4 text-text-secondary" aria-hidden="true" />
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
+                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
+                    <Star className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
                   </div>
-                  <p className="text-sm text-text-secondary">
+                  <p className="text-sm text-[#8C9C92]">
                     New BookDrop location added in Jordaan.
                   </p>
                 </div>
               </div>
 
-              <button className="w-full py-4 rounded-xl border border-border-dark text-primary font-bold text-sm uppercase tracking-wider hover:bg-border-dark/50 transition-colors">
+              <button className="w-full py-4 rounded-xl border border-[#28382D] text-[#E4B643] font-bold text-sm uppercase tracking-wider hover:bg-[#28382D]/50 transition-colors">
                 {t('home.community.viewMap', 'View Full Map')}
               </button>
             </div>
@@ -354,14 +331,14 @@ const HomePage = (): ReactElement => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8">
-        <div className="bg-primary rounded-[2rem] p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
+      {/* ── CTA Section ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8" style={{ marginInline: 'auto' }}>
+        <div className="bg-[#E4B643] rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="max-w-xl">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-background-dark mb-4">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#152018] mb-4">
               {t('home.cta.title', 'Ready to clear your shelves?')}
             </h2>
-            <p className="text-background-dark/80 text-lg font-medium">
+            <p className="text-[#152018]/80 text-lg font-medium">
               {t(
                 'home.cta.subtitle',
                 'Join 15,000+ book lovers in Amsterdam and start trading today.',
@@ -371,24 +348,19 @@ const HomePage = (): ReactElement => {
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <Link
               to={PATHS.REGISTER}
-              className="bg-background-dark hover:bg-black text-white px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center"
+              className="bg-[#152018] hover:bg-black text-white px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center no-underline"
             >
               {t('home.cta.createAccount', 'Create Free Account')}
             </Link>
             <a
               href="#how-it-works"
-              className="bg-transparent border border-background-dark/30 text-background-dark hover:bg-background-dark/10 px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center"
+              className="bg-transparent border border-[#152018]/30 text-[#152018] hover:bg-[#152018]/10 px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center no-underline"
             >
               {t('home.cta.learnMore', 'Learn More')}
             </a>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border-dark/50 py-8 text-center text-text-muted text-sm font-medium">
-        <p>&copy; {new Date().getFullYear()} BookSwap Amsterdam. Built for readers.</p>
-      </footer>
     </div>
   );
 };

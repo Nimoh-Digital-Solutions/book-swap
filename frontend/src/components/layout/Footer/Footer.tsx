@@ -1,22 +1,17 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { APP_CONFIG } from '@configs';
-
-import styles from './Footer.module.scss';
-
-/**
- * Footer
- * Layout component
- */
 export const Footer = ({ className }: { className?: string }): ReactElement => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className={className ? `${styles.root} ${className}` : styles.root}>
+    <footer
+      className={`border-t border-[#28382D] py-8 text-center text-[#5A6A60] text-sm font-medium ${className ?? ''}`}
+    >
       <p>
-        &copy; {currentYear} {APP_CONFIG.appName}. {t('footer.rights')}
+        &copy; {currentYear} {t('app.name', 'BookSwap')} Amsterdam.{' '}
+        {t('footer.tagline', 'Built for readers.')}
       </p>
     </footer>
   );

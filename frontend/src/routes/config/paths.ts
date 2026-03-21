@@ -18,6 +18,9 @@ export const PATHS = {
   ONBOARDING: '/onboarding',
   PROFILE: '/profile',
   SETTINGS: '/settings',
+  CATALOGUE: '/catalogue',
+  HOW_IT_WORKS: '/#how-it-works',
+  COMMUNITY: '/#community',
   NOT_FOUND: '*',
 } as const;
 
@@ -68,6 +71,10 @@ export const routeMetadata = {
   [PATHS.SETTINGS]: {
     title: 'Settings',
     description: 'Account settings',
+  },
+  [PATHS.CATALOGUE]: {
+    title: 'Catalogue',
+    description: 'Browse all available books in your community',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',

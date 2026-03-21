@@ -2,7 +2,8 @@
   "navigation": {
     "mainLabel": "Main navigation",
     "home": "Home",
-    "components": "Components"
+    "components": "Components",
+    "profile": "My Profile"
   },
   "theme": {
     "switchToDim": "Switch to dim mode",
@@ -12,7 +13,8 @@
     "setDefault": "Set as default theme"
   },
   "footer": {
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "tagline": "Built for readers."
   },
   "notFound": {
     "code": "404",
@@ -37,7 +39,39 @@
   },
   "home": {
     "surfaces": "Surfaces",
-    "typography": "Typography"
+    "typography": "Typography",
+    "nav": {
+      "browse": "Browse",
+      "howItWorks": "How it Works",
+      "community": "Community",
+      "signIn": "Sign In"
+    },
+    "hero": {
+      "badge": "Amsterdam's Book Exchange Community",
+      "headlinePart1": "Find Your Next",
+      "headlinePart2": "Great Adventure",
+      "subtitle": "Swap books with readers in your neighborhood. List your finished reads, discover new stories nearby, and meet fellow book lovers — all for free.",
+      "searchPlaceholder": "Search by title, author, or ISBN...",
+      "popularLabel": "Popular:"
+    },
+    "recentlyAdded": {
+      "title": "Recently Added",
+      "viewAll": "View all →"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Three simple steps to start swapping books with your neighbors"
+    },
+    "community": {
+      "title": "Join Our Community",
+      "subtitle": "Be part of Amsterdam's growing network of book lovers"
+    },
+    "cta": {
+      "title": "Ready to Start Swapping?",
+      "subtitle": "Join hundreds of readers in Amsterdam who are already sharing their favorite books.",
+      "createAccount": "Create Free Account",
+      "learnMore": "Learn More"
+    }
   },
   "error": {
     "somethingWentWrong": "Something went wrong.",
@@ -48,6 +82,7 @@
     "updateAction": "Update now"
   },
   "app": {
+    "name": "BookSwap",
     "loading": "Loading…",
     "skipToContent": "Skip to main content",
     "dismiss": "Dismiss notification"
@@ -56,5 +91,9 @@
     "label": "Language",
     "en": "English",
     "fr": "Français"
+  },
+  "catalogue": {
+    "title": "Browse Books",
+    "description": "Discover books available for swap in your community. Listings coming soon."
   }
 }

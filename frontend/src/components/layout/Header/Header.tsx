@@ -1,76 +1,42 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LuHouse, LuLayers, LuMoon, LuSun, LuSunMedium } from 'react-icons/lu';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-import { APP_CONFIG } from '@configs';
-import { useThemeContext } from '@contexts';
+import { useAuthStore } from '@features/auth/stores/authStore';
 import { PATHS } from '@routes/config/paths';
 
-import styles from './Header.module.scss';
-
-/**
- * Header
- * Layout component — includes light → dim → dark theme cycler.
- */
 export const Header = ({ className }: { className?: string }): ReactElement => {
   const { t } = useTranslation();
-  const { theme, toggleTheme, preferredTheme, setPreferredTheme } = useThemeContext();
-
-  const navLinks = [
-    { name: t('navigation.home'),       path: PATHS.HOME,            icon: <LuHouse  aria-hidden="true" size={22} /> },
-    { name: t('navigation.components'), path: PATHS.COMPONENTS_DEMO, icon: <LuLayers aria-hidden="true" size={22} /> },
-  ];
-
-  const themeConfig = {
-    light: { icon: <LuMoon  size={20} aria-hidden="true" />, label: t('theme.switchToDim')  },
-    dim:   { icon: <LuSun   size={20} aria-hidden="true" />, label: t('theme.switchToDark') },
-    dark:  { icon: <LuSunMedium size={20} aria-hidden="true" />, label: t('theme.switchToLight') },
-  } as const;
-
-  const { icon, label } = themeConfig[theme] ?? themeConfig.light;
-  const isPreferred = theme === preferredTheme;
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
-    <header className={className ? `${styles.root} ${className}` : styles.root}>
-      <nav className={styles.nav} aria-label={t('navigation.mainLabel')}>
-        <NavLink to="/" className={styles.navBrand!}>
-          {APP_CONFIG.appName}
-        </NavLink>
-        <ul className={styles.navLinks}>
-          {navLinks.map(({ name, path, icon: navIcon }) => (
-            <li key={path}>
-              <NavLink
-                to={path}
-                className={({ isActive }) =>
-                  isActive ? `${styles.navLink} ${styles.active}` : styles.navLink
-                }
-              >
-                {navIcon} {name}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-        <div className={styles.themeActions}>
-          <button
-            className={styles.themeToggle}
-            onClick={toggleTheme}
-            aria-label={label}
-            title={label}
-            data-theme-current={theme}
-          >
-            {icon}
-            <span className={styles.themeLabel}>{theme}</span>
-          </button>
-          <button
-            className={`${styles.themeDefault}${isPreferred ? ` ${styles.themeDefaultActive}` : ''}`}
-            onClick={() => setPreferredTheme(isPreferred ? null : theme)}
-            aria-label={isPreferred ? t('theme.unpinDefault') : t('theme.setDefault')}
-            title={isPreferred ? t('theme.unpinDefault') : t('theme.setDefault')}
-          >
-            <span aria-hidden="true">{isPreferred ? '★' : '☆'}</span>
-          </button>
+    <header
+      className={`sticky top-0 z-40 bg-[#152018] backdrop-blur-[16px] ${className ?? ''}`}
+    >
+      {/* Navigation */}
+      <nav className="flex items-center justify-between px-6 py-5 max-w-7xl mx-auto border-b border-[#28382D]/50" aria-label="Main navigation" style={{ marginInline: 'auto' }}>
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
+              <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
+          </div>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+            <Link to={PATHS.CATALOGUE} className="text-white hover:text-[#E4B643] transition-colors">{t('home.nav.browse', 'Browse')}</Link>
+            <a href={PATHS.HOW_IT_WORKS} className="hover:text-white transition-colors">{t('home.nav.howItWorks', 'How it Works')}</a>
+            <a href={PATHS.COMMUNITY} className="hover:text-white transition-colors">{t('home.nav.community', 'Community')}</a>
+          </div>
         </div>
+         {isAuthenticated ? (
+          <Link to={PATHS.PROFILE} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-5 py-2 rounded-full font-bold text-sm transition-colors">
+            {t('navigation.profile', 'My Profile')}
+          </Link>
+        ) : (
+        <Link to={PATHS.LOGIN} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-6 py-2 rounded-full font-bold text-sm transition-colors">
+          {t('home.nav.signIn', 'Sign In')} 
+        </Link>
+        )}
       </nav>
     </header>
   );

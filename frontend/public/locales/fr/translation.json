@@ -2,7 +2,8 @@
   "navigation": {
     "mainLabel": "Navigation principale",
     "home": "Accueil",
-    "components": "Composants"
+    "components": "Composants",
+    "profile": "Mon profil"
   },
   "theme": {
     "switchToDim": "Passer en mode tamisé",
@@ -12,7 +13,8 @@
     "setDefault": "Définir comme thème par défaut"
   },
   "footer": {
-    "rights": "Tous droits réservés."
+    "rights": "Tous droits réservés.",
+    "tagline": "Conçu pour les lecteurs."
   },
   "notFound": {
     "code": "404",
@@ -37,7 +39,39 @@
   },
   "home": {
     "surfaces": "Surfaces",
-    "typography": "Typographie"
+    "typography": "Typographie",
+    "nav": {
+      "browse": "Parcourir",
+      "howItWorks": "Comment ça marche",
+      "community": "Communauté",
+      "signIn": "Se connecter"
+    },
+    "hero": {
+      "badge": "La communauté d'échange de livres d'Amsterdam",
+      "headlinePart1": "Trouvez Votre Prochaine",
+      "headlinePart2": "Grande Aventure",
+      "subtitle": "Échangez des livres avec des lecteurs de votre quartier. Listez vos lectures terminées, découvrez de nouvelles histoires à proximité et rencontrez des passionnés de lecture — gratuitement.",
+      "searchPlaceholder": "Rechercher par titre, auteur ou ISBN...",
+      "popularLabel": "Populaires :"
+    },
+    "recentlyAdded": {
+      "title": "Ajoutés récemment",
+      "viewAll": "Voir tout →"
+    },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "subtitle": "Trois étapes simples pour commencer à échanger des livres avec vos voisins"
+    },
+    "community": {
+      "title": "Rejoignez notre communauté",
+      "subtitle": "Faites partie du réseau grandissant de passionnés de lecture d'Amsterdam"
+    },
+    "cta": {
+      "title": "Prêt à commencer les échanges ?",
+      "subtitle": "Rejoignez des centaines de lecteurs à Amsterdam qui partagent déjà leurs livres préférés.",
+      "createAccount": "Créer un compte gratuit",
+      "learnMore": "En savoir plus"
+    }
   },
   "error": {
     "somethingWentWrong": "Une erreur est survenue.",
@@ -48,6 +82,7 @@
     "updateAction": "Mettre à jour"
   },
   "app": {
+    "name": "BookSwap",
     "loading": "Chargement…",
     "skipToContent": "Aller au contenu principal",
     "dismiss": "Fermer la notification"
@@ -56,5 +91,9 @@
     "label": "Langue",
     "en": "English",
     "fr": "Français"
+  },
+  "catalogue": {
+    "title": "Parcourir les livres",
+    "description": "Découvrez les livres disponibles à l'échange dans votre communauté. Les annonces arrivent bientôt."
   }
 }

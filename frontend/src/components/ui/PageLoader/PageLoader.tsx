@@ -23,7 +23,7 @@ export function PageLoader(): ReactElement {
               <path d="M13 2L4.09 12.29A1 1 0 0 0 5 14h7v8l8.91-10.29A1 1 0 0 0 20 10h-7V2z" />
             </svg>
           </span>
-          <span className={styles.logoName}>TAST</span>
+          <span className={styles.logoName}>BOOKSWAP</span>
         </div>
         <div className={styles.spinnerWrap}>
           <Spinner size="lg" label="Loading application…" />
