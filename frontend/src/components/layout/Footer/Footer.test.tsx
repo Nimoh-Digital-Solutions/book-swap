@@ -9,16 +9,16 @@ import { Footer } from './Footer';
 // ---------------------------------------------------------------------------
 
 describe('Footer', () => {
-  it('renders the copyright year and app name', () => {
+  it('renders the copyright year and BookSwap name', () => {
     render(<Footer />);
     const currentYear = new Date().getFullYear().toString();
     expect(screen.getByText(new RegExp(currentYear))).toBeInTheDocument();
-    expect(screen.getByText(/React Starter Kit/)).toBeInTheDocument();
+    expect(screen.getByText(/BookSwap/)).toBeInTheDocument();
   });
 
-  it('renders the translated rights text', () => {
+  it('renders the tagline text', () => {
     render(<Footer />);
-    expect(screen.getByText(/all rights reserved/i)).toBeInTheDocument();
+    expect(screen.getByText(/built for readers/i)).toBeInTheDocument();
   });
 
   it('applies custom className when provided', () => {

@@ -13,7 +13,7 @@ services:
       - /app/node_modules
       - yarn_cache:/root/.yarn/berry/cache
     ports:
-      - '3070:3000'
+      - '3070:3070'
     environment:
       - NODE_ENV=development
       - DOCKER=true

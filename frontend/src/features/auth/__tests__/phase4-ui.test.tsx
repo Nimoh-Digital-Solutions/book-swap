@@ -82,13 +82,7 @@ describe('RegisterForm', () => {
     expect(screen.getByText(/step 1 of 2/i)).toBeInTheDocument();
   });
 
-  it('renders first name and last name fields', () => {
-    wrap(<RegisterForm {...defaults()} />);
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-  });
-
-  it('renders username, email, and date of birth fields', () => {
+  it('renders username, email, and date of birth fields (name fields deferred to onboarding)', () => {
     wrap(<RegisterForm {...defaults()} />);
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();

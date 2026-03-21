@@ -49,9 +49,4 @@ describe('HomePage', () => {
     renderPage();
     expect(screen.getByText(/create free account/i)).toBeInTheDocument();
   });
-
-  it('renders footer with BookSwap branding', () => {
-    renderPage();
-    expect(screen.getAllByText(/BookSwap/).length).toBeGreaterThanOrEqual(1);
-  });
 });

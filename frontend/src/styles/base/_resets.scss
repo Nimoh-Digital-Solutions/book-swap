@@ -5,123 +5,127 @@
    Base Reset / Normalization
    - Minimal reset + sensible defaults.
    - Keep opinionation low; rely on tokens & mixins for design.
+   - Wrapped in @layer base so Tailwind utilities (@layer utilities) can
+     override these defaults via the CSS cascade layer order.
    ========================================================================= */
 
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    border-width: 0;
-    border-style: solid;
-}
-
-html {
-    /* UX */
-    scroll-behavior: smooth;
-
-    /* Typography rendering */
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    font-feature-settings: "kern";
-    font-kerning: normal;
-    text-rendering: optimizeLegibility;
-    font-synthesis-weight: none;
-    font-synthesis-style: none;
-    line-height: 1.5;
-
-    /* Support both light and dark — ThemeProvider picks one via [data-theme] */
-    color-scheme: light dark;
-}
-
-body {
-    font-family: #{func.font('default')};
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    background: var(--surface-1);
-    color: var(--text-1);
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    font-family: #{func.font('default')};
-    margin: 0;
-    @include mixin.font-smoothing;
-}
-
-p {
-    margin: 0;
-}
-
-p,
-span,
-strong,
-label {
-    font-family: #{func.font('default')};
-    @include mixin.font-smoothing;
-}
-
-img,
-svg,
-video,
-canvas,
-audio,
-iframe,
-embed,
-object {
-    display: block;
-    vertical-align: middle;
-    max-width: 100%;
-    height: auto;
-}
-
-button,
-input,
-select,
-textarea {
-    font: inherit;
-    color: inherit;
-    background: transparent;
-    margin: 0;
-    border: none;
-}
-
-/* Subtle selection */
-::selection {
-    background-color: var(--surface-3);
-    color: var(--text-1);
-}
-
-/* Accessible focus by default; override with @include mixin.focus-ring() if needed */
-:focus {
-    outline: none;
-}
-
-:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
-}
-
-/* Respect reduced motion globally */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        border-width: 0;
+        border-style: solid;
     }
-}
 
-#root {
-    block-size: 100dvh;
-    inline-size: 100dvw;
-}
+    html {
+        /* UX */
+        scroll-behavior: smooth;
 
-* > ::placeholder {
-    color: var(--text-2);
+        /* Typography rendering */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        font-feature-settings: "kern";
+        font-kerning: normal;
+        text-rendering: optimizeLegibility;
+        font-synthesis-weight: none;
+        font-synthesis-style: none;
+        line-height: 1.5;
+
+        /* Support both light and dark — ThemeProvider picks one via [data-theme] */
+        color-scheme: light dark;
+    }
+
+    body {
+        font-family: #{func.font('default')};
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background: var(--surface-1);
+        color: var(--text-1);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: #{func.font('default')};
+        margin: 0;
+        @include mixin.font-smoothing;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    p,
+    span,
+    strong,
+    label {
+        font-family: #{func.font('default')};
+        @include mixin.font-smoothing;
+    }
+
+    img,
+    svg,
+    video,
+    canvas,
+    audio,
+    iframe,
+    embed,
+    object {
+        display: block;
+        vertical-align: middle;
+        max-width: 100%;
+        height: auto;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        margin: 0;
+        border: none;
+    }
+
+    /* Subtle selection */
+    ::selection {
+        background-color: var(--surface-3);
+        color: var(--text-1);
+    }
+
+    /* Accessible focus by default; override with @include mixin.focus-ring() if needed */
+    :focus {
+        outline: none;
+    }
+
+    :focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+
+    /* Respect reduced motion globally */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+
+    #root {
+        block-size: 100dvh;
+        inline-size: 100dvw;
+    }
+
+    * > ::placeholder {
+        color: var(--text-2);
+    }
 }

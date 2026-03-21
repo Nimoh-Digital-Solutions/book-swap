@@ -3,8 +3,8 @@ import { afterEach,beforeEach, describe, expect, it } from 'vitest';
 
 import { useDocumentTitle } from './useDocumentTitle';
 
-// APP_CONFIG.appName falls back to 'React Starter Kit' when VITE_APP_TITLE is not set.
-const APP_NAME = 'React Starter Kit';
+// APP_CONFIG.appName falls back to 'Bookswap' when VITE_APP_TITLE is not set.
+const APP_NAME = 'Bookswap';
 
 describe('useDocumentTitle', () => {
   const originalTitle = document.title;

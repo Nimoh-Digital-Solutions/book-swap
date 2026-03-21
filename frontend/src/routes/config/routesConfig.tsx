@@ -42,6 +42,8 @@ const ProfilePage = lazy(() =>
   import('@features/profile').then(m => ({ default: m.ProfilePage }))
 );
 
+const CataloguePage = lazy(() => import('@pages/CataloguePage/CataloguePage'));
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -110,6 +112,10 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.COMPONENTS_DEMO,
         element: <LazyPage component={ComponentsDemoPage} />,
+      },
+      {
+        path: PATHS.CATALOGUE,
+        element: <LazyPage component={CataloguePage} />,
       },
       // -- Protected routes -------------------------------------------------
       // Add your authenticated routes here using the ProtectedPage wrapper:

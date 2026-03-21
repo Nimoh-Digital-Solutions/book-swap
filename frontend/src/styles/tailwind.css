@@ -8,37 +8,62 @@
  *   <div className="bg-background-dark text-text-secondary font-sans">
  *   <h1 className="font-serif text-primary">BookSwap</h1>
  * ───────────────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
 
 /* ─── Theme: The Archival Naturalist ──────────────────────────────────────── */
 @theme {
-  /* Primary accent — golden amber */
-  --color-primary: #E4B643;
-  --color-primary-hover: #D4A633;
+  /* Primary — deep botanical green (hero headers, primary CTAs) */
+  --color-primary: #051a0f;
+  --color-primary-container: #1a2f23;
+  --color-primary-hover: #0d2a18;
 
-  /* Backgrounds — deep botanical greens */
+  /* Secondary — warm terracotta (engagement, human warmth) */
+  --color-secondary: #974723;
+  --color-secondary-hover: #7d3a1c;
+
+  /* Tertiary — golden accent (soft CTAs, accent highlights) */
+  --color-tertiary: #d4a503;
+  --color-tertiary-hover: #b8900a;
+
+  /* Surfaces — tonal layering (cream/vellum spectrum) */
+  --color-surface: #f5f0e1;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f5dc;
+  --color-surface-container: #efead8;
+  --color-surface-container-high: #e8e3d0;
+  --color-surface-container-highest: #e4e4cc;
+  --color-surface-bright: #faf8f0;
+  --color-surface-variant: #e2dcc8;
+  --color-surface-dark: #1A251D;
+
+  /* Backgrounds */
   --color-background-light: #FDFBF7;
   --color-background-dark: #152018;
 
-  /* Surfaces — tonal layering */
-  --color-surface-dark: #1A251D;
-  --color-surface-light: #FFFFFF;
-
-  /* Borders — ghost borders at reduced opacity */
+  /* Borders — ghost borders (use at 15% opacity) */
   --color-border-dark: #28382D;
+  --color-outline: #79746a;
+  --color-outline-variant: #c9c4b5;
 
-  /* Text — muted naturalist greens */
+  /* Text — on surfaces */
+  --color-on-surface: #1b1d0e;
+  --color-on-primary: #f5f0e1;
+  --color-on-primary-fixed: #0a2014;
+  --color-on-secondary: #ffffff;
   --color-text-dark: #111827;
   --color-text-light: #F3F4F6;
   --color-text-secondary: #8C9C92;
   --color-text-muted: #5A6A60;
 
-  /* Typography — serif display + sans body */
-  --font-serif: "Merriweather", serif;
-  --font-sans: "Inter", sans-serif;
+  /* Typography — Newsreader (serif display) + Work Sans (body) */
+  --font-serif: "Newsreader", serif;
+  --font-sans: "Work Sans", sans-serif;
 
-  /* Border radius */
+  /* Border radius — organic, softened */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.75rem;
   --radius: 0.5rem;
 }

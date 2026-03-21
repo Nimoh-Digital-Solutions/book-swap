@@ -179,7 +179,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
       {/* Form */}
       <form className="space-y-5" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
         {/* Name row */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="first_name">
               {t('auth.register.firstNameLabel', 'First Name')}
@@ -222,7 +222,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
               <p className="mt-1 text-xs text-red-400" role="alert">{errors.last_name.message}</p>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Username */}
         <div>
@@ -344,7 +344,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
         </div>
 
         {/* Legal checkboxes */}
-        <div className="space-y-3">
+        <div className="space-y-3 flex justify-between">
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
