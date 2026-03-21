@@ -1,3 +1,5 @@
+name: bookswap
+
 services:
   # Development environment with hot-reload
   app:

@@ -7,6 +7,7 @@ from this module.  Use python-environ to populate values from the .env file.
 from __future__ import annotations
 
 import pathlib
+
 import environ
 from nimoh_base.conf import NimohBaseSettings
 
@@ -57,14 +58,14 @@ NIMOH_BASE = {
 }
 
 # ── AUTH ──────────────────────────────────────────────────────────────────────
-# bookswap.users.User subclasses AbstractNimohUser — add custom fields here.
-AUTH_USER_MODEL = 'nimoh_auth.User'
+AUTH_USER_MODEL = 'bookswap.User'
 
 # ── Installed apps ────────────────────────────────────────────────────────────
-INSTALLED_APPS = NimohBaseSettings.get_base_apps(
+INSTALLED_APPS = NimohBaseSettings.get_base_apps(  # noqa: RUF005
     include_monitoring=True,
     include_privacy=True,
 ) + [
+    'django.contrib.gis',
     # Project apps
     'bookswap',
 ]
@@ -78,6 +79,7 @@ DATABASES = {
     'default': env.db_url(
         'DATABASE_URL',
         default='postgresql://gnimoh001:root@localhost:5432/bookswap',
+        engine='django.contrib.gis.db.backends.postgis',
     )
 }
 

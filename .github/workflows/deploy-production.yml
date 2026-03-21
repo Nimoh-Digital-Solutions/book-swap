@@ -1,0 +1,149 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches: [production]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: "Pi 5 → production"
+    runs-on: [self-hosted, pi5]
+    environment: production
+    # All `run:` steps default to the Pi app directory so git commands in
+    # "Detect changed layers" operate on the real repo history, not the empty
+    # GITHUB_WORKSPACE (no actions/checkout is used in this workflow).
+    defaults:
+      run:
+        working-directory: /home/gnimoh001/apps/speak-linka
+
+    steps:
+      # Pull latest code into the canonical app directory on the Pi.
+      # No actions/checkout needed — the Pi already has ~/speak-linka cloned.
+      - name: Pull latest code
+        run: |
+          git fetch origin
+          git reset --hard origin/production
+
+      # ── Detect which layers changed ───────────────────────────────────────────
+      # Compares the push's before/after SHAs to decide whether to rebuild the
+      # backend, the frontend, or both.  Falls back to a full deploy when the
+      # before SHA is unavailable (force-push, first push to branch).
+      - name: Detect changed layers
+        id: detect
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          # Force-push or new branch — can't diff; deploy everything safely.
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "backend=true"  >> $GITHUB_OUTPUT
+            echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "First push / force-push → deploying both layers."
+            exit 0
+          fi
+
+          # If BEFORE isn't in local history (shallow clone edge-case), full deploy.
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "backend=true"  >> $GITHUB_OUTPUT
+            echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "Before SHA not in local history → deploying both layers."
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "$BEFORE" "$AFTER")
+          echo "Changed files in this push:"
+          echo "$CHANGED"
+
+          if echo "$CHANGED" | grep -qE '^backend/'; then
+            echo "backend=true"  >> $GITHUB_OUTPUT
+          else
+            echo "backend=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$CHANGED" | grep -qE '^frontend/'; then
+            echo "frontend=true"  >> $GITHUB_OUTPUT
+          else
+            echo "frontend=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Nothing to deploy
+        if: steps.detect.outputs.backend != 'true' && steps.detect.outputs.frontend != 'true'
+        run: |
+          echo "No backend or frontend files changed in this push — skipping deploy."
+
+      # ── Backend ──────────────────────────────────────────────────────────────
+      - name: Copy backend env file
+        if: steps.detect.outputs.backend == 'true'
+        run: cp ~/envs/speaklinka.backend.prod.env ~/apps/speak-linka/backend/.env.production
+
+      - name: Build backend image
+        if: steps.detect.outputs.backend == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/backend
+        run: |
+          DOCKER_BUILDKIT=1 docker compose -p sl_prod \
+            -f docker-compose.prod.yml build --no-cache
+
+      - name: Deploy backend
+        if: steps.detect.outputs.backend == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/backend
+        run: |
+          docker compose -p sl_prod -f docker-compose.prod.yml \
+            up -d --force-recreate web celery_worker celery_beat
+
+      # ── Frontend ─────────────────────────────────────────────────────────────
+      - name: Build frontend image
+        if: steps.detect.outputs.frontend == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/frontend
+        run: |
+          DOCKER_BUILDKIT=1 docker compose -p sl_frontend_prod \
+            -f docker-compose.prod.yml build --no-cache \
+            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_PROD }}"
+
+      - name: Deploy frontend
+        if: steps.detect.outputs.frontend == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/frontend
+        run: |
+          docker compose -p sl_frontend_prod -f docker-compose.prod.yml \
+            up -d --force-recreate
+
+      # ── Health checks ─────────────────────────────────────────────────────────
+      - name: Health check — backend
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          echo "Waiting for sl_web_prod to become healthy..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8104/api/v1/health/ > /dev/null 2>&1; then
+              echo "Backend healthy ✓"; break
+            fi
+            [ $i -eq 30 ] && echo "ERROR: Backend health check timed out." && exit 1
+            echo "  Attempt $i/30 — retrying in 5s..."; sleep 5
+          done
+
+      - name: Health check — frontend
+        if: steps.detect.outputs.frontend == 'true'
+        run: |
+          for i in $(seq 1 12); do
+            if curl -sf http://localhost:3100/ > /dev/null 2>&1; then
+              echo "Frontend healthy ✓"; break
+            fi
+            [ $i -eq 12 ] && echo "ERROR: Frontend health check timed out." && exit 1
+            sleep 5
+          done
+
+      # ── Summary ───────────────────────────────────────────────────────────────
+      - name: Container status
+        if: always()
+        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "sl_|NAMES" || true
+
+      - name: Deployment summary
+        if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true'
+        run: |
+          echo "================================================="
+          echo " SpeakLinka Production — deployed successfully!"
+          [ "${{ steps.detect.outputs.backend }}"  = "true" ] && echo " Backend  : https://api.speaklinka.com  ✓"
+          [ "${{ steps.detect.outputs.frontend }}" = "true" ] && echo " Frontend : https://speaklinka.com      ✓"
+          echo "================================================="
