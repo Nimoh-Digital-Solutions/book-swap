@@ -168,3 +168,5 @@ docs/action-plans/
 .context/
 Support/
 AGENTS.md
+# Base reference design repo (read-only, never committed)
+.base-reference/

@@ -2,18 +2,13 @@ import type { FieldValues, Resolver } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { ArrowRight, Lock, Mail, Wand2 } from 'lucide-react';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 import type { LoginPayload } from '../../types/auth.types';
 
-import styles from './LoginForm.module.scss';
-
 // ---------------------------------------------------------------------------
 // Inline Zod resolver
-// @hookform/resolvers v5 ships only utilities; write a thin adapter for Zod v4.
-// Constraining to FieldValues lets TypeScript verify that T is a plain object
-// record, matching react-hook-form's Resolver<T> expectation.
 // ---------------------------------------------------------------------------
 
 function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<T> {
@@ -28,8 +23,6 @@ function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<
         errors[key] = { type: issue.code, message: issue.message };
       }
     }
-    // Cast: RHF's ResolverError<T> expects values:Record<string,never>; `never`
-    // extends every type so this is safe — the values are never read on error.
     return { errors: errors as never, values: {} as never };
   };
 }
@@ -39,36 +32,29 @@ function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<
 // ---------------------------------------------------------------------------
 
 export interface LoginFormProps {
-  /** Called with validated form data on successful submission. */
   onSubmit: (payload: LoginPayload) => void | Promise<void>;
-  /** Triggers the parent to navigate to the register view. */
   onToggle: () => void;
-  /** Triggers the parent to navigate to the forgot-password view. */
   onForgotPassword: () => void;
-  /** When true the submit button shows a loading state. */
   isLoading?: boolean;
-  /** Server-side error message to display below the form. */
   serverError?: string | null;
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Component — "The Archival Naturalist" dark‑theme login
 // ---------------------------------------------------------------------------
 
-/**
- * LoginForm
- *
- * Split-panel login form.
- * - Visual layer ported from auth-app's LoginForm.
- * - Business logic wired to RHF + Zod; matches LoginPayload type contract.
- * - Google OAuth and Magic Link buttons are scaffolded (not wired to backend).
- */
-export function LoginForm({ onSubmit, onToggle, onForgotPassword, isLoading = false, serverError }: LoginFormProps) {
+export function LoginForm({
+  onSubmit,
+  onToggle,
+  onForgotPassword,
+  isLoading = false,
+  serverError,
+}: LoginFormProps) {
   const { t } = useTranslation();
 
   const loginSchema = z.object({
-    email_or_username: z.string().min(1, t('auth.credentialRequired')),
-    password: z.string().min(8, t('auth.passwordMin')),
+    email_or_username: z.string().min(1, t('auth.credentialRequired', 'Email or username is required')),
+    password: z.string().min(8, t('auth.passwordMin', 'Password must be at least 8 characters')),
   });
 
   const {
@@ -81,119 +67,153 @@ export function LoginForm({ onSubmit, onToggle, onForgotPassword, isLoading = fa
   });
 
   return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>{t('auth.pageTitle', 'Sign in')}</h1>
-        <p className={styles.subtitle}>
-          {t('auth.welcomeBack', 'Welcome back — enter your credentials below.')}
-        </p>
+    <div>
+      {/* Header row */}
+      <div className="flex justify-end items-center mb-8">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          {t('auth.newToBookswap', 'New to BookSwap? Create Account')}
+        </button>
       </div>
 
-      <form className={styles.form} onSubmit={handleSubmit(onSubmit)} noValidate>
-        {/* Email / username */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="email_or_username">
+      <h2 className="text-3xl font-bold text-white mb-2">
+        {t('auth.pageTitle', 'Welcome Back')}
+      </h2>
+      <p className="text-text-secondary mb-8">
+        {t('auth.welcomeBack', 'Sign in to continue your swapping journey.')}
+      </p>
+
+      {/* OAuth buttons */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
+          aria-disabled="true"
+          title={t('auth.googleComingSoon', 'Google sign-in coming soon')}
+        >
+          <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+          </svg>
+          <span className="text-sm font-medium text-white">
+            {t('auth.google', 'Google')}
+          </span>
+        </button>
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
+          aria-disabled="true"
+          title={t('auth.appleComingSoon', 'Apple sign-in coming soon')}
+        >
+          <svg aria-hidden="true" className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13.064 3.245c.083 1.838-1.077 3.515-2.22 4.14-1.082.59-2.61.542-3.32-.437-.767-1.055-.386-3.058.74-4.22 1.05-1.085 3.033-1.127 4.8-.517zM12.986 6.94c2.256-.254 3.733 1.258 4.256 1.638 1.488-1.083 3.03-1.01 3.597-.733.204 1.144-.64 2.45-1.637 3.692-1.22 1.517-1.11 3.284.225 5.176 1.156 1.634.355 3.525-1.074 4.137-1.23.527-2.68.32-4.103-.23-1.378-.535-2.716-.475-4.102-.036-1.554.49-3.023.76-4.39-.023-1.572-.9-2.072-2.73-1.074-4.137 1.063-1.498 1.405-3.23.366-4.996-.803-1.365-1.353-2.623-.42-3.832.613-.794 1.76-1.464 3.23-1.233.91.143 1.95.83 2.76 1.255.856.45 1.795.397 2.366-.68z" />
+          </svg>
+          <span className="text-sm font-medium text-white">
+            {t('auth.apple', 'Apple')}
+          </span>
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-border-dark" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-surface-dark text-text-secondary">
+            {t('auth.orSignInWithEmail', 'Or sign in with email')}
+          </span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="email_or_username">
             {t('auth.credentialLabel', 'Email or Username')}
           </label>
-          <div className={styles.inputWrapper}>
-            <Mail className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="email_or_username"
               type="text"
               autoComplete="username"
-              placeholder="your@email.com"
-              className={`${styles.input} ${errors.email_or_username ? styles.inputError : ''}`}
+              placeholder="you@example.com"
+              className={`block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary ${
+                errors.email_or_username ? 'border-red-500' : 'border-border-dark'
+              }`}
               {...register('email_or_username')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
           {errors.email_or_username && (
-            <p className={styles.fieldError} role="alert">
+            <p className="mt-1 text-xs text-red-400" role="alert">
               {errors.email_or_username.message as string}
             </p>
           )}
         </div>
 
-        {/* Password */}
-        <div className={styles.fieldGroup}>
-          <div className={styles.passwordLabelRow}>
-            <label className={styles.label} htmlFor="login-password">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-text-secondary" htmlFor="login-password">
               {t('auth.passwordLabel', 'Password')}
             </label>
-            <button type="button" onClick={onForgotPassword} className={styles.forgotLink}>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-sm font-medium text-primary hover:underline"
+            >
               {t('auth.forgotPassword', 'Forgot password?')}
             </button>
           </div>
-          <div className={styles.inputWrapper}>
-            <Lock className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="login-password"
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
-              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+              className={`block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary ${
+                errors.password ? 'border-red-500' : 'border-border-dark'
+              }`}
               {...register('password')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
           {errors.password && (
-            <p className={styles.fieldError} role="alert">
+            <p className="mt-1 text-xs text-red-400" role="alert">
               {errors.password.message as string}
             </p>
           )}
         </div>
 
         {serverError && (
-          <p className={styles.serverError} role="alert">{serverError}</p>
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3" role="alert">
+            <p className="text-sm text-red-400">{serverError}</p>
+          </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          className={styles.submitBtn}
-        >
-          {isLoading ? t('auth.loading', 'Signing in…') : t('auth.submit', 'Sign In')}
-          {!isLoading && <ArrowRight aria-hidden="true" />}
-        </button>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={isLoading}
+            aria-busy={isLoading}
+            className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60"
+          >
+            {isLoading
+              ? t('auth.loading', 'Signing in…')
+              : t('auth.submit', 'Sign In')}
+            {!isLoading && <ArrowRight className="w-4 h-4" aria-hidden="true" />}
+          </button>
+        </div>
       </form>
-
-      {/* Divider */}
-      <div className={styles.divider} role="separator">
-        <span>{t('auth.orContinueWith', 'Or continue with')}</span>
-      </div>
-
-      {/* Third-party buttons — scaffolded; not wired to backend */}
-      <div className={styles.socialRow}>
-        <button
-          type="button"
-          className={styles.socialBtn}
-          aria-disabled="true"
-          title={t('auth.googleComingSoon', 'Google sign-in coming soon')}
-        >
-          <svg aria-hidden="true" className={styles.googleIcon} viewBox="0 0 24 24">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-          </svg>
-          <span>{t('auth.google', 'Google')}</span>
-        </button>
-        <button
-          type="button"
-          className={styles.socialBtn}
-          aria-disabled="true"
-          title={t('auth.magicLinkComingSoon', 'Magic Link coming soon')}
-        >
-          <Wand2 aria-hidden="true" className={styles.magicIcon} />
-          <span>{t('auth.magicLink', 'Magic Link')}</span>
-        </button>
-      </div>
-
-      <p className={styles.togglePrompt}>
-        {t('auth.newUser', 'New here?')}{' '}
-        <button type="button" onClick={onToggle} className={styles.toggleLink}>
-          {t('auth.createAccount', 'Create an account')}
-        </button>
-      </p>
     </div>
   );
 }

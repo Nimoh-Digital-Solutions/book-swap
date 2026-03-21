@@ -1,46 +1,44 @@
 /* ─────────────────────────────────────────────────────────────────────────────
- * Tailwind CSS v4 — imported alongside SCSS Modules.
+ * Tailwind CSS v4 — "The Archival Naturalist" design system
  *
- * This file is the single entry-point for Tailwind.  The @theme block below
- * bridges the project's Open Props / brand design tokens into Tailwind's
- * utility-class namespace so both styling systems share the same palette.
+ * This file is the single entry-point for Tailwind.  The @theme block maps
+ * the project's design tokens into Tailwind's utility-class namespace.
  *
- * Usage:  apply Tailwind utilities directly on JSX elements:
- *   <div className="flex items-center gap-2 text-brand bg-surface rounded-lg p-4">
- *
- * Scoped component styles still live in *.module.scss files — the two
- * approaches coexist without conflict.
+ * Usage:
+ *   <div className="bg-background-dark text-text-secondary font-sans">
+ *   <h1 className="font-serif text-primary">BookSwap</h1>
  * ───────────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
-/* ─── Theme bridge: map CSS custom properties → Tailwind tokens ───────────── */
+/* ─── Theme: The Archival Naturalist ──────────────────────────────────────── */
 @theme {
-  /* Brand colours — driven by the same --brand-* vars that SCSS uses */
-  --color-brand: hsl(var(--brand-hue) var(--brand-saturation) var(--brand-lightness));
-  --color-brand-light: hsl(var(--brand-hue) var(--brand-saturation) calc(var(--brand-lightness) + 15%));
-  --color-brand-dark: hsl(var(--brand-hue) var(--brand-saturation) calc(var(--brand-lightness) - 15%));
+  /* Primary accent — golden amber */
+  --color-primary: #E4B643;
+  --color-primary-hover: #D4A633;
 
-  /* Surface / background tokens */
-  --color-surface: var(--surface-1);
-  --color-surface-alt: var(--surface-2);
-  --color-surface-elevated: var(--surface-3);
+  /* Backgrounds — deep botanical greens */
+  --color-background-light: #FDFBF7;
+  --color-background-dark: #152018;
 
-  /* Text tokens */
-  --color-text: var(--text-1);
-  --color-text-muted: var(--text-2);
+  /* Surfaces — tonal layering */
+  --color-surface-dark: #1A251D;
+  --color-surface-light: #FFFFFF;
 
-  /* Open Props size scale — available as p-size-1, gap-size-2, etc. */
-  --spacing-size-1: var(--size-1);
-  --spacing-size-2: var(--size-2);
-  --spacing-size-3: var(--size-3);
-  --spacing-size-4: var(--size-4);
-  --spacing-size-5: var(--size-5);
-  --spacing-size-6: var(--size-6);
-  --spacing-size-7: var(--size-7);
-  --spacing-size-8: var(--size-8);
+  /* Borders — ghost borders at reduced opacity */
+  --color-border-dark: #28382D;
 
-  /* Border radius tokens */
-  --radius-sm: var(--radius-2);
-  --radius-md: var(--radius-3);
-  --radius-lg: var(--radius-4);
+  /* Text — muted naturalist greens */
+  --color-text-dark: #111827;
+  --color-text-light: #F3F4F6;
+  --color-text-secondary: #8C9C92;
+  --color-text-muted: #5A6A60;
+
+  /* Typography — serif display + sans body */
+  --font-serif: "Merriweather", serif;
+  --font-sans: "Inter", sans-serif;
+
+  /* Border radius */
+  --radius: 0.5rem;
 }

@@ -1,18 +1,14 @@
-import { useState } from 'react';
 import type { FieldValues, Resolver } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { ArrowRight, Lock, Mail, User, Users } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { ArrowRight, Calendar, Lock, Mail, User } from 'lucide-react';
 import { z } from 'zod';
 
 import type { RegisterPayload } from '../../types/auth.types';
 
-import styles from './RegisterForm.module.scss';
-
 // ---------------------------------------------------------------------------
-// Inline Zod resolver (same pattern as LoginForm)
+// Inline Zod resolver
 // ---------------------------------------------------------------------------
 function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<T> {
   return async values => {
@@ -32,13 +28,9 @@ function makeZodResolver<T extends FieldValues>(schema: z.ZodType<T>): Resolver<
 // Props
 // ---------------------------------------------------------------------------
 export interface RegisterFormProps {
-  /** Called with validated form data on successful submission. */
   onSubmit: (payload: RegisterPayload) => void | Promise<void>;
-  /** Triggers the parent to navigate to the login view. */
   onToggle: () => void;
-  /** When true the submit button shows a loading state. */
   isLoading?: boolean;
-  /** Server-side error message to display below the form. */
   serverError?: string | null;
 }
 
@@ -51,7 +43,6 @@ const registerSchema = z
     last_name: z.string().min(1, 'Last name is required').max(50),
     username: z.string().min(3, 'Username must be at least 3 characters').max(30),
     email: z.string().email('Please enter a valid email address'),
-    display_name: z.string().max(100).optional(),
     date_of_birth: z.string().min(1, 'Date of birth is required'),
     password: z
       .string()
@@ -90,21 +81,11 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 // ---------------------------------------------------------------------------
-// Component
+// Component — "The Archival Naturalist" dark‑theme register (Step 1 of 2)
 // ---------------------------------------------------------------------------
 
-/**
- * RegisterForm
- *
- * Split-panel registration form.
- * - Visual layer ported from auth-app's RegisterForm (role toggle, animated field reveal)
- * - Business logic wired to RHF + Zod; matches RegisterPayload type contract.
- * - Role toggle is cosmetic (shows/hides display_name field), not sent in payload.
- */
 export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverError }: RegisterFormProps) {
   const { t } = useTranslation();
-  const prefersReducedMotion = useReducedMotion();
-  const [role, setRole] = useState<'member' | 'leader'>('member');
 
   const {
     register,
@@ -116,7 +97,6 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
   });
 
   const handleFormSubmit = (values: RegisterFormValues) => {
-    // Strip the role (UI-only) and the re-typed password confirm from the payload
     const payload: RegisterPayload = {
       first_name: values.first_name,
       last_name: values.last_name,
@@ -128,263 +108,308 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
       privacy_policy_accepted: values.privacy_policy_accepted as boolean,
       terms_of_service_accepted: values.terms_of_service_accepted as boolean,
     };
-    if (values.display_name) payload.display_name = values.display_name;
     void onSubmit(payload);
   };
 
-  const fieldRevealProps = prefersReducedMotion
-    ? {}
-    : {
-        initial: { opacity: 0, height: 0, marginTop: 0 },
-        animate: { opacity: 1, height: 'auto', marginTop: 16 },
-        exit: { opacity: 0, height: 0, marginTop: 0 },
-        transition: { duration: 0.3, ease: 'easeInOut' as const },
-      };
+  const inputBase =
+    'block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary';
 
   return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>{t('auth.register.heading', 'Create your account')}</h1>
-        <p className={styles.subtitle}>
-          {t('auth.register.subtitle', 'Get started today — it only takes a minute.')}
-        </p>
-      </div>
-
-      {/* Role toggle */}
-      <div className={styles.roleToggle} role="group" aria-label={t('auth.register.roleLabel', 'Account type')}>
+    <div>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <span className="uppercase tracking-widest text-xs font-bold text-text-secondary">
+          {t('auth.register.step', 'Step 1 of 2')}
+        </span>
         <button
           type="button"
-          className={`${styles.roleBtn} ${role === 'member' ? styles.roleBtnActive : ''}`}
-          onClick={() => setRole('member')}
-          aria-pressed={role === 'member'}
+          onClick={onToggle}
+          className="text-sm font-medium text-primary hover:underline"
         >
-          {role === 'member' && (
-            <motion.div
-              layoutId="activeRole"
-              className={styles.roleIndicator}
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-            />
-          )}
-          <span className={styles.roleBtnLabel}>
-            {t('auth.register.roleMember', 'Looking for a group')}
-          </span>
-        </button>
-        <button
-          type="button"
-          className={`${styles.roleBtn} ${role === 'leader' ? styles.roleBtnActive : ''}`}
-          onClick={() => setRole('leader')}
-          aria-pressed={role === 'leader'}>
-          {role === 'leader' && (
-            <motion.div
-              layoutId="activeRole"
-              className={styles.roleIndicator}
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-            />
-          )}
-          <span className={styles.roleBtnLabel}>
-            {t('auth.register.roleLeader', 'Want to lead')}
-          </span>
+          {t('auth.register.alreadyMember', 'Already a member?')}
         </button>
       </div>
 
-      <form className={styles.form} onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+      <h2 className="text-3xl font-bold text-white mb-2">
+        {t('auth.register.heading', 'Create Account')}
+      </h2>
+      <p className="text-text-secondary mb-8">
+        {t('auth.register.subtitle', 'Start your reading journey in seconds.')}
+      </p>
+
+      {/* OAuth buttons */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
+          aria-disabled="true"
+        >
+          <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+          </svg>
+          <span className="text-sm font-medium text-white">{t('auth.google', 'Google')}</span>
+        </button>
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
+          aria-disabled="true"
+        >
+          <svg aria-hidden="true" className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13.064 3.245c.083 1.838-1.077 3.515-2.22 4.14-1.082.59-2.61.542-3.32-.437-.767-1.055-.386-3.058.74-4.22 1.05-1.085 3.033-1.127 4.8-.517zM12.986 6.94c2.256-.254 3.733 1.258 4.256 1.638 1.488-1.083 3.03-1.01 3.597-.733.204 1.144-.64 2.45-1.637 3.692-1.22 1.517-1.11 3.284.225 5.176 1.156 1.634.355 3.525-1.074 4.137-1.23.527-2.68.32-4.103-.23-1.378-.535-2.716-.475-4.102-.036-1.554.49-3.023.76-4.39-.023-1.572-.9-2.072-2.73-1.074-4.137 1.063-1.498 1.405-3.23.366-4.996-.803-1.365-1.353-2.623-.42-3.832.613-.794 1.76-1.464 3.23-1.233.91.143 1.95.83 2.76 1.255.856.45 1.795.397 2.366-.68z" />
+          </svg>
+          <span className="text-sm font-medium text-white">{t('auth.apple', 'Apple')}</span>
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <div className="w-full border-t border-border-dark" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-surface-dark text-text-secondary">
+            {t('auth.orRegisterWithEmail', 'Or register with email')}
+          </span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <form className="space-y-5" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
         {/* Name row */}
-        <div className={styles.nameRow}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label} htmlFor="first_name">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="first_name">
               {t('auth.register.firstNameLabel', 'First Name')}
             </label>
-            <div className={styles.inputWrapper}>
-              <User className={styles.inputIcon} aria-hidden="true" />
+            <div className="relative">
               <input
                 id="first_name"
                 type="text"
                 autoComplete="given-name"
                 placeholder="Jane"
-                className={`${styles.input} ${errors.first_name ? styles.inputError : ''}`}
+                className={`${inputBase} ${errors.first_name ? 'border-red-500' : 'border-border-dark'}`}
                 {...register('first_name')}
               />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="text-text-muted w-5 h-5" aria-hidden="true" />
+              </div>
             </div>
             {errors.first_name && (
-              <p className={styles.fieldError} role="alert">{errors.first_name.message}</p>
+              <p className="mt-1 text-xs text-red-400" role="alert">{errors.first_name.message}</p>
             )}
           </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label} htmlFor="last_name">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="last_name">
               {t('auth.register.lastNameLabel', 'Last Name')}
             </label>
-            <div className={styles.inputWrapper}>
-              <User className={styles.inputIcon} aria-hidden="true" />
+            <div className="relative">
               <input
                 id="last_name"
                 type="text"
                 autoComplete="family-name"
                 placeholder="Doe"
-                className={`${styles.input} ${errors.last_name ? styles.inputError : ''}`}
+                className={`${inputBase} ${errors.last_name ? 'border-red-500' : 'border-border-dark'}`}
                 {...register('last_name')}
               />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <User className="text-text-muted w-5 h-5" aria-hidden="true" />
+              </div>
             </div>
             {errors.last_name && (
-              <p className={styles.fieldError} role="alert">{errors.last_name.message}</p>
+              <p className="mt-1 text-xs text-red-400" role="alert">{errors.last_name.message}</p>
             )}
           </div>
         </div>
 
         {/* Username */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="username">
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="username">
             {t('auth.register.usernameLabel', 'Username')}
           </label>
-          <div className={styles.inputWrapper}>
-            <User className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="username"
               type="text"
               autoComplete="username"
               placeholder="janedoe"
-              className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
+              className={`${inputBase} ${errors.username ? 'border-red-500' : 'border-border-dark'}`}
               {...register('username')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
           {errors.username && (
-            <p className={styles.fieldError} role="alert">{errors.username.message}</p>
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.username.message}</p>
           )}
         </div>
 
         {/* Email */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="reg-email">
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="reg-email">
             {t('auth.register.emailLabel', 'Email Address')}
           </label>
-          <div className={styles.inputWrapper}>
-            <Mail className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="reg-email"
               type="email"
               autoComplete="email"
-              placeholder="your@email.com"
-              className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+              placeholder="you@example.com"
+              className={`${inputBase} ${errors.email ? 'border-red-500' : 'border-border-dark'}`}
               {...register('email')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
           {errors.email && (
-            <p className={styles.fieldError} role="alert">{errors.email.message}</p>
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.email.message}</p>
           )}
         </div>
 
-        {/* Display name (conditionally revealed for group leaders) */}
-        <AnimatePresence initial={false}>
-          {role === 'leader' && (
-            <motion.div className={`${styles.fieldGroup} ${styles.overflow}`} {...fieldRevealProps}>
-              <label className={styles.label} htmlFor="display_name">
-                {t('auth.register.displayNameLabel', 'Small Group Name')}
-                <span className={styles.optional}> ({t('common.optional', 'optional')})</span>
-              </label>
-              <div className={styles.inputWrapper}>
-                <Users className={styles.inputIcon} aria-hidden="true" />
-                <input
-                  id="display_name"
-                  type="text"
-                  placeholder="e.g. Downtown Young Adults"
-                  className={styles.input}
-                  {...register('display_name')}
-                />
-              </div>
-            </motion.div>
+        {/* Date of Birth */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="date_of_birth">
+            {t('auth.register.dobLabel', 'Date of Birth')}
+          </label>
+          <div className="relative">
+            <input
+              id="date_of_birth"
+              type="date"
+              className={`${inputBase} ${errors.date_of_birth ? 'border-red-500' : 'border-border-dark'}`}
+              {...register('date_of_birth')}
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Calendar className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-text-muted">
+            {t('auth.register.dobHint', 'You must be at least 16 years old.')}
+          </p>
+          {errors.date_of_birth && (
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.date_of_birth.message}</p>
           )}
-        </AnimatePresence>
+        </div>
 
         {/* Password */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="reg-password">
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="reg-password">
             {t('auth.passwordLabel', 'Password')}
           </label>
-          <div className={styles.inputWrapper}>
-            <Lock className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="reg-password"
               type="password"
               autoComplete="new-password"
               placeholder="••••••••"
-              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+              className={`${inputBase} ${errors.password ? 'border-red-500' : 'border-border-dark'}`}
               {...register('password')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
+          <p className="mt-1 text-xs text-text-muted">
+            {t('auth.register.passwordHint', 'Min 8 characters with uppercase, lowercase, and a number.')}
+          </p>
           {errors.password && (
-            <p className={styles.fieldError} role="alert">{errors.password.message}</p>
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.password.message}</p>
           )}
         </div>
 
         {/* Confirm password */}
-        <div className={styles.fieldGroup}>
-          <label className={styles.label} htmlFor="password_confirm">
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="password_confirm">
             {t('auth.register.confirmPasswordLabel', 'Confirm Password')}
           </label>
-          <div className={styles.inputWrapper}>
-            <Lock className={styles.inputIcon} aria-hidden="true" />
+          <div className="relative">
             <input
               id="password_confirm"
               type="password"
               autoComplete="new-password"
               placeholder="••••••••"
-              className={`${styles.input} ${errors.password_confirm ? styles.inputError : ''}`}
+              className={`${inputBase} ${errors.password_confirm ? 'border-red-500' : 'border-border-dark'}`}
               {...register('password_confirm')}
             />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="text-text-muted w-5 h-5" aria-hidden="true" />
+            </div>
           </div>
           {errors.password_confirm && (
-            <p className={styles.fieldError} role="alert">{errors.password_confirm.message}</p>
+            <p className="mt-1 text-xs text-red-400" role="alert">{errors.password_confirm.message}</p>
           )}
         </div>
 
         {/* Legal checkboxes */}
-        <div className={styles.checkboxGroup}>
-          <label className={styles.checkboxLabel}>
-            <input type="checkbox" className={styles.checkbox} {...register('privacy_policy_accepted')} />
-            <span>
-              {t('auth.register.privacyAccept', 'I accept the')}{' '}
-              <button type="button" className={styles.legalLink}>{t('auth.register.privacyPolicy', 'Privacy Policy')}</button>
-            </span>
-          </label>
-          {errors.privacy_policy_accepted && (
-            <p className={styles.fieldError} role="alert">{errors.privacy_policy_accepted.message}</p>
+        <div className="space-y-3">
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="terms_of_service_accepted"
+                type="checkbox"
+                className="h-4 w-4 text-primary border-border-dark rounded bg-background-dark focus:ring-primary"
+                {...register('terms_of_service_accepted')}
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label className="font-medium text-text-secondary" htmlFor="terms_of_service_accepted">
+                {t('auth.register.termsAccept', 'I agree to the')}{' '}
+                <button type="button" className="text-primary hover:underline">
+                  {t('auth.register.termsOfService', 'Terms of Service')}
+                </button>
+              </label>
+            </div>
+          </div>
+          {errors.terms_of_service_accepted && (
+            <p className="text-xs text-red-400 ml-7" role="alert">{errors.terms_of_service_accepted.message}</p>
           )}
 
-          <label className={styles.checkboxLabel}>
-            <input type="checkbox" className={styles.checkbox} {...register('terms_of_service_accepted')} />
-            <span>
-              {t('auth.register.termsAccept', 'I accept the')}{' '}
-              <button type="button" className={styles.legalLink}>{t('auth.register.termsOfService', 'Terms of Service')}</button>
-            </span>
-          </label>
-          {errors.terms_of_service_accepted && (
-            <p className={styles.fieldError} role="alert">{errors.terms_of_service_accepted.message}</p>
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="privacy_policy_accepted"
+                type="checkbox"
+                className="h-4 w-4 text-primary border-border-dark rounded bg-background-dark focus:ring-primary"
+                {...register('privacy_policy_accepted')}
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label className="font-medium text-text-secondary" htmlFor="privacy_policy_accepted">
+                {t('auth.register.privacyAccept', 'I accept the')}{' '}
+                <button type="button" className="text-primary hover:underline">
+                  {t('auth.register.privacyPolicy', 'Privacy Policy')}
+                </button>
+              </label>
+            </div>
+          </div>
+          {errors.privacy_policy_accepted && (
+            <p className="text-xs text-red-400 ml-7" role="alert">{errors.privacy_policy_accepted.message}</p>
           )}
         </div>
 
         {serverError && (
-          <p className={styles.serverError} role="alert">{serverError}</p>
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3" role="alert">
+            <p className="text-sm text-red-400">{serverError}</p>
+          </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          className={styles.submitBtn}
-        >
-          {isLoading
-            ? t('auth.loading', 'Creating account…')
-            : t('auth.register.submit', 'Create Account')}
-          {!isLoading && <ArrowRight aria-hidden="true" />}
-        </button>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={isLoading}
+            aria-busy={isLoading}
+            className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60"
+          >
+            {isLoading
+              ? t('auth.loading', 'Creating account…')
+              : t('auth.register.submit', 'Continue to Step 2')}
+            {!isLoading && <ArrowRight className="w-4 h-4" aria-hidden="true" />}
+          </button>
+        </div>
       </form>
-
-      <p className={styles.togglePrompt}>
-        {t('auth.register.alreadyHaveAccount', 'Already have an account?')}{' '}
-        <button type="button" onClick={onToggle} className={styles.toggleLink}>
-          {t('auth.signIn', 'Sign in')}
-        </button>
-      </p>
     </div>
   );
 }

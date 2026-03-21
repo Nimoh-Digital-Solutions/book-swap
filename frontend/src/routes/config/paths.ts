@@ -15,6 +15,8 @@ export const PATHS = {
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   PASSWORD_RESET_CONFIRM: '/password-reset/confirm',
+  ONBOARDING: '/onboarding',
+  PROFILE: '/profile',
   SETTINGS: '/settings',
   NOT_FOUND: '*',
 } as const;
@@ -54,6 +56,14 @@ export const routeMetadata = {
   [PATHS.PASSWORD_RESET_CONFIRM]: {
     title: 'Set New Password',
     description: 'Choose a new password for your account',
+  },
+  [PATHS.ONBOARDING]: {
+    title: 'Set Your Location',
+    description: 'Complete your account setup by setting your location',
+  },
+  [PATHS.PROFILE]: {
+    title: 'Profile',
+    description: 'View and edit your profile',
   },
   [PATHS.SETTINGS]: {
     title: 'Settings',

@@ -16,6 +16,9 @@ export { usePublicProfile } from './hooks/usePublicProfile';
 export { useSetLocation } from './hooks/useSetLocation';
 export { useUpdateProfile } from './hooks/useUpdateProfile';
 
+// Pages
+export { ProfilePage } from './pages/ProfilePage';
+
 // Schemas
 export type {
   LocationFormValues,
