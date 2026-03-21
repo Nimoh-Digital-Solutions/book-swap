@@ -159,6 +159,7 @@ Thumbs.db
 # =============================================================================
 ANALYSIS-*.md
 docs/claude-artefacts/*
+docs/action-plans/
 
 
 # =============================================================================
@@ -167,4 +168,3 @@ docs/claude-artefacts/*
 .context/
 Support/
 AGENTS.md
-action-plans/

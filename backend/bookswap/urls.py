@@ -1,14 +1,13 @@
 """URL configuration for the bookswap app."""
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-router = DefaultRouter()
-# Register viewsets here, e.g.:
-# router.register(r'items', ItemViewSet, basename='item')
+from . import views
 
 app_name = 'bookswap'
 
 urlpatterns = [
-    *router.urls,
-    # Extra non-router paths go here, e.g.:
-    # path('stats/', views.stats, name='stats'),
+    path('users/me/', views.UserMeView.as_view(), name='user-me'),
+    path('users/me/location/', views.SetLocationView.as_view(), name='user-set-location'),
+    path('users/me/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='user-onboarding-complete'),
+    path('users/<uuid:pk>/', views.UserDetailView.as_view(), name='user-detail'),
 ]
