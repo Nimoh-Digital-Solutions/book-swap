@@ -2,17 +2,21 @@
  * BrowsePage — main discovery page.
  *
  * Authenticated users see nearby books with infinite scroll.
+ * Desktop: FilterPanel sidebar + book grid.
+ * Mobile: "Filters" button opens bottom sheet.
  * If the user hasn't set a location, shows SetLocationPrompt.
  */
-import { type ReactElement, useCallback, useEffect, useRef } from 'react';
+import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useProfile } from '@features/profile';
-import { Loader2 } from 'lucide-react';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
 import { FilterChips } from '../../components/FilterChips';
+import { FilterPanel } from '../../components/FilterPanel';
+import { MobileFilterSheet } from '../../components/MobileFilterSheet';
 import { RadiusSelector } from '../../components/RadiusSelector';
 import { SearchBar } from '../../components/SearchBar';
 import { SetLocationPrompt } from '../../components/SetLocationPrompt';
@@ -27,6 +31,7 @@ export function BrowsePage(): ReactElement {
   const { t } = useTranslation();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { filters, setFilters, clearFilters } = useBrowseFilters();
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Default radius from user profile, fallback to 5 km
   const activeRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
@@ -113,6 +118,27 @@ export function BrowsePage(): ReactElement {
     [filters.condition, setFilters],
   );
 
+  // --- FilterPanel handlers (set full arrays) ---
+  const handleGenreChange = useCallback(
+    (genres: string[]) => setFilters({ genre: genres.length ? genres : undefined }),
+    [setFilters],
+  );
+
+  const handleLanguageChange = useCallback(
+    (languages: string[]) => setFilters({ language: languages.length ? languages : undefined }),
+    [setFilters],
+  );
+
+  const handleConditionChange = useCallback(
+    (conditions: string[]) => setFilters({ condition: conditions.length ? conditions : undefined }),
+    [setFilters],
+  );
+
+  const activeFilterCount =
+    (filters.genre?.length ?? 0) +
+    (filters.language?.length ?? 0) +
+    (filters.condition?.length ?? 0);
+
   // --- Loading state ---
   if (profileLoading) {
     return (
@@ -153,11 +179,28 @@ export function BrowsePage(): ReactElement {
           onChange={handleSearchChange}
           isLoading={isLoading && !isFetchingNextPage}
         />
-        <RadiusSelector
-          value={activeRadius}
-          onChange={handleRadiusChange}
-          counts={radiusCounts}
-        />
+        <div className="flex items-center gap-3">
+          <RadiusSelector
+            value={activeRadius}
+            onChange={handleRadiusChange}
+            counts={radiusCounts}
+          />
+          {/* Mobile filter button */}
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-[#1A251D] border border-[#28382D] rounded-xl text-xs font-medium text-[#8C9C92] hover:text-white transition-colors"
+            aria-label={t('discovery.filters.title', 'Filters')}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            {t('discovery.filters.title', 'Filters')}
+            {activeFilterCount > 0 && (
+              <span className="bg-[#E4B643] text-[#152018] text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Active filters + result count */}
@@ -170,60 +213,93 @@ export function BrowsePage(): ReactElement {
         onClearAll={clearFilters}
       />
 
-      {/* Error state */}
-      {isError && (
-        <div className="text-center py-10">
-          <p className="text-red-400">
-            {t('error.somethingWentWrong')}
-          </p>
-        </div>
-      )}
+      {/* Sidebar + Grid layout */}
+      <div className="flex gap-8">
+        {/* Desktop filter sidebar */}
+        <aside className="hidden lg:block w-[280px] shrink-0">
+          <div className="sticky top-24 bg-[#1A251D] border border-[#28382D] rounded-2xl p-5">
+            <FilterPanel
+              filters={filters}
+              onGenreChange={handleGenreChange}
+              onLanguageChange={handleLanguageChange}
+              onConditionChange={handleConditionChange}
+              onClearAll={clearFilters}
+            />
+          </div>
+        </aside>
 
-      {/* Empty state */}
-      {!isLoading && !isError && books.length === 0 && (
-        <BrowseEmptyState
-          search={filters.search}
-          radiusKm={activeRadius / 1000}
-          onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
-        />
-      )}
-
-      {/* Book grid */}
-      {books.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {books.map(book => (
-            <BrowseBookCard key={book.id} book={book} />
-          ))}
-        </div>
-      )}
-
-      {/* Loading skeleton for initial load */}
-      {isLoading && books.length === 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
-            >
-              <div className="aspect-[3/4] bg-[#28382D]" />
-              <div className="p-4 space-y-2">
-                <div className="h-4 bg-[#28382D] rounded w-3/4" />
-                <div className="h-3 bg-[#28382D] rounded w-1/2" />
-              </div>
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-6">
+          {/* Error state */}
+          {isError && (
+            <div className="text-center py-10">
+              <p className="text-red-400">
+                {t('error.somethingWentWrong')}
+              </p>
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Infinite scroll sentinel */}
-      <div ref={sentinelRef} className="h-1" />
+          {/* Empty state */}
+          {!isLoading && !isError && books.length === 0 && (
+            <BrowseEmptyState
+              search={filters.search}
+              radiusKm={activeRadius / 1000}
+              onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
+            />
+          )}
 
-      {/* Loading more indicator */}
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-6">
-          <Loader2 className="w-6 h-6 text-[#E4B643] animate-spin" />
+          {/* Book grid */}
+          {books.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {books.map(book => (
+                <BrowseBookCard key={book.id} book={book} />
+              ))}
+            </div>
+          )}
+
+          {/* Loading skeleton for initial load */}
+          {isLoading && books.length === 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
+                >
+                  <div className="aspect-[3/4] bg-[#28382D]" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-[#28382D] rounded w-3/4" />
+                    <div className="h-3 bg-[#28382D] rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-1" />
+
+          {/* Loading more indicator */}
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-6 h-6 text-[#E4B643] animate-spin" />
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Mobile filter sheet */}
+      <MobileFilterSheet
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+      >
+        <FilterPanel
+          filters={filters}
+          onGenreChange={handleGenreChange}
+          onLanguageChange={handleLanguageChange}
+          onConditionChange={handleConditionChange}
+          onClearAll={clearFilters}
+        />
+      </MobileFilterSheet>
     </div>
   );
 }

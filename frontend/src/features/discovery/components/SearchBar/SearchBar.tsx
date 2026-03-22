@@ -25,20 +25,28 @@ export function SearchBar({
     setLocal(value);
   }, [value]);
 
-  // Debounce: propagate after 300ms of inactivity
+  // Debounce: propagate after 300ms of inactivity (min 3 chars or empty)
   useEffect(() => {
     const id = setTimeout(() => {
-      if (local !== value) onChange(local);
+      if (local !== value) {
+        // Only trigger search with 3+ chars, or empty to clear
+        if (local.length >= 3 || local.length === 0) {
+          onChange(local);
+        }
+      }
     }, 300);
     return () => clearTimeout(id);
   }, [local, value, onChange]);
 
+  const showMinCharsHint = local.length > 0 && local.length < 3;
+
   return (
-    <div className="relative">
-      <Search
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A6A60]"
-        aria-hidden="true"
-      />
+    <div>
+      <div className="relative">
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A6A60]"
+          aria-hidden="true"
+        />
       <input
         type="search"
         value={local}
@@ -69,6 +77,12 @@ export function SearchBar({
             <X className="w-4 h-4" />
           </button>
         )
+      )}
+      </div>
+      {showMinCharsHint && (
+        <p className="mt-1 text-xs text-[#5A6A60]">
+          {t('discovery.search.minChars', 'Type at least 3 characters')}
+        </p>
       )}
     </div>
   );

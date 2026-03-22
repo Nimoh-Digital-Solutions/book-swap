@@ -298,7 +298,8 @@
     "distance": "~{{km}} km",
     "search": {
       "placeholder": "Zoek op titel, auteur of ISBN...",
-      "clear": "Zoekopdracht wissen"
+      "clear": "Zoekopdracht wissen",
+      "minChars": "Typ minimaal 3 tekens"
     },
     "radius": {
       "label": "Afstand"
@@ -311,7 +312,12 @@
       "expandRadius": "Probeer je zoekradius te vergroten"
     },
     "filters": {
-      "clearAll": "Alle filters wissen"
+      "title": "Filters",
+      "clearAll": "Alle filters wissen",
+      "genre": "Genre",
+      "language": "Taal",
+      "condition": "Staat",
+      "apply": "Filters toepassen"
     },
     "location": {
       "required": "Stel je locatie in om boeken in de buurt te ontdekken",
