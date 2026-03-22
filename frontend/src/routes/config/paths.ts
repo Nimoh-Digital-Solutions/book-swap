@@ -20,6 +20,10 @@ export const PATHS = {
   PROFILE_EDIT: '/profile/edit',
   PUBLIC_PROFILE: '/profile/:id',
   SETTINGS: '/settings',
+  MY_SHELF: '/my-shelf',
+  ADD_BOOK: '/books/add',
+  BOOK_DETAIL: '/books/:id',
+  EDIT_BOOK: '/books/:id/edit',
   CATALOGUE: '/catalogue',
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
@@ -85,6 +89,22 @@ export const routeMetadata = {
   [PATHS.CATALOGUE]: {
     title: 'Catalogue',
     description: 'Browse all available books in your community',
+  },
+  [PATHS.MY_SHELF]: {
+    title: 'My Shelf',
+    description: 'Manage your book listings',
+  },
+  [PATHS.ADD_BOOK]: {
+    title: 'Add Book',
+    description: 'List a new book for swapping',
+  },
+  [PATHS.BOOK_DETAIL]: {
+    title: 'Book Details',
+    description: 'View book details and request a swap',
+  },
+  [PATHS.EDIT_BOOK]: {
+    title: 'Edit Book',
+    description: 'Edit your book listing',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',

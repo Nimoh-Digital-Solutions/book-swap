@@ -52,6 +52,22 @@ const PublicProfilePage = lazy(() =>
 
 const CataloguePage = lazy(() => import('@pages/CataloguePage/CataloguePage'));
 
+const MyShelfPage = lazy(() =>
+  import('@features/books').then(m => ({ default: m.MyShelfPage }))
+);
+
+const AddBookPage = lazy(() =>
+  import('@features/books').then(m => ({ default: m.AddBookPage }))
+);
+
+const BookDetailPage = lazy(() =>
+  import('@features/books').then(m => ({ default: m.BookDetailPage }))
+);
+
+const EditBookPage = lazy(() =>
+  import('@features/books').then(m => ({ default: m.EditBookPage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -147,6 +163,22 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.PUBLIC_PROFILE,
         element: <ProtectedPage component={PublicProfilePage} />,
+      },
+      {
+        path: PATHS.MY_SHELF,
+        element: <ProtectedPage component={MyShelfPage} />,
+      },
+      {
+        path: PATHS.ADD_BOOK,
+        element: <ProtectedPage component={AddBookPage} />,
+      },
+      {
+        path: PATHS.BOOK_DETAIL,
+        element: <ProtectedPage component={BookDetailPage} />,
+      },
+      {
+        path: PATHS.EDIT_BOOK,
+        element: <ProtectedPage component={EditBookPage} />,
       },
     ],
   },
