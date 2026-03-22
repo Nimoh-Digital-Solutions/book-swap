@@ -357,6 +357,100 @@ const wishlistHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Browse / Discovery handlers (Epic 4)
+// ---------------------------------------------------------------------------
+
+export const TEST_BROWSE_BOOK = {
+  id: 'book_browse_001',
+  title: 'The Alchemist',
+  author: 'Paulo Coelho',
+  cover_url: 'https://example.com/alchemist.jpg',
+  condition: 'good' as const,
+  language: 'en' as const,
+  status: 'available' as const,
+  primary_photo: null,
+  owner: {
+    ...TEST_BOOK_OWNER,
+    id: 'usr_other_001',
+    username: 'otheruser',
+    neighborhood: 'De Pijp',
+    location: { latitude: 52.3508, longitude: 4.8952 },
+  },
+  distance: 2.3,
+  created_at: '2025-08-01T12:00:00Z',
+};
+
+export const TEST_BROWSE_BOOK_2 = {
+  id: 'book_browse_002',
+  title: '1984',
+  author: 'George Orwell',
+  cover_url: 'https://example.com/1984.jpg',
+  condition: 'like_new' as const,
+  language: 'en' as const,
+  status: 'available' as const,
+  primary_photo: null,
+  owner: {
+    ...TEST_BOOK_OWNER,
+    id: 'usr_other_002',
+    username: 'bookworm',
+    neighborhood: 'Oud-West',
+    location: { latitude: 52.3640, longitude: 4.8720 },
+  },
+  distance: 4.1,
+  created_at: '2025-08-02T10:00:00Z',
+};
+
+const browseHandlers = [
+  /** GET /api/v1/books/browse/ — paginated browse */
+  http.get('*/api/v1/books/browse/', ({ request }) => {
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search');
+
+    if (search) {
+      const filtered = [TEST_BROWSE_BOOK, TEST_BROWSE_BOOK_2].filter(
+        b =>
+          b.title.toLowerCase().includes(search.toLowerCase()) ||
+          b.author.toLowerCase().includes(search.toLowerCase()),
+      );
+      return HttpResponse.json({
+        count: filtered.length,
+        next: null,
+        previous: null,
+        results: filtered,
+      });
+    }
+
+    return HttpResponse.json({
+      count: 2,
+      next: null,
+      previous: null,
+      results: [TEST_BROWSE_BOOK, TEST_BROWSE_BOOK_2],
+    });
+  }),
+
+  /** GET /api/v1/books/browse/radius-counts/ */
+  http.get('*/api/v1/books/browse/radius-counts/', () => {
+    return HttpResponse.json({
+      counts: {
+        '1000': 1,
+        '3000': 2,
+        '5000': 5,
+        '10000': 12,
+        '25000': 30,
+      },
+    });
+  }),
+
+  /** GET /api/v1/books/nearby-count/ */
+  http.get('*/api/v1/books/nearby-count/', () => {
+    return HttpResponse.json({
+      count: 42,
+      radius: 5000,
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
@@ -365,6 +459,7 @@ export const handlers = [
   ...authHandlers,
   ...profileHandlers,
   ...registrationHandlers,
+  ...browseHandlers,
   ...bookHandlers,
   ...wishlistHandlers,
 ];
