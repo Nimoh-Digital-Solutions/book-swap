@@ -17,6 +17,8 @@ export const PATHS = {
   PASSWORD_RESET_CONFIRM: '/password-reset/confirm',
   ONBOARDING: '/onboarding',
   PROFILE: '/profile',
+  PROFILE_EDIT: '/profile/edit',
+  PUBLIC_PROFILE: '/profile/:id',
   SETTINGS: '/settings',
   CATALOGUE: '/catalogue',
   HOW_IT_WORKS: '/#how-it-works',
@@ -67,6 +69,14 @@ export const routeMetadata = {
   [PATHS.PROFILE]: {
     title: 'Profile',
     description: 'View and edit your profile',
+  },
+  [PATHS.PROFILE_EDIT]: {
+    title: 'Edit Profile',
+    description: 'Edit your profile information',
+  },
+  [PATHS.PUBLIC_PROFILE]: {
+    title: 'User Profile',
+    description: 'View a user\'s public profile',
   },
   [PATHS.SETTINGS]: {
     title: 'Settings',
