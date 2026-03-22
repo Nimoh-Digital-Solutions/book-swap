@@ -14,3 +14,6 @@ class BookswapConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'bookswap'
     verbose_name = 'BookSwap Core'
+
+    def ready(self):
+        import bookswap.signals  # noqa: F401
