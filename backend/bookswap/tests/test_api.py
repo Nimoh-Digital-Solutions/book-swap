@@ -630,3 +630,223 @@ class TestSocialAuthConfig:
     def test_social_auth_done_url(self):
         from django.urls import reverse
         assert reverse("social-auth-done") == "/api/v1/auth/social/done/"
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Epic 2 — User Profile endpoints
+# ═══════════════════════════════════════════════════════════════════════
+
+
+class TestCheckUsernameView:
+    """GET /api/v1/users/check-username/?q=<name>."""
+
+    def test_available_username(self, auth_client):
+        client, _ = auth_client
+        response = client.get("/api/v1/users/check-username/", {"q": "newuser123"})
+        assert response.status_code == 200
+        assert response.data["available"] is True
+
+    def test_taken_username(self, auth_client):
+        client, _ = auth_client
+        UserFactory(is_active=True, username="takenname")
+        response = client.get("/api/v1/users/check-username/", {"q": "takenname"})
+        assert response.status_code == 200
+        assert response.data["available"] is False
+        assert "suggestions" in response.data
+
+    def test_own_username_available(self, auth_client):
+        client, user = auth_client
+        response = client.get("/api/v1/users/check-username/", {"q": user.username})
+        assert response.status_code == 200
+        assert response.data["available"] is True
+
+    def test_too_short_rejected(self, auth_client):
+        client, _ = auth_client
+        response = client.get("/api/v1/users/check-username/", {"q": "ab"})
+        assert response.status_code == 400
+
+    def test_invalid_characters_rejected(self, auth_client):
+        client, _ = auth_client
+        response = client.get("/api/v1/users/check-username/", {"q": "bad name!"})
+        assert response.status_code == 400
+
+    def test_unauthenticated_rejected(self, api_client):
+        response = api_client.get("/api/v1/users/check-username/", {"q": "test"})
+        assert response.status_code == 401
+
+
+class TestAccountDeletionView:
+    """POST /api/v1/users/me/delete/."""
+
+    def test_request_deletion(self, auth_client):
+        client, user = auth_client
+        response = client.post(
+            "/api/v1/users/me/delete/",
+            {"password": "testpass123"},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert "cancel_token" in response.data
+        user.refresh_from_db()
+        assert user.deletion_requested_at is not None
+        assert user.is_active is False
+
+    def test_wrong_password_rejected(self, auth_client):
+        client, _ = auth_client
+        response = client.post(
+            "/api/v1/users/me/delete/",
+            {"password": "wrongpassword"},
+            format="json",
+        )
+        assert response.status_code == 400
+
+    def test_duplicate_deletion_rejected(self, auth_client):
+        client, user = auth_client
+        from django.utils import timezone
+        user.deletion_requested_at = timezone.now()
+        user.save(update_fields=["deletion_requested_at"])
+        response = client.post(
+            "/api/v1/users/me/delete/",
+            {"password": "testpass123"},
+            format="json",
+        )
+        assert response.status_code == 400
+
+
+class TestAccountDeletionCancelView:
+    """POST /api/v1/users/me/delete/cancel/."""
+
+    def test_cancel_deletion(self, api_client):
+        from django.core import signing
+        from django.utils import timezone
+
+        user = UserFactory(is_active=False)
+        user.deletion_requested_at = timezone.now()
+        user.save(update_fields=["deletion_requested_at"])
+
+        token = signing.dumps(
+            {"user_id": str(user.pk), "action": "cancel_deletion"},
+            salt="account-deletion-cancel",
+        )
+        response = api_client.post(
+            "/api/v1/users/me/delete/cancel/",
+            {"token": token},
+            format="json",
+        )
+        assert response.status_code == 200
+        user.refresh_from_db()
+        assert user.deletion_requested_at is None
+        assert user.is_active is True
+
+    def test_invalid_token_rejected(self, api_client):
+        response = api_client.post(
+            "/api/v1/users/me/delete/cancel/",
+            {"token": "invalid-token"},
+            format="json",
+        )
+        assert response.status_code == 400
+
+    def test_missing_token_rejected(self, api_client):
+        response = api_client.post(
+            "/api/v1/users/me/delete/cancel/",
+            {},
+            format="json",
+        )
+        assert response.status_code == 400
+
+
+class TestPublicProfileRatingDisplay:
+    """UserPublicSerializer should hide avg_rating when rating_count < 3."""
+
+    def test_rating_hidden_below_threshold(self, auth_client):
+        client, _ = auth_client
+        other = UserFactory(is_active=True, rating_count=2, avg_rating=4.5)
+        response = client.get(f"/api/v1/users/{other.id}/")
+        assert response.status_code == 200
+        assert response.data["avg_rating"] is None
+
+    def test_rating_shown_at_threshold(self, auth_client):
+        client, _ = auth_client
+        other = UserFactory(is_active=True, rating_count=3, avg_rating=4.5)
+        response = client.get(f"/api/v1/users/{other.id}/")
+        assert response.status_code == 200
+        assert response.data["avg_rating"] == 4.5
+
+    def test_rating_shown_above_threshold(self, auth_client):
+        client, _ = auth_client
+        other = UserFactory(is_active=True, rating_count=10, avg_rating=3.75)
+        response = client.get(f"/api/v1/users/{other.id}/")
+        assert response.status_code == 200
+        assert response.data["avg_rating"] == 3.75
+
+
+class TestAvatarValidation:
+    """UserUpdateSerializer should validate avatar file type and size."""
+
+    def test_reject_non_image_avatar(self, auth_client):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        client, _ = auth_client
+        fake_file = SimpleUploadedFile("test.txt", b"not an image", content_type="text/plain")
+        response = client.patch(
+            "/api/v1/users/me/",
+            {"avatar": fake_file},
+            format="multipart",
+        )
+        assert response.status_code == 400
+
+    def test_reject_oversized_avatar(self, auth_client):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        client, _ = auth_client
+        # 3MB file — over the 2MB limit
+        large_content = b"\x89PNG" + b"\x00" * (3 * 1024 * 1024)
+        fake_file = SimpleUploadedFile("big.png", large_content, content_type="image/png")
+        response = client.patch(
+            "/api/v1/users/me/",
+            {"avatar": fake_file},
+            format="multipart",
+        )
+        assert response.status_code == 400
+
+
+class TestAnonymizeTask:
+    """bookswap.anonymize_deleted_accounts Celery task."""
+
+    def test_anonymize_after_30_days(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from bookswap.tasks import anonymize_deleted_accounts
+
+        user = UserFactory(
+            is_active=False,
+            username="toberemoved",
+            email="toberemoved@example.com",
+            bio="I have a bio",
+        )
+        user.deletion_requested_at = timezone.now() - timedelta(days=31)
+        user.save(update_fields=["deletion_requested_at"])
+
+        count = anonymize_deleted_accounts()
+        assert count == 1
+
+        user.refresh_from_db()
+        assert user.username.startswith("deleted_")
+        assert user.bio == ""
+        assert user.first_name == "Deleted"
+
+    def test_skip_recent_deletions(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from bookswap.tasks import anonymize_deleted_accounts
+
+        user = UserFactory(is_active=False)
+        user.deletion_requested_at = timezone.now() - timedelta(days=10)
+        user.save(update_fields=["deletion_requested_at"])
+
+        count = anonymize_deleted_accounts()
+        assert count == 0

@@ -192,6 +192,10 @@ globals().update(NimohBaseSettings.get_base_celery(
     result_backend=env('CELERY_RESULT_BACKEND', default=f'{_REDIS_BASE}/2'),
 ))
 CELERY_BEAT_SCHEDULE = NimohBaseSettings.get_base_celery_beat()
+CELERY_BEAT_SCHEDULE["anonymize-deleted-accounts"] = {
+    "task": "bookswap.anonymize_deleted_accounts",
+    "schedule": 86400,  # daily (24h in seconds)
+}
 
 
 
