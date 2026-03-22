@@ -1,24 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { ArrowLeft, LockKeyhole } from 'lucide-react';
 
+import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm/ForgotPasswordForm';
 import { authService } from '../services/auth.service';
-
-import styles from './ForgotPasswordPage.module.scss';
 
 /**
  * ForgotPasswordPage
  *
  * Route: /forgot-password
  *
- * Static split-panel layout (no animated panel swap — single-purpose page).
- * Left: form panel with ForgotPasswordForm.
- * Right: brand panel with BackgroundPaths (desktop only).
+ * Uses the shared AuthSplitPanel layout matching the dark reference design.
  */
 export function ForgotPasswordPage() {
   useDocumentTitle(routeMetadata[PATHS.FORGOT_PASSWORD].title);
@@ -45,58 +41,28 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <main className={styles.root}>
-      {/* ── Form panel ──────────────────────────────────────────────────── */}
-      <div className={styles.formPanel}>
-        <div className={styles.formContent}>
-          {/* Logo */}
-          <div className={styles.logoRow}>
-            <div className={styles.logoIcon}>
-              <LockKeyhole aria-hidden="true" />
-            </div>
-            <span className={styles.logoName}>App</span>
-          </div>
-
-          {/* Back to login */}
-          <Link to={PATHS.LOGIN} className={styles.backLink}>
-            <ArrowLeft aria-hidden="true" />
-            {t('auth.forgotPassword.backToLogin', 'Back to Login')}
-          </Link>
-
-          <ForgotPasswordForm
-            onSubmit={handleSubmit}
-            onBack={() => void navigate(PATHS.LOGIN)}
-            isLoading={isLoading}
-            serverError={serverError}
-            isSuccess={isSuccess}
-            submittedEmail={submittedEmail}
-          />
-        </div>
-
-        {/* Footer */}
-        <p className={styles.copyright}>
-          © {new Date().getFullYear()} App. All rights reserved.
-        </p>
-      </div>
-
-      {/* ── Brand panel (desktop only) ─────────────────────────────────── */}
-      <div className={styles.brandPanel} aria-hidden="true">
-        <div className={styles.brandOverlay} />
-        <div className={styles.brandBody}>
-          <div className={styles.brandIconCircle}>
-            <LockKeyhole />
-          </div>
-          <h2 className={styles.brandHeadline}>
-            {t('auth.forgotPassword.brandHeadline', 'Recover Your Account')}
-          </h2>
-          <p className={styles.brandTagline}>
-            {t(
-              'auth.forgotPassword.brandTagline',
-              "We'll help you regain access to your account in just a few steps.",
-            )}
-          </p>
-        </div>
-      </div>
-    </main>
+    <AuthSplitPanel
+      view="forgot"
+      brandingTitle={
+        <>
+          Welcome to the{' '}
+          <span className="text-[#E4B643] italic">Community</span>
+        </>
+      }
+      brandingSubtitle="Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam."
+      quote="I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion."
+      authorName="Sarah Jenkins"
+      authorDetails="Swapping since 2021"
+      formContent={
+        <ForgotPasswordForm
+          onSubmit={handleSubmit}
+          onBack={() => void navigate(PATHS.LOGIN)}
+          isLoading={isLoading}
+          serverError={serverError}
+          isSuccess={isSuccess}
+          submittedEmail={submittedEmail}
+        />
+      }
+    />
   );
 }

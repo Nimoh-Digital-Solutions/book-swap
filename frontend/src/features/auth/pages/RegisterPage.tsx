@@ -28,7 +28,7 @@ export function RegisterPage() {
       brandingTitle={
         <>
           Welcome to the{' '}
-          <span className="text-primary italic">Community</span>
+          <span className="text-[#E4B643] italic">Community</span>
         </>
       }
       brandingSubtitle="Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam."

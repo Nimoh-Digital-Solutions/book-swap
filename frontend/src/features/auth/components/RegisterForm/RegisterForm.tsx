@@ -112,7 +112,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
   };
 
   const inputBase =
-    'block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary';
+    'block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
 
   return (
     <div>
@@ -124,7 +124,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
         <button
           type="button"
           onClick={onToggle}
-          className="text-sm font-medium text-primary hover:underline"
+          className="text-sm font-medium text-[#E4B643] hover:underline"
         >
           {t('auth.register.alreadyMember', 'Already a member?')}
         </button>
@@ -350,14 +350,14 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
               <input
                 id="terms_of_service_accepted"
                 type="checkbox"
-                className="h-4 w-4 text-primary border-border-dark rounded bg-background-dark focus:ring-primary"
+                className="h-4 w-4 text-[#E4B643] border-[#28382D] rounded bg-[#152018] focus:ring-[#E4B643] checked:bg-[#E4B643]"
                 {...register('terms_of_service_accepted')}
               />
             </div>
             <div className="ml-3 text-sm">
               <label className="font-medium text-text-secondary" htmlFor="terms_of_service_accepted">
                 {t('auth.register.termsAccept', 'I agree to the')}{' '}
-                <button type="button" className="text-primary hover:underline">
+                <button type="button" className="text-[#E4B643] hover:underline">
                   {t('auth.register.termsOfService', 'Terms of Service')}
                 </button>
               </label>
@@ -372,14 +372,14 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
               <input
                 id="privacy_policy_accepted"
                 type="checkbox"
-                className="h-4 w-4 text-primary border-border-dark rounded bg-background-dark focus:ring-primary"
+                className="h-4 w-4 text-[#E4B643] border-[#28382D] rounded bg-[#152018] focus:ring-[#E4B643] checked:bg-[#E4B643]"
                 {...register('privacy_policy_accepted')}
               />
             </div>
             <div className="ml-3 text-sm">
               <label className="font-medium text-text-secondary" htmlFor="privacy_policy_accepted">
                 {t('auth.register.privacyAccept', 'I accept the')}{' '}
-                <button type="button" className="text-primary hover:underline">
+                <button type="button" className="text-[#E4B643] hover:underline">
                   {t('auth.register.privacyPolicy', 'Privacy Policy')}
                 </button>
               </label>
@@ -401,7 +401,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
             type="submit"
             disabled={isLoading}
             aria-busy={isLoading}
-            className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60"
+            className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-[#152018] bg-[#E4B643] hover:bg-[#d9b93e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E4B643] transition-colors disabled:opacity-60"
           >
             {isLoading
               ? t('auth.loading', 'Creating account…')
