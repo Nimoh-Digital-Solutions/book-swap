@@ -3,8 +3,10 @@
 from django.contrib.auth import get_user_model
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core import signing
-from django.db.models import Case, Count, IntegerField, When
+from django.db.models import Case, Count, F, FloatField, IntegerField, Value, When
+from django.db.models.functions import Cast
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -445,13 +447,14 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         """Return the authenticated user's location or None."""
         return self.request.user.location
 
-    def _get_radius(self):
-        """Parse and validate the radius query param."""
+    def _get_validated_filters(self):
+        """Parse and validate all browse query params."""
         filter_ser = BrowseFilterSerializer(data=self.request.query_params)
         filter_ser.is_valid(raise_exception=True)
-        return filter_ser.validated_data.get(
-            "radius", self.request.user.preferred_radius or 5000
-        )
+        return filter_ser.validated_data
+
+    def _get_radius(self, filters):
+        return filters.get("radius", self.request.user.preferred_radius or 5000)
 
     def _base_queryset(self, user_location, radius):
         """Queryset of available books within radius, excluding own books."""
@@ -467,12 +470,75 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             .annotate(distance=Distance("owner__location", user_location))
         )
 
+    @staticmethod
+    def _is_isbn(term: str) -> bool:
+        """Return True if term looks like an ISBN (10–13 digits)."""
+        cleaned = term.replace("-", "").replace(" ", "")
+        return cleaned.replace("X", "").isdigit() and len(cleaned) in (10, 13)
+
+    def _apply_search(self, qs, search_term):
+        """Apply FTS or ISBN exact-match to the queryset."""
+        if not search_term:
+            return qs, False
+
+        if self._is_isbn(search_term):
+            cleaned = search_term.replace("-", "").replace(" ", "")
+            return qs.filter(isbn=cleaned), False
+
+        query = SearchQuery(search_term, search_type="plain")
+        qs = qs.filter(search_vector=query)
+        qs = qs.annotate(text_rank=SearchRank(F("search_vector"), query))
+        return qs, True
+
+    @staticmethod
+    def _apply_filters(qs, filters):
+        """Apply genre, language, condition comma-separated filters."""
+        genre = filters.get("genre")
+        if genre:
+            genre_list = [g.strip() for g in genre.split(",") if g.strip()]
+            if genre_list:
+                qs = qs.filter(genres__overlap=genre_list)
+
+        language = filters.get("language")
+        if language:
+            lang_list = [l.strip() for l in language.split(",") if l.strip()]
+            if lang_list:
+                qs = qs.filter(language__in=lang_list)
+
+        condition = filters.get("condition")
+        if condition:
+            cond_list = [c.strip() for c in condition.split(",") if c.strip()]
+            if cond_list:
+                qs = qs.filter(condition__in=cond_list)
+
+        return qs
+
     def get_queryset(self):
         user_location = self._get_user_location()
         if user_location is None:
             return Book.objects.none()
-        radius = self._get_radius()
-        return self._base_queryset(user_location, radius).order_by("distance")
+
+        filters = self._get_validated_filters()
+        radius = self._get_radius(filters)
+        qs = self._base_queryset(user_location, radius)
+
+        # Full-text search or ISBN match
+        search_term = filters.get("search", "").strip()
+        qs, has_text_rank = self._apply_search(qs, search_term)
+
+        # Multi-value filters
+        qs = self._apply_filters(qs, filters)
+
+        # Ordering
+        ordering = filters.get("ordering", "")
+        if ordering == "relevance" and has_text_rank:
+            qs = qs.order_by("-text_rank", "distance")
+        elif ordering == "-created_at":
+            qs = qs.order_by("-created_at")
+        else:
+            qs = qs.order_by("distance")
+
+        return qs
 
     def list(self, request, *args, **kwargs):
         if request.user.location is None:
