@@ -34,7 +34,7 @@ export function LoginPage() {
       brandingTitle={
         <>
           Welcome Back to the{' '}
-          <span className="text-primary italic">Community</span>
+          <span className="text-[#E4B643] italic">Community</span>
         </>
       }
       brandingSubtitle="Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam."

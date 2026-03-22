@@ -40,7 +40,7 @@ const BRANDING: Record<
     title: (
       <>
         Welcome Back to the{' '}
-        <span className="text-primary italic">Community</span>
+        <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
     subtitle:
@@ -55,7 +55,7 @@ const BRANDING: Record<
     title: (
       <>
         Welcome to the{' '}
-        <span className="text-primary italic">Community</span>
+        <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
     subtitle:
@@ -70,7 +70,7 @@ const BRANDING: Record<
     title: (
       <>
         Reset Your{' '}
-        <span className="text-primary italic">Password</span>
+        <span className="text-[#E4B643] italic">Password</span>
       </>
     ),
     subtitle:

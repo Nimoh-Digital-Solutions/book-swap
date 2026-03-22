@@ -80,7 +80,7 @@ export function ForgotPasswordForm({
         <button
           type="button"
           onClick={onBack}
-          className="mt-4 text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+          className="mt-4 text-sm font-medium text-[#E4B643] hover:underline inline-flex items-center gap-1"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t('auth.forgotPassword.backToLogin', 'Back to Login')}
@@ -94,7 +94,7 @@ export function ForgotPasswordForm({
       <button
         type="button"
         onClick={onBack}
-        className="mb-6 text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+        className="mb-6 text-sm font-medium text-[#E4B643] hover:underline inline-flex items-center gap-1"
       >
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
         {t('auth.forgotPassword.backToLogin', 'Back to Login')}
@@ -125,8 +125,8 @@ export function ForgotPasswordForm({
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
-              className={`block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary ${
-                errors.email ? 'border-red-500' : 'border-border-dark'
+              className={`block w-full pl-10 pr-3 py-3 border rounded-xl sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643] ${
+                errors.email ? 'border-red-500' : 'border-[#28382D]'
               }`}
               {...register('email')}
             />
@@ -150,7 +150,7 @@ export function ForgotPasswordForm({
             type="submit"
             disabled={isLoading}
             aria-busy={isLoading}
-            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-60"
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-[#152018] bg-[#E4B643] hover:bg-[#d9b93e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#E4B643] transition-colors disabled:opacity-60"
           >
             {isLoading
               ? t('auth.forgotPassword.loading', 'Sending…')

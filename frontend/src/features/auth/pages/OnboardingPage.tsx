@@ -35,13 +35,13 @@ export function OnboardingPage() {
 
           <div className="relative z-10">
             <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </Link>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-              Find Books <span className="text-primary italic">Near You</span>
+              Find Books <span className="text-[#E4B643] italic">Near You</span>
             </h1>
             <p className="text-text-secondary text-lg leading-relaxed">
               {t(
@@ -53,7 +53,7 @@ export function OnboardingPage() {
 
           <div className="relative z-10 mt-12 md:mt-0">
             <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
-              <div className="flex text-primary mb-3 gap-1" aria-label="5 stars">
+              <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
                 ))}
@@ -62,7 +62,7 @@ export function OnboardingPage() {
                 &ldquo;Setting my neighborhood helped me find three amazing books just a 5-minute walk from my apartment!&rdquo;
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-background-dark text-sm font-bold border-2 border-primary">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
                   D
                 </div>
                 <div>
@@ -77,14 +77,14 @@ export function OnboardingPage() {
         {/* ── Form panel ──────────────────────────────────────── */}
         <div className="md:w-7/12 bg-surface-dark p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-border-dark" aria-hidden="true">
-            <div className="h-full bg-primary w-full" />
+            <div className="h-full bg-[#E4B643] w-full" />
           </div>
 
           {/* Mobile logo */}
           <div className="md:hidden mb-8">
             <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </Link>
@@ -98,7 +98,7 @@ export function OnboardingPage() {
               </span>
               <Link
                 to={PATHS.HOME}
-                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
+                className="text-sm font-medium text-text-secondary hover:text-[#E4B643] transition-colors"
               >
                 {t('onboarding.skip', 'Skip for now')}
               </Link>
@@ -127,7 +127,7 @@ export function OnboardingPage() {
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     required
-                    className="block w-full pl-10 pr-3 py-3 border border-border-dark rounded-xl sm:text-sm bg-background-dark text-white placeholder-text-muted transition-colors focus:ring-primary focus:border-primary"
+                    className="block w-full pl-10 pr-3 py-3 border border-[#28382D] rounded-xl sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]"
                     aria-label={t('onboarding.locationLabel', 'City, Neighborhood, or Zip Code')}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -137,8 +137,8 @@ export function OnboardingPage() {
               </div>
 
               {/* Privacy info box */}
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex gap-3">
-                <Info className="text-primary w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="bg-[#E4B643]/10 border border-[#E4B643]/20 rounded-xl p-4 flex gap-3">
+                <Info className="text-[#E4B643] w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="text-sm text-text-secondary">
                   {t(
                     'onboarding.privacyNote',
@@ -157,7 +157,7 @@ export function OnboardingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-background-dark bg-primary hover:bg-primary-hover transition-colors"
+                  className="flex-[2] flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-[#152018] bg-[#E4B643] hover:bg-[#d9b93e] transition-colors"
                 >
                   {t('onboarding.submit', 'Complete Setup')}
                 </button>

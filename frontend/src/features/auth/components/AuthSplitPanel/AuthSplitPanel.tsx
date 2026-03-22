@@ -51,8 +51,8 @@ export function AuthSplitPanel({
 
           <div className="relative z-10">
             <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </Link>
@@ -67,14 +67,14 @@ export function AuthSplitPanel({
           {/* Testimonial card */}
           <div className="relative z-10 mt-12 md:mt-0">
             <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
-              <div className="flex text-primary mb-3 gap-1" aria-label="5 stars">
+              <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
                 ))}
               </div>
               <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-background-dark text-sm font-bold border-2 border-primary">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
                   {authorName.charAt(0)}
                 </div>
                 <div>
@@ -89,9 +89,9 @@ export function AuthSplitPanel({
         {/* ── Form panel (right) ──────────────────────────────── */}
         <div className="md:w-7/12 bg-surface-dark p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
           {/* Progress bar */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-border-dark" aria-hidden="true">
+          <div className="absolute top-0 left-0 w-full h-1 bg-[#28382D]" aria-hidden="true">
             <div
-              className="h-full bg-primary transition-all duration-500"
+              className="h-full bg-[#E4B643] transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -99,8 +99,8 @@ export function AuthSplitPanel({
           {/* Mobile logo (hidden on desktop) */}
           <div className="md:hidden mb-8">
             <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-background-dark transform -rotate-45 rounded-sm" />
+              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
+                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </Link>
