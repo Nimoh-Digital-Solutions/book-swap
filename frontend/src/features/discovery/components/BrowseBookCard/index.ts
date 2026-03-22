@@ -1,0 +1,1 @@
+export { BrowseBookCard } from './BrowseBookCard';

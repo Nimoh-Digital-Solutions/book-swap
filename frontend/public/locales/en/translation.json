@@ -291,5 +291,31 @@
       "typeError": "Only JPEG and PNG images are allowed.",
       "sizeError": "Image must be smaller than 5 MB."
     }
+  },
+  "discovery": {
+    "title": "Browse Books",
+    "subtitle": "Discover books available for swap near you",
+    "distance": "~{{km}} km",
+    "search": {
+      "placeholder": "Search by title, author, or ISBN...",
+      "clear": "Clear search"
+    },
+    "radius": {
+      "label": "Distance"
+    },
+    "results": {
+      "count": "{{count}} books found",
+      "count_one": "{{count}} book found",
+      "empty": "No books found within {{radius}} km",
+      "emptySearch": "No books matching '{{query}}' found nearby",
+      "expandRadius": "Try expanding your search radius"
+    },
+    "filters": {
+      "clearAll": "Clear all filters"
+    },
+    "location": {
+      "required": "Set your location to discover nearby books",
+      "setButton": "Set Location"
+    }
   }
 }

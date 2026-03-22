@@ -50,7 +50,9 @@ const PublicProfilePage = lazy(() =>
   import('@features/profile').then(m => ({ default: m.PublicProfilePage }))
 );
 
-const CataloguePage = lazy(() => import('@pages/CataloguePage/CataloguePage'));
+const BrowsePage = lazy(() =>
+  import('@features/discovery').then(m => ({ default: m.BrowsePage }))
+);
 
 const MyShelfPage = lazy(() =>
   import('@features/books').then(m => ({ default: m.MyShelfPage }))
@@ -139,7 +141,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: PATHS.CATALOGUE,
-        element: <LazyPage component={CataloguePage} />,
+        element: <ProtectedPage component={BrowsePage} />,
       },
       // -- Protected routes -------------------------------------------------
       // Add your authenticated routes here using the ProtectedPage wrapper:
