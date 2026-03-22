@@ -454,3 +454,30 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You can have up to 20 wishlist items.")
         validated_data["user"] = user
         return super().create(validated_data)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Browse / Discovery Serializers (Epic 4 — US-401, US-402)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class BrowseBookListSerializer(BookListSerializer):
+    """Extends BookListSerializer with distance (km) for spatial browse."""
+
+    distance = serializers.SerializerMethodField()
+
+    class Meta(BookListSerializer.Meta):
+        fields = (*BookListSerializer.Meta.fields, "distance")
+        read_only_fields = fields
+
+    def get_distance(self, obj) -> float | None:
+        d = getattr(obj, "distance", None)
+        if d is not None:
+            return round(d.m / 1000, 1)
+        return None
+
+
+class BrowseFilterSerializer(serializers.Serializer):
+    """Validate query params for the browse endpoint."""
+
+    radius = serializers.IntegerField(min_value=500, max_value=50000, required=False)

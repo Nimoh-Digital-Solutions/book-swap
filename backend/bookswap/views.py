@@ -1,9 +1,13 @@
-"""bookswap views — user profile, location, onboarding, account, book, and wishlist endpoints."""
+"""bookswap views — user profile, location, onboarding, account, book, wishlist, and browse endpoints."""
 
 from django.contrib.auth import get_user_model
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
 from django.core import signing
+from django.db.models import Case, Count, IntegerField, When
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -18,6 +22,8 @@ from .serializers import (
     BookPhotoSerializer,
     BookSerializer,
     BookUpdateSerializer,
+    BrowseBookListSerializer,
+    BrowseFilterSerializer,
     CheckUsernameSerializer,
     ExternalSearchSerializer,
     ISBNLookupSerializer,
@@ -409,3 +415,149 @@ class WishlistItemViewSet(
 
     def get_queryset(self):
         return WishlistItem.objects.filter(user=self.request.user)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Browse / Discovery (Epic 4 — US-401, US-402)
+# ══════════════════════════════════════════════════════════════════════════════
+
+RADIUS_BUCKETS = [1000, 3000, 5000, 10000, 25000]
+
+
+class BrowsePagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
+class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+    """Browse nearby available books, sorted by distance.
+
+    - ``GET /books/browse/`` — paginated list with distance annotation.
+    - ``GET /books/browse/radius-counts/`` — book count per radius bucket.
+    """
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BrowseBookListSerializer
+    pagination_class = BrowsePagination
+
+    def _get_user_location(self):
+        """Return the authenticated user's location or None."""
+        return self.request.user.location
+
+    def _get_radius(self):
+        """Parse and validate the radius query param."""
+        filter_ser = BrowseFilterSerializer(data=self.request.query_params)
+        filter_ser.is_valid(raise_exception=True)
+        return filter_ser.validated_data.get(
+            "radius", self.request.user.preferred_radius or 5000
+        )
+
+    def _base_queryset(self, user_location, radius):
+        """Queryset of available books within radius, excluding own books."""
+        return (
+            Book.objects.select_related("owner")
+            .prefetch_related("photos")
+            .filter(
+                status=BookStatus.AVAILABLE,
+                owner__location__isnull=False,
+                owner__location__distance_lte=(user_location, D(m=radius)),
+            )
+            .exclude(owner=self.request.user)
+            .annotate(distance=Distance("owner__location", user_location))
+        )
+
+    def get_queryset(self):
+        user_location = self._get_user_location()
+        if user_location is None:
+            return Book.objects.none()
+        radius = self._get_radius()
+        return self._base_queryset(user_location, radius).order_by("distance")
+
+    def list(self, request, *args, **kwargs):
+        if request.user.location is None:
+            return Response(
+                {"detail": "Set your location first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=["get"], url_path="radius-counts")
+    def radius_counts(self, request):
+        """Return book counts per radius bucket in a single query."""
+        user_location = self._get_user_location()
+        if user_location is None:
+            return Response(
+                {"detail": "Set your location first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        base_qs = (
+            Book.objects.filter(
+                status=BookStatus.AVAILABLE,
+                owner__location__isnull=False,
+            )
+            .exclude(owner=request.user)
+        )
+
+        whens = [
+            When(
+                owner__location__distance_lte=(user_location, D(m=r)),
+                then=1,
+            )
+            for r in RADIUS_BUCKETS
+        ]
+
+        counts = base_qs.aggregate(
+            **{
+                str(r): Count(
+                    Case(whens[i], output_field=IntegerField())
+                )
+                for i, r in enumerate(RADIUS_BUCKETS)
+            }
+        )
+
+        return Response({"counts": counts})
+
+
+class NearbyCountView(APIView):
+    """GET /books/nearby-count/ — public book count for landing page."""
+
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        from django.contrib.gis.geos import Point
+
+        try:
+            lat = float(request.query_params.get("lat", ""))
+            lng = float(request.query_params.get("lng", ""))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Valid 'lat' and 'lng' query params are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+            return Response(
+                {"detail": "lat must be [-90,90] and lng must be [-180,180]."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            radius = int(request.query_params.get("radius", 5000))
+        except (TypeError, ValueError):
+            radius = 5000
+
+        radius = max(500, min(radius, 50000))
+
+        point = Point(lng, lat, srid=4326)
+        count = (
+            Book.objects.filter(
+                status=BookStatus.AVAILABLE,
+                owner__location__isnull=False,
+                owner__location__distance_lte=(point, D(m=radius)),
+            )
+            .count()
+        )
+
+        return Response({"count": count, "radius": radius})
