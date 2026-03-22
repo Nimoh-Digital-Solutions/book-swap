@@ -13,7 +13,9 @@ import { http, HttpResponse } from 'msw';
 
 import { server } from '../../../test/mocks/server';
 import { profileKeys } from '../hooks/profileKeys';
+import { useCheckUsername } from '../hooks/useCheckUsername';
 import { useCompleteOnboarding } from '../hooks/useCompleteOnboarding';
+import { useDeleteAccount } from '../hooks/useDeleteAccount';
 import { useProfile } from '../hooks/useProfile';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { useSetLocation } from '../hooks/useSetLocation';
@@ -110,6 +112,23 @@ function setupProfileHandlers() {
     http.post(`*${API.users.meOnboardingComplete}`, () =>
       HttpResponse.json({ onboarding_completed: true }),
     ),
+    http.get(`*${API.users.checkUsername}*`, ({ request }) => {
+      const url = new URL(request.url);
+      const q = url.searchParams.get('q') ?? '';
+      return HttpResponse.json({
+        available: q !== 'taken',
+        ...(q === 'taken' ? { suggestions: ['taken_1', 'taken_2'] } : {}),
+      });
+    }),
+    http.post(`*${API.users.meDelete}`, () =>
+      HttpResponse.json({
+        detail: 'Account scheduled for deletion.',
+        cancel_token: 'test-cancel-token',
+      }),
+    ),
+    http.post(`*${API.users.meDeleteCancel}`, () =>
+      HttpResponse.json({ detail: 'Account deletion cancelled.' }),
+    ),
   );
 }
 
@@ -126,6 +145,10 @@ describe('profileKeys', () => {
     expect(profileKeys.me()).toEqual(['profile', 'me']);
     expect(profileKeys.details()).toEqual(['profile', 'detail']);
     expect(profileKeys.detail('abc-123')).toEqual(['profile', 'detail', 'abc-123']);
+  });
+
+  it('returns correct checkUsername key', () => {
+    expect(profileKeys.checkUsername('alice')).toEqual(['profile', 'check-username', 'alice']);
   });
 });
 
@@ -161,6 +184,28 @@ describe('profileService', () => {
   it('completeOnboarding returns onboarding status', async () => {
     const result = await profileService.completeOnboarding();
     expect(result.onboarding_completed).toBe(true);
+  });
+
+  it('checkUsername returns availability', async () => {
+    const result = await profileService.checkUsername('available_name');
+    expect(result.available).toBe(true);
+  });
+
+  it('checkUsername returns suggestions for taken name', async () => {
+    const result = await profileService.checkUsername('taken');
+    expect(result.available).toBe(false);
+    expect(result.suggestions).toEqual(['taken_1', 'taken_2']);
+  });
+
+  it('requestDeletion sends POST and returns cancel token', async () => {
+    const result = await profileService.requestDeletion({ password: 'pass123' });
+    expect(result.detail).toBe('Account scheduled for deletion.');
+    expect(result.cancel_token).toBe('test-cancel-token');
+  });
+
+  it('cancelDeletion sends POST and returns confirmation', async () => {
+    const result = await profileService.cancelDeletion({ token: 'some-token' });
+    expect(result.detail).toBe('Account deletion cancelled.');
   });
 });
 
@@ -277,6 +322,50 @@ describe('useCompleteOnboarding', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.onboarding_completed).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. useDeleteAccount hook
+// ---------------------------------------------------------------------------
+describe('useDeleteAccount', () => {
+  beforeEach(setupProfileHandlers);
+
+  it('requests account deletion with password', async () => {
+    const { result } = renderHook(() => useDeleteAccount(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ password: 'mypassword' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.detail).toBe('Account scheduled for deletion.');
+    expect(result.current.data?.cancel_token).toBe('test-cancel-token');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 9. useCheckUsername hook
+// ---------------------------------------------------------------------------
+describe('useCheckUsername', () => {
+  beforeEach(setupProfileHandlers);
+
+  it('does not fetch when query is too short', () => {
+    const { result } = renderHook(
+      () => useCheckUsername('ab'),
+      { wrapper: createWrapper() },
+    );
+
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+
+  it('does not fetch when query matches current username', () => {
+    const { result } = renderHook(
+      () => useCheckUsername('alice', 'alice'),
+      { wrapper: createWrapper() },
+    );
+
+    expect(result.current.fetchStatus).toBe('idle');
   });
 });
 

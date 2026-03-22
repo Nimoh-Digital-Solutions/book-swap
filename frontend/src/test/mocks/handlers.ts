@@ -124,10 +124,44 @@ const profileHandlers = [
       avatar: null,
       neighborhood: 'De Pijp',
       preferred_genres: [],
+      preferred_language: 'en',
       avg_rating: '0.0',
       swap_count: 0,
       rating_count: 0,
       member_since: '2025-01-01T00:00:00Z',
+    });
+  }),
+
+  /** GET /api/v1/users/check-username/ — username availability */
+  http.get('*/api/v1/users/check-username/', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q') ?? '';
+    const taken = q === 'taken_user';
+    return HttpResponse.json({
+      available: !taken,
+      ...(taken ? { suggestions: [`${q}_1`, `${q}_2`] } : {}),
+    });
+  }),
+
+  /** POST /api/v1/users/me/delete/ — request account deletion */
+  http.post('*/api/v1/users/me/delete/', async ({ request }) => {
+    const body = (await request.json()) as { password?: string };
+    if (body.password === 'wrong') {
+      return HttpResponse.json(
+        { password: ['Invalid password.'] },
+        { status: 400 },
+      );
+    }
+    return HttpResponse.json({
+      detail: 'Account scheduled for deletion.',
+      cancel_token: 'signed-cancel-token-abc',
+    });
+  }),
+
+  /** POST /api/v1/users/me/delete/cancel/ — cancel account deletion */
+  http.post('*/api/v1/users/me/delete/cancel/', () => {
+    return HttpResponse.json({
+      detail: 'Account deletion cancelled.',
     });
   }),
 ];
