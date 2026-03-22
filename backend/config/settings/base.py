@@ -91,6 +91,7 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     include_privacy=True,
 ) + get_social_installed_apps() + [
     'django.contrib.gis',
+    'django.contrib.postgres',
     # Project apps
     'bookswap',
 ]
