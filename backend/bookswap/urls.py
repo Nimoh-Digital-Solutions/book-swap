@@ -41,6 +41,19 @@ urlpatterns = [
     path('books/isbn-lookup/', views.ISBNLookupView.as_view(), name='isbn-lookup'),
     path('books/search-external/', views.ExternalSearchView.as_view(), name='external-search'),
 
+    # ── Browse / Discovery (Epic 4) ──────────────────────────────────
+    path(
+        'books/browse/',
+        views.BrowseViewSet.as_view({'get': 'list'}),
+        name='browse-list',
+    ),
+    path(
+        'books/browse/radius-counts/',
+        views.BrowseViewSet.as_view({'get': 'radius_counts'}),
+        name='browse-radius-counts',
+    ),
+    path('books/nearby-count/', views.NearbyCountView.as_view(), name='nearby-count'),
+
     # ── Router-generated Book & Wishlist CRUD ─────────────────────────
     path('', include(router.urls)),
 ]

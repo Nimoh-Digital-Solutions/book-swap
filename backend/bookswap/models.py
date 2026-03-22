@@ -135,6 +135,7 @@ class User(AbstractNimohUser):
         indexes = [  # noqa: RUF012
             *AbstractNimohUser.Meta.indexes,
             models.Index(fields=['onboarding_completed']),
+            models.Index(fields=['location'], name='user_location_gist'),
         ]
 
 
