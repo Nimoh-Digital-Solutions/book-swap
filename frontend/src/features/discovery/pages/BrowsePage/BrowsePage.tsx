@@ -6,7 +6,7 @@
  * Mobile: "Filters" button opens bottom sheet.
  * If the user hasn't set a location, shows SetLocationPrompt.
  */
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, type ReactElement, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useProfile } from '@features/profile';
@@ -20,9 +20,16 @@ import { MobileFilterSheet } from '../../components/MobileFilterSheet';
 import { RadiusSelector } from '../../components/RadiusSelector';
 import { SearchBar } from '../../components/SearchBar';
 import { SetLocationPrompt } from '../../components/SetLocationPrompt';
+import { type ViewMode, ViewToggle } from '../../components/ViewToggle';
 import { useBrowseBooks } from '../../hooks/useBrowseBooks';
 import { useBrowseFilters } from '../../hooks/useBrowseFilters';
+import { useMapBooks } from '../../hooks/useMapBooks';
 import { useRadiusCounts } from '../../hooks/useRadiusCounts';
+
+// Lazy-load MapView to avoid loading Leaflet JS on list view
+const LazyMapView = lazy(() =>
+  import('../../components/MapView/MapView').then(m => ({ default: m.MapView })),
+);
 
 const DEFAULT_RADIUS = 5000;
 const EXPAND_RADIUS = 10000;
@@ -32,6 +39,7 @@ export function BrowsePage(): ReactElement {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { filters, setFilters, clearFilters } = useBrowseFilters();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // Default radius from user profile, fallback to 5 km
   const activeRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
@@ -50,6 +58,12 @@ export function BrowsePage(): ReactElement {
   } = useBrowseBooks(
     { ...filters, radius: activeRadius },
     hasLocation,
+  );
+
+  // Map data — fetched only when map is active
+  const { data: mapData, isLoading: mapLoading } = useMapBooks(
+    { ...filters, radius: activeRadius },
+    hasLocation && viewMode === 'map',
   );
 
   // Flatten paginated results
@@ -179,12 +193,13 @@ export function BrowsePage(): ReactElement {
           onChange={handleSearchChange}
           isLoading={isLoading && !isFetchingNextPage}
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <RadiusSelector
             value={activeRadius}
             onChange={handleRadiusChange}
             counts={radiusCounts}
           />
+          <ViewToggle value={viewMode} onChange={setViewMode} />
           {/* Mobile filter button */}
           <button
             type="button"
@@ -213,7 +228,7 @@ export function BrowsePage(): ReactElement {
         onClearAll={clearFilters}
       />
 
-      {/* Sidebar + Grid layout */}
+      {/* Sidebar + Content layout */}
       <div className="flex gap-8">
         {/* Desktop filter sidebar */}
         <aside className="hidden lg:block w-[280px] shrink-0">
@@ -230,59 +245,95 @@ export function BrowsePage(): ReactElement {
 
         {/* Main content */}
         <div className="flex-1 min-w-0 space-y-6">
-          {/* Error state */}
-          {isError && (
-            <div className="text-center py-10">
-              <p className="text-red-400">
-                {t('error.somethingWentWrong')}
-              </p>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!isLoading && !isError && books.length === 0 && (
-            <BrowseEmptyState
-              search={filters.search}
-              radiusKm={activeRadius / 1000}
-              onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
-            />
-          )}
-
-          {/* Book grid */}
-          {books.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {books.map(book => (
-                <BrowseBookCard key={book.id} book={book} />
-              ))}
-            </div>
-          )}
-
-          {/* Loading skeleton for initial load */}
-          {isLoading && books.length === 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
-                >
-                  <div className="aspect-[3/4] bg-[#28382D]" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-[#28382D] rounded w-3/4" />
-                    <div className="h-3 bg-[#28382D] rounded w-1/2" />
-                  </div>
+          {viewMode === 'map' ? (
+            /* ── Map View ── */
+            <>
+              {mapLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
                 </div>
-              ))}
-            </div>
-          )}
+              )}
+              {!mapLoading && profile?.location && (
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center py-20">
+                      <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
+                    </div>
+                  }
+                >
+                  <LazyMapView
+                    books={mapData?.results ?? []}
+                    userLocation={profile.location}
+                    radiusMetres={activeRadius}
+                  />
+                </Suspense>
+              )}
+              {!mapLoading && mapData && mapData.results.length === 0 && (
+                <BrowseEmptyState
+                  search={filters.search}
+                  radiusKm={activeRadius / 1000}
+                  onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
+                />
+              )}
+            </>
+          ) : (
+            /* ── List View ── */
+            <>
+              {/* Error state */}
+              {isError && (
+                <div className="text-center py-10">
+                  <p className="text-red-400">
+                    {t('error.somethingWentWrong')}
+                  </p>
+                </div>
+              )}
 
-          {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className="h-1" />
+              {/* Empty state */}
+              {!isLoading && !isError && books.length === 0 && (
+                <BrowseEmptyState
+                  search={filters.search}
+                  radiusKm={activeRadius / 1000}
+                  onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
+                />
+              )}
 
-          {/* Loading more indicator */}
-          {isFetchingNextPage && (
-            <div className="flex justify-center py-6">
-              <Loader2 className="w-6 h-6 text-[#E4B643] animate-spin" />
-            </div>
+              {/* Book grid */}
+              {books.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {books.map(book => (
+                    <BrowseBookCard key={book.id} book={book} />
+                  ))}
+                </div>
+              )}
+
+              {/* Loading skeleton for initial load */}
+              {isLoading && books.length === 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
+                    >
+                      <div className="aspect-[3/4] bg-[#28382D]" />
+                      <div className="p-4 space-y-2">
+                        <div className="h-4 bg-[#28382D] rounded w-3/4" />
+                        <div className="h-3 bg-[#28382D] rounded w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+
+              {/* Loading more indicator */}
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="w-6 h-6 text-[#E4B643] animate-spin" />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

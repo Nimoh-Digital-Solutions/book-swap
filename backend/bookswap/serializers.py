@@ -461,9 +461,23 @@ class WishlistItemSerializer(serializers.ModelSerializer):
 # ══════════════════════════════════════════════════════════════════════════════
 
 
-class BrowseBookListSerializer(BookListSerializer):
-    """Extends BookListSerializer with distance (km) for spatial browse."""
+class BrowseBookOwnerSerializer(BookOwnerSerializer):
+    """Owner info with snapped location for map pins in browse results."""
 
+    location = serializers.SerializerMethodField()
+
+    class Meta(BookOwnerSerializer.Meta):
+        fields = (*BookOwnerSerializer.Meta.fields, "location")
+        read_only_fields = fields
+
+    def get_location(self, obj) -> dict | None:
+        return snap_to_grid(obj.location)
+
+
+class BrowseBookListSerializer(BookListSerializer):
+    """Extends BookListSerializer with distance (km) and owner location for browse."""
+
+    owner = BrowseBookOwnerSerializer(read_only=True)
     distance = serializers.SerializerMethodField()
 
     class Meta(BookListSerializer.Meta):

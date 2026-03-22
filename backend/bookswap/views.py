@@ -429,7 +429,7 @@ RADIUS_BUCKETS = [1000, 3000, 5000, 10000, 25000]
 class BrowsePagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = "page_size"
-    max_page_size = 50
+    max_page_size = 200
 
 
 class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
