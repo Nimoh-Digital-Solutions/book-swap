@@ -1,6 +1,10 @@
 """Serializers for the bookswap app."""
+import re
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from django.contrib.gis.geos import Point
+from django.utils import timezone
 from rest_framework import serializers
 
 from .services import GeocodingError, NominatimGeocodingService
@@ -60,6 +64,9 @@ class UserPrivateSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     """Partial update serializer for PATCH /users/me/."""
 
+    ALLOWED_AVATAR_TYPES = ("image/jpeg", "image/png")
+    MAX_AVATAR_SIZE = 2 * 1024 * 1024  # 2 MB
+
     class Meta:
         model = User
         fields = (
@@ -71,6 +78,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "preferred_language",
             "preferred_radius",
         )
+
+    def validate_avatar(self, value):
+        if value is None:
+            return value
+        if value.content_type not in self.ALLOWED_AVATAR_TYPES:
+            raise serializers.ValidationError("Only JPEG and PNG images are allowed.")
+        if value.size > self.MAX_AVATAR_SIZE:
+            raise serializers.ValidationError("Avatar must be 2 MB or smaller.")
+        return value
 
     def validate_preferred_genres(self, value):
         if len(value) > 5:
@@ -93,6 +109,7 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
     location = serializers.SerializerMethodField()
     member_since = serializers.DateTimeField(source="created_at", read_only=True)
+    avg_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -114,6 +131,12 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
     def get_location(self, obj) -> dict | None:
         return snap_to_grid(obj.location)
+
+    def get_avg_rating(self, obj):
+        """Only expose avg_rating when the user has 3+ ratings."""
+        if obj.rating_count >= 3:
+            return float(obj.avg_rating)
+        return None
 
 
 class SetLocationSerializer(serializers.Serializer):
@@ -226,3 +249,48 @@ class BookswapRegisterSerializer(serializers.Serializer):
     def validate_date_of_birth(self, value):
         validate_minimum_age(value)
         return value
+
+
+# ── Username availability (US-201 AC2) ────────────────────────────────
+
+
+class CheckUsernameSerializer(serializers.Serializer):
+    """Validate and check username availability."""
+
+    q = serializers.CharField(min_length=3, max_length=30)
+
+    def validate_q(self, value):
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise serializers.ValidationError(
+                "Username may only contain letters, numbers, and underscores."
+            )
+        return value.lower()
+
+
+# ── Account deletion (US-203) ─────────────────────────────────────────
+
+
+class AccountDeletionRequestSerializer(serializers.Serializer):
+    """Request account deletion — requires password confirmation."""
+
+    password = serializers.CharField(write_only=True)
+
+    def validate_password(self, value):
+        user = self.context["request"].user
+        if not check_password(value, user.password):
+            raise serializers.ValidationError("Incorrect password.")
+        return value
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if user.deletion_requested_at is not None:
+            raise serializers.ValidationError(
+                "Account deletion has already been requested."
+            )
+        return attrs
+
+    def save(self):
+        user = self.context["request"].user
+        user.deletion_requested_at = timezone.now()
+        user.is_active = False
+        user.save(update_fields=["deletion_requested_at", "is_active"])
