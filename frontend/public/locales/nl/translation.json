@@ -291,5 +291,31 @@
       "typeError": "Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.",
       "sizeError": "Afbeelding moet kleiner zijn dan 5 MB."
     }
+  },
+  "discovery": {
+    "title": "Boeken bladeren",
+    "subtitle": "Ontdek boeken beschikbaar voor ruil in je buurt",
+    "distance": "~{{km}} km",
+    "search": {
+      "placeholder": "Zoek op titel, auteur of ISBN...",
+      "clear": "Zoekopdracht wissen"
+    },
+    "radius": {
+      "label": "Afstand"
+    },
+    "results": {
+      "count": "{{count}} boeken gevonden",
+      "count_one": "{{count}} boek gevonden",
+      "empty": "Geen boeken gevonden binnen {{radius}} km",
+      "emptySearch": "Geen boeken gevonden voor '{{query}}' in de buurt",
+      "expandRadius": "Probeer je zoekradius te vergroten"
+    },
+    "filters": {
+      "clearAll": "Alle filters wissen"
+    },
+    "location": {
+      "required": "Stel je locatie in om boeken in de buurt te ontdekken",
+      "setButton": "Locatie instellen"
+    }
   }
 }

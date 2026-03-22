@@ -291,5 +291,31 @@
       "typeError": "Seules les images JPEG et PNG sont acceptées.",
       "sizeError": "L'image doit faire moins de 5 Mo."
     }
+  },
+  "discovery": {
+    "title": "Parcourir les livres",
+    "subtitle": "Découvrez les livres disponibles à l'échange près de chez vous",
+    "distance": "~{{km}} km",
+    "search": {
+      "placeholder": "Rechercher par titre, auteur ou ISBN...",
+      "clear": "Effacer la recherche"
+    },
+    "radius": {
+      "label": "Distance"
+    },
+    "results": {
+      "count": "{{count}} livres trouvés",
+      "count_one": "{{count}} livre trouvé",
+      "empty": "Aucun livre trouvé dans un rayon de {{radius}} km",
+      "emptySearch": "Aucun livre correspondant à '{{query}}' trouvé à proximité",
+      "expandRadius": "Essayez d'élargir votre rayon de recherche"
+    },
+    "filters": {
+      "clearAll": "Effacer tous les filtres"
+    },
+    "location": {
+      "required": "Définissez votre position pour découvrir les livres à proximité",
+      "setButton": "Définir la position"
+    }
   }
 }

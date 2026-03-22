@@ -86,4 +86,10 @@ export const API = {
     create: `${WISHLIST}/`,
     detail: (id: string) => `${WISHLIST}/${id}/`,
   },
+
+  browse: {
+    list: `${BOOKS}/browse/`,
+    radiusCounts: `${BOOKS}/browse/radius-counts/`,
+    nearbyCount: `${BOOKS}/nearby-count/`,
+  },
 } as const;

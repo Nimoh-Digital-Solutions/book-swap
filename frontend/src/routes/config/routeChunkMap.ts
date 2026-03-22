@@ -16,5 +16,6 @@ export const routeChunkMap: Record<string, (() => Promise<unknown>) | undefined>
   [PATHS.COMPONENTS_DEMO]: () => import('@pages/ComponentsDemoPage/ComponentsDemoPage'),
   [PATHS.LOGIN]: () => import('@features/auth'),
   [PATHS.REGISTER]: () => import('@features/auth'),
+  [PATHS.CATALOGUE]: () => import('@features/discovery'),
   [PATHS.NOT_FOUND]: () => import('@pages/NotFoundPage/NotFoundPage'),
 };
