@@ -9,4 +9,5 @@ export const profileKeys = {
   me: () => [...profileKeys.all, 'me'] as const,
   details: () => [...profileKeys.all, 'detail'] as const,
   detail: (id: string) => [...profileKeys.details(), id] as const,
+  checkUsername: (query: string) => [...profileKeys.all, 'check-username', query] as const,
 };

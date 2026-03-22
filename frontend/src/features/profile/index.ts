@@ -10,7 +10,9 @@
 
 // Hooks
 export { profileKeys } from './hooks/profileKeys';
+export { useCheckUsername } from './hooks/useCheckUsername';
 export { useCompleteOnboarding } from './hooks/useCompleteOnboarding';
+export { useDeleteAccount } from './hooks/useDeleteAccount';
 export { useProfile } from './hooks/useProfile';
 export { usePublicProfile } from './hooks/usePublicProfile';
 export { useSetLocation } from './hooks/useSetLocation';
@@ -31,6 +33,10 @@ export { profileService } from './services/profile.service';
 
 // Types
 export type {
+  AccountDeletionCancelPayload,
+  AccountDeletionPayload,
+  AccountDeletionResponse,
+  CheckUsernameResponse,
   OnboardingCompleteResponse,
   PreferredLanguage,
   SetLocationPayload,

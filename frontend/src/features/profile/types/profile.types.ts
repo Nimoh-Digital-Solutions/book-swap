@@ -112,3 +112,33 @@ export interface SetLocationResponse {
 export interface OnboardingCompleteResponse {
   onboarding_completed: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Username check (US-201 AC2)
+// ---------------------------------------------------------------------------
+
+/** Response from `GET /api/v1/users/check-username/?q=<name>`. */
+export interface CheckUsernameResponse {
+  available: boolean;
+  suggestions?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Account deletion (US-203)
+// ---------------------------------------------------------------------------
+
+/** Payload for `POST /api/v1/users/me/delete/`. */
+export interface AccountDeletionPayload {
+  password: string;
+}
+
+/** Response from `POST /api/v1/users/me/delete/`. */
+export interface AccountDeletionResponse {
+  detail: string;
+  cancel_token: string;
+}
+
+/** Payload for `POST /api/v1/users/me/delete/cancel/`. */
+export interface AccountDeletionCancelPayload {
+  token: string;
+}
