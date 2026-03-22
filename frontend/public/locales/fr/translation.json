@@ -298,7 +298,8 @@
     "distance": "~{{km}} km",
     "search": {
       "placeholder": "Rechercher par titre, auteur ou ISBN...",
-      "clear": "Effacer la recherche"
+      "clear": "Effacer la recherche",
+      "minChars": "Saisissez au moins 3 caractères"
     },
     "radius": {
       "label": "Distance"
@@ -311,7 +312,12 @@
       "expandRadius": "Essayez d'élargir votre rayon de recherche"
     },
     "filters": {
-      "clearAll": "Effacer tous les filtres"
+      "title": "Filtres",
+      "clearAll": "Effacer tous les filtres",
+      "genre": "Genre",
+      "language": "Langue",
+      "condition": "État",
+      "apply": "Appliquer les filtres"
     },
     "location": {
       "required": "Définissez votre position pour découvrir les livres à proximité",

@@ -12,6 +12,9 @@
 export { BrowseBookCard } from './components/BrowseBookCard';
 export { BrowseEmptyState } from './components/BrowseEmptyState';
 export { FilterChips } from './components/FilterChips';
+export { FilterGroup } from './components/FilterGroup';
+export { FilterPanel } from './components/FilterPanel';
+export { MobileFilterSheet } from './components/MobileFilterSheet';
 export { RadiusSelector } from './components/RadiusSelector';
 export { SearchBar } from './components/SearchBar';
 export { SetLocationPrompt } from './components/SetLocationPrompt';
