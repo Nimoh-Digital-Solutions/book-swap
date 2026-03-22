@@ -189,8 +189,182 @@ const registrationHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Book / Wishlist handlers
+// ---------------------------------------------------------------------------
+
+export const TEST_BOOK_OWNER = {
+  id: 'usr_test_001',
+  username: 'testuser',
+  avatar: null,
+  neighborhood: 'Jordaan',
+  avg_rating: '4.5',
+};
+
+export const TEST_BOOK_LIST_ITEM = {
+  id: 'book_001',
+  title: 'The Great Gatsby',
+  author: 'F. Scott Fitzgerald',
+  cover_url: 'https://example.com/gatsby.jpg',
+  condition: 'good' as const,
+  language: 'en' as const,
+  status: 'available' as const,
+  primary_photo: null,
+  owner: TEST_BOOK_OWNER,
+  created_at: '2025-07-10T10:00:00Z',
+};
+
+export const TEST_BOOK: Record<string, unknown> = {
+  ...TEST_BOOK_LIST_ITEM,
+  isbn: '9780743273565',
+  description: 'A novel about the American Dream.',
+  genres: ['Fiction'],
+  notes: '',
+  page_count: 180,
+  publish_year: 1925,
+  photos: [],
+  updated_at: '2025-07-10T10:00:00Z',
+};
+
+export const TEST_WISHLIST_ITEM = {
+  id: 'wish_001',
+  isbn: '9780140449136',
+  title: 'Crime and Punishment',
+  author: 'Fyodor Dostoevsky',
+  genre: 'Fiction',
+  cover_url: '',
+  created_at: '2025-07-11T08:00:00Z',
+};
+
+const bookHandlers = [
+  /** GET /api/v1/books/ — list books (optionally filtered by owner=me) */
+  http.get('*/api/v1/books/', ({ request }) => {
+    const url = new URL(request.url);
+    const owner = url.searchParams.get('owner');
+    if (owner === 'me') {
+      return HttpResponse.json({
+        count: 1,
+        next: null,
+        previous: null,
+        results: [TEST_BOOK_LIST_ITEM],
+      });
+    }
+    return HttpResponse.json({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [TEST_BOOK_LIST_ITEM],
+    });
+  }),
+
+  /** GET /api/v1/books/:id/ — book detail */
+  http.get('*/api/v1/books/:id/', () => {
+    return HttpResponse.json(TEST_BOOK);
+  }),
+
+  /** POST /api/v1/books/ — create book */
+  http.post('*/api/v1/books/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      { ...TEST_BOOK, ...body, id: 'book_new_001' },
+      { status: 201 },
+    );
+  }),
+
+  /** PATCH /api/v1/books/:id/ — update book */
+  http.patch('*/api/v1/books/:id/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ ...TEST_BOOK, ...body });
+  }),
+
+  /** DELETE /api/v1/books/:id/ */
+  http.delete('*/api/v1/books/:id/', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  /** GET /api/v1/books/isbn-lookup/ */
+  http.get('*/api/v1/books/isbn-lookup/', ({ request }) => {
+    const url = new URL(request.url);
+    const isbn = url.searchParams.get('isbn') ?? '';
+    return HttpResponse.json({
+      isbn,
+      title: 'The Great Gatsby',
+      author: 'F. Scott Fitzgerald',
+      description: 'A novel about the American Dream.',
+      cover_url: 'https://example.com/gatsby.jpg',
+      page_count: 180,
+      publish_year: 1925,
+    });
+  }),
+
+  /** GET /api/v1/books/search-external/ */
+  http.get('*/api/v1/books/search-external/', () => {
+    return HttpResponse.json([
+      {
+        isbn: '9780743273565',
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        description: '',
+        cover_url: '',
+        page_count: null,
+        publish_year: 1925,
+      },
+    ]);
+  }),
+
+  /** POST /api/v1/books/:bookId/photos/ — upload photo */
+  http.post('*/api/v1/books/:bookId/photos/', () => {
+    return HttpResponse.json(
+      { id: 'photo_001', image: 'https://example.com/photo.jpg', position: 0, created_at: '2025-07-10T10:00:00Z' },
+      { status: 201 },
+    );
+  }),
+
+  /** DELETE /api/v1/books/:bookId/photos/:photoId/ */
+  http.delete('*/api/v1/books/:bookId/photos/:photoId/', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  /** PATCH /api/v1/books/:bookId/photos/reorder/ */
+  http.patch('*/api/v1/books/:bookId/photos/reorder/', () => {
+    return HttpResponse.json([]);
+  }),
+];
+
+const wishlistHandlers = [
+  /** GET /api/v1/wishlist/ */
+  http.get('*/api/v1/wishlist/', () => {
+    return HttpResponse.json({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [TEST_WISHLIST_ITEM],
+    });
+  }),
+
+  /** POST /api/v1/wishlist/ */
+  http.post('*/api/v1/wishlist/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      { ...TEST_WISHLIST_ITEM, ...body, id: 'wish_new_001' },
+      { status: 201 },
+    );
+  }),
+
+  /** DELETE /api/v1/wishlist/:id/ */
+  http.delete('*/api/v1/wishlist/:id/', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
 /** Default MSW request handlers for all tests. */
-export const handlers = [...authHandlers, ...profileHandlers, ...registrationHandlers];
+export const handlers = [
+  ...authHandlers,
+  ...profileHandlers,
+  ...registrationHandlers,
+  ...bookHandlers,
+  ...wishlistHandlers,
+];
