@@ -8,6 +8,14 @@
  * import { useBooks, useCreateBook, bookService } from '@features/books';
  */
 
+// Components
+export { BookCard } from './components/BookCard/BookCard';
+export { BookForm } from './components/BookForm/BookForm';
+export { BookGenrePicker } from './components/BookGenrePicker/BookGenrePicker';
+export { ConditionBadge } from './components/ConditionBadge/ConditionBadge';
+export { PhotoUploader } from './components/PhotoUploader/PhotoUploader';
+export { WishlistForm } from './components/WishlistForm/WishlistForm';
+
 // Hooks
 export { bookKeys, wishlistKeys } from './hooks/bookKeys';
 export { useAddWishlistItem } from './hooks/useAddWishlistItem';
@@ -41,6 +49,12 @@ export {
 export { bookService } from './services/book.service';
 export { isbnService } from './services/isbn.service';
 export { wishlistService } from './services/wishlist.service';
+
+// Pages
+export { AddBookPage } from './pages/AddBookPage';
+export { BookDetailPage } from './pages/BookDetailPage';
+export { EditBookPage } from './pages/EditBookPage';
+export { MyShelfPage } from './pages/MyShelfPage';
 
 // Types
 export type {

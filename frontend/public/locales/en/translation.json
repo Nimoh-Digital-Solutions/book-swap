@@ -3,7 +3,8 @@
     "mainLabel": "Main navigation",
     "home": "Home",
     "components": "Components",
-    "profile": "My Profile"
+    "profile": "My Profile",
+    "myShelf": "My Shelf"
   },
   "theme": {
     "switchToDim": "Switch to dim mode",
@@ -90,7 +91,8 @@
   "language": {
     "label": "Language",
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "nl": "Nederlands"
   },
   "catalogue": {
     "title": "Browse Books",
@@ -156,6 +158,138 @@
   },
   "common": {
     "loading": "Loading…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "noResults": "No results found.",
+    "confirm": "Confirm",
+    "optional": "optional"
+  },
+  "books": {
+    "myShelf": {
+      "title": "My Shelf",
+      "description": "Manage your book listings and wishlist.",
+      "addBook": "Add Book",
+      "emptyTitle": "Your shelf is empty",
+      "emptyDescription": "List your first book to start swapping with readers in your community.",
+      "addFirstBook": "Add Your First Book",
+      "tabs": {
+        "listings": "My Listings",
+        "wishlist": "Wishlist"
+      }
+    },
+    "addBook": {
+      "title": "Add Book",
+      "backToShelf": "Back to My Shelf",
+      "isbnStep": "Find Your Book",
+      "isbnLabel": "ISBN",
+      "isbnPlaceholder": "Enter ISBN to auto-fill details…",
+      "isbnLookup": "Look Up",
+      "isbnNotFound": "Book not found. Fill in the details manually.",
+      "isbnFound": "Book found! Details have been auto-filled.",
+      "orManual": "Or fill in manually",
+      "detailsStep": "Book Details",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. The Great Gatsby",
+      "authorLabel": "Author",
+      "authorPlaceholder": "e.g. F. Scott Fitzgerald",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Brief description of the book…",
+      "conditionLabel": "Condition",
+      "conditions": {
+        "new": "New",
+        "like_new": "Like New",
+        "good": "Good",
+        "acceptable": "Acceptable"
+      },
+      "languageLabel": "Language",
+      "languages": {
+        "en": "English",
+        "nl": "Dutch",
+        "de": "German",
+        "fr": "French",
+        "es": "Spanish",
+        "other": "Other"
+      },
+      "genresLabel": "Genres",
+      "genresHint": "Select up to 3 genres",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Any notes for potential swappers…",
+      "photosStep": "Photos",
+      "photosHint": "Add up to 5 photos of your book. First photo is the cover.",
+      "addPhoto": "Add Photo",
+      "submit": "List Book",
+      "submitting": "Listing…",
+      "success": "Book listed successfully!",
+      "error": "Failed to list book. Please try again."
+    },
+    "editBook": {
+      "title": "Edit Book",
+      "backToBook": "Back to Book",
+      "save": "Save Changes",
+      "saving": "Saving…",
+      "success": "Book updated successfully!",
+      "error": "Failed to update book. Please try again.",
+      "deleteTitle": "Delete Book",
+      "deleteWarning": "This will permanently remove this book from your shelf. This cannot be undone.",
+      "deleteConfirm": "Delete Book",
+      "deleteSuccess": "Book deleted.",
+      "deleteError": "Failed to delete book."
+    },
+    "detail": {
+      "backToCatalogue": "Back to Catalogue",
+      "backToShelf": "Back to My Shelf",
+      "condition": "Condition",
+      "language": "Language",
+      "genres": "Genres",
+      "description": "Description",
+      "notes": "Swap Notes",
+      "photos": "Photos",
+      "listedBy": "Listed by",
+      "requestSwap": "Request Swap",
+      "editListing": "Edit Listing",
+      "noDescription": "No description provided.",
+      "isbn": "ISBN",
+      "pageCount": "Pages",
+      "published": "Published",
+      "notFound": "Book not found.",
+      "error": "Unable to load book details."
+    },
+    "wishlist": {
+      "title": "Wishlist",
+      "emptyTitle": "Your wishlist is empty",
+      "emptyDescription": "Add books you're looking for and we'll let you know when they become available nearby.",
+      "addItem": "Add to Wishlist",
+      "isbnLabel": "ISBN",
+      "titleLabel": "Title",
+      "authorLabel": "Author",
+      "genreLabel": "Genre",
+      "atLeastOne": "Fill in at least one of ISBN, title, or genre.",
+      "addSuccess": "Added to wishlist!",
+      "removeSuccess": "Removed from wishlist.",
+      "addError": "Failed to add to wishlist.",
+      "removeError": "Failed to remove from wishlist."
+    },
+    "card": {
+      "by": "by {{author}}",
+      "available": "Available",
+      "in_exchange": "In Exchange",
+      "returned": "Returned"
+    },
+    "photo": {
+      "uploadSuccess": "Photo uploaded.",
+      "uploadError": "Failed to upload photo.",
+      "deleteSuccess": "Photo removed.",
+      "deleteError": "Failed to remove photo.",
+      "reorderSuccess": "Photo order updated.",
+      "reorderError": "Failed to reorder photos.",
+      "maxReached": "Maximum 5 photos reached.",
+      "typeError": "Only JPEG and PNG images are allowed.",
+      "sizeError": "Image must be smaller than 5 MB."
+    }
   }
 }

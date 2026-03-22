@@ -3,7 +3,8 @@
     "mainLabel": "Navigation principale",
     "home": "Accueil",
     "components": "Composants",
-    "profile": "Mon profil"
+    "profile": "Mon profil",
+    "myShelf": "Mon étagère"
   },
   "theme": {
     "switchToDim": "Passer en mode tamisé",
@@ -90,7 +91,8 @@
   "language": {
     "label": "Langue",
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "nl": "Nederlands"
   },
   "catalogue": {
     "title": "Parcourir les livres",
@@ -156,6 +158,138 @@
   },
   "common": {
     "loading": "Chargement…",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "noResults": "Aucun résultat trouvé.",
+    "confirm": "Confirmer",
+    "optional": "facultatif"
+  },
+  "books": {
+    "myShelf": {
+      "title": "Mon étagère",
+      "description": "Gérez vos annonces de livres et votre liste de souhaits.",
+      "addBook": "Ajouter un livre",
+      "emptyTitle": "Votre étagère est vide",
+      "emptyDescription": "Ajoutez votre premier livre pour commencer à échanger avec les lecteurs de votre communauté.",
+      "addFirstBook": "Ajouter votre premier livre",
+      "tabs": {
+        "listings": "Mes annonces",
+        "wishlist": "Liste de souhaits"
+      }
+    },
+    "addBook": {
+      "title": "Ajouter un livre",
+      "backToShelf": "Retour à mon étagère",
+      "isbnStep": "Trouver votre livre",
+      "isbnLabel": "ISBN",
+      "isbnPlaceholder": "Entrez l'ISBN pour remplir automatiquement…",
+      "isbnLookup": "Rechercher",
+      "isbnNotFound": "Livre non trouvé. Remplissez les détails manuellement.",
+      "isbnFound": "Livre trouvé ! Les détails ont été remplis automatiquement.",
+      "orManual": "Ou remplir manuellement",
+      "detailsStep": "Détails du livre",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "ex. Le Petit Prince",
+      "authorLabel": "Auteur",
+      "authorPlaceholder": "ex. Antoine de Saint-Exupéry",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Brève description du livre…",
+      "conditionLabel": "État",
+      "conditions": {
+        "new": "Neuf",
+        "like_new": "Comme neuf",
+        "good": "Bon",
+        "acceptable": "Acceptable"
+      },
+      "languageLabel": "Langue",
+      "languages": {
+        "en": "Anglais",
+        "nl": "Néerlandais",
+        "de": "Allemand",
+        "fr": "Français",
+        "es": "Espagnol",
+        "other": "Autre"
+      },
+      "genresLabel": "Genres",
+      "genresHint": "Sélectionnez jusqu'à 3 genres",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Notes pour les échangeurs potentiels…",
+      "photosStep": "Photos",
+      "photosHint": "Ajoutez jusqu'à 5 photos de votre livre. La première photo est la couverture.",
+      "addPhoto": "Ajouter une photo",
+      "submit": "Publier le livre",
+      "submitting": "Publication…",
+      "success": "Livre publié avec succès !",
+      "error": "Échec de la publication. Veuillez réessayer."
+    },
+    "editBook": {
+      "title": "Modifier le livre",
+      "backToBook": "Retour au livre",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "success": "Livre mis à jour avec succès !",
+      "error": "Échec de la mise à jour. Veuillez réessayer.",
+      "deleteTitle": "Supprimer le livre",
+      "deleteWarning": "Cela supprimera définitivement ce livre de votre étagère. Cette action est irréversible.",
+      "deleteConfirm": "Supprimer le livre",
+      "deleteSuccess": "Livre supprimé.",
+      "deleteError": "Échec de la suppression du livre."
+    },
+    "detail": {
+      "backToCatalogue": "Retour au catalogue",
+      "backToShelf": "Retour à mon étagère",
+      "condition": "État",
+      "language": "Langue",
+      "genres": "Genres",
+      "description": "Description",
+      "notes": "Notes d'échange",
+      "photos": "Photos",
+      "listedBy": "Proposé par",
+      "requestSwap": "Demander un échange",
+      "editListing": "Modifier l'annonce",
+      "noDescription": "Aucune description fournie.",
+      "isbn": "ISBN",
+      "pageCount": "Pages",
+      "published": "Publié",
+      "notFound": "Livre non trouvé.",
+      "error": "Impossible de charger les détails du livre."
+    },
+    "wishlist": {
+      "title": "Liste de souhaits",
+      "emptyTitle": "Votre liste de souhaits est vide",
+      "emptyDescription": "Ajoutez des livres que vous recherchez et nous vous informerons lorsqu'ils seront disponibles à proximité.",
+      "addItem": "Ajouter à la liste",
+      "isbnLabel": "ISBN",
+      "titleLabel": "Titre",
+      "authorLabel": "Auteur",
+      "genreLabel": "Genre",
+      "atLeastOne": "Remplissez au moins un champ parmi ISBN, titre ou genre.",
+      "addSuccess": "Ajouté à la liste de souhaits !",
+      "removeSuccess": "Retiré de la liste de souhaits.",
+      "addError": "Échec de l'ajout à la liste.",
+      "removeError": "Échec du retrait de la liste."
+    },
+    "card": {
+      "by": "par {{author}}",
+      "available": "Disponible",
+      "in_exchange": "En échange",
+      "returned": "Retourné"
+    },
+    "photo": {
+      "uploadSuccess": "Photo téléchargée.",
+      "uploadError": "Échec du téléchargement de la photo.",
+      "deleteSuccess": "Photo supprimée.",
+      "deleteError": "Échec de la suppression de la photo.",
+      "reorderSuccess": "Ordre des photos mis à jour.",
+      "reorderError": "Échec de la réorganisation des photos.",
+      "maxReached": "Maximum de 5 photos atteint.",
+      "typeError": "Seules les images JPEG et PNG sont acceptées.",
+      "sizeError": "L'image doit faire moins de 5 Mo."
+    }
   }
 }

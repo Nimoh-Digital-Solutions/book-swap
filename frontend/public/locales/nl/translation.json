@@ -1,0 +1,295 @@
+{
+  "navigation": {
+    "mainLabel": "Hoofdnavigatie",
+    "home": "Home",
+    "components": "Componenten",
+    "profile": "Mijn profiel",
+    "myShelf": "Mijn plank"
+  },
+  "theme": {
+    "switchToDim": "Naar gedimd schakelen",
+    "switchToDark": "Naar donker schakelen",
+    "switchToLight": "Naar licht schakelen",
+    "unpinDefault": "Standaardthema losmaken",
+    "setDefault": "Als standaardthema instellen"
+  },
+  "footer": {
+    "rights": "Alle rechten voorbehouden.",
+    "tagline": "Gemaakt voor lezers."
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Pagina niet gevonden",
+    "description": "De pagina die je zoekt bestaat niet of is verplaatst.",
+    "backToHome": "← Terug naar Home"
+  },
+  "auth": {
+    "pageTitle": "Inloggen",
+    "welcomeBack": "Welkom terug — voer hieronder je gegevens in.",
+    "credentialLabel": "E-mail of gebruikersnaam",
+    "credentialRequired": "E-mail of gebruikersnaam is vereist",
+    "passwordLabel": "Wachtwoord",
+    "passwordMin": "Wachtwoord moet minstens 8 tekens bevatten",
+    "submit": "Inloggen",
+    "loading": "Bezig met inloggen…",
+    "unknownError": "Er is een onverwachte fout opgetreden. Probeer het opnieuw.",
+    "registerTitle": "Account aanmaken",
+    "registerWelcome": "Vul hieronder de gegevens in om te beginnen.",
+    "alreadyHaveAccount": "Heb je al een account?",
+    "signIn": "Inloggen"
+  },
+  "home": {
+    "surfaces": "Oppervlakken",
+    "typography": "Typografie",
+    "nav": {
+      "browse": "Bladeren",
+      "howItWorks": "Hoe het werkt",
+      "community": "Community",
+      "signIn": "Inloggen"
+    },
+    "hero": {
+      "badge": "Amsterdams boekenruilgemeenschap",
+      "headlinePart1": "Vind Je Volgende",
+      "headlinePart2": "Geweldige Avontuur",
+      "subtitle": "Ruil boeken met lezers in je buurt. Zet je uitgelezen boeken online, ontdek nieuwe verhalen in de buurt en ontmoet medelezers — helemaal gratis.",
+      "searchPlaceholder": "Zoek op titel, auteur of ISBN...",
+      "popularLabel": "Populair:"
+    },
+    "recentlyAdded": {
+      "title": "Recent toegevoegd",
+      "viewAll": "Alles bekijken →"
+    },
+    "howItWorks": {
+      "title": "Hoe het werkt",
+      "subtitle": "Drie eenvoudige stappen om boeken te ruilen met je buren"
+    },
+    "community": {
+      "title": "Word lid van onze community",
+      "subtitle": "Maak deel uit van het groeiende netwerk van boekliefhebbers in Amsterdam"
+    },
+    "cta": {
+      "title": "Klaar om te beginnen met ruilen?",
+      "subtitle": "Sluit je aan bij honderden lezers in Amsterdam die al hun favoriete boeken delen.",
+      "createAccount": "Gratis account aanmaken",
+      "learnMore": "Meer informatie"
+    }
+  },
+  "error": {
+    "somethingWentWrong": "Er is iets misgegaan.",
+    "tryAgain": "Opnieuw proberen"
+  },
+  "pwa": {
+    "updateAvailable": "Er is een nieuwe versie beschikbaar.",
+    "updateAction": "Nu bijwerken"
+  },
+  "app": {
+    "name": "BookSwap",
+    "loading": "Laden…",
+    "skipToContent": "Ga naar hoofdinhoud",
+    "dismiss": "Melding sluiten"
+  },
+  "language": {
+    "label": "Taal",
+    "en": "English",
+    "fr": "Français",
+    "nl": "Nederlands"
+  },
+  "catalogue": {
+    "title": "Boeken bladeren",
+    "description": "Ontdek boeken die beschikbaar zijn voor ruil in je community. Aanbiedingen komen binnenkort."
+  },
+  "profile": {
+    "error": "Kan profiel niet laden.",
+    "editButton": "Profiel bewerken",
+    "memberSince": "Lid sinds {{year}}",
+    "newMember": "Nieuw lid",
+    "stats": {
+      "swaps": "Ruilen",
+      "rating": "Beoordeling",
+      "genres": "Genres"
+    },
+    "genres": {
+      "title": "Voorkeursgenres"
+    },
+    "edit": {
+      "heading": "Profiel bewerken",
+      "backToProfile": "Terug naar profiel",
+      "usernameLabel": "Gebruikersnaam",
+      "firstNameLabel": "Voornaam",
+      "lastNameLabel": "Achternaam",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "Vertel anderen over je leesinteresses…",
+      "genresLabel": "Voorkeursgenres",
+      "languageLabel": "Voorkeurstaal",
+      "radiusLabel": "Zoekradius",
+      "avatarLabel": "Profielfoto",
+      "uploadPhoto": "Foto uploaden",
+      "removeAvatar": "Foto verwijderen",
+      "avatarHint": "JPEG of PNG, max 2 MB. Automatisch bijgesneden tot vierkant.",
+      "avatarTypeError": "Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.",
+      "avatarSizeError": "Afbeelding moet kleiner zijn dan 2 MB.",
+      "avatarProcessError": "Kan afbeelding niet verwerken.",
+      "usernameTaken": "Deze gebruikersnaam is al in gebruik.",
+      "usernameSuggestions": "Probeer: {{suggestions}}",
+      "save": "Wijzigingen opslaan",
+      "success": "Profiel succesvol bijgewerkt!",
+      "error": "Kan profiel niet bijwerken. Probeer het opnieuw."
+    },
+    "delete": {
+      "title": "Account verwijderen",
+      "warning": "Dit verwijdert permanent je account, al je boekaanbiedingen, ruilgeschiedenis en berichten. Dit kan niet ongedaan worden gemaakt.",
+      "gracePeriod": "Je hebt 30 dagen om te annuleren voordat je gegevens permanent worden geanonimiseerd.",
+      "passwordLabel": "Voer je wachtwoord in ter bevestiging",
+      "confirm": "Account verwijderen",
+      "error": "Kan account niet verwijderen. Controleer je wachtwoord en probeer het opnieuw."
+    },
+    "public": {
+      "notFound": "Gebruiker niet gevonden",
+      "deactivated": "Deze gebruiker is niet meer actief.",
+      "listedBooks": "Aangeboden boeken",
+      "noBooksYet": "Nog geen boeken aangeboden."
+    }
+  },
+  "settings": {
+    "heading": "Instellingen",
+    "dangerZone": "Gevarenzone",
+    "deleteDescription": "Als je je account verwijdert, is er geen weg terug. Je hebt een respijtperiode van 30 dagen om te annuleren.",
+    "deleteAccount": "Account verwijderen"
+  },
+  "common": {
+    "loading": "Laden…",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "back": "Terug",
+    "next": "Volgende",
+    "search": "Zoeken",
+    "noResults": "Geen resultaten gevonden.",
+    "confirm": "Bevestigen",
+    "optional": "optioneel"
+  },
+  "books": {
+    "myShelf": {
+      "title": "Mijn plank",
+      "description": "Beheer je boekaanbiedingen en verlanglijst.",
+      "addBook": "Boek toevoegen",
+      "emptyTitle": "Je plank is leeg",
+      "emptyDescription": "Voeg je eerste boek toe om te beginnen met ruilen met lezers in je buurt.",
+      "addFirstBook": "Voeg je eerste boek toe",
+      "tabs": {
+        "listings": "Mijn aanbiedingen",
+        "wishlist": "Verlanglijst"
+      }
+    },
+    "addBook": {
+      "title": "Boek toevoegen",
+      "backToShelf": "Terug naar mijn plank",
+      "isbnStep": "Vind je boek",
+      "isbnLabel": "ISBN",
+      "isbnPlaceholder": "Voer ISBN in om automatisch in te vullen…",
+      "isbnLookup": "Opzoeken",
+      "isbnNotFound": "Boek niet gevonden. Vul de gegevens handmatig in.",
+      "isbnFound": "Boek gevonden! Gegevens zijn automatisch ingevuld.",
+      "orManual": "Of handmatig invullen",
+      "detailsStep": "Boekdetails",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "bijv. Het Achterhuis",
+      "authorLabel": "Auteur",
+      "authorPlaceholder": "bijv. Anne Frank",
+      "descriptionLabel": "Beschrijving",
+      "descriptionPlaceholder": "Korte beschrijving van het boek…",
+      "conditionLabel": "Staat",
+      "conditions": {
+        "new": "Nieuw",
+        "like_new": "Als nieuw",
+        "good": "Goed",
+        "acceptable": "Acceptabel"
+      },
+      "languageLabel": "Taal",
+      "languages": {
+        "en": "Engels",
+        "nl": "Nederlands",
+        "de": "Duits",
+        "fr": "Frans",
+        "es": "Spaans",
+        "other": "Overig"
+      },
+      "genresLabel": "Genres",
+      "genresHint": "Selecteer maximaal 3 genres",
+      "notesLabel": "Opmerkingen",
+      "notesPlaceholder": "Opmerkingen voor potentiële ruilers…",
+      "photosStep": "Foto's",
+      "photosHint": "Voeg maximaal 5 foto's toe van je boek. De eerste foto is de omslag.",
+      "addPhoto": "Foto toevoegen",
+      "submit": "Boek plaatsen",
+      "submitting": "Plaatsen…",
+      "success": "Boek succesvol geplaatst!",
+      "error": "Plaatsen mislukt. Probeer het opnieuw."
+    },
+    "editBook": {
+      "title": "Boek bewerken",
+      "backToBook": "Terug naar boek",
+      "save": "Wijzigingen opslaan",
+      "saving": "Opslaan…",
+      "success": "Boek succesvol bijgewerkt!",
+      "error": "Bijwerken mislukt. Probeer het opnieuw.",
+      "deleteTitle": "Boek verwijderen",
+      "deleteWarning": "Dit zal het boek permanent van je plank verwijderen. Dit kan niet ongedaan worden gemaakt.",
+      "deleteConfirm": "Boek verwijderen",
+      "deleteSuccess": "Boek verwijderd.",
+      "deleteError": "Verwijderen van boek mislukt."
+    },
+    "detail": {
+      "backToCatalogue": "Terug naar catalogus",
+      "backToShelf": "Terug naar mijn plank",
+      "condition": "Staat",
+      "language": "Taal",
+      "genres": "Genres",
+      "description": "Beschrijving",
+      "notes": "Ruilopmerkingen",
+      "photos": "Foto's",
+      "listedBy": "Aangeboden door",
+      "requestSwap": "Ruil aanvragen",
+      "editListing": "Aanbieding bewerken",
+      "noDescription": "Geen beschrijving opgegeven.",
+      "isbn": "ISBN",
+      "pageCount": "Pagina's",
+      "published": "Gepubliceerd",
+      "notFound": "Boek niet gevonden.",
+      "error": "Kan boekdetails niet laden."
+    },
+    "wishlist": {
+      "title": "Verlanglijst",
+      "emptyTitle": "Je verlanglijst is leeg",
+      "emptyDescription": "Voeg boeken toe die je zoekt en we laten je weten wanneer ze beschikbaar zijn in de buurt.",
+      "addItem": "Toevoegen aan verlanglijst",
+      "isbnLabel": "ISBN",
+      "titleLabel": "Titel",
+      "authorLabel": "Auteur",
+      "genreLabel": "Genre",
+      "atLeastOne": "Vul ten minste één van ISBN, titel of genre in.",
+      "addSuccess": "Toegevoegd aan verlanglijst!",
+      "removeSuccess": "Verwijderd van verlanglijst.",
+      "addError": "Toevoegen aan verlanglijst mislukt.",
+      "removeError": "Verwijderen van verlanglijst mislukt."
+    },
+    "card": {
+      "by": "door {{author}}",
+      "available": "Beschikbaar",
+      "in_exchange": "In ruil",
+      "returned": "Geretourneerd"
+    },
+    "photo": {
+      "uploadSuccess": "Foto geüpload.",
+      "uploadError": "Uploaden van foto mislukt.",
+      "deleteSuccess": "Foto verwijderd.",
+      "deleteError": "Verwijderen van foto mislukt.",
+      "reorderSuccess": "Fotovolgorde bijgewerkt.",
+      "reorderError": "Herschikken van foto's mislukt.",
+      "maxReached": "Maximum van 5 foto's bereikt.",
+      "typeError": "Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.",
+      "sizeError": "Afbeelding moet kleiner zijn dan 5 MB."
+    }
+  }
+}
