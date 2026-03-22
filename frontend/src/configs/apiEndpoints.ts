@@ -26,6 +26,12 @@ const USERS = `${V1}/users` as const;
 /** Health-check endpoint. */
 const HEALTH = `${V1}/health` as const;
 
+/** Book listing endpoints. */
+const BOOKS = `${V1}/books` as const;
+
+/** Wishlist endpoints. */
+const WISHLIST = `${V1}/wishlist` as const;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -62,4 +68,22 @@ export const API = {
   },
 
   health: `${HEALTH}/`,
+
+  books: {
+    list: `${BOOKS}/`,
+    detail: (id: string) => `${BOOKS}/${id}/`,
+    create: `${BOOKS}/`,
+    isbnLookup: `${BOOKS}/isbn-lookup/`,
+    searchExternal: `${BOOKS}/search-external/`,
+    photos: (bookId: string) => `${BOOKS}/${bookId}/photos/`,
+    photoDetail: (bookId: string, photoId: string) =>
+      `${BOOKS}/${bookId}/photos/${photoId}/`,
+    photosReorder: (bookId: string) => `${BOOKS}/${bookId}/photos/reorder/`,
+  },
+
+  wishlist: {
+    list: `${WISHLIST}/`,
+    create: `${WISHLIST}/`,
+    detail: (id: string) => `${WISHLIST}/${id}/`,
+  },
 } as const;
