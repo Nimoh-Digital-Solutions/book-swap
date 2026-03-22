@@ -81,7 +81,7 @@ export function ProfilePage(): ReactElement {
                 className="inline-flex items-center gap-2 px-4 py-2 border border-border-dark rounded-xl text-sm font-medium text-primary hover:bg-border-dark/50 transition-colors"
               >
                 <Edit2 className="w-4 h-4" aria-hidden="true" />
-                {t('profile.edit', 'Edit Profile')}
+                {t('profile.editButton', 'Edit Profile')}
               </button>
             </div>
 

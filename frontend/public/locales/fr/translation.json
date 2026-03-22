@@ -95,5 +95,67 @@
   "catalogue": {
     "title": "Parcourir les livres",
     "description": "Découvrez les livres disponibles à l'échange dans votre communauté. Les annonces arrivent bientôt."
+  },
+  "profile": {
+    "error": "Impossible de charger le profil.",
+    "editButton": "Modifier le profil",
+    "memberSince": "Membre depuis {{year}}",
+    "newMember": "Nouveau membre",
+    "stats": {
+      "swaps": "Échanges",
+      "rating": "Note",
+      "genres": "Genres"
+    },
+    "genres": {
+      "title": "Genres préférés"
+    },
+    "edit": {
+      "heading": "Modifier le profil",
+      "backToProfile": "Retour au profil",
+      "usernameLabel": "Nom d'utilisateur",
+      "firstNameLabel": "Prénom",
+      "lastNameLabel": "Nom",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "Parlez de vos intérêts de lecture…",
+      "genresLabel": "Genres préférés",
+      "languageLabel": "Langue préférée",
+      "radiusLabel": "Rayon de recherche",
+      "avatarLabel": "Photo de profil",
+      "uploadPhoto": "Télécharger une photo",
+      "removeAvatar": "Supprimer la photo",
+      "avatarHint": "JPEG ou PNG, max 2 Mo. Recadrée automatiquement en carré.",
+      "avatarTypeError": "Seules les images JPEG et PNG sont autorisées.",
+      "avatarSizeError": "L'image doit faire moins de 2 Mo.",
+      "avatarProcessError": "Impossible de traiter l'image.",
+      "usernameTaken": "Ce nom d'utilisateur est déjà pris.",
+      "usernameSuggestions": "Essayez : {{suggestions}}",
+      "save": "Enregistrer",
+      "success": "Profil mis à jour avec succès !",
+      "error": "Impossible de mettre à jour le profil. Veuillez réessayer."
+    },
+    "delete": {
+      "title": "Supprimer le compte",
+      "warning": "Cela supprimera définitivement votre compte, toutes vos annonces de livres, votre historique d'échanges et vos messages. Cette action est irréversible.",
+      "gracePeriod": "Vous aurez 30 jours pour annuler avant que vos données ne soient définitivement anonymisées.",
+      "passwordLabel": "Entrez votre mot de passe pour confirmer",
+      "confirm": "Supprimer le compte",
+      "error": "Impossible de supprimer le compte. Vérifiez votre mot de passe et réessayez."
+    },
+    "public": {
+      "notFound": "Utilisateur introuvable",
+      "deactivated": "Cet utilisateur n'est plus actif.",
+      "listedBooks": "Livres listés",
+      "noBooksYet": "Aucun livre listé pour le moment."
+    }
+  },
+  "settings": {
+    "heading": "Paramètres",
+    "dangerZone": "Zone de danger",
+    "deleteDescription": "Une fois votre compte supprimé, il n'y a pas de retour en arrière. Vous aurez un délai de grâce de 30 jours pour annuler.",
+    "deleteAccount": "Supprimer le compte"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "cancel": "Annuler"
   }
 }

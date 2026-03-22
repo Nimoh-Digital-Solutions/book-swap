@@ -95,5 +95,67 @@
   "catalogue": {
     "title": "Browse Books",
     "description": "Discover books available for swap in your community. Listings coming soon."
+  },
+  "profile": {
+    "error": "Unable to load profile.",
+    "editButton": "Edit Profile",
+    "memberSince": "Member since {{year}}",
+    "newMember": "New Member",
+    "stats": {
+      "swaps": "Swaps",
+      "rating": "Rating",
+      "genres": "Genres"
+    },
+    "genres": {
+      "title": "Preferred Genres"
+    },
+    "edit": {
+      "heading": "Edit Profile",
+      "backToProfile": "Back to Profile",
+      "usernameLabel": "Username",
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "Tell others about your reading interests…",
+      "genresLabel": "Preferred Genres",
+      "languageLabel": "Preferred Language",
+      "radiusLabel": "Search Radius",
+      "avatarLabel": "Profile Photo",
+      "uploadPhoto": "Upload Photo",
+      "removeAvatar": "Remove photo",
+      "avatarHint": "JPEG or PNG, max 2 MB. Auto-cropped to square.",
+      "avatarTypeError": "Only JPEG and PNG images are allowed.",
+      "avatarSizeError": "Image must be smaller than 2 MB.",
+      "avatarProcessError": "Failed to process image.",
+      "usernameTaken": "This username is taken.",
+      "usernameSuggestions": "Try: {{suggestions}}",
+      "save": "Save Changes",
+      "success": "Profile updated successfully!",
+      "error": "Failed to update profile. Please try again."
+    },
+    "delete": {
+      "title": "Delete Account",
+      "warning": "This will permanently delete your account, all your book listings, exchange history, and messages. This cannot be undone.",
+      "gracePeriod": "You will have 30 days to cancel before your data is permanently anonymized.",
+      "passwordLabel": "Enter your password to confirm",
+      "confirm": "Delete Account",
+      "error": "Failed to delete account. Please check your password and try again."
+    },
+    "public": {
+      "notFound": "User not found",
+      "deactivated": "This user is no longer active.",
+      "listedBooks": "Listed Books",
+      "noBooksYet": "No books listed yet."
+    }
+  },
+  "settings": {
+    "heading": "Settings",
+    "dangerZone": "Danger Zone",
+    "deleteDescription": "Once you delete your account, there is no going back. You will have a 30-day grace period to cancel.",
+    "deleteAccount": "Delete Account"
+  },
+  "common": {
+    "loading": "Loading…",
+    "cancel": "Cancel"
   }
 }
