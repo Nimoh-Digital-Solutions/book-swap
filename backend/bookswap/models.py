@@ -112,6 +112,14 @@ class User(AbstractNimohUser):
         help_text="True after the user completes the location-setup onboarding.",
     )
 
+    # ── GDPR account deletion (US-203) ────────────────────────────────
+    deletion_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Set when user requests account deletion; cleared on cancellation. "
+                  "Accounts are anonymized 30 days after this timestamp.",
+    )
+
     class Meta(AbstractNimohUser.Meta):
         db_table = 'bookswap_user'
         swappable = 'AUTH_USER_MODEL'
