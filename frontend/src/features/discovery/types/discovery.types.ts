@@ -11,6 +11,17 @@ import type { BookCondition, BookLanguage, BookOwner } from '@features/books';
 // Response shapes (from BE)
 // ---------------------------------------------------------------------------
 
+/** Snapped owner location for map pins. */
+export interface OwnerLocation {
+  latitude: number;
+  longitude: number;
+}
+
+/** Owner info in browse results — extends BookOwner with snapped location. */
+export interface BrowseBookOwner extends BookOwner {
+  location: OwnerLocation | null;
+}
+
 /** A book in browse results — extends BookListItem with distance. */
 export interface BrowseBook {
   id: string;
@@ -21,7 +32,7 @@ export interface BrowseBook {
   language: BookLanguage;
   status: 'available';
   primary_photo: string | null;
-  owner: BookOwner;
+  owner: BrowseBookOwner;
   distance: number; // km, rounded to 1 decimal
   created_at: string;
 }
@@ -58,4 +69,5 @@ export interface BrowseFilters {
   language?: string[] | undefined;
   condition?: string[] | undefined;
   ordering?: BrowseOrdering | undefined;
+  page_size?: number | undefined;
 }

@@ -322,6 +322,19 @@
     "location": {
       "required": "Stel je locatie in om boeken in de buurt te ontdekken",
       "setButton": "Locatie instellen"
+    },
+    "viewToggle": {
+      "label": "Weergavemodus",
+      "list": "Lijst",
+      "map": "Kaart"
+    },
+    "map": {
+      "yourLocation": "Jouw locatie"
+    },
+    "bookPopup": {
+      "by": "door",
+      "lessThan1km": "< 1 km",
+      "viewBook": "Bekijk boek →"
     }
   }
 }

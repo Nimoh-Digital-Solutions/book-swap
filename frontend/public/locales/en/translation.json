@@ -322,6 +322,19 @@
     "location": {
       "required": "Set your location to discover nearby books",
       "setButton": "Set Location"
+    },
+    "viewToggle": {
+      "label": "View mode",
+      "list": "List",
+      "map": "Map"
+    },
+    "map": {
+      "yourLocation": "Your location"
+    },
+    "bookPopup": {
+      "by": "by",
+      "lessThan1km": "< 1 km",
+      "viewBook": "View Book →"
     }
   }
 }

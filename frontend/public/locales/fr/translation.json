@@ -322,6 +322,19 @@
     "location": {
       "required": "Définissez votre position pour découvrir les livres à proximité",
       "setButton": "Définir la position"
+    },
+    "viewToggle": {
+      "label": "Mode d'affichage",
+      "list": "Liste",
+      "map": "Carte"
+    },
+    "map": {
+      "yourLocation": "Votre position"
+    },
+    "bookPopup": {
+      "by": "par",
+      "lessThan1km": "< 1 km",
+      "viewBook": "Voir le livre →"
     }
   }
 }
