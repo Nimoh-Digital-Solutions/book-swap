@@ -55,6 +55,9 @@ export const API = {
     me: `${USERS}/me/`,
     meLocation: `${USERS}/me/location/`,
     meOnboardingComplete: `${USERS}/me/onboarding/complete/`,
+    meDelete: `${USERS}/me/delete/`,
+    meDeleteCancel: `${USERS}/me/delete/cancel/`,
+    checkUsername: `${USERS}/check-username/`,
     detail: (id: string) => `${USERS}/${id}/`,
   },
 

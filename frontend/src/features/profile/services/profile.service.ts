@@ -8,6 +8,10 @@ import { API } from '@configs/apiEndpoints';
 import { http } from '@services';
 
 import type {
+  AccountDeletionCancelPayload,
+  AccountDeletionPayload,
+  AccountDeletionResponse,
+  CheckUsernameResponse,
   OnboardingCompleteResponse,
   SetLocationPayload,
   SetLocationResponse,
@@ -49,6 +53,31 @@ export const profileService = {
     const { data } = await http.post<OnboardingCompleteResponse>(
       API.users.meOnboardingComplete,
       {},
+    );
+    return data;
+  },
+
+  /** Check if a username is available. */
+  async checkUsername(query: string): Promise<CheckUsernameResponse> {
+    const url = `${API.users.checkUsername}?q=${encodeURIComponent(query)}`;
+    const { data } = await http.get<CheckUsernameResponse>(url);
+    return data;
+  },
+
+  /** Request account deletion (GDPR). */
+  async requestDeletion(payload: AccountDeletionPayload): Promise<AccountDeletionResponse> {
+    const { data } = await http.post<AccountDeletionResponse>(
+      API.users.meDelete,
+      payload,
+    );
+    return data;
+  },
+
+  /** Cancel a pending account deletion. */
+  async cancelDeletion(payload: AccountDeletionCancelPayload): Promise<{ detail: string }> {
+    const { data } = await http.post<{ detail: string }>(
+      API.users.meDeleteCancel,
+      payload,
     );
     return data;
   },
