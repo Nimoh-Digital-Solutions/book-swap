@@ -4,8 +4,9 @@
  * Debounced TanStack Query hook for checking username availability.
  * Fetches from `GET /api/v1/users/check-username/?q=<name>`.
  */
+import { useEffect,useState } from 'react';
+
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
 
 import { profileService } from '../services/profile.service';
 import type { CheckUsernameResponse } from '../types/profile.types';

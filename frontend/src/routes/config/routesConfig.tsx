@@ -42,6 +42,14 @@ const ProfilePage = lazy(() =>
   import('@features/profile').then(m => ({ default: m.ProfilePage }))
 );
 
+const EditProfilePage = lazy(() =>
+  import('@features/profile').then(m => ({ default: m.EditProfilePage }))
+);
+
+const PublicProfilePage = lazy(() =>
+  import('@features/profile').then(m => ({ default: m.PublicProfilePage }))
+);
+
 const CataloguePage = lazy(() => import('@pages/CataloguePage/CataloguePage'));
 
 /** Convenience wrapper: lazy page inside Suspense. */
@@ -131,6 +139,14 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.PROFILE,
         element: <ProtectedPage component={ProfilePage} />,
+      },
+      {
+        path: PATHS.PROFILE_EDIT,
+        element: <ProtectedPage component={EditProfilePage} />,
+      },
+      {
+        path: PATHS.PUBLIC_PROFILE,
+        element: <ProtectedPage component={PublicProfilePage} />,
       },
     ],
   },
