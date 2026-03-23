@@ -14,7 +14,7 @@ export function useMarkMessagesRead() {
   return useMutation<MarkReadResponse, Error, string>({
     mutationFn: (exchangeId) => messagingService.markRead(exchangeId),
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({
+      void qc.invalidateQueries({
         queryKey: messagingKeys.messageList(exchangeId),
       });
     },

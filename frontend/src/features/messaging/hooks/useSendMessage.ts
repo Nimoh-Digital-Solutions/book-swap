@@ -21,7 +21,7 @@ export function useSendMessage() {
     mutationFn: ({ exchangeId, payload }) =>
       messagingService.sendMessage(exchangeId, payload),
     onSuccess: (_data, { exchangeId }) => {
-      qc.invalidateQueries({
+      void qc.invalidateQueries({
         queryKey: messagingKeys.messageList(exchangeId),
       });
     },

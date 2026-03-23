@@ -42,8 +42,8 @@ export interface PaginatedMessages {
 
 /** Payload for sending a new message (text only — image via FormData). */
 export interface SendMessagePayload {
-  content?: string;
-  image?: File;
+  content?: string | undefined;
+  image?: File | undefined;
 }
 
 /** Mark-read response. */

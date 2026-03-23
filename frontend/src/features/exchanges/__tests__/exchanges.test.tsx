@@ -195,6 +195,35 @@ vi.mock('@features/auth/stores/authStore', () => ({
     selector({ user: { id: 'usr_test_001' }, isAuthenticated: true }),
 }));
 
+// Mock messaging hooks so ChatPanel doesn't start WebSocket connections
+vi.mock('@features/messaging/hooks/useChatWebSocket', () => ({
+  useChatWebSocket: () => ({
+    isConnected: false,
+    isLocked: false,
+    sendMessage: vi.fn(),
+    sendTyping: vi.fn(),
+    sendRead: vi.fn(),
+  }),
+}));
+vi.mock('@features/messaging/hooks/useMessages', () => ({
+  useMessages: () => ({
+    data: undefined,
+    isLoading: false,
+    hasNextPage: false,
+    fetchNextPage: vi.fn(),
+    isFetchingNextPage: false,
+  }),
+}));
+vi.mock('@features/messaging/hooks/useSendMessage', () => ({
+  useSendMessage: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock('@features/messaging/hooks/useMarkMessagesRead', () => ({
+  useMarkMessagesRead: () => ({ mutate: vi.fn() }),
+}));
+vi.mock('@features/messaging/hooks/useMeetupSuggestions', () => ({
+  useMeetupSuggestions: () => ({ data: [], isLoading: false }),
+}));
+
 const { default: ExchangeDetailPage } = await import('../pages/ExchangeDetailPage');
 
 describe('ExchangeDetailPage', () => {
