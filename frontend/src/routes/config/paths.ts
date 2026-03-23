@@ -28,6 +28,8 @@ export const PATHS = {
   EXCHANGES: '/exchanges',
   EXCHANGE_DETAIL: '/exchanges/:id',
   INCOMING_REQUESTS: '/exchanges/incoming',
+  PRIVACY_POLICY: '/privacy-policy',
+  TERMS_OF_SERVICE: '/terms-of-service',
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
   NOT_FOUND: '*',
@@ -120,6 +122,14 @@ export const routeMetadata = {
   [PATHS.INCOMING_REQUESTS]: {
     title: 'Incoming Requests',
     description: 'Review and respond to incoming swap requests',
+  },
+  [PATHS.PRIVACY_POLICY]: {
+    title: 'Privacy Policy',
+    description: 'How BookSwap handles your personal data',
+  },
+  [PATHS.TERMS_OF_SERVICE]: {
+    title: 'Terms of Service',
+    description: 'Rules and conditions for using BookSwap',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',

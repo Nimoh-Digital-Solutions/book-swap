@@ -1,0 +1,70 @@
+{
+  "block": {
+    "button": "Bloquer",
+    "confirmTitle": "Bloquer {{name}} ?",
+    "confirmBody": "Cette personne ne pourra plus voir votre profil, vos livres ni vous envoyer de demandes. Elle ne sera pas notifiée.",
+    "confirm": "Bloquer",
+    "cancel": "Annuler",
+    "success": "Utilisateur bloqué.",
+    "error": "Échec du blocage.",
+    "alreadyBlocked": "Utilisateur déjà bloqué."
+  },
+  "unblock": {
+    "button": "Débloquer",
+    "success": "Utilisateur débloqué.",
+    "error": "Échec du déblocage."
+  },
+  "blockedUsers": {
+    "title": "Utilisateurs bloqués",
+    "empty": "Vous n'avez bloqué personne.",
+    "loading": "Chargement…"
+  },
+  "report": {
+    "button": "Signaler",
+    "title": "Signaler un utilisateur",
+    "categoryLabel": "Raison",
+    "categories": {
+      "inappropriate": "Contenu inapproprié",
+      "fake_listing": "Fausse annonce",
+      "no_show": "Absent au rendez-vous",
+      "misrepresented": "État du livre mal décrit",
+      "harassment": "Harcèlement",
+      "spam": "Spam",
+      "other": "Autre"
+    },
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Décrivez ce qui s'est passé (max 500 caractères)…",
+    "descriptionRequired": "La description est requise pour cette catégorie.",
+    "submit": "Envoyer le signalement",
+    "cancel": "Annuler",
+    "success": "Merci pour votre signalement. Nous l'examinerons dans les 48 heures.",
+    "error": "Échec de l'envoi du signalement."
+  },
+  "emailGate": {
+    "title": "Vérification d'e-mail requise",
+    "message": "Veuillez vérifier votre e-mail pour {{action}}. Consultez votre boîte de réception ou renvoyez l'e-mail de vérification.",
+    "resend": "Renvoyer l'e-mail de vérification",
+    "resending": "Envoi…",
+    "resent": "E-mail de vérification envoyé !",
+    "resendError": "Échec du renvoi. Réessayez plus tard."
+  },
+  "cookieConsent": {
+    "message": "Nous utilisons des cookies essentiels pour faire fonctionner BookSwap.",
+    "accept": "Accepter",
+    "manage": "Gérer les préférences"
+  },
+  "dataExport": {
+    "button": "Télécharger mes données",
+    "loading": "Préparation de l'export…",
+    "success": "Export des données téléchargé.",
+    "error": "Échec de l'export."
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Dernière mise à jour : {{date}}"
+  },
+  "terms": {
+    "title": "Conditions d'utilisation",
+    "lastUpdated": "Dernière mise à jour : {{date}}"
+  }
+}

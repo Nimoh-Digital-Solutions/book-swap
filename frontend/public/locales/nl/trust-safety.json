@@ -1,0 +1,70 @@
+{
+  "block": {
+    "button": "Blokkeren",
+    "confirmTitle": "{{name}} blokkeren?",
+    "confirmBody": "Ze kunnen je profiel, boeken en ruilverzoeken niet meer zien. Ze worden niet op de hoogte gesteld.",
+    "confirm": "Blokkeren",
+    "cancel": "Annuleren",
+    "success": "Gebruiker geblokkeerd.",
+    "error": "Blokkeren mislukt.",
+    "alreadyBlocked": "Gebruiker is al geblokkeerd."
+  },
+  "unblock": {
+    "button": "Deblokkeren",
+    "success": "Gebruiker gedeblokkeerd.",
+    "error": "Deblokkeren mislukt."
+  },
+  "blockedUsers": {
+    "title": "Geblokkeerde gebruikers",
+    "empty": "Je hebt niemand geblokkeerd.",
+    "loading": "Laden…"
+  },
+  "report": {
+    "button": "Rapporteren",
+    "title": "Gebruiker rapporteren",
+    "categoryLabel": "Reden",
+    "categories": {
+      "inappropriate": "Ongepaste inhoud",
+      "fake_listing": "Nep-advertentie",
+      "no_show": "Niet komen opdagen",
+      "misrepresented": "Verkeerde boekconditie",
+      "harassment": "Intimidatie",
+      "spam": "Spam",
+      "other": "Overig"
+    },
+    "descriptionLabel": "Beschrijving",
+    "descriptionPlaceholder": "Vertel ons wat er is gebeurd (max 500 tekens)…",
+    "descriptionRequired": "Beschrijving is verplicht voor deze categorie.",
+    "submit": "Rapport indienen",
+    "cancel": "Annuleren",
+    "success": "Bedankt voor je melding. We bekijken dit binnen 48 uur.",
+    "error": "Rapport indienen mislukt."
+  },
+  "emailGate": {
+    "title": "E-mailverificatie vereist",
+    "message": "Verifieer je e-mail om {{action}}. Controleer je inbox of verstuur de verificatie-e-mail opnieuw.",
+    "resend": "Verificatie-e-mail opnieuw versturen",
+    "resending": "Verzenden…",
+    "resent": "Verificatie-e-mail verzonden!",
+    "resendError": "Opnieuw versturen mislukt. Probeer het later opnieuw."
+  },
+  "cookieConsent": {
+    "message": "We gebruiken essentiële cookies om BookSwap te laten werken.",
+    "accept": "Accepteren",
+    "manage": "Voorkeuren beheren"
+  },
+  "dataExport": {
+    "button": "Mijn gegevens downloaden",
+    "loading": "Export voorbereiden…",
+    "success": "Gegevensexport gedownload.",
+    "error": "Export mislukt."
+  },
+  "privacy": {
+    "title": "Privacybeleid",
+    "lastUpdated": "Laatst bijgewerkt: {{date}}"
+  },
+  "terms": {
+    "title": "Servicevoorwaarden",
+    "lastUpdated": "Laatst bijgewerkt: {{date}}"
+  }
+}

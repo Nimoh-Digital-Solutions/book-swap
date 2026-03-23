@@ -5,6 +5,7 @@ import { ErrorBoundary, PageLoader, PwaUpdateBanner } from '@components';
 import { captureException } from '@configs/sentry';
 import { ThemeProvider } from '@contexts';
 import { useInitAuth } from '@features/auth';
+import { CookieConsentBanner } from '@features/trust-safety';
 import { AppRouter } from '@routes';
 import { queryClient } from '@services';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -47,6 +48,7 @@ function App() {
                 <div className="app">
                   <AppRouter />
                   <PwaUpdateBanner />
+                  <CookieConsentBanner />
                 </div>
               </AuthGate>
             </ThemeProvider>

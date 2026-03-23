@@ -1,0 +1,70 @@
+{
+  "block": {
+    "button": "Block User",
+    "confirmTitle": "Block {{name}}?",
+    "confirmBody": "They won't be able to see your profile, books, or send you requests. They won't be notified.",
+    "confirm": "Block",
+    "cancel": "Cancel",
+    "success": "User blocked.",
+    "error": "Failed to block user.",
+    "alreadyBlocked": "User is already blocked."
+  },
+  "unblock": {
+    "button": "Unblock",
+    "success": "User unblocked.",
+    "error": "Failed to unblock user."
+  },
+  "blockedUsers": {
+    "title": "Blocked Users",
+    "empty": "You haven't blocked anyone.",
+    "loading": "Loading…"
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report User",
+    "categoryLabel": "Reason",
+    "categories": {
+      "inappropriate": "Inappropriate Content",
+      "fake_listing": "Fake Listing",
+      "no_show": "No-Show",
+      "misrepresented": "Misrepresented Book Condition",
+      "harassment": "Harassment",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Tell us what happened (max 500 characters)…",
+    "descriptionRequired": "Description is required for this category.",
+    "submit": "Submit Report",
+    "cancel": "Cancel",
+    "success": "Thanks for reporting. We'll review this within 48 hours.",
+    "error": "Failed to submit report."
+  },
+  "emailGate": {
+    "title": "Email Verification Required",
+    "message": "Please verify your email to {{action}}. Check your inbox or resend the verification email.",
+    "resend": "Resend Verification Email",
+    "resending": "Sending…",
+    "resent": "Verification email sent!",
+    "resendError": "Failed to resend. Try again later."
+  },
+  "cookieConsent": {
+    "message": "We use essential cookies to run BookSwap.",
+    "accept": "Accept",
+    "manage": "Manage Preferences"
+  },
+  "dataExport": {
+    "button": "Download My Data",
+    "loading": "Preparing export…",
+    "success": "Data export downloaded.",
+    "error": "Failed to export data."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {{date}}"
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {{date}}"
+  }
+}

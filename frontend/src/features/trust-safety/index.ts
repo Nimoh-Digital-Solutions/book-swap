@@ -5,6 +5,16 @@
  * into sub-directories directly from outside this feature.
  */
 
+// Components
+export { BlockUserButton } from './components/BlockUserButton/BlockUserButton';
+export { UnblockButton } from './components/UnblockButton/UnblockButton';
+export { BlockedUsersList } from './components/BlockedUsersList/BlockedUsersList';
+export { ReportButton } from './components/ReportButton/ReportButton';
+export { ReportDialog } from './components/ReportDialog/ReportDialog';
+export { EmailVerificationGate } from './components/EmailVerificationGate/EmailVerificationGate';
+export { DataExportButton } from './components/DataExportButton/DataExportButton';
+export { CookieConsentBanner } from './components/CookieConsentBanner/CookieConsentBanner';
+
 // Types
 export type {
   Block,
