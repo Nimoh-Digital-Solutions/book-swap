@@ -6,9 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from bookswap.models import BookStatus
+from apps.books.models import BookStatus
 from bookswap.permissions import IsEmailVerified
-from bookswap.services import get_blocked_user_ids
 
 from .models import (
     ConditionsAcceptance,
@@ -58,6 +57,7 @@ class ExchangeRequestViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        from apps.trust_safety.services import get_blocked_user_ids
         blocked_ids = get_blocked_user_ids(self.request.user)
         return (
             ExchangeRequest.objects
@@ -104,6 +104,7 @@ class ExchangeRequestViewSet(
         serializer.is_valid(raise_exception=True)
 
         # Check block relationship between requester and book owner
+        from apps.trust_safety.services import get_blocked_user_ids
         blocked_ids = get_blocked_user_ids(request.user)
         requested_book = serializer._requested_book
         if requested_book.owner_id in blocked_ids:

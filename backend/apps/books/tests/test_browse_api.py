@@ -3,8 +3,9 @@ import pytest
 from django.contrib.gis.geos import Point
 from rest_framework.test import APIClient
 
-from bookswap.models import Book, BookCondition, BookStatus
-from bookswap.tests.factories import BookFactory, UserFactory
+from apps.books.models import BookCondition, BookStatus
+from apps.books.tests.factories import BookFactory
+from bookswap.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -428,7 +429,6 @@ class TestBrowseFilters:
         resp = auth_client.get("/api/v1/books/browse/?radius=50000&genre=fantasy")
         assert resp.status_code == 200
         assert len(resp.data["results"]) >= 1
-        # The fantasy book should be returned
         titles = [b["title"] for b in resp.data["results"]]
         assert any("Potter" in t for t in titles)
 
@@ -437,7 +437,6 @@ class TestBrowseFilters:
             "/api/v1/books/browse/?radius=50000&genre=fantasy,history"
         )
         assert resp.status_code == 200
-        # Both fantasy and history books are returned
         assert len(resp.data["results"]) >= 2
 
     def test_filter_by_language(self, auth_client, searchable_books):
@@ -445,7 +444,6 @@ class TestBrowseFilters:
         assert resp.status_code == 200
         titles = [b["title"] for b in resp.data["results"]]
         assert any("Hemel" in t for t in titles)
-        # English books should be excluded
         assert not any("Potter" in t for t in titles)
 
     def test_filter_by_multiple_languages(self, auth_client, searchable_books):
@@ -485,7 +483,6 @@ class TestBrowseFilters:
         assert resp.status_code == 200
         titles = [b["title"] for b in resp.data["results"]]
         assert any("Potter" in t for t in titles)
-        # Dutch Harry Mulisch should be excluded by language filter
         assert not any("Hemel" in t for t in titles)
 
     def test_no_genre_match_returns_empty(self, auth_client, searchable_books):

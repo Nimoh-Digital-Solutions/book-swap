@@ -2,7 +2,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from bookswap.models import Book, BookStatus
+from apps.books.models import Book, BookStatus
 
 from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest, ExchangeStatus
 

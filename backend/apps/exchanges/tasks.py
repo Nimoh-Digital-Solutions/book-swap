@@ -65,7 +65,7 @@ def auto_confirm_stale_swaps():
     """
     from django.contrib.auth import get_user_model
 
-    from bookswap.models import BookStatus
+    from apps.books.models import BookStatus
 
     from .models import ExchangeRequest, ExchangeStatus
 

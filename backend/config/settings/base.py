@@ -94,6 +94,8 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     'django.contrib.postgres',
     # Project apps
     'bookswap',
+    'apps.books',
+    'apps.trust_safety',
     'apps.exchanges',
     'apps.messaging',
     'apps.ratings',

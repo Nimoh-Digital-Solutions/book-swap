@@ -8,16 +8,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from rest_framework.test import APIClient
 
-from bookswap.models import Book, BookCondition, BookPhoto, BookStatus, WishlistItem
-from bookswap.services import ISBNLookupError, ISBNLookupService
-from bookswap.tests.factories import (
+from apps.books.models import Book, BookStatus, WishlistItem
+from apps.books.services import ISBNLookupError, ISBNLookupService
+from apps.books.tests.factories import (
     BookFactory,
     BookPhotoFactory,
-    UserFactory,
     WishlistItemFactory,
-    _tiny_jpeg,
 )
-from bookswap.validators import validate_book_photo
+from apps.books.validators import validate_book_photo
+from bookswap.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -53,7 +52,7 @@ def _make_image(fmt="JPEG", size=(100, 100), color="red"):
 class TestISBNLookupService:
     """ISBNLookupService with mocked external APIs."""
 
-    @patch("bookswap.services.httpx.get")
+    @patch("apps.books.services.httpx.get")
     def test_lookup_isbn_open_library_success(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -76,7 +75,7 @@ class TestISBNLookupService:
         assert result["publish_year"] == 2020
         assert "covers.openlibrary.org" in result["cover_url"]
 
-    @patch("bookswap.services.httpx.get")
+    @patch("apps.books.services.httpx.get")
     def test_lookup_isbn_falls_back_to_google(self, mock_get):
         """When Open Library returns 404, fall back to Google Books."""
         ol_resp = MagicMock()
@@ -105,7 +104,7 @@ class TestISBNLookupService:
         assert result["author"] == "FB Author"
         assert result["publish_year"] == 2019
 
-    @patch("bookswap.services.httpx.get")
+    @patch("apps.books.services.httpx.get")
     def test_lookup_isbn_both_fail_raises(self, mock_get):
         ol_resp = MagicMock()
         ol_resp.status_code = 404
@@ -118,7 +117,7 @@ class TestISBNLookupService:
         with pytest.raises(ISBNLookupError, match="No metadata found"):
             ISBNLookupService.lookup_isbn("0000000000")
 
-    @patch("bookswap.services.httpx.get")
+    @patch("apps.books.services.httpx.get")
     def test_search_external_success(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -147,7 +146,7 @@ class TestISBNLookupService:
         assert results[0]["isbn"] == "9780439554930"
         assert results[1]["isbn"] == ""
 
-    @patch("bookswap.services.httpx.get")
+    @patch("apps.books.services.httpx.get")
     def test_search_external_network_error_returns_empty(self, mock_get):
         import httpx
         mock_get.side_effect = httpx.ConnectError("fail")
@@ -192,7 +191,6 @@ class TestBookPhotoValidator:
         img_bytes = _make_image("JPEG", size=(3000, 2000)).read()
         uploaded = SimpleUploadedFile("big.jpg", img_bytes, content_type="image/jpeg")
         result = validate_book_photo(uploaded)
-        # Re-open to check dimensions
         img = Image.open(io.BytesIO(result.read()))
         assert max(img.size) <= 1200
 
@@ -206,7 +204,7 @@ class TestBookListView:
     """GET /api/v1/books/ — list available books."""
 
     def test_lists_available_books(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         BookFactory(status=BookStatus.AVAILABLE)
         BookFactory(status=BookStatus.IN_EXCHANGE)
         response = client.get("/api/v1/books/")
@@ -246,7 +244,7 @@ class TestBookCreateView:
         assert Book.objects.filter(owner=user).count() == 1
 
     def test_create_book_with_isbn(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         data = {
             "isbn": "9781234567890",
             "title": "ISBN Book",
@@ -259,12 +257,12 @@ class TestBookCreateView:
         assert response.data["isbn"] == "9781234567890"
 
     def test_create_missing_required_fields(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         response = client.post("/api/v1/books/", {}, format="json")
         assert response.status_code == 400
 
     def test_create_too_many_genres(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         data = {
             "title": "Book",
             "author": "Author",
@@ -533,20 +531,20 @@ class TestWishlistCreateView:
         assert WishlistItem.objects.filter(user=user).count() == 1
 
     def test_create_with_isbn(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         data = {"isbn": "9781234567890"}
         response = client.post("/api/v1/wishlist/", data, format="json")
         assert response.status_code == 201
 
     def test_create_with_genre(self, auth_client):
-        client, user = auth_client
+        client, _ = auth_client
         data = {"genre": "mystery"}
         response = client.post("/api/v1/wishlist/", data, format="json")
         assert response.status_code == 201
 
     def test_create_requires_at_least_one_field(self, auth_client):
-        client, user = auth_client
-        data = {"author": "Only Author"}  # no isbn, title, or genre
+        client, _ = auth_client
+        data = {"author": "Only Author"}
         response = client.post("/api/v1/wishlist/", data, format="json")
         assert response.status_code == 400
 
@@ -572,7 +570,7 @@ class TestWishlistDeleteView:
         client, _ = auth_client
         item = WishlistItemFactory()  # different user
         response = client.delete(f"/api/v1/wishlist/{item.id}/")
-        assert response.status_code == 404  # queryset filtered to own items
+        assert response.status_code == 404
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -583,8 +581,9 @@ class TestWishlistDeleteView:
 class TestBookCreateSerializer:
 
     def test_valid_data(self):
-        from bookswap.serializers import BookCreateSerializer
         from rest_framework.test import APIRequestFactory
+
+        from apps.books.serializers import BookCreateSerializer
 
         user = UserFactory()
         factory = APIRequestFactory()
@@ -603,8 +602,9 @@ class TestBookCreateSerializer:
         assert book.owner == user
 
     def test_genres_max_3(self):
-        from bookswap.serializers import BookCreateSerializer
         from rest_framework.test import APIRequestFactory
+
+        from apps.books.serializers import BookCreateSerializer
 
         user = UserFactory()
         factory = APIRequestFactory()
@@ -626,22 +626,22 @@ class TestBookCreateSerializer:
 class TestISBNLookupSerializer:
 
     def test_valid_isbn13(self):
-        from bookswap.serializers import ISBNLookupSerializer
+        from apps.books.serializers import ISBNLookupSerializer
         s = ISBNLookupSerializer(data={"isbn": "9781234567890"})
         assert s.is_valid()
 
     def test_valid_isbn10(self):
-        from bookswap.serializers import ISBNLookupSerializer
+        from apps.books.serializers import ISBNLookupSerializer
         s = ISBNLookupSerializer(data={"isbn": "0123456789"})
         assert s.is_valid()
 
     def test_invalid_isbn(self):
-        from bookswap.serializers import ISBNLookupSerializer
+        from apps.books.serializers import ISBNLookupSerializer
         s = ISBNLookupSerializer(data={"isbn": "abc"})
         assert not s.is_valid()
 
     def test_strips_dashes(self):
-        from bookswap.serializers import ISBNLookupSerializer
+        from apps.books.serializers import ISBNLookupSerializer
         s = ISBNLookupSerializer(data={"isbn": "978-1-234-56789-0"})
         assert s.is_valid()
         assert s.validated_data["isbn"] == "9781234567890"
@@ -650,8 +650,9 @@ class TestISBNLookupSerializer:
 class TestWishlistItemSerializer:
 
     def test_requires_at_least_one_field(self):
-        from bookswap.serializers import WishlistItemSerializer
         from rest_framework.test import APIRequestFactory
+
+        from apps.books.serializers import WishlistItemSerializer
 
         user = UserFactory()
         factory = APIRequestFactory()
@@ -662,8 +663,9 @@ class TestWishlistItemSerializer:
         assert not s.is_valid()
 
     def test_valid_with_title(self):
-        from bookswap.serializers import WishlistItemSerializer
         from rest_framework.test import APIRequestFactory
+
+        from apps.books.serializers import WishlistItemSerializer
 
         user = UserFactory()
         factory = APIRequestFactory()
@@ -677,7 +679,7 @@ class TestWishlistItemSerializer:
 class TestPermissionIsBookOwner:
 
     def test_owner_has_permission(self):
-        from bookswap.permissions import IsBookOwner
+        from apps.books.permissions import IsBookOwner
         user = UserFactory()
         book = BookFactory(owner=user)
         perm = IsBookOwner()
@@ -686,7 +688,7 @@ class TestPermissionIsBookOwner:
         assert perm.has_object_permission(request, None, book)
 
     def test_non_owner_denied(self):
-        from bookswap.permissions import IsBookOwner
+        from apps.books.permissions import IsBookOwner
         user = UserFactory()
         other = UserFactory()
         book = BookFactory(owner=other)

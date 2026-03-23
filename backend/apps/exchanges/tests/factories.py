@@ -1,12 +1,12 @@
 import factory
-from django.contrib.gis.geos import Point
 
+from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import (
     ConditionsAcceptance,
     ExchangeRequest,
     ExchangeStatus,
 )
-from bookswap.tests.factories import BookFactory, UserFactory
+from bookswap.tests.factories import UserFactory
 
 
 class ExchangeRequestFactory(factory.django.DjangoModelFactory):

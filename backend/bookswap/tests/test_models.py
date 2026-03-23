@@ -10,19 +10,23 @@ from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
 from django.db import models as django_models
 
-from bookswap.models import (
+from apps.books.models import (
     Book,
     BookCondition,
     BookPhoto,
     BookStatus,
-    User,
     WishlistItem,
 )
-from bookswap.tests.factories import (
+from bookswap.models import (
+    User,
+)
+from apps.books.tests.factories import (
     BookFactory,
     BookPhotoFactory,
-    UserFactory,
     WishlistItemFactory,
+)
+from bookswap.tests.factories import (
+    UserFactory,
 )
 
 pytestmark = pytest.mark.django_db

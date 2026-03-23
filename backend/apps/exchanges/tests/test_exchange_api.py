@@ -4,15 +4,15 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.books.models import BookStatus
+from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import (
-    ConditionsAcceptance,
+    VALID_TRANSITIONS,
     DeclineReason,
     ExchangeRequest,
     ExchangeStatus,
-    VALID_TRANSITIONS,
 )
-from bookswap.models import BookStatus
-from bookswap.tests.factories import BookFactory, UserFactory
+from bookswap.tests.factories import UserFactory
 
 from .factories import ConditionsAcceptanceFactory, ExchangeRequestFactory
 

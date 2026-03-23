@@ -12,11 +12,10 @@ from django.contrib.gis.geos import Point
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import ExchangeRequest, ExchangeStatus
-from apps.messaging.models import Message
-from apps.ratings.models import Rating
-from bookswap.models import Block, Book, BookCondition, BookStatus, Report, ReportCategory
-from bookswap.tests.factories import BookFactory, UserFactory
+from apps.trust_safety.models import Block, Report
+from bookswap.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 

@@ -250,7 +250,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _is_blocked(self, user, other_id):
-        from bookswap.services import get_blocked_user_ids
+        from apps.trust_safety.services import get_blocked_user_ids
         return other_id in get_blocked_user_ids(user)
 
     @database_sync_to_async

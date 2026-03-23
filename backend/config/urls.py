@@ -22,6 +22,8 @@ urlpatterns = [
 
     # Project-specific routes — add new apps here:
     path('api/v1/', include('bookswap.urls')),
+    path('api/v1/', include('apps.books.urls')),
+    path('api/v1/', include('apps.trust_safety.urls')),
     path('api/v1/exchanges/', include('apps.exchanges.urls')),
     path('api/v1/messaging/', include('apps.messaging.urls')),
     path('api/v1/ratings/', include('apps.ratings.urls')),

@@ -86,13 +86,13 @@ class ExchangeRequest(TimeStampedModel):
         related_name='received_exchanges',
     )
     requested_book = models.ForeignKey(
-        'bookswap.Book',
+        'books.Book',
         on_delete=models.CASCADE,
         related_name='incoming_requests',
         help_text="The owner's book the requester wants.",
     )
     offered_book = models.ForeignKey(
-        'bookswap.Book',
+        'books.Book',
         on_delete=models.CASCADE,
         related_name='outgoing_requests',
         help_text="The requester's book offered in exchange.",

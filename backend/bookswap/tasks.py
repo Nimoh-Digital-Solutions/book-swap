@@ -54,45 +54,4 @@ def anonymize_deleted_accounts():
     return count
 
 
-@shared_task(name="bookswap.send_report_notification_email")
-def send_report_notification_email(report_id: str):
-    """Send an email notification to admin when a new report is filed.
-
-    Uses Django's mail framework (SendGrid in production).
-    """
-    from django.conf import settings
-    from django.core.mail import send_mail
-
-    from .models import Report
-
-    try:
-        report = Report.objects.select_related(
-            'reporter', 'reported_user',
-        ).get(pk=report_id)
-    except Report.DoesNotExist:
-        logger.warning("Report %s not found for notification.", report_id)
-        return
-
-    subject = f"[BookSwap] New report: {report.get_category_display()}"
-    body = (
-        f"Reporter: {report.reporter.username}\n"
-        f"Reported user: {report.reported_user.username}\n"
-        f"Category: {report.get_category_display()}\n"
-        f"Description: {report.description or '(none)'}\n"
-        f"Created: {report.created_at}\n"
-        f"Admin link: /admin/bookswap/report/{report.pk}/change/"
-    )
-
-    admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
-    if not admin_email:
-        default_from = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@bookswap.example')
-        admin_email = default_from
-
-    send_mail(
-        subject=subject,
-        message=body,
-        from_email=None,  # uses DEFAULT_FROM_EMAIL
-        recipient_list=[admin_email],
-        fail_silently=True,
-    )
-    logger.info("Report notification sent for report %s.", report_id)
+# send_report_notification_email has been moved to apps/trust_safety/tasks.py

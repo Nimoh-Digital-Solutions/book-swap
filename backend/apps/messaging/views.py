@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
 from bookswap.permissions import IsEmailVerified
-from bookswap.services import get_blocked_user_ids
+from apps.trust_safety.services import get_blocked_user_ids
 
 from .models import MeetupLocation, Message
 from .permissions import (

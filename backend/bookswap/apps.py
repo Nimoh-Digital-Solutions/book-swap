@@ -2,9 +2,11 @@
 
 This is the foundational app for BookSwap. It owns ``AUTH_USER_MODEL``
 (``bookswap.User``) and all profile/onboarding API endpoints. The Django
-app label **must** remain ``bookswap`` because 73+ migrations reference it.
+app label **must** remain ``bookswap``.
 
-Future domain apps (books, swaps, messaging, reviews) live in ``apps/``.
+Domain models live in dedicated apps:
+- ``apps.books`` — Book, BookPhoto, WishlistItem
+- ``apps.trust_safety`` — Block, Report
 """
 
 from django.apps import AppConfig
