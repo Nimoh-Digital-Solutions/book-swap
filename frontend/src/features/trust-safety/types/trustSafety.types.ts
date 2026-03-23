@@ -76,10 +76,10 @@ export interface BlockUserPayload {
 /** Payload for creating a report. */
 export interface CreateReportPayload {
   reported_user_id: string;
-  reported_book_id?: string;
-  reported_exchange_id?: string;
+  reported_book_id?: string | undefined;
+  reported_exchange_id?: string | undefined;
   category: ReportCategory;
-  description?: string;
+  description?: string | undefined;
 }
 
 /** Data export response structure. */

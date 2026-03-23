@@ -82,6 +82,10 @@ const IncomingRequestsPage = lazy(() =>
   import('@features/exchanges').then(m => ({ default: m.IncomingRequestsPage }))
 );
 
+const PrivacyPolicyPage = lazy(() => import('@pages/PrivacyPolicyPage/PrivacyPolicyPage'));
+
+const TermsOfServicePage = lazy(() => import('@pages/TermsOfServicePage/TermsOfServicePage'));
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -205,6 +209,14 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.EXCHANGES,
         element: <ProtectedPage component={ExchangesPage} />,
+      },
+      {
+        path: PATHS.PRIVACY_POLICY,
+        element: <LazyPage component={PrivacyPolicyPage} />,
+      },
+      {
+        path: PATHS.TERMS_OF_SERVICE,
+        element: <LazyPage component={TermsOfServicePage} />,
       },
     ],
   },

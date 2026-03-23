@@ -6,6 +6,8 @@ import { useDocumentTitle } from '@hooks';
 import { routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Globe, MapPin, Star, UserX } from 'lucide-react';
 
+import { BlockUserButton, ReportButton } from '@features/trust-safety';
+
 import { NewMemberBadge } from '../components/NewMemberBadge';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 
@@ -78,6 +80,14 @@ export function PublicProfilePage(): ReactElement {
                 <p className="text-[#8C9C92]">@{profile.username}</p>
               </div>
             </div>
+
+            {/* Actions: Block + Report */}
+            {id && (
+              <div className="flex gap-3 mt-2">
+                <BlockUserButton userId={id} displayName={profile.first_name} />
+                <ReportButton reportedUserId={id} />
+              </div>
+            )}
 
             {profile.bio && (
               <p className="mt-3 text-[#8C9C92] leading-relaxed">
