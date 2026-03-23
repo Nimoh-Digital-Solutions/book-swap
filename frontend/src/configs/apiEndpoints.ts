@@ -32,6 +32,9 @@ const BOOKS = `${V1}/books` as const;
 /** Wishlist endpoints. */
 const WISHLIST = `${V1}/wishlist` as const;
 
+/** Exchange endpoints. */
+const EXCHANGES = `${V1}/exchanges` as const;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -91,5 +94,22 @@ export const API = {
     list: `${BOOKS}/browse/`,
     radiusCounts: `${BOOKS}/browse/radius-counts/`,
     nearbyCount: `${BOOKS}/nearby-count/`,
+  },
+
+  exchanges: {
+    list: `${EXCHANGES}/`,
+    detail: (id: string) => `${EXCHANGES}/${id}/`,
+    create: `${EXCHANGES}/`,
+    accept: (id: string) => `${EXCHANGES}/${id}/accept/`,
+    decline: (id: string) => `${EXCHANGES}/${id}/decline/`,
+    counter: (id: string) => `${EXCHANGES}/${id}/counter/`,
+    cancel: (id: string) => `${EXCHANGES}/${id}/cancel/`,
+    acceptConditions: (id: string) => `${EXCHANGES}/${id}/accept-conditions/`,
+    conditions: (id: string) => `${EXCHANGES}/${id}/conditions/`,
+    confirmSwap: (id: string) => `${EXCHANGES}/${id}/confirm-swap/`,
+    requestReturn: (id: string) => `${EXCHANGES}/${id}/request-return/`,
+    confirmReturn: (id: string) => `${EXCHANGES}/${id}/confirm-return/`,
+    incoming: `${EXCHANGES}/incoming/`,
+    incomingCount: `${EXCHANGES}/incoming/count/`,
   },
 } as const;
