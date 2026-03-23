@@ -451,6 +451,194 @@ const browseHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Exchange handlers
+// ---------------------------------------------------------------------------
+
+const MOCK_EXCHANGE_PARTICIPANT_REQUESTER = {
+  id: 'usr_test_001',
+  username: 'testuser',
+  avatar: null,
+  avg_rating: 4.2,
+  swap_count: 3,
+};
+
+const MOCK_EXCHANGE_PARTICIPANT_OWNER = {
+  id: 'usr_owner_001',
+  username: 'bookworm',
+  avatar: null,
+  avg_rating: 4.5,
+  swap_count: 7,
+};
+
+const MOCK_EXCHANGE_BOOK_REQUESTED = {
+  id: 'book_req_001',
+  title: 'The Great Gatsby',
+  author: 'F. Scott Fitzgerald',
+  cover_url: 'https://example.com/gatsby.jpg',
+  condition: 'good',
+  primary_photo: null,
+};
+
+const MOCK_EXCHANGE_BOOK_OFFERED = {
+  id: 'book_off_001',
+  title: '1984',
+  author: 'George Orwell',
+  cover_url: 'https://example.com/1984.jpg',
+  condition: 'like_new',
+  primary_photo: null,
+};
+
+const MOCK_EXCHANGE_LIST_ITEM = {
+  id: 'exch_001',
+  status: 'pending' as const,
+  message: 'Would love to swap!',
+  requester: MOCK_EXCHANGE_PARTICIPANT_REQUESTER,
+  owner: MOCK_EXCHANGE_PARTICIPANT_OWNER,
+  requested_book: MOCK_EXCHANGE_BOOK_REQUESTED,
+  offered_book: MOCK_EXCHANGE_BOOK_OFFERED,
+  created_at: '2025-07-15T10:00:00Z',
+  updated_at: '2025-07-15T10:00:00Z',
+};
+
+const MOCK_EXCHANGE_DETAIL = {
+  ...MOCK_EXCHANGE_LIST_ITEM,
+  decline_reason: null,
+  counter_to: null,
+  requester_confirmed_at: null,
+  owner_confirmed_at: null,
+  return_requested_at: null,
+  return_confirmed_requester: null,
+  return_confirmed_owner: null,
+  expired_at: null,
+  conditions_accepted_by_me: false,
+  conditions_accepted_count: 0,
+  conditions_version: '1.0',
+};
+
+export {
+  MOCK_EXCHANGE_LIST_ITEM,
+  MOCK_EXCHANGE_DETAIL,
+  MOCK_EXCHANGE_PARTICIPANT_REQUESTER,
+  MOCK_EXCHANGE_PARTICIPANT_OWNER,
+  MOCK_EXCHANGE_BOOK_REQUESTED,
+  MOCK_EXCHANGE_BOOK_OFFERED,
+};
+
+const exchangeHandlers = [
+  /** GET /api/v1/exchanges/ — list exchanges */
+  http.get('*/api/v1/exchanges/', ({ request }) => {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/incoming/count/')) return;
+    if (url.pathname.endsWith('/incoming/')) return;
+    return HttpResponse.json({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [MOCK_EXCHANGE_LIST_ITEM],
+    });
+  }),
+
+  /** GET /api/v1/exchanges/:id/ — exchange detail */
+  http.get('*/api/v1/exchanges/:id/', ({ params }) => {
+    return HttpResponse.json({ ...MOCK_EXCHANGE_DETAIL, id: params.id });
+  }),
+
+  /** POST /api/v1/exchanges/ — create exchange */
+  http.post('*/api/v1/exchanges/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      { ...MOCK_EXCHANGE_DETAIL, id: 'exch_new_001', ...body },
+      { status: 201 },
+    );
+  }),
+
+  /** POST /api/v1/exchanges/:id/accept/ */
+  http.post('*/api/v1/exchanges/:id/accept/', ({ params }) => {
+    return HttpResponse.json({ ...MOCK_EXCHANGE_DETAIL, id: params.id, status: 'accepted' });
+  }),
+
+  /** POST /api/v1/exchanges/:id/decline/ */
+  http.post('*/api/v1/exchanges/:id/decline/', ({ params }) => {
+    return HttpResponse.json({ ...MOCK_EXCHANGE_DETAIL, id: params.id, status: 'declined' });
+  }),
+
+  /** POST /api/v1/exchanges/:id/counter/ */
+  http.post('*/api/v1/exchanges/:id/counter/', ({ params }) => {
+    return HttpResponse.json({ ...MOCK_EXCHANGE_DETAIL, id: `${String(params.id)}_counter`, status: 'pending' });
+  }),
+
+  /** POST /api/v1/exchanges/:id/cancel/ */
+  http.post('*/api/v1/exchanges/:id/cancel/', ({ params }) => {
+    return HttpResponse.json({ ...MOCK_EXCHANGE_DETAIL, id: params.id, status: 'cancelled' });
+  }),
+
+  /** POST /api/v1/exchanges/:id/accept-conditions/ */
+  http.post('*/api/v1/exchanges/:id/accept-conditions/', ({ params }) => {
+    return HttpResponse.json({
+      ...MOCK_EXCHANGE_DETAIL,
+      id: params.id,
+      status: 'conditions_pending',
+      conditions_accepted_by_me: true,
+      conditions_accepted_count: 1,
+    });
+  }),
+
+  /** GET /api/v1/exchanges/:id/conditions/ */
+  http.get('*/api/v1/exchanges/:id/conditions/', () => {
+    return HttpResponse.json({
+      conditions_version: '1.0',
+      acceptances: [],
+      both_accepted: false,
+    });
+  }),
+
+  /** POST /api/v1/exchanges/:id/confirm-swap/ */
+  http.post('*/api/v1/exchanges/:id/confirm-swap/', ({ params }) => {
+    return HttpResponse.json({
+      ...MOCK_EXCHANGE_DETAIL,
+      id: params.id,
+      status: 'active',
+      requester_confirmed_at: new Date().toISOString(),
+    });
+  }),
+
+  /** POST /api/v1/exchanges/:id/request-return/ */
+  http.post('*/api/v1/exchanges/:id/request-return/', ({ params }) => {
+    return HttpResponse.json({
+      ...MOCK_EXCHANGE_DETAIL,
+      id: params.id,
+      status: 'return_requested',
+      return_requested_at: new Date().toISOString(),
+    });
+  }),
+
+  /** POST /api/v1/exchanges/:id/confirm-return/ */
+  http.post('*/api/v1/exchanges/:id/confirm-return/', ({ params }) => {
+    return HttpResponse.json({
+      ...MOCK_EXCHANGE_DETAIL,
+      id: params.id,
+      status: 'returned',
+      return_confirmed_requester: new Date().toISOString(),
+      return_confirmed_owner: new Date().toISOString(),
+    });
+  }),
+
+  /** GET /api/v1/exchanges/incoming/ */
+  http.get('*/api/v1/exchanges/incoming/', ({ request }) => {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/count/')) return;
+    return HttpResponse.json([
+      { ...MOCK_EXCHANGE_LIST_ITEM, id: 'exch_incoming_001' },
+    ]);
+  }),
+
+  /** GET /api/v1/exchanges/incoming/count/ */
+  http.get('*/api/v1/exchanges/incoming/count/', () => {
+    return HttpResponse.json({ count: 2 });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
@@ -462,4 +650,5 @@ export const handlers = [
   ...browseHandlers,
   ...bookHandlers,
   ...wishlistHandlers,
+  ...exchangeHandlers,
 ];
