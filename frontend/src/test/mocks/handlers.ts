@@ -639,6 +639,102 @@ const exchangeHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Messaging handlers (Epic 6)
+// ---------------------------------------------------------------------------
+
+const MOCK_MESSAGE_SENDER = {
+  id: 'usr_test_001',
+  username: 'testuser',
+  avatar: null,
+};
+
+const MOCK_MESSAGE_PARTNER = {
+  id: 'usr_owner_001',
+  username: 'bookworm',
+  avatar: null,
+};
+
+export const MOCK_CHAT_MESSAGE = {
+  id: 'msg_001',
+  exchange: 'exch_001',
+  sender: MOCK_MESSAGE_SENDER,
+  content: 'Hello! Ready for the swap?',
+  image: null,
+  read_at: null,
+  created_at: '2025-07-16T10:00:00Z',
+};
+
+export const MOCK_CHAT_MESSAGE_PARTNER = {
+  id: 'msg_002',
+  exchange: 'exch_001',
+  sender: MOCK_MESSAGE_PARTNER,
+  content: 'Yes, how about tomorrow?',
+  image: null,
+  read_at: '2025-07-16T10:05:00Z',
+  created_at: '2025-07-16T10:01:00Z',
+};
+
+export const MOCK_MEETUP_LOCATION = {
+  id: 'loc_001',
+  name: 'OBA Oosterdok',
+  address: 'Oosterdokskade 143',
+  category: 'library' as const,
+  city: 'Amsterdam',
+  latitude: 52.3763,
+  longitude: 4.9068,
+  distance_km: 1.2,
+};
+
+const messagingHandlers = [
+  /** GET /api/v1/messaging/exchanges/:exchangeId/messages/ */
+  http.get('*/api/v1/messaging/exchanges/:exchangeId/messages/', () => {
+    return HttpResponse.json({
+      count: 2,
+      next: null,
+      previous: null,
+      results: [MOCK_CHAT_MESSAGE, MOCK_CHAT_MESSAGE_PARTNER],
+    });
+  }),
+
+  /** POST /api/v1/messaging/exchanges/:exchangeId/messages/ */
+  http.post('*/api/v1/messaging/exchanges/:exchangeId/messages/', async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      {
+        id: 'msg_new_001',
+        exchange: params.exchangeId,
+        sender: MOCK_MESSAGE_SENDER,
+        content: body.content ?? '',
+        image: null,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  /** POST /api/v1/messaging/exchanges/:exchangeId/messages/mark-read/ */
+  http.post('*/api/v1/messaging/exchanges/:exchangeId/messages/mark-read/', () => {
+    return HttpResponse.json({ marked_read: 1 });
+  }),
+
+  /** GET /api/v1/messaging/exchanges/:exchangeId/meetup-suggestions/ */
+  http.get('*/api/v1/messaging/exchanges/:exchangeId/meetup-suggestions/', () => {
+    return HttpResponse.json([
+      MOCK_MEETUP_LOCATION,
+      {
+        ...MOCK_MEETUP_LOCATION,
+        id: 'loc_002',
+        name: 'Vondelpark',
+        address: 'Vondelpark',
+        category: 'park' as const,
+        distance_km: 2.5,
+      },
+    ]);
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
@@ -651,4 +747,5 @@ export const handlers = [
   ...bookHandlers,
   ...wishlistHandlers,
   ...exchangeHandlers,
+  ...messagingHandlers,
 ];

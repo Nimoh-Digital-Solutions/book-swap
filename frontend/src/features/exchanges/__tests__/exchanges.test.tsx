@@ -124,7 +124,7 @@ describe('ExchangesPage', () => {
       isError: false,
     });
     renderWithProviders(<ExchangesPage />);
-    expect(screen.getByText(/no exchanges here yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/no active exchanges/i)).toBeInTheDocument();
   });
 
   it('renders exchange cards for pending tab', async () => {
@@ -407,7 +407,7 @@ describe('ExchangeDetailPage', () => {
     expect(screen.getByText('Requested')).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
     expect(screen.getByText('Conditions')).toBeInTheDocument();
-    expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
     expect(screen.getByText('Swap Confirmed')).toBeInTheDocument();
     expect(screen.getByText('Completed')).toBeInTheDocument();
   });
