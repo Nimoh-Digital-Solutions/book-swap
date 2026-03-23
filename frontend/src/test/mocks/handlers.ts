@@ -793,6 +793,85 @@ const ratingHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Trust & Safety handlers
+// ---------------------------------------------------------------------------
+
+const MOCK_BLOCKED_USER = {
+  id: 'blk_001',
+  blocked_user: {
+    id: 'usr_blocked_001',
+    username: 'blockeduser',
+    first_name: 'Blocked',
+    avatar: null,
+  },
+  created_at: '2025-01-15T10:00:00Z',
+};
+
+const trustSafetyHandlers = [
+  /** GET /api/v1/users/block/ — list blocked users */
+  http.get('*/api/v1/users/block/', () => {
+    return HttpResponse.json({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [MOCK_BLOCKED_USER],
+    });
+  }),
+
+  /** POST /api/v1/users/block/ — block a user */
+  http.post('*/api/v1/users/block/', async ({ request }) => {
+    const body = (await request.json()) as { blocked_user_id: string };
+    return HttpResponse.json(
+      {
+        id: 'blk_new_001',
+        blocked_user: body.blocked_user_id,
+        created_at: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  /** DELETE /api/v1/users/block/:userId/ — unblock a user */
+  http.delete('*/api/v1/users/block/:userId/', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  /** POST /api/v1/reports/ — submit a report */
+  http.post('*/api/v1/reports/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      {
+        id: 'rpt_new_001',
+        reporter: 'usr_test_001',
+        reported_user: body.reported_user_id,
+        reported_book: body.reported_book_id ?? null,
+        reported_exchange: body.reported_exchange_id ?? null,
+        category: body.category,
+        description: body.description ?? '',
+        status: 'open',
+        created_at: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  /** GET /api/v1/users/me/data-export/ — GDPR data export */
+  http.get('*/api/v1/users/me/data-export/', () => {
+    return HttpResponse.json({
+      profile: { id: 'usr_test_001', email: 'test@example.com', first_name: 'Test' },
+      books: [],
+      exchanges: [],
+      messages_sent: [],
+      ratings_given: [],
+      ratings_received: [],
+      blocks: [],
+      reports_filed: [],
+      exported_at: new Date().toISOString(),
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
@@ -807,4 +886,5 @@ export const handlers = [
   ...exchangeHandlers,
   ...messagingHandlers,
   ...ratingHandlers,
+  ...trustSafetyHandlers,
 ];

@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { axe } from '../../../test/a11y.setup';
+import { renderWithProviders } from '../../../test/renderWithProviders';
 import { Footer } from './Footer';
 
 // ---------------------------------------------------------------------------
@@ -10,25 +11,31 @@ import { Footer } from './Footer';
 
 describe('Footer', () => {
   it('renders the copyright year and BookSwap name', () => {
-    render(<Footer />);
+    renderWithProviders(<Footer />);
     const currentYear = new Date().getFullYear().toString();
     expect(screen.getByText(new RegExp(currentYear))).toBeInTheDocument();
     expect(screen.getByText(/BookSwap/)).toBeInTheDocument();
   });
 
   it('renders the tagline text', () => {
-    render(<Footer />);
+    renderWithProviders(<Footer />);
     expect(screen.getByText(/built for readers/i)).toBeInTheDocument();
   });
 
   it('applies custom className when provided', () => {
-    render(<Footer className="custom-footer" />);
+    renderWithProviders(<Footer className="custom-footer" />);
     const footer = screen.getByRole('contentinfo');
     expect(footer.className).toContain('custom-footer');
   });
 
+  it('renders privacy policy and terms links', () => {
+    renderWithProviders(<Footer />);
+    expect(screen.getByText(/privacy policy/i)).toBeInTheDocument();
+    expect(screen.getByText(/terms of service/i)).toBeInTheDocument();
+  });
+
   it('has no a11y violations', async () => {
-    const { container } = render(<Footer />);
+    const { container } = renderWithProviders(<Footer />);
     expect(await axe(container)).toHaveNoViolations();
   });
 });

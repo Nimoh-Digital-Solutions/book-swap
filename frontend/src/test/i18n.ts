@@ -16,12 +16,20 @@ import i18n from 'i18next';
 import en from '../../public/locales/en/translation.json';
 import enExchanges from '../../public/locales/en/exchanges.json';
 import enMessaging from '../../public/locales/en/messaging.json';
+import enRatings from '../../public/locales/en/ratings.json';
+import enTrustSafety from '../../public/locales/en/trust-safety.json';
 
 // Re-initialise i18n (strip any plugins like HttpBackend that may have been
 // added by the app-level `src/i18n/index.ts` if it executes first).
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { translation: en, exchanges: enExchanges, messaging: enMessaging },
+    en: {
+      translation: en,
+      exchanges: enExchanges,
+      messaging: enMessaging,
+      ratings: enRatings,
+      'trust-safety': enTrustSafety,
+    },
   },
   lng: 'en',
   fallbackLng: 'en',
