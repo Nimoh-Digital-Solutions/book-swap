@@ -1,0 +1,190 @@
+"""Serializers for the exchanges app."""
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
+from bookswap.models import Book, BookStatus
+
+from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest, ExchangeStatus
+
+User = get_user_model()
+
+
+# ── Nested read-only serializers ──────────────────────────────────────────────
+
+
+class ExchangeParticipantSerializer(serializers.ModelSerializer):
+    """Compact user info nested inside exchange responses."""
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'avatar', 'avg_rating', 'swap_count')
+        read_only_fields = fields
+
+
+class ExchangeBookSerializer(serializers.ModelSerializer):
+    """Compact book info nested inside exchange responses."""
+
+    primary_photo = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Book
+        fields = ('id', 'title', 'author', 'cover_url', 'condition', 'primary_photo')
+        read_only_fields = fields
+
+    def get_primary_photo(self, obj) -> str | None:
+        first = obj.photos.first()
+        if first and first.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(first.image.url)
+            return first.image.url
+        return None
+
+
+# ── List / Detail serializers ─────────────────────────────────────────────────
+
+
+class ExchangeRequestListSerializer(serializers.ModelSerializer):
+    """Compact exchange data for list views."""
+
+    requester = ExchangeParticipantSerializer(read_only=True)
+    owner = ExchangeParticipantSerializer(read_only=True)
+    requested_book = ExchangeBookSerializer(read_only=True)
+    offered_book = ExchangeBookSerializer(read_only=True)
+
+    class Meta:
+        model = ExchangeRequest
+        fields = (
+            'id', 'status', 'message', 'created_at', 'updated_at',
+            'requester', 'owner', 'requested_book', 'offered_book',
+        )
+        read_only_fields = fields
+
+
+class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
+    """Full exchange detail with conditions and confirmation info."""
+
+    conditions_accepted_by_me = serializers.SerializerMethodField()
+    conditions_accepted_count = serializers.SerializerMethodField()
+    conditions_version = serializers.SerializerMethodField()
+
+    class Meta(ExchangeRequestListSerializer.Meta):
+        fields = (
+            *ExchangeRequestListSerializer.Meta.fields,
+            'decline_reason', 'counter_to',
+            'requester_confirmed_at', 'owner_confirmed_at',
+            'return_requested_at', 'return_confirmed_requester',
+            'return_confirmed_owner', 'expired_at',
+            'conditions_accepted_by_me', 'conditions_accepted_count',
+            'conditions_version',
+        )
+        read_only_fields = fields
+
+    def get_conditions_accepted_by_me(self, obj) -> bool:
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.conditions_acceptances.filter(user=request.user).exists()
+
+    def get_conditions_accepted_count(self, obj) -> int:
+        return obj.conditions_acceptances.count()
+
+    def get_conditions_version(self, obj) -> str:
+        return ConditionsAcceptance.CURRENT_VERSION
+
+
+# ── Create / Action serializers ───────────────────────────────────────────────
+
+
+class ExchangeRequestCreateSerializer(serializers.Serializer):
+    """Validate and create a new exchange request."""
+
+    requested_book_id = serializers.UUIDField()
+    offered_book_id = serializers.UUIDField()
+    message = serializers.CharField(max_length=200, required=False, default='')
+
+    def validate_requested_book_id(self, value):
+        try:
+            book = Book.objects.select_related('owner').get(pk=value)
+        except Book.DoesNotExist:
+            raise serializers.ValidationError('Book not found.')
+        if book.owner_id == self.context['request'].user.pk:
+            raise serializers.ValidationError('You cannot request your own book.')
+        if book.status != BookStatus.AVAILABLE:
+            raise serializers.ValidationError('This book is not available for exchange.')
+        self._requested_book = book
+        return value
+
+    def validate_offered_book_id(self, value):
+        try:
+            book = Book.objects.get(pk=value)
+        except Book.DoesNotExist:
+            raise serializers.ValidationError('Book not found.')
+        if book.owner_id != self.context['request'].user.pk:
+            raise serializers.ValidationError('You can only offer your own books.')
+        if book.status != BookStatus.AVAILABLE:
+            raise serializers.ValidationError('This book is not available for exchange.')
+        self._offered_book = book
+        return value
+
+    def validate(self, attrs):
+        if attrs['requested_book_id'] == attrs['offered_book_id']:
+            raise serializers.ValidationError('Requested and offered books must be different.')
+        return attrs
+
+    def create(self, validated_data):
+        from django.db import IntegrityError
+        try:
+            return ExchangeRequest.objects.create(
+                requester=self.context['request'].user,
+                owner=self._requested_book.owner,
+                requested_book=self._requested_book,
+                offered_book=self._offered_book,
+                message=validated_data.get('message', ''),
+            )
+        except IntegrityError:
+            raise serializers.ValidationError(
+                'You already have a pending request for this book.'
+            )
+
+
+class CounterProposeSerializer(serializers.Serializer):
+    """Validate counter-proposal: owner picks a different book from requester's shelf."""
+
+    offered_book_id = serializers.UUIDField()
+
+    def validate_offered_book_id(self, value):
+        exchange = self.context['exchange']
+        try:
+            book = Book.objects.get(pk=value)
+        except Book.DoesNotExist:
+            raise serializers.ValidationError('Book not found.')
+        if book.owner_id != exchange.requester_id:
+            raise serializers.ValidationError(
+                "You must pick a book from the requester's shelf."
+            )
+        if book.status != BookStatus.AVAILABLE:
+            raise serializers.ValidationError('This book is not available for exchange.')
+        if book.pk == exchange.offered_book_id:
+            raise serializers.ValidationError('Pick a different book from the original offer.')
+        self._offered_book = book
+        return value
+
+
+class DeclineSerializer(serializers.Serializer):
+    """Validate decline action with optional reason."""
+
+    reason = serializers.ChoiceField(
+        choices=DeclineReason.choices,
+        required=False,
+        allow_blank=True,
+    )
+
+
+class ConditionsAcceptanceSerializer(serializers.ModelSerializer):
+    """Read-only serializer for conditions acceptance records."""
+
+    class Meta:
+        model = ConditionsAcceptance
+        fields = ('id', 'exchange', 'user', 'accepted_at', 'conditions_version')
+        read_only_fields = fields

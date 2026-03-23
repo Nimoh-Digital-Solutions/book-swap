@@ -1,0 +1,124 @@
+"""Celery tasks for the exchanges app."""
+import logging
+from datetime import timedelta
+
+from celery import shared_task
+from django.db.models import F
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(name='exchanges.expire_stale_requests')
+def expire_stale_requests():
+    """Expire pending exchange requests older than 14 days.
+
+    Runs daily via Celery Beat. Sets status → 'expired' and records
+    the expiry timestamp.
+    """
+    from .models import ExchangeRequest, ExchangeStatus
+
+    cutoff = timezone.now() - timedelta(days=14)
+    expired = ExchangeRequest.objects.filter(
+        status=ExchangeStatus.PENDING,
+        created_at__lte=cutoff,
+    ).update(
+        status=ExchangeStatus.EXPIRED,
+        expired_at=timezone.now(),
+    )
+
+    if expired:
+        logger.info('Expired %d stale exchange requests.', expired)
+    return expired
+
+
+@shared_task(name='exchanges.expire_stale_conditions')
+def expire_stale_conditions():
+    """Expire exchanges stuck in accepted/conditions_pending for 14+ days.
+
+    Runs daily via Celery Beat. Gives both users 14 days to accept
+    conditions after the owner accepts the request.
+    """
+    from .models import ExchangeRequest, ExchangeStatus
+
+    cutoff = timezone.now() - timedelta(days=14)
+    expired = ExchangeRequest.objects.filter(
+        status__in=[ExchangeStatus.ACCEPTED, ExchangeStatus.CONDITIONS_PENDING],
+        updated_at__lte=cutoff,
+    ).update(
+        status=ExchangeStatus.EXPIRED,
+        expired_at=timezone.now(),
+    )
+
+    if expired:
+        logger.info('Expired %d exchanges with stale conditions.', expired)
+    return expired
+
+
+@shared_task(name='exchanges.auto_confirm_stale_swaps')
+def auto_confirm_stale_swaps():
+    """Auto-confirm swaps where one party confirmed 60+ days ago.
+
+    Runs weekly via Celery Beat. If one user confirmed the swap but
+    the other hasn't after 60 days, auto-fill the missing confirmation
+    and advance to swap_confirmed.
+    """
+    from django.contrib.auth import get_user_model
+
+    from bookswap.models import BookStatus
+
+    from .models import ExchangeRequest, ExchangeStatus
+
+    UserModel = get_user_model()
+    cutoff = timezone.now() - timedelta(days=60)
+    now = timezone.now()
+
+    # Requester confirmed but owner hasn't
+    requester_only = ExchangeRequest.objects.filter(
+        status=ExchangeStatus.ACTIVE,
+        requester_confirmed_at__lte=cutoff,
+        owner_confirmed_at__isnull=True,
+    )
+    for exchange in requester_only.iterator():
+        exchange.owner_confirmed_at = now
+        exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
+        exchange.save(update_fields=[
+            'owner_confirmed_at', 'status', 'updated_at',
+        ])
+        exchange.requested_book.status = BookStatus.IN_EXCHANGE
+        exchange.requested_book.save(update_fields=['status'])
+        exchange.offered_book.status = BookStatus.IN_EXCHANGE
+        exchange.offered_book.save(update_fields=['status'])
+
+    # Owner confirmed but requester hasn't
+    owner_only = ExchangeRequest.objects.filter(
+        status=ExchangeStatus.ACTIVE,
+        owner_confirmed_at__lte=cutoff,
+        requester_confirmed_at__isnull=True,
+    )
+    for exchange in owner_only.iterator():
+        exchange.requester_confirmed_at = now
+        exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
+        exchange.save(update_fields=[
+            'requester_confirmed_at', 'status', 'updated_at',
+        ])
+        exchange.requested_book.status = BookStatus.IN_EXCHANGE
+        exchange.requested_book.save(update_fields=['status'])
+        exchange.offered_book.status = BookStatus.IN_EXCHANGE
+        exchange.offered_book.save(update_fields=['status'])
+
+    total = requester_only.count() + owner_only.count()
+    if total:
+        # Increment swap_count for affected users
+        affected_ids = set()
+        for qs in (requester_only, owner_only):
+            for exchange in qs:
+                affected_ids.add(exchange.requester_id)
+                affected_ids.add(exchange.owner_id)
+        if affected_ids:
+            UserModel.objects.filter(pk__in=affected_ids).update(
+                swap_count=F('swap_count') + 1,
+            )
+        logger.info('Auto-confirmed %d stale swaps.', total)
+
+    return total
