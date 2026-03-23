@@ -1,4 +1,5 @@
 """Tests for Phase 2 — Backend API (serializers, views, validators, utils, services)."""
+
 import datetime
 from unittest.mock import MagicMock, patch
 
@@ -28,24 +29,30 @@ pytestmark = pytest.mark.django_db
 class TestDutchPostcodeValidator:
     """validate_dutch_postcode()."""
 
-    @pytest.mark.parametrize("value,expected", [
-        ("1012AB", "1012 AB"),
-        ("1012 ab", "1012 AB"),
-        ("1012 Ab", "1012 AB"),
-        ("9999ZZ", "9999 ZZ"),
-        ("  1012AB  ", "1012 AB"),
-    ])
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("1012AB", "1012 AB"),
+            ("1012 ab", "1012 AB"),
+            ("1012 Ab", "1012 AB"),
+            ("9999ZZ", "9999 ZZ"),
+            ("  1012AB  ", "1012 AB"),
+        ],
+    )
     def test_valid_postcodes(self, value, expected):
         assert validate_dutch_postcode(value) == expected
 
-    @pytest.mark.parametrize("value", [
-        "12345",
-        "AB1234",
-        "1012",
-        "1012 ABC",
-        "",
-        "12 AB",
-    ])
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "12345",
+            "AB1234",
+            "1012",
+            "1012 ABC",
+            "",
+            "12 AB",
+        ],
+    )
     def test_invalid_postcodes(self, value):
         with pytest.raises(ValidationError):
             validate_dutch_postcode(value)
@@ -148,6 +155,7 @@ class TestGeocodingService:
     @patch("bookswap.services.httpx.get")
     def test_geocode_postcode_network_error(self, mock_get):
         import httpx
+
         mock_get.side_effect = httpx.ConnectError("Connection refused")
 
         with pytest.raises(GeocodingError, match="Geocoding failed"):
@@ -156,15 +164,11 @@ class TestGeocodingService:
     @patch("bookswap.services.httpx.get")
     def test_reverse_geocode_neighborhood_success(self, mock_get):
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "address": {"suburb": "Centrum", "city": "Amsterdam"}
-        }
+        mock_response.json.return_value = {"address": {"suburb": "Centrum", "city": "Amsterdam"}}
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        result = NominatimGeocodingService.reverse_geocode_neighborhood(
-            Point(4.9041, 52.3676, srid=4326)
-        )
+        result = NominatimGeocodingService.reverse_geocode_neighborhood(Point(4.9041, 52.3676, srid=4326))
         assert result == "Centrum"
 
     @patch("bookswap.services.httpx.get")
@@ -174,19 +178,16 @@ class TestGeocodingService:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        result = NominatimGeocodingService.reverse_geocode_neighborhood(
-            Point(4.47, 51.92, srid=4326)
-        )
+        result = NominatimGeocodingService.reverse_geocode_neighborhood(Point(4.47, 51.92, srid=4326))
         assert result == "Rotterdam"
 
     @patch("bookswap.services.httpx.get")
     def test_reverse_geocode_network_error_returns_empty(self, mock_get):
         import httpx
+
         mock_get.side_effect = httpx.ConnectError("fail")
 
-        result = NominatimGeocodingService.reverse_geocode_neighborhood(
-            Point(4.9041, 52.3676, srid=4326)
-        )
+        result = NominatimGeocodingService.reverse_geocode_neighborhood(Point(4.9041, 52.3676, srid=4326))
         assert result == ""
 
 
@@ -280,9 +281,7 @@ class TestUserUpdateSerializer:
         from bookswap.serializers import UserUpdateSerializer
 
         user = UserFactory()
-        serializer = UserUpdateSerializer(
-            user, data={"preferred_language": "fr"}, partial=True
-        )
+        serializer = UserUpdateSerializer(user, data={"preferred_language": "fr"}, partial=True)
         assert not serializer.is_valid()
         assert "preferred_language" in serializer.errors
 
@@ -290,9 +289,7 @@ class TestUserUpdateSerializer:
         from bookswap.serializers import UserUpdateSerializer
 
         user = UserFactory()
-        serializer = UserUpdateSerializer(
-            user, data={"preferred_radius": 100}, partial=True
-        )
+        serializer = UserUpdateSerializer(user, data={"preferred_radius": 100}, partial=True)
         assert not serializer.is_valid()
         assert "preferred_radius" in serializer.errors
 
@@ -323,9 +320,7 @@ class TestSetLocationSerializer:
         mock_reverse.return_value = "Jordaan"
 
         user = UserFactory()
-        serializer = SetLocationSerializer(
-            data={"latitude": 52.3676, "longitude": 4.9041}
-        )
+        serializer = SetLocationSerializer(data={"latitude": 52.3676, "longitude": 4.9041})
         assert serializer.is_valid(), serializer.errors
         serializer.save(user=user)
         user.refresh_from_db()
@@ -347,9 +342,7 @@ class TestSetLocationSerializer:
     def test_invalid_latitude(self):
         from bookswap.serializers import SetLocationSerializer
 
-        serializer = SetLocationSerializer(
-            data={"latitude": 100.0, "longitude": 4.0}
-        )
+        serializer = SetLocationSerializer(data={"latitude": 100.0, "longitude": 4.0})
         assert not serializer.is_valid()
 
 
@@ -362,9 +355,7 @@ class TestOnboardingCompleteSerializer:
         user = UserFactory()
         request = MagicMock()
         request.user = user
-        serializer = OnboardingCompleteSerializer(
-            data={}, context={"request": request}
-        )
+        serializer = OnboardingCompleteSerializer(data={}, context={"request": request})
         assert not serializer.is_valid()
 
     def test_accepts_with_location(self):
@@ -373,9 +364,7 @@ class TestOnboardingCompleteSerializer:
         user = UserFactory(with_location=True)
         request = MagicMock()
         request.user = user
-        serializer = OnboardingCompleteSerializer(
-            data={}, context={"request": request}
-        )
+        serializer = OnboardingCompleteSerializer(data={}, context={"request": request})
         assert serializer.is_valid()
         serializer.save(user=user)
         user.refresh_from_db()
@@ -390,15 +379,17 @@ class TestBookswapRegisterSerializer:
 
         today = datetime.datetime.now(tz=datetime.UTC).date()
         dob = today.replace(year=today.year - 20)
-        serializer = BookswapRegisterSerializer(data={
-            "email": "test@example.com",
-            "username": "newuser",
-            "password": "Str0ngP@ss!",
-            "password_confirm": "Str0ngP@ss!",
-            "privacy_policy_accepted": True,
-            "terms_of_service_accepted": True,
-            "date_of_birth": dob.isoformat(),
-        })
+        serializer = BookswapRegisterSerializer(
+            data={
+                "email": "test@example.com",
+                "username": "newuser",
+                "password": "Str0ngP@ss!",
+                "password_confirm": "Str0ngP@ss!",
+                "privacy_policy_accepted": True,
+                "terms_of_service_accepted": True,
+                "date_of_birth": dob.isoformat(),
+            }
+        )
         assert serializer.is_valid(), serializer.errors
 
     def test_underage_rejected(self):
@@ -406,15 +397,17 @@ class TestBookswapRegisterSerializer:
 
         today = datetime.datetime.now(tz=datetime.UTC).date()
         dob = today.replace(year=today.year - 10)
-        serializer = BookswapRegisterSerializer(data={
-            "email": "kid@example.com",
-            "username": "kiduser",
-            "password": "Str0ngP@ss!",
-            "password_confirm": "Str0ngP@ss!",
-            "privacy_policy_accepted": True,
-            "terms_of_service_accepted": True,
-            "date_of_birth": dob.isoformat(),
-        })
+        serializer = BookswapRegisterSerializer(
+            data={
+                "email": "kid@example.com",
+                "username": "kiduser",
+                "password": "Str0ngP@ss!",
+                "password_confirm": "Str0ngP@ss!",
+                "privacy_policy_accepted": True,
+                "terms_of_service_accepted": True,
+                "date_of_birth": dob.isoformat(),
+            }
+        )
         assert not serializer.is_valid()
         assert "date_of_birth" in serializer.errors
 
@@ -541,9 +534,7 @@ class TestSetLocationView:
 
     def test_empty_body_rejected(self, auth_client):
         client, _ = auth_client
-        response = client.post(
-            "/api/v1/users/me/location/", {}, format="json"
-        )
+        response = client.post("/api/v1/users/me/location/", {}, format="json")
         assert response.status_code == 400
 
     def test_unauthenticated_rejected(self, api_client):
@@ -585,14 +576,17 @@ class TestURLResolution:
 
     def test_user_me_url(self):
         from django.urls import reverse
+
         assert reverse("bookswap:user-me") == "/api/v1/users/me/"
 
     def test_set_location_url(self):
         from django.urls import reverse
+
         assert reverse("bookswap:user-set-location") == "/api/v1/users/me/location/"
 
     def test_onboarding_complete_url(self):
         from django.urls import reverse
+
         assert reverse("bookswap:user-onboarding-complete") == "/api/v1/users/me/onboarding/complete/"
 
     def test_user_detail_url(self):
@@ -614,21 +608,25 @@ class TestSocialAuthConfig:
 
     def test_social_django_in_installed_apps(self):
         from django.conf import settings
+
         assert "social_django" in settings.INSTALLED_APPS
 
     def test_authentication_backends(self):
         from django.conf import settings
+
         assert "social_core.backends.google.GoogleOAuth2" in settings.AUTHENTICATION_BACKENDS
         assert "social_core.backends.apple.AppleIdAuth" in settings.AUTHENTICATION_BACKENDS
         assert "django.contrib.auth.backends.ModelBackend" in settings.AUTHENTICATION_BACKENDS
 
     def test_pipeline_set(self):
         from django.conf import settings
+
         assert hasattr(settings, "SOCIAL_AUTH_PIPELINE")
         assert len(settings.SOCIAL_AUTH_PIPELINE) > 0
 
     def test_social_auth_done_url(self):
         from django.urls import reverse
+
         assert reverse("social-auth-done") == "/api/v1/auth/social/done/"
 
 
@@ -703,6 +701,7 @@ class TestAccountDeletionView:
     def test_duplicate_deletion_rejected(self, auth_client):
         client, user = auth_client
         from django.utils import timezone
+
         user.deletion_requested_at = timezone.now()
         user.save(update_fields=["deletion_requested_at"])
         response = client.post(

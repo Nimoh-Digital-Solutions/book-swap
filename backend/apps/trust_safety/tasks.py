@@ -1,4 +1,5 @@
 """Celery tasks for the trust_safety app."""
+
 import logging
 
 from celery import shared_task
@@ -16,7 +17,8 @@ def send_report_notification_email(report_id: str):
 
     try:
         report = Report.objects.select_related(
-            'reporter', 'reported_user',
+            "reporter",
+            "reported_user",
         ).get(pk=report_id)
     except Report.DoesNotExist:
         logger.warning("Report %s not found for notification.", report_id)
@@ -32,9 +34,9 @@ def send_report_notification_email(report_id: str):
         f"Admin link: /admin/trust_safety/report/{report.pk}/change/"
     )
 
-    admin_email = getattr(settings, 'ADMIN_NOTIFICATION_EMAIL', None)
+    admin_email = getattr(settings, "ADMIN_NOTIFICATION_EMAIL", None)
     if not admin_email:
-        default_from = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@bookswap.example')
+        default_from = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@bookswap.example")
         admin_email = default_from
 
     send_mail(

@@ -11,6 +11,7 @@ NotificationPreferences:
   stable (non-expiring) ``unsubscribe_token`` used for one-click unsubscribe
   links that work without authentication.
 """
+
 import secrets
 import uuid
 
@@ -20,13 +21,13 @@ from nimoh_base.core.models import TimeStampedModel
 
 
 class NotificationType(models.TextChoices):
-    NEW_REQUEST = 'new_request', 'New Partner Request'
-    REQUEST_ACCEPTED = 'request_accepted', 'Request Accepted'
-    REQUEST_DECLINED = 'request_declined', 'Request Declined'
-    REQUEST_EXPIRED = 'request_expired', 'Request Expired'
-    EXCHANGE_COMPLETED = 'exchange_completed', 'Exchange Completed'
-    NEW_MESSAGE = 'new_message', 'New Message'
-    RATING_RECEIVED = 'rating_received', 'Rating Received'
+    NEW_REQUEST = "new_request", "New Partner Request"
+    REQUEST_ACCEPTED = "request_accepted", "Request Accepted"
+    REQUEST_DECLINED = "request_declined", "Request Declined"
+    REQUEST_EXPIRED = "request_expired", "Request Expired"
+    EXCHANGE_COMPLETED = "exchange_completed", "Exchange Completed"
+    NEW_MESSAGE = "new_message", "New Message"
+    RATING_RECEIVED = "rating_received", "Rating Received"
 
 
 class Notification(TimeStampedModel):
@@ -37,7 +38,7 @@ class Notification(TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='notifications',
+        related_name="notifications",
     )
     notification_type = models.CharField(
         max_length=32,
@@ -46,18 +47,18 @@ class Notification(TimeStampedModel):
     )
     title = models.CharField(max_length=150)
     body = models.CharField(max_length=512)
-    link = models.CharField(max_length=512, blank=True, default='')
+    link = models.CharField(max_length=512, blank=True, default="")
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
         indexes = [  # noqa: RUF012
-            models.Index(fields=['user', '-created_at']),
-            models.Index(fields=['user', 'read_at']),
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["user", "read_at"]),
         ]
 
     def __str__(self) -> str:
-        return f'{self.notification_type} → {self.user_id} ({self.pk})'
+        return f"{self.notification_type} → {self.user_id} ({self.pk})"
 
     @property
     def is_read(self) -> bool:
@@ -74,7 +75,7 @@ class NotificationPreferences(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='notification_preferences',
+        related_name="notification_preferences",
         primary_key=True,
     )
 
@@ -97,8 +98,8 @@ class NotificationPreferences(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Notification Preferences'
-        verbose_name_plural = 'Notification Preferences'
+        verbose_name = "Notification Preferences"
+        verbose_name_plural = "Notification Preferences"
 
     def __str__(self) -> str:
-        return f'NotificationPreferences({self.user_id})'
+        return f"NotificationPreferences({self.user_id})"

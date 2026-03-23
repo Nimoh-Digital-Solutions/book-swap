@@ -1,10 +1,23 @@
 """Basic profanity filter utility for rating comments."""
 
-BLOCKED_TERMS = frozenset({
-    'fuck', 'shit', 'asshole', 'bitch', 'bastard',
-    'cunt', 'dick', 'piss', 'slut', 'whore',
-    'nigger', 'nigga', 'faggot', 'retard',
-})
+BLOCKED_TERMS = frozenset(
+    {
+        "fuck",
+        "shit",
+        "asshole",
+        "bitch",
+        "bastard",
+        "cunt",
+        "dick",
+        "piss",
+        "slut",
+        "whore",
+        "nigger",
+        "nigga",
+        "faggot",
+        "retard",
+    }
+)
 
 
 def is_profane(text: str) -> bool:

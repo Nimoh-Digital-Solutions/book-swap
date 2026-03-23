@@ -1,4 +1,5 @@
 """Book domain models — Book, BookPhoto, WishlistItem."""
+
 import uuid
 
 from django.conf import settings
@@ -11,25 +12,25 @@ from nimoh_base.core.models import TimeStampedModel
 
 
 class BookCondition(models.TextChoices):
-    NEW = 'new', 'New'
-    LIKE_NEW = 'like_new', 'Like New'
-    GOOD = 'good', 'Good'
-    ACCEPTABLE = 'acceptable', 'Acceptable'
+    NEW = "new", "New"
+    LIKE_NEW = "like_new", "Like New"
+    GOOD = "good", "Good"
+    ACCEPTABLE = "acceptable", "Acceptable"
 
 
 class BookStatus(models.TextChoices):
-    AVAILABLE = 'available', 'Available'
-    IN_EXCHANGE = 'in_exchange', 'In Exchange'
-    RETURNED = 'returned', 'Returned'
+    AVAILABLE = "available", "Available"
+    IN_EXCHANGE = "in_exchange", "In Exchange"
+    RETURNED = "returned", "Returned"
 
 
 BOOK_LANGUAGE_CHOICES = [
-    ('en', 'English'),
-    ('nl', 'Dutch'),
-    ('de', 'German'),
-    ('fr', 'French'),
-    ('es', 'Spanish'),
-    ('other', 'Other'),
+    ("en", "English"),
+    ("nl", "Dutch"),
+    ("de", "German"),
+    ("fr", "French"),
+    ("es", "Spanish"),
+    ("other", "Other"),
 ]
 
 
@@ -40,7 +41,7 @@ class Book(TimeStampedModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='books',
+        related_name="books",
     )
 
     # ── Book metadata ─────────────────────────────────────────────────
@@ -73,15 +74,15 @@ class Book(TimeStampedModel):
     search_vector = SearchVectorField(null=True)
 
     class Meta:
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
         indexes = [  # noqa: RUF012
-            GinIndex(fields=['search_vector'], name='book_search_vector_gin'),
-            models.Index(fields=['status', 'created_at'], name='book_status_created'),
-            GinIndex(fields=['genres'], name='book_genres_gin'),
+            GinIndex(fields=["search_vector"], name="book_search_vector_gin"),
+            models.Index(fields=["status", "created_at"], name="book_status_created"),
+            GinIndex(fields=["genres"], name="book_genres_gin"),
         ]
 
     def __str__(self):
-        return f'{self.title} by {self.author}'
+        return f"{self.title} by {self.author}"
 
 
 class BookPhoto(TimeStampedModel):
@@ -91,19 +92,19 @@ class BookPhoto(TimeStampedModel):
     book = models.ForeignKey(
         Book,
         on_delete=models.CASCADE,
-        related_name='photos',
+        related_name="photos",
     )
-    image = models.ImageField(upload_to='book_photos/')
+    image = models.ImageField(upload_to="book_photos/")
     position = models.PositiveSmallIntegerField(
         default=0,
-        help_text='Display order. 0 = primary thumbnail.',
+        help_text="Display order. 0 = primary thumbnail.",
     )
 
     class Meta:
-        ordering = ['position', 'created_at']  # noqa: RUF012
+        ordering = ["position", "created_at"]  # noqa: RUF012
 
     def __str__(self):
-        return f'Photo {self.position} for {self.book.title}'
+        return f"Photo {self.position} for {self.book.title}"
 
 
 class WishlistItem(TimeStampedModel):
@@ -113,7 +114,7 @@ class WishlistItem(TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='wishlist_items',
+        related_name="wishlist_items",
     )
     isbn = models.CharField(max_length=13, blank=True)
     title = models.CharField(max_length=300, blank=True)
@@ -122,14 +123,12 @@ class WishlistItem(TimeStampedModel):
     cover_url = models.URLField(blank=True)
 
     class Meta:
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
 
     def clean(self):
         super().clean()
         if not any([self.isbn, self.title, self.genre]):
-            raise ValidationError(
-                'At least one of isbn, title, or genre must be provided.'
-            )
+            raise ValidationError("At least one of isbn, title, or genre must be provided.")
 
     def __str__(self):
         return self.title or self.isbn or self.genre

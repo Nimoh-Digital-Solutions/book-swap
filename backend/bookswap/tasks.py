@@ -41,11 +41,20 @@ def anonymize_deleted_accounts():
         user.preferred_genres = []
         user.avatar = None
 
-        user.save(update_fields=[
-            "username", "email", "first_name", "last_name",
-            "bio", "date_of_birth", "location", "neighborhood",
-            "preferred_genres", "avatar",
-        ])
+        user.save(
+            update_fields=[
+                "username",
+                "email",
+                "first_name",
+                "last_name",
+                "bio",
+                "date_of_birth",
+                "location",
+                "neighborhood",
+                "preferred_genres",
+                "avatar",
+            ]
+        )
         count += 1
 
     if count:

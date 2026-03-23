@@ -1,4 +1,5 @@
 """Trust & Safety models — Block and Report."""
+
 import uuid
 
 from django.conf import settings
@@ -19,47 +20,47 @@ class Block(TimeStampedModel):
     blocker = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='blocks_given',
+        related_name="blocks_given",
     )
     blocked_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='blocks_received',
+        related_name="blocks_received",
     )
 
     class Meta:
         constraints = [  # noqa: RUF012
             models.UniqueConstraint(
-                fields=['blocker', 'blocked_user'],
-                name='unique_block',
+                fields=["blocker", "blocked_user"],
+                name="unique_block",
             ),
         ]
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
 
     def clean(self):
         super().clean()
         if self.blocker_id == self.blocked_user_id:
-            raise ValidationError('You cannot block yourself.')
+            raise ValidationError("You cannot block yourself.")
 
     def __str__(self):
-        return f'{self.blocker} blocked {self.blocked_user}'
+        return f"{self.blocker} blocked {self.blocked_user}"
 
 
 class ReportCategory(models.TextChoices):
-    INAPPROPRIATE = 'inappropriate', 'Inappropriate Content'
-    FAKE_LISTING = 'fake_listing', 'Fake Listing'
-    NO_SHOW = 'no_show', 'No-Show'
-    MISREPRESENTED = 'misrepresented', 'Misrepresented Book Condition'
-    HARASSMENT = 'harassment', 'Harassment'
-    SPAM = 'spam', 'Spam'
-    OTHER = 'other', 'Other'
+    INAPPROPRIATE = "inappropriate", "Inappropriate Content"
+    FAKE_LISTING = "fake_listing", "Fake Listing"
+    NO_SHOW = "no_show", "No-Show"
+    MISREPRESENTED = "misrepresented", "Misrepresented Book Condition"
+    HARASSMENT = "harassment", "Harassment"
+    SPAM = "spam", "Spam"
+    OTHER = "other", "Other"
 
 
 class ReportStatus(models.TextChoices):
-    OPEN = 'open', 'Open'
-    REVIEWED = 'reviewed', 'Under Review'
-    RESOLVED = 'resolved', 'Resolved'
-    DISMISSED = 'dismissed', 'Dismissed'
+    OPEN = "open", "Open"
+    REVIEWED = "reviewed", "Under Review"
+    RESOLVED = "resolved", "Resolved"
+    DISMISSED = "dismissed", "Dismissed"
 
 
 class Report(TimeStampedModel):
@@ -69,26 +70,26 @@ class Report(TimeStampedModel):
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reports_filed',
+        related_name="reports_filed",
     )
     reported_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reports_received',
+        related_name="reports_received",
     )
     reported_book = models.ForeignKey(
-        'books.Book',
+        "books.Book",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reports',
+        related_name="reports",
     )
     reported_exchange = models.ForeignKey(
-        'exchanges.ExchangeRequest',
+        "exchanges.ExchangeRequest",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reports',
+        related_name="reports",
     )
     category = models.CharField(
         max_length=30,
@@ -106,7 +107,7 @@ class Report(TimeStampedModel):
     )
     admin_notes = models.TextField(
         blank=True,
-        help_text='Internal notes for admin review.',
+        help_text="Internal notes for admin review.",
     )
     resolved_at = models.DateTimeField(
         null=True,
@@ -114,16 +115,14 @@ class Report(TimeStampedModel):
     )
 
     class Meta:
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
 
     def clean(self):
         super().clean()
         if self.reporter_id == self.reported_user_id:
-            raise ValidationError('You cannot report yourself.')
+            raise ValidationError("You cannot report yourself.")
         if self.category == ReportCategory.OTHER and not self.description.strip():
-            raise ValidationError(
-                {'description': 'Description is required when category is "other".'}
-            )
+            raise ValidationError({"description": 'Description is required when category is "other".'})
 
     def __str__(self):
-        return f'Report by {self.reporter} against {self.reported_user} ({self.category})'
+        return f"Report by {self.reporter} against {self.reported_user} ({self.category})"

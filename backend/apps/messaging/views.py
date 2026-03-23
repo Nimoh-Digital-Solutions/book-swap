@@ -1,4 +1,5 @@
 """Views for the messaging app."""
+
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.db.models import FloatField, Value
@@ -40,37 +41,31 @@ class MessageViewSet(GenericViewSet):
 
     def initial(self, request, *args, **kwargs):
         """Resolve the exchange before permission checks."""
-        exchange_id = kwargs.get('exchange_id')
+        exchange_id = kwargs.get("exchange_id")
         try:
             self.exchange = ExchangeRequest.objects.select_related(
-                'requester', 'owner',
+                "requester",
+                "owner",
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
-            raise NotFound('Exchange not found.') from None
+            raise NotFound("Exchange not found.") from None
 
         # Block check: hide exchange if either party is blocked
         if request.user.is_authenticated:
             blocked_ids = get_blocked_user_ids(request.user)
             other_id = (
-                self.exchange.owner_id
-                if self.exchange.requester_id == request.user.pk
-                else self.exchange.requester_id
+                self.exchange.owner_id if self.exchange.requester_id == request.user.pk else self.exchange.requester_id
             )
             if other_id in blocked_ids:
-                raise NotFound('Exchange not found.')
+                raise NotFound("Exchange not found.")
 
         super().initial(request, *args, **kwargs)
 
     def get_queryset(self):
-        return (
-            Message.objects
-            .filter(exchange=self.exchange)
-            .select_related('sender')
-            .order_by('created_at')
-        )
+        return Message.objects.filter(exchange=self.exchange).select_related("sender").order_by("created_at")
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return MessageCreateSerializer
         return MessageSerializer
 
@@ -78,7 +73,7 @@ class MessageViewSet(GenericViewSet):
         """List messages for this exchange."""
         if self.exchange.status not in CHAT_ELIGIBLE_STATUSES:
             return Response(
-                {'detail': 'Chat is not available for this exchange.'},
+                {"detail": "Chat is not available for this exchange."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -95,13 +90,13 @@ class MessageViewSet(GenericViewSet):
         # Email verification gate (US-803)
         if not IsEmailVerified().has_permission(request, self):
             return Response(
-                {'detail': IsEmailVerified.message},
+                {"detail": IsEmailVerified.message},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         if self.exchange.status not in CHAT_WRITABLE_STATUSES:
             return Response(
-                {'detail': 'Chat is read-only for this exchange.'},
+                {"detail": "Chat is read-only for this exchange."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -117,23 +112,22 @@ class MessageViewSet(GenericViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(detail=False, methods=['post'], url_path='mark-read')
+    @action(detail=False, methods=["post"], url_path="mark-read")
     def mark_read(self, request, *args, **kwargs):
         """Mark all unread messages from the partner as read."""
         if self.exchange.status not in CHAT_ELIGIBLE_STATUSES:
             return Response(
-                {'detail': 'Chat is not available for this exchange.'},
+                {"detail": "Chat is not available for this exchange."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         now = timezone.now()
         updated = (
-            Message.objects
-            .filter(exchange=self.exchange, read_at__isnull=True)
+            Message.objects.filter(exchange=self.exchange, read_at__isnull=True)
             .exclude(sender=request.user)
             .update(read_at=now)
         )
-        return Response({'marked_read': updated})
+        return Response({"marked_read": updated})
 
 
 class MeetupSuggestionViewSet(GenericViewSet):
@@ -147,21 +141,22 @@ class MeetupSuggestionViewSet(GenericViewSet):
     serializer_class = MeetupLocationSerializer
 
     def initial(self, request, *args, **kwargs):
-        exchange_id = kwargs.get('exchange_id')
+        exchange_id = kwargs.get("exchange_id")
         try:
             self.exchange = ExchangeRequest.objects.select_related(
-                'requester', 'owner',
+                "requester",
+                "owner",
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
-            raise NotFound('Exchange not found.') from None
+            raise NotFound("Exchange not found.") from None
         super().initial(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = MeetupLocation.objects.filter(is_active=True)
 
         # Try to compute midpoint from both users' locations.
-        requester_loc = getattr(self.exchange.requester, 'location', None)
-        owner_loc = getattr(self.exchange.owner, 'location', None)
+        requester_loc = getattr(self.exchange.requester, "location", None)
+        owner_loc = getattr(self.exchange.owner, "location", None)
 
         if requester_loc and owner_loc:
             midpoint = Point(
@@ -170,16 +165,16 @@ class MeetupSuggestionViewSet(GenericViewSet):
                 srid=4326,
             )
             qs = qs.annotate(
-                distance_km=Distance('location', midpoint) / 1000,
-            ).order_by('distance_km')
+                distance_km=Distance("location", midpoint) / 1000,
+            ).order_by("distance_km")
         elif requester_loc:
             qs = qs.annotate(
-                distance_km=Distance('location', requester_loc) / 1000,
-            ).order_by('distance_km')
+                distance_km=Distance("location", requester_loc) / 1000,
+            ).order_by("distance_km")
         elif owner_loc:
             qs = qs.annotate(
-                distance_km=Distance('location', owner_loc) / 1000,
-            ).order_by('distance_km')
+                distance_km=Distance("location", owner_loc) / 1000,
+            ).order_by("distance_km")
         else:
             qs = qs.annotate(
                 distance_km=Value(None, output_field=FloatField()),
@@ -191,7 +186,7 @@ class MeetupSuggestionViewSet(GenericViewSet):
         """List meetup suggestions sorted by distance from exchange midpoint."""
         if self.exchange.status not in CHAT_ELIGIBLE_STATUSES:
             return Response(
-                {'detail': 'Meetup suggestions are not available for this exchange.'},
+                {"detail": "Meetup suggestions are not available for this exchange."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

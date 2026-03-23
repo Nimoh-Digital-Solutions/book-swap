@@ -3,6 +3,7 @@
 ``validate_book_photo`` and photo-related constants have moved to
 ``apps.books.validators``.
 """
+
 import re
 from datetime import date
 
@@ -11,7 +12,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 # Dutch postcode: 4 digits, optional space, 2 letters
-DUTCH_POSTCODE_RE = re.compile(r'^\d{4}\s?[A-Za-z]{2}$')
+DUTCH_POSTCODE_RE = re.compile(r"^\d{4}\s?[A-Za-z]{2}$")
 
 MINIMUM_AGE = 16
 
@@ -39,4 +40,3 @@ def validate_minimum_age(dob: date) -> None:
             f"You must be at least {MINIMUM_AGE} years old to register.",
             code="underage",
         )
-

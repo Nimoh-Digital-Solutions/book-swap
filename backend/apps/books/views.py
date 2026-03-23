@@ -1,4 +1,5 @@
 """Views for the books app — CRUD, photos, ISBN lookup, wishlist, and browse."""
+
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.contrib.postgres.search import SearchQuery, SearchRank
@@ -36,6 +37,7 @@ from .validators import validate_book_photo
 def _get_blocked_user_ids(user):
     """Lazy import to avoid circular dependency with trust_safety."""
     from apps.trust_safety.services import get_blocked_user_ids
+
     return get_blocked_user_ids(user)
 
 
@@ -88,9 +90,7 @@ class BookViewSet(
 
     def perform_destroy(self, instance):
         if instance.status == BookStatus.IN_EXCHANGE:
-            raise drf_serializers.ValidationError(
-                "Cannot delete a book that is currently in exchange."
-            )
+            raise drf_serializers.ValidationError("Cannot delete a book that is currently in exchange.")
         instance.delete()
 
     def create(self, request, *args, **kwargs):
@@ -184,11 +184,7 @@ class BookPhotoViewSet(viewsets.GenericViewSet):
             photo_map[pid].position = position
         BookPhoto.objects.bulk_update(photos, ["position"])
 
-        return Response(
-            BookPhotoSerializer(
-                book.photos.all(), many=True, context={"request": request}
-            ).data
-        )
+        return Response(BookPhotoSerializer(book.photos.all(), many=True, context={"request": request}).data)
 
 
 # ── ISBN Lookup & External Search ─────────────────────────────────────────────
@@ -286,11 +282,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     def _get_radius(self, filters):
         user = self.request.user
-        default_radius = (
-            user.preferred_radius
-            if user.is_authenticated and user.preferred_radius
-            else 5000
-        )
+        default_radius = user.preferred_radius if user.is_authenticated and user.preferred_radius else 5000
         return filters.get("radius", default_radius)
 
     def _base_queryset(self, user_location, radius):
@@ -407,12 +399,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         ]
 
         counts = base_qs.aggregate(
-            **{
-                str(r): Count(
-                    Case(whens[i], output_field=IntegerField())
-                )
-                for i, r in enumerate(RADIUS_BUCKETS)
-            }
+            **{str(r): Count(Case(whens[i], output_field=IntegerField())) for i, r in enumerate(RADIUS_BUCKETS)}
         )
 
         return Response({"counts": counts})
@@ -449,13 +436,10 @@ class NearbyCountView(APIView):
         radius = max(500, min(radius, 50000))
 
         point = Point(lng, lat, srid=4326)
-        count = (
-            Book.objects.filter(
-                status=BookStatus.AVAILABLE,
-                owner__location__isnull=False,
-                owner__location__distance_lte=(point, D(m=radius)),
-            )
-            .count()
-        )
+        count = Book.objects.filter(
+            status=BookStatus.AVAILABLE,
+            owner__location__isnull=False,
+            owner__location__distance_lte=(point, D(m=radius)),
+        ).count()
 
         return Response({"count": count, "radius": radius})

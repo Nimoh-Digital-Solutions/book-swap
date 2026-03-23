@@ -1,4 +1,5 @@
 """Tests for the ratings API — Epic 7."""
+
 from datetime import timedelta
 
 import pytest
@@ -21,11 +22,11 @@ def api_client(user):
 
 
 def exchange_rating_url(exchange_id):
-    return f'/api/v1/ratings/exchanges/{exchange_id}/'
+    return f"/api/v1/ratings/exchanges/{exchange_id}/"
 
 
 def user_ratings_url(user_id):
-    return f'/api/v1/ratings/users/{user_id}/'
+    return f"/api/v1/ratings/users/{user_id}/"
 
 
 @pytest.fixture
@@ -43,29 +44,29 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 5, 'comment': 'Great swap partner!'},
+            {"score": 5, "comment": "Great swap partner!"},
         )
         assert resp.status_code == status.HTTP_201_CREATED
         data = resp.json()
-        assert data['score'] == 5
-        assert data['comment'] == 'Great swap partner!'
-        assert data['rater']['id'] == str(completed_exchange.requester.pk)
-        assert data['rated']['id'] == str(completed_exchange.owner.pk)
+        assert data["score"] == 5
+        assert data["comment"] == "Great swap partner!"
+        assert data["rater"]["id"] == str(completed_exchange.requester.pk)
+        assert data["rated"]["id"] == str(completed_exchange.owner.pk)
 
     def test_submit_rating_score_only(self, completed_exchange):
         client = api_client(completed_exchange.owner)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 3},
+            {"score": 3},
         )
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.json()['comment'] == ''
+        assert resp.json()["comment"] == ""
 
     def test_unauthenticated_returns_401(self, completed_exchange):
         client = APIClient()
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 4},
+            {"score": 4},
         )
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -74,7 +75,7 @@ class TestSubmitRating:
         client = api_client(outsider)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 4},
+            {"score": 4},
         )
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
@@ -82,7 +83,7 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 0},
+            {"score": 0},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -90,7 +91,7 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 6},
+            {"score": 6},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -98,7 +99,7 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 4, 'comment': 'x' * 301},
+            {"score": 4, "comment": "x" * 301},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -107,7 +108,7 @@ class TestSubmitRating:
         client = api_client(exchange.requester)
         resp = client.post(
             exchange_rating_url(exchange.pk),
-            {'score': 4},
+            {"score": 4},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -116,7 +117,7 @@ class TestSubmitRating:
         client = api_client(exchange.requester)
         resp = client.post(
             exchange_rating_url(exchange.pk),
-            {'score': 4},
+            {"score": 4},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -131,7 +132,7 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 4},
+            {"score": 4},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -144,7 +145,7 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 3},
+            {"score": 3},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -152,10 +153,10 @@ class TestSubmitRating:
         client = api_client(completed_exchange.requester)
         resp = client.post(
             exchange_rating_url(completed_exchange.pk),
-            {'score': 1, 'comment': 'This person is a shit partner'},
+            {"score": 1, "comment": "This person is a shit partner"},
         )
         assert resp.status_code == status.HTTP_201_CREATED
-        rating = Rating.objects.get(pk=resp.json()['id'])
+        rating = Rating.objects.get(pk=resp.json()["id"])
         assert rating.is_flagged is True
 
     def test_returned_exchange_allows_rating(self, db):
@@ -163,7 +164,7 @@ class TestSubmitRating:
         client = api_client(exchange.requester)
         resp = client.post(
             exchange_rating_url(exchange.pk),
-            {'score': 4, 'comment': 'Smooth return process!'},
+            {"score": 4, "comment": "Smooth return process!"},
         )
         assert resp.status_code == status.HTTP_201_CREATED
 
@@ -177,9 +178,9 @@ class TestExchangeRatingStatus:
         resp = client.get(exchange_rating_url(completed_exchange.pk))
         assert resp.status_code == status.HTTP_200_OK
         data = resp.json()
-        assert data['can_rate'] is True
-        assert data['my_rating'] is None
-        assert data['partner_rating'] is None
+        assert data["can_rate"] is True
+        assert data["my_rating"] is None
+        assert data["partner_rating"] is None
 
     def test_get_status_after_rating(self, completed_exchange):
         RatingFactory(
@@ -191,10 +192,10 @@ class TestExchangeRatingStatus:
         client = api_client(completed_exchange.requester)
         resp = client.get(exchange_rating_url(completed_exchange.pk))
         data = resp.json()
-        assert data['can_rate'] is False
-        assert data['my_rating'] is not None
-        assert data['my_rating']['score'] == 5
-        assert data['partner_rating'] is None
+        assert data["can_rate"] is False
+        assert data["my_rating"] is not None
+        assert data["my_rating"]["score"] == 5
+        assert data["partner_rating"] is None
 
     def test_get_status_both_rated(self, completed_exchange):
         RatingFactory(
@@ -212,8 +213,8 @@ class TestExchangeRatingStatus:
         client = api_client(completed_exchange.requester)
         resp = client.get(exchange_rating_url(completed_exchange.pk))
         data = resp.json()
-        assert data['my_rating']['score'] == 5
-        assert data['partner_rating']['score'] == 4
+        assert data["my_rating"]["score"] == 5
+        assert data["partner_rating"]["score"] == 4
 
     def test_get_status_expired_window(self, completed_exchange):
         ExchangeRequest.objects.filter(pk=completed_exchange.pk).update(
@@ -224,7 +225,7 @@ class TestExchangeRatingStatus:
         client = api_client(completed_exchange.requester)
         resp = client.get(exchange_rating_url(completed_exchange.pk))
         data = resp.json()
-        assert data['can_rate'] is False
+        assert data["can_rate"] is False
 
 
 @pytest.mark.django_db
@@ -238,14 +239,14 @@ class TestUserRatings:
             rater=exchange.requester,
             rated=exchange.owner,
             score=5,
-            comment='Excellent!',
+            comment="Excellent!",
         )
         client = api_client(exchange.requester)
         resp = client.get(user_ratings_url(exchange.owner.pk))
         assert resp.status_code == status.HTTP_200_OK
-        results = resp.json()['results']
+        results = resp.json()["results"]
         assert len(results) == 1
-        assert results[0]['score'] == 5
+        assert results[0]["score"] == 5
 
     def test_flagged_ratings_excluded(self, db):
         exchange = ExchangeRequestFactory(status=ExchangeStatus.COMPLETED)
@@ -257,7 +258,7 @@ class TestUserRatings:
         )
         client = api_client(exchange.requester)
         resp = client.get(user_ratings_url(exchange.owner.pk))
-        assert len(resp.json()['results']) == 0
+        assert len(resp.json()["results"]) == 0
 
     def test_unauthenticated_returns_401(self, db):
         user = UserFactory(with_location=True, onboarded=True)
@@ -314,7 +315,7 @@ class TestRatingModel:
             rated=completed_exchange.owner,
             score=5,
         )
-        assert '5★' in str(rating)
+        assert "5★" in str(rating)
 
     def test_unique_constraint(self, completed_exchange):
         RatingFactory(
@@ -323,6 +324,7 @@ class TestRatingModel:
             rated=completed_exchange.owner,
         )
         from django.db import IntegrityError
+
         with pytest.raises(IntegrityError):
             RatingFactory(
                 exchange=completed_exchange,

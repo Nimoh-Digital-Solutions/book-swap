@@ -1,4 +1,5 @@
 """Serializers for the bookswap app."""
+
 import re
 
 from django.contrib.auth import get_user_model
@@ -170,14 +171,10 @@ class SetLocationSerializer(serializers.Serializer):
         has_coords = lat is not None and lng is not None
 
         if not has_postcode and not has_coords:
-            raise serializers.ValidationError(
-                "Provide either 'postcode' or both 'latitude' and 'longitude'."
-            )
+            raise serializers.ValidationError("Provide either 'postcode' or both 'latitude' and 'longitude'.")
 
         if has_coords and (lat is None or lng is None):
-            raise serializers.ValidationError(
-                "Both 'latitude' and 'longitude' are required when using coordinates."
-            )
+            raise serializers.ValidationError("Both 'latitude' and 'longitude' are required when using coordinates.")
 
         return attrs
 
@@ -211,9 +208,7 @@ class OnboardingCompleteSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context["request"].user
         if user.location is None:
-            raise serializers.ValidationError(
-                "You must set your location before completing onboarding."
-            )
+            raise serializers.ValidationError("You must set your location before completing onboarding.")
         return attrs
 
     def save(self, user):
@@ -260,10 +255,8 @@ class CheckUsernameSerializer(serializers.Serializer):
     q = serializers.CharField(min_length=3, max_length=30)
 
     def validate_q(self, value):
-        if not re.match(r'^[a-zA-Z0-9_]+$', value):
-            raise serializers.ValidationError(
-                "Username may only contain letters, numbers, and underscores."
-            )
+        if not re.match(r"^[a-zA-Z0-9_]+$", value):
+            raise serializers.ValidationError("Username may only contain letters, numbers, and underscores.")
         return value.lower()
 
 
@@ -284,9 +277,7 @@ class AccountDeletionRequestSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context["request"].user
         if user.deletion_requested_at is not None:
-            raise serializers.ValidationError(
-                "Account deletion has already been requested."
-            )
+            raise serializers.ValidationError("Account deletion has already been requested.")
         return attrs
 
     def save(self):
@@ -294,5 +285,3 @@ class AccountDeletionRequestSerializer(serializers.Serializer):
         user.deletion_requested_at = timezone.now()
         user.is_active = False
         user.save(update_fields=["deletion_requested_at", "is_active"])
-
-

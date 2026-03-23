@@ -7,40 +7,45 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('books', '0001_initial'),
+        ("books", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='book',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='books', to=settings.AUTH_USER_MODEL),
+            model_name="book",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="books", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddField(
-            model_name='bookphoto',
-            name='book',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='photos', to='books.book'),
+            model_name="bookphoto",
+            name="book",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="photos", to="books.book"
+            ),
         ),
         migrations.AddField(
-            model_name='wishlistitem',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wishlist_items', to=settings.AUTH_USER_MODEL),
+            model_name="wishlistitem",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="wishlist_items", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddIndex(
-            model_name='book',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['search_vector'], name='book_search_vector_gin'),
+            model_name="book",
+            index=django.contrib.postgres.indexes.GinIndex(fields=["search_vector"], name="book_search_vector_gin"),
         ),
         migrations.AddIndex(
-            model_name='book',
-            index=models.Index(fields=['status', 'created_at'], name='book_status_created'),
+            model_name="book",
+            index=models.Index(fields=["status", "created_at"], name="book_status_created"),
         ),
         migrations.AddIndex(
-            model_name='book',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['genres'], name='book_genres_gin'),
+            model_name="book",
+            index=django.contrib.postgres.indexes.GinIndex(fields=["genres"], name="book_genres_gin"),
         ),
     ]

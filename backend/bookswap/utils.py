@@ -1,4 +1,5 @@
 """Spatial utilities for bookswap."""
+
 import math
 
 from django.contrib.gis.geos import Point

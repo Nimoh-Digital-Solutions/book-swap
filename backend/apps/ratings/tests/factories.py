@@ -12,5 +12,5 @@ class RatingFactory(factory.django.DjangoModelFactory):
     exchange = factory.SubFactory(ExchangeRequestFactory)
     rater = factory.LazyAttribute(lambda o: o.exchange.requester)
     rated = factory.LazyAttribute(lambda o: o.exchange.owner)
-    score = factory.Faker('random_int', min=1, max=5)
-    comment = factory.Faker('sentence', nb_words=8)
+    score = factory.Faker("random_int", min=1, max=5)
+    comment = factory.Faker("sentence", nb_words=8)

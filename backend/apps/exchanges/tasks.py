@@ -1,4 +1,5 @@
 """Celery tasks for the exchanges app."""
+
 import logging
 from datetime import timedelta
 
@@ -9,7 +10,7 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
-@shared_task(name='exchanges.expire_stale_requests')
+@shared_task(name="exchanges.expire_stale_requests")
 def expire_stale_requests():
     """Expire pending exchange requests older than 14 days.
 
@@ -28,11 +29,11 @@ def expire_stale_requests():
     )
 
     if expired:
-        logger.info('Expired %d stale exchange requests.', expired)
+        logger.info("Expired %d stale exchange requests.", expired)
     return expired
 
 
-@shared_task(name='exchanges.expire_stale_conditions')
+@shared_task(name="exchanges.expire_stale_conditions")
 def expire_stale_conditions():
     """Expire exchanges stuck in accepted/conditions_pending for 14+ days.
 
@@ -51,11 +52,11 @@ def expire_stale_conditions():
     )
 
     if expired:
-        logger.info('Expired %d exchanges with stale conditions.', expired)
+        logger.info("Expired %d exchanges with stale conditions.", expired)
     return expired
 
 
-@shared_task(name='exchanges.auto_confirm_stale_swaps')
+@shared_task(name="exchanges.auto_confirm_stale_swaps")
 def auto_confirm_stale_swaps():
     """Auto-confirm swaps where one party confirmed 60+ days ago.
 
@@ -82,13 +83,17 @@ def auto_confirm_stale_swaps():
     for exchange in requester_only.iterator():
         exchange.owner_confirmed_at = now
         exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
-        exchange.save(update_fields=[
-            'owner_confirmed_at', 'status', 'updated_at',
-        ])
+        exchange.save(
+            update_fields=[
+                "owner_confirmed_at",
+                "status",
+                "updated_at",
+            ]
+        )
         exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=['status'])
+        exchange.requested_book.save(update_fields=["status"])
         exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=['status'])
+        exchange.offered_book.save(update_fields=["status"])
 
     # Owner confirmed but requester hasn't
     owner_only = ExchangeRequest.objects.filter(
@@ -99,13 +104,17 @@ def auto_confirm_stale_swaps():
     for exchange in owner_only.iterator():
         exchange.requester_confirmed_at = now
         exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
-        exchange.save(update_fields=[
-            'requester_confirmed_at', 'status', 'updated_at',
-        ])
+        exchange.save(
+            update_fields=[
+                "requester_confirmed_at",
+                "status",
+                "updated_at",
+            ]
+        )
         exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=['status'])
+        exchange.requested_book.save(update_fields=["status"])
         exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=['status'])
+        exchange.offered_book.save(update_fields=["status"])
 
     total = requester_only.count() + owner_only.count()
     if total:
@@ -117,8 +126,8 @@ def auto_confirm_stale_swaps():
                 affected_ids.add(exchange.owner_id)
         if affected_ids:
             UserModel.objects.filter(pk__in=affected_ids).update(
-                swap_count=F('swap_count') + 1,
+                swap_count=F("swap_count") + 1,
             )
-        logger.info('Auto-confirmed %d stale swaps.', total)
+        logger.info("Auto-confirmed %d stale swaps.", total)
 
     return total

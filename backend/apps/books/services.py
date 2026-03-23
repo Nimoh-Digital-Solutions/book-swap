@@ -1,4 +1,5 @@
 """ISBN lookup service for the books app."""
+
 import logging
 from typing import Any
 
@@ -23,6 +24,7 @@ def _extract_year(date_str: str) -> int | None:
     if not date_str:
         return None
     import re
+
     match = re.search(r"\b(\d{4})\b", date_str)
     return int(match.group(1)) if match else None
 
@@ -153,13 +155,15 @@ class ISBNLookupService:
             cover_id = doc.get("cover_i")
             cover_url = f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg" if cover_id else ""
             isbn_list = doc.get("isbn", [])
-            results.append({
-                "isbn": isbn_list[0] if isbn_list else "",
-                "title": doc.get("title", ""),
-                "author": ", ".join(doc.get("author_name", [])),
-                "description": "",
-                "cover_url": cover_url,
-                "page_count": doc.get("number_of_pages_median"),
-                "publish_year": doc.get("first_publish_year"),
-            })
+            results.append(
+                {
+                    "isbn": isbn_list[0] if isbn_list else "",
+                    "title": doc.get("title", ""),
+                    "author": ", ".join(doc.get("author_name", [])),
+                    "description": "",
+                    "cover_url": cover_url,
+                    "page_count": doc.get("number_of_pages_median"),
+                    "publish_year": doc.get("first_publish_year"),
+                }
+            )
         return results

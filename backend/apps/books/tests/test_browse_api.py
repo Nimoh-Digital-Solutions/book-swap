@@ -1,4 +1,5 @@
 """Tests for Epic 4 — Browse, Search, Filters, Radius Counts, and Nearby Count endpoints."""
+
 import pytest
 from django.contrib.gis.geos import Point
 from rest_framework.test import APIClient
@@ -275,9 +276,7 @@ class TestNearbyCount:
     """GET /api/v1/books/nearby-count/ — public book count."""
 
     def test_returns_count_for_valid_coords(self, api_client, nearby_books):
-        resp = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=5000"
-        )
+        resp = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=5000")
         assert resp.status_code == 200
         assert "count" in resp.data
         assert isinstance(resp.data["count"], int)
@@ -285,9 +284,7 @@ class TestNearbyCount:
 
     def test_counts_books_within_radius(self, api_client, nearby_books):
         """Should count at least 1 book within 5km of Amsterdam center."""
-        resp = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=5000"
-        )
+        resp = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=5000")
         assert resp.status_code == 200
         assert resp.data["count"] >= 1
 
@@ -298,9 +295,7 @@ class TestNearbyCount:
 
     def test_allows_unauthenticated_access(self, api_client, nearby_books):
         """This endpoint is AllowAny for the landing page."""
-        resp = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041"
-        )
+        resp = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041")
         assert resp.status_code == 200
 
     def test_400_when_missing_coords(self, api_client):
@@ -313,20 +308,14 @@ class TestNearbyCount:
 
     def test_radius_clamped_to_bounds(self, api_client, nearby_books):
         """Radius below 500 is clamped to 500, above 50000 to 50000."""
-        resp = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=100"
-        )
+        resp = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=100")
         assert resp.status_code == 200
         assert resp.data["radius"] == 500
 
     def test_large_radius_returns_more_books(self, api_client, nearby_books):
         """50km radius finds more books than 1km."""
-        resp_small = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=1000"
-        )
-        resp_large = api_client.get(
-            "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=50000"
-        )
+        resp_small = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=1000")
+        resp_large = api_client.get("/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=50000")
         assert resp_large.data["count"] >= resp_small.data["count"]
 
 
@@ -341,23 +330,35 @@ def searchable_books(user_with_location):
     owner = UserFactory(is_active=True, location=NEARBY_2KM)
 
     fiction = BookFactory(
-        owner=owner, title="Harry Potter and the Sorcerer's Stone",
-        author="J.K. Rowling", genres=["fiction", "fantasy"], language="en",
+        owner=owner,
+        title="Harry Potter and the Sorcerer's Stone",
+        author="J.K. Rowling",
+        genres=["fiction", "fantasy"],
+        language="en",
         condition=BookCondition.GOOD,
     )
     nonfiction = BookFactory(
-        owner=owner, title="Sapiens A Brief History",
-        author="Yuval Noah Harari", genres=["nonfiction", "history"], language="en",
+        owner=owner,
+        title="Sapiens A Brief History",
+        author="Yuval Noah Harari",
+        genres=["nonfiction", "history"],
+        language="en",
         condition=BookCondition.LIKE_NEW,
     )
     dutch_book = BookFactory(
-        owner=owner, title="De Ontdekking van de Hemel",
-        author="Harry Mulisch", genres=["fiction"], language="nl",
+        owner=owner,
+        title="De Ontdekking van de Hemel",
+        author="Harry Mulisch",
+        genres=["fiction"],
+        language="nl",
         condition=BookCondition.ACCEPTABLE,
     )
     isbn_book = BookFactory(
-        owner=owner, title="Thinking Fast and Slow",
-        author="Daniel Kahneman", isbn="9780374533557", language="en",
+        owner=owner,
+        title="Thinking Fast and Slow",
+        author="Daniel Kahneman",
+        isbn="9780374533557",
+        language="en",
         condition=BookCondition.NEW,
     )
 
@@ -389,24 +390,18 @@ class TestBrowseSearch:
         assert any("Potter" in t for t in titles)
 
     def test_search_no_results(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&search=nonexistentxyz123"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&search=nonexistentxyz123")
         assert resp.status_code == 200
         assert len(resp.data["results"]) == 0
 
     def test_isbn_exact_match(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&search=978-0374533557"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&search=978-0374533557")
         assert resp.status_code == 200
         titles = [b["title"] for b in resp.data["results"]]
         assert "Thinking Fast and Slow" in titles
 
     def test_isbn_without_hyphens(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&search=9780374533557"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&search=9780374533557")
         assert resp.status_code == 200
         assert len(resp.data["results"]) >= 1
 
@@ -433,9 +428,7 @@ class TestBrowseFilters:
         assert any("Potter" in t for t in titles)
 
     def test_filter_by_multiple_genres(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&genre=fantasy,history"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&genre=fantasy,history")
         assert resp.status_code == 200
         assert len(resp.data["results"]) >= 2
 
@@ -458,18 +451,14 @@ class TestBrowseFilters:
             assert book["condition"] == "new"
 
     def test_filter_by_multiple_conditions(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&condition=good,like_new"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&condition=good,like_new")
         assert resp.status_code == 200
         for book in resp.data["results"]:
             assert book["condition"] in ("good", "like_new")
 
     def test_combined_filters(self, auth_client, searchable_books):
         """Genre + language combined narrows results."""
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&genre=fiction&language=nl"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&genre=fiction&language=nl")
         assert resp.status_code == 200
         titles = [b["title"] for b in resp.data["results"]]
         assert any("Hemel" in t for t in titles)
@@ -477,18 +466,14 @@ class TestBrowseFilters:
 
     def test_search_with_filters(self, auth_client, searchable_books):
         """Search + filter combined."""
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&search=Harry&language=en"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&search=Harry&language=en")
         assert resp.status_code == 200
         titles = [b["title"] for b in resp.data["results"]]
         assert any("Potter" in t for t in titles)
         assert not any("Hemel" in t for t in titles)
 
     def test_no_genre_match_returns_empty(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&genre=romance"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&genre=romance")
         assert resp.status_code == 200
         assert len(resp.data["results"]) == 0
 
@@ -508,27 +493,19 @@ class TestBrowseOrdering:
         assert distances == sorted(distances)
 
     def test_ordering_by_created_at(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&ordering=-created_at"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&ordering=-created_at")
         assert resp.status_code == 200
         dates = [b["created_at"] for b in resp.data["results"]]
         assert dates == sorted(dates, reverse=True)
 
     def test_ordering_by_relevance_with_search(self, auth_client, searchable_books):
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&search=Harry&ordering=relevance"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&search=Harry&ordering=relevance")
         assert resp.status_code == 200
         assert len(resp.data["results"]) >= 1
 
-    def test_relevance_without_search_falls_back_to_distance(
-        self, auth_client, nearby_books
-    ):
+    def test_relevance_without_search_falls_back_to_distance(self, auth_client, nearby_books):
         """When ordering=relevance but no search term, falls back to distance."""
-        resp = auth_client.get(
-            "/api/v1/books/browse/?radius=50000&ordering=relevance"
-        )
+        resp = auth_client.get("/api/v1/books/browse/?radius=50000&ordering=relevance")
         assert resp.status_code == 200
         distances = [b["distance"] for b in resp.data["results"]]
         assert distances == sorted(distances)

@@ -4,6 +4,7 @@ Exchange models — ExchangeRequest and ConditionsAcceptance.
 Tracks the full swap lifecycle from initial request through to completion
 or return, including two-phase confirmations and state machine transitions.
 """
+
 import uuid
 
 from django.conf import settings
@@ -12,24 +13,24 @@ from nimoh_base.core.models import TimeStampedModel
 
 
 class ExchangeStatus(models.TextChoices):
-    PENDING = 'pending', 'Pending'
-    ACCEPTED = 'accepted', 'Accepted'
-    CONDITIONS_PENDING = 'conditions_pending', 'Conditions Pending'
-    ACTIVE = 'active', 'Active'
-    SWAP_CONFIRMED = 'swap_confirmed', 'Swap Confirmed'
-    COMPLETED = 'completed', 'Completed'
-    DECLINED = 'declined', 'Declined'
-    CANCELLED = 'cancelled', 'Cancelled'
-    EXPIRED = 'expired', 'Expired'
-    RETURN_REQUESTED = 'return_requested', 'Return Requested'
-    RETURNED = 'returned', 'Returned'
+    PENDING = "pending", "Pending"
+    ACCEPTED = "accepted", "Accepted"
+    CONDITIONS_PENDING = "conditions_pending", "Conditions Pending"
+    ACTIVE = "active", "Active"
+    SWAP_CONFIRMED = "swap_confirmed", "Swap Confirmed"
+    COMPLETED = "completed", "Completed"
+    DECLINED = "declined", "Declined"
+    CANCELLED = "cancelled", "Cancelled"
+    EXPIRED = "expired", "Expired"
+    RETURN_REQUESTED = "return_requested", "Return Requested"
+    RETURNED = "returned", "Returned"
 
 
 class DeclineReason(models.TextChoices):
-    NOT_INTERESTED = 'not_interested', 'Not interested in offered book'
-    RESERVED = 'reserved', 'Book is reserved for someone else'
-    COUNTER_PROPOSED = 'counter_proposed', 'Counter-proposed a different book'
-    OTHER = 'other', 'Other'
+    NOT_INTERESTED = "not_interested", "Not interested in offered book"
+    RESERVED = "reserved", "Book is reserved for someone else"
+    COUNTER_PROPOSED = "counter_proposed", "Counter-proposed a different book"
+    OTHER = "other", "Other"
 
 
 # Valid state transitions — used by the API to guard status changes.
@@ -78,23 +79,23 @@ class ExchangeRequest(TimeStampedModel):
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='sent_exchanges',
+        related_name="sent_exchanges",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='received_exchanges',
+        related_name="received_exchanges",
     )
     requested_book = models.ForeignKey(
-        'books.Book',
+        "books.Book",
         on_delete=models.CASCADE,
-        related_name='incoming_requests',
+        related_name="incoming_requests",
         help_text="The owner's book the requester wants.",
     )
     offered_book = models.ForeignKey(
-        'books.Book',
+        "books.Book",
         on_delete=models.CASCADE,
-        related_name='outgoing_requests',
+        related_name="outgoing_requests",
         help_text="The requester's book offered in exchange.",
     )
 
@@ -107,7 +108,7 @@ class ExchangeRequest(TimeStampedModel):
     message = models.CharField(
         max_length=200,
         blank=True,
-        help_text='Optional personal note from the requester.',
+        help_text="Optional personal note from the requester.",
     )
     decline_reason = models.CharField(
         max_length=30,
@@ -115,12 +116,12 @@ class ExchangeRequest(TimeStampedModel):
         blank=True,
     )
     counter_to = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='counter_requests',
-        help_text='References the original request when counter-proposed.',
+        related_name="counter_requests",
+        help_text="References the original request when counter-proposed.",
     )
 
     # Two-phase swap confirmation (US-504)
@@ -136,51 +137,41 @@ class ExchangeRequest(TimeStampedModel):
     expired_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']  # noqa: RUF012
+        ordering = ["-created_at"]  # noqa: RUF012
         constraints = [  # noqa: RUF012
             models.UniqueConstraint(
-                fields=['requester', 'requested_book'],
-                condition=models.Q(status='pending'),
-                name='unique_pending_request_per_book',
+                fields=["requester", "requested_book"],
+                condition=models.Q(status="pending"),
+                name="unique_pending_request_per_book",
             ),
         ]
         indexes = [  # noqa: RUF012
             models.Index(
-                fields=['status', 'created_at'],
-                name='exchange_status_created',
+                fields=["status", "created_at"],
+                name="exchange_status_created",
             ),
             models.Index(
-                fields=['requester', 'status'],
-                name='exchange_requester_status',
+                fields=["requester", "status"],
+                name="exchange_requester_status",
             ),
             models.Index(
-                fields=['owner', 'status'],
-                name='exchange_owner_status',
+                fields=["owner", "status"],
+                name="exchange_owner_status",
             ),
         ]
 
     def __str__(self):
-        return (
-            f'Exchange {self.id!s:.8} — '
-            f'{self.requester} → {self.owner} '
-            f'({self.get_status_display()})'
-        )
+        return f"Exchange {self.id!s:.8} — {self.requester} → {self.owner} ({self.get_status_display()})"
 
     # ── Helpers ────────────────────────────────────────────────────────
 
     @property
     def is_swap_confirmed(self) -> bool:
-        return (
-            self.requester_confirmed_at is not None
-            and self.owner_confirmed_at is not None
-        )
+        return self.requester_confirmed_at is not None and self.owner_confirmed_at is not None
 
     @property
     def is_return_confirmed(self) -> bool:
-        return (
-            self.return_confirmed_requester is not None
-            and self.return_confirmed_owner is not None
-        )
+        return self.return_confirmed_requester is not None and self.return_confirmed_owner is not None
 
     def both_conditions_accepted(self) -> bool:
         return self.conditions_acceptances.count() == 2
@@ -191,42 +182,40 @@ class ExchangeRequest(TimeStampedModel):
     def transition_to(self, new_status: str) -> None:
         """Transition to *new_status*, raising ValueError on invalid transition."""
         if not self.can_transition_to(new_status):
-            raise ValueError(
-                f'Cannot transition from {self.status!r} to {new_status!r}.'
-            )
+            raise ValueError(f"Cannot transition from {self.status!r} to {new_status!r}.")
         self.status = new_status
 
 
 class ConditionsAcceptance(TimeStampedModel):
     """Records a user's acceptance of the exchange conditions for a specific exchange."""
 
-    CURRENT_VERSION = '1.0'
+    CURRENT_VERSION = "1.0"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     exchange = models.ForeignKey(
         ExchangeRequest,
         on_delete=models.CASCADE,
-        related_name='conditions_acceptances',
+        related_name="conditions_acceptances",
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='conditions_acceptances',
+        related_name="conditions_acceptances",
     )
     accepted_at = models.DateTimeField(auto_now_add=True)
     conditions_version = models.CharField(
         max_length=10,
         default=CURRENT_VERSION,
-        help_text='Version of the conditions the user accepted.',
+        help_text="Version of the conditions the user accepted.",
     )
 
     class Meta:
         constraints = [  # noqa: RUF012
             models.UniqueConstraint(
-                fields=['exchange', 'user'],
-                name='unique_conditions_per_user_per_exchange',
+                fields=["exchange", "user"],
+                name="unique_conditions_per_user_per_exchange",
             ),
         ]
 
     def __str__(self):
-        return f'{self.user} accepted conditions v{self.conditions_version} for {self.exchange_id!s:.8}'
+        return f"{self.user} accepted conditions v{self.conditions_version} for {self.exchange_id!s:.8}"

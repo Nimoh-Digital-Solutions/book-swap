@@ -10,17 +10,17 @@ class MessageFactory(factory.django.DjangoModelFactory):
         model = Message
 
     exchange = factory.SubFactory(ExchangeRequestFactory, active=True)
-    sender = factory.SelfAttribute('exchange.requester')
-    content = factory.Faker('sentence', nb_words=10)
+    sender = factory.SelfAttribute("exchange.requester")
+    content = factory.Faker("sentence", nb_words=10)
 
 
 class MeetupLocationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = MeetupLocation
 
-    name = factory.Faker('company')
-    address = factory.Faker('address')
+    name = factory.Faker("company")
+    address = factory.Faker("address")
     category = MeetupCategory.LIBRARY
-    city = 'Amsterdam'
+    city = "Amsterdam"
     location = factory.LazyFunction(lambda: Point(4.9, 52.37, srid=4326))
     is_active = True

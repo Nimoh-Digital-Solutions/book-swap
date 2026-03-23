@@ -8,32 +8,76 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('exchanges', '0001_initial'),
+        ("exchanges", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Rating',
+            name="Rating",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('score', models.PositiveSmallIntegerField(help_text='Star rating from 1 (poor) to 5 (excellent).', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(5)])),
-                ('comment', models.CharField(blank=True, help_text='Optional text review (max 300 characters).', max_length=300)),
-                ('is_flagged', models.BooleanField(default=False, help_text='Set by profanity filter; hidden from public until admin review.')),
-                ('exchange', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings', to='exchanges.exchangerequest')),
-                ('rated', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings_received', to=settings.AUTH_USER_MODEL)),
-                ('rater', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings_given', to=settings.AUTH_USER_MODEL)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                (
+                    "score",
+                    models.PositiveSmallIntegerField(
+                        help_text="Star rating from 1 (poor) to 5 (excellent).",
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(5),
+                        ],
+                    ),
+                ),
+                (
+                    "comment",
+                    models.CharField(
+                        blank=True, help_text="Optional text review (max 300 characters).", max_length=300
+                    ),
+                ),
+                (
+                    "is_flagged",
+                    models.BooleanField(
+                        default=False, help_text="Set by profanity filter; hidden from public until admin review."
+                    ),
+                ),
+                (
+                    "exchange",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ratings",
+                        to="exchanges.exchangerequest",
+                    ),
+                ),
+                (
+                    "rated",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ratings_received",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "rater",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="ratings_given",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['rated', 'created_at'], name='rating_rated_created'), models.Index(fields=['exchange'], name='rating_exchange')],
-                'constraints': [models.UniqueConstraint(fields=('exchange', 'rater'), name='unique_rating_per_exchange_per_rater')],
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["rated", "created_at"], name="rating_rated_created"),
+                    models.Index(fields=["exchange"], name="rating_exchange"),
+                ],
+                "constraints": [
+                    models.UniqueConstraint(fields=("exchange", "rater"), name="unique_rating_per_exchange_per_rater")
+                ],
             },
         ),
     ]

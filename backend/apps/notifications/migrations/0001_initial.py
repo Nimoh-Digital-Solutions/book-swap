@@ -8,48 +8,89 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('bookswap', '0001_initial'),
+        ("bookswap", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationPreferences',
+            name="NotificationPreferences",
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='notification_preferences', serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('email_new_request', models.BooleanField(default=True)),
-                ('email_request_accepted', models.BooleanField(default=True)),
-                ('email_request_declined', models.BooleanField(default=True)),
-                ('email_new_message', models.BooleanField(default=True)),
-                ('email_exchange_completed', models.BooleanField(default=True)),
-                ('email_rating_received', models.BooleanField(default=True)),
-                ('unsubscribe_token', models.CharField(default=apps.notifications.models._default_unsubscribe_token, editable=False, max_length=64, unique=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        related_name="notification_preferences",
+                        serialize=False,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                ("email_new_request", models.BooleanField(default=True)),
+                ("email_request_accepted", models.BooleanField(default=True)),
+                ("email_request_declined", models.BooleanField(default=True)),
+                ("email_new_message", models.BooleanField(default=True)),
+                ("email_exchange_completed", models.BooleanField(default=True)),
+                ("email_rating_received", models.BooleanField(default=True)),
+                (
+                    "unsubscribe_token",
+                    models.CharField(
+                        default=apps.notifications.models._default_unsubscribe_token,
+                        editable=False,
+                        max_length=64,
+                        unique=True,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Notification Preferences',
-                'verbose_name_plural': 'Notification Preferences',
+                "verbose_name": "Notification Preferences",
+                "verbose_name_plural": "Notification Preferences",
             },
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('notification_type', models.CharField(choices=[('new_request', 'New Partner Request'), ('request_accepted', 'Request Accepted'), ('request_declined', 'Request Declined'), ('request_expired', 'Request Expired'), ('exchange_completed', 'Exchange Completed'), ('new_message', 'New Message'), ('rating_received', 'Rating Received')], db_index=True, max_length=32)),
-                ('title', models.CharField(max_length=150)),
-                ('body', models.CharField(max_length=512)),
-                ('link', models.CharField(blank=True, default='', max_length=512)),
-                ('read_at', models.DateTimeField(blank=True, null=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("new_request", "New Partner Request"),
+                            ("request_accepted", "Request Accepted"),
+                            ("request_declined", "Request Declined"),
+                            ("request_expired", "Request Expired"),
+                            ("exchange_completed", "Exchange Completed"),
+                            ("new_message", "New Message"),
+                            ("rating_received", "Rating Received"),
+                        ],
+                        db_index=True,
+                        max_length=32,
+                    ),
+                ),
+                ("title", models.CharField(max_length=150)),
+                ("body", models.CharField(max_length=512)),
+                ("link", models.CharField(blank=True, default="", max_length=512)),
+                ("read_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', '-created_at'], name='notificatio_user_id_05b4bc_idx'), models.Index(fields=['user', 'read_at'], name='notificatio_user_id_47e85c_idx')],
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["user", "-created_at"], name="notificatio_user_id_05b4bc_idx"),
+                    models.Index(fields=["user", "read_at"], name="notificatio_user_id_47e85c_idx"),
+                ],
             },
         ),
     ]

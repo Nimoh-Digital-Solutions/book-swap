@@ -15,10 +15,10 @@ class ExchangeRequestFactory(factory.django.DjangoModelFactory):
 
     requester = factory.SubFactory(UserFactory, with_location=True, onboarded=True)
     owner = factory.SubFactory(UserFactory, with_location=True, onboarded=True)
-    requested_book = factory.SubFactory(BookFactory, owner=factory.SelfAttribute('..owner'))
-    offered_book = factory.SubFactory(BookFactory, owner=factory.SelfAttribute('..requester'))
+    requested_book = factory.SubFactory(BookFactory, owner=factory.SelfAttribute("..owner"))
+    offered_book = factory.SubFactory(BookFactory, owner=factory.SelfAttribute("..requester"))
     status = ExchangeStatus.PENDING
-    message = 'I would love to swap!'
+    message = "I would love to swap!"
 
     class Params:
         accepted = factory.Trait(status=ExchangeStatus.ACCEPTED)

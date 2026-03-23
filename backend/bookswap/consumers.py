@@ -1,4 +1,3 @@
-
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
@@ -18,4 +17,3 @@ class ExampleConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content, **kwargs):
         # Echo the message back — replace with real business logic.
         await self.send_json({"echo": content})
-

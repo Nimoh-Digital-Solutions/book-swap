@@ -1,4 +1,5 @@
 """Views for the trust_safety app — Block and Report endpoints."""
+
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -32,23 +33,21 @@ class BlockViewSet(
     serializer_class = BlockSerializer
 
     def get_queryset(self):
-        return (
-            Block.objects.filter(blocker=self.request.user)
-            .select_related('blocked_user')
-        )
+        return Block.objects.filter(blocker=self.request.user).select_related("blocked_user")
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return BlockCreateSerializer
         return BlockSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = BlockCreateSerializer(
-            data=request.data, context={'request': request},
+            data=request.data,
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
 
-        blocked_user_id = serializer.validated_data['blocked_user_id']
+        blocked_user_id = serializer.validated_data["blocked_user_id"]
 
         block, created = Block.objects.get_or_create(
             blocker=request.user,
@@ -57,7 +56,7 @@ class BlockViewSet(
 
         if not created:
             return Response(
-                {'detail': 'User is already blocked.'},
+                {"detail": "User is already blocked."},
                 status=status.HTTP_200_OK,
             )
 
@@ -68,14 +67,15 @@ class BlockViewSet(
 
     def destroy(self, request, *args, **kwargs):
         """Unblock — lookup by blocked_user's UUID (not Block PK)."""
-        blocked_user_id = kwargs.get('pk')
+        blocked_user_id = kwargs.get("pk")
         try:
             block = Block.objects.get(
-                blocker=request.user, blocked_user_id=blocked_user_id,
+                blocker=request.user,
+                blocked_user_id=blocked_user_id,
             )
         except Block.DoesNotExist:
             return Response(
-                {'detail': 'Block not found.'},
+                {"detail": "Block not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         block.delete()
@@ -96,9 +96,12 @@ class BlockViewSet(
         ]
         ExchangeRequest.objects.filter(
             db_models.Q(
-                requester_id=user_a_id, owner_id=user_b_id,
-            ) | db_models.Q(
-                requester_id=user_b_id, owner_id=user_a_id,
+                requester_id=user_a_id,
+                owner_id=user_b_id,
+            )
+            | db_models.Q(
+                requester_id=user_b_id,
+                owner_id=user_a_id,
             ),
             status__in=cancelable,
         ).update(status=ExchangeStatus.CANCELLED)
@@ -113,6 +116,7 @@ class ReportCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         report = serializer.save()
         from .tasks import send_report_notification_email
+
         send_report_notification_email.delay(str(report.pk))
 
 
@@ -123,8 +127,8 @@ class ReportAdminListView(generics.ListAPIView):
     serializer_class = ReportListSerializer
 
     def get_queryset(self):
-        qs = Report.objects.select_related('reporter', 'reported_user').order_by('-created_at')
-        status_filter = self.request.query_params.get('status')
+        qs = Report.objects.select_related("reporter", "reported_user").order_by("-created_at")
+        status_filter = self.request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
         return qs
@@ -136,5 +140,5 @@ class ReportAdminUpdateView(generics.UpdateAPIView):
     permission_classes = (IsAdminUser,)
     serializer_class = ReportAdminUpdateSerializer
     queryset = Report.objects.all()
-    lookup_field = 'pk'
-    http_method_names = ['patch']  # noqa: RUF012
+    lookup_field = "pk"
+    http_method_names = ["patch"]  # noqa: RUF012

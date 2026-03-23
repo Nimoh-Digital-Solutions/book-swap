@@ -7,6 +7,7 @@ Connects three event sources to async Celery notification tasks:
   Message          — new chat message (batched, see tasks.py)
   Rating           — rating received
 """
+
 import logging
 
 from django.db.models.signals import post_save, pre_save
@@ -23,15 +24,14 @@ logger = logging.getLogger(__name__)
 # ExchangeRequest — track previous status before save
 # ---------------------------------------------------------------------------
 
+
 @receiver(pre_save, sender=ExchangeRequest)
 def _cache_exchange_previous_status(sender, instance, **kwargs):
     """Stash the current DB status on the instance before saving."""
     if instance.pk:
         try:
             instance._previous_status = (
-                ExchangeRequest.objects.filter(pk=instance.pk)
-                .values_list('status', flat=True)
-                .get()
+                ExchangeRequest.objects.filter(pk=instance.pk).values_list("status", flat=True).get()
             )
         except ExchangeRequest.DoesNotExist:
             instance._previous_status = None
@@ -50,11 +50,11 @@ def on_exchange_saved(sender, instance, created, **kwargs):
     )
 
     exchange_id = str(instance.pk)
-    prev = getattr(instance, '_previous_status', None)
+    prev = getattr(instance, "_previous_status", None)
     current = instance.status
 
     if created and current == ExchangeStatus.PENDING:
-        logger.debug('Exchange %s created → dispatching new_request task.', exchange_id)
+        logger.debug("Exchange %s created → dispatching new_request task.", exchange_id)
         send_new_request_notification.delay(exchange_id)
         return
 
@@ -71,14 +71,17 @@ def on_exchange_saved(sender, instance, created, **kwargs):
         send_exchange_completed_notification.delay(exchange_id)
 
     logger.debug(
-        'Exchange %s: %s → %s (notification task dispatched if applicable).',
-        exchange_id, prev, current,
+        "Exchange %s: %s → %s (notification task dispatched if applicable).",
+        exchange_id,
+        prev,
+        current,
     )
 
 
 # ---------------------------------------------------------------------------
 # Message — new chat message
 # ---------------------------------------------------------------------------
+
 
 @receiver(post_save, sender=Message)
 def on_message_created(sender, instance, created, **kwargs):
@@ -99,14 +102,16 @@ def on_message_created(sender, instance, created, **kwargs):
 
     send_new_message_notification.delay(str(exchange.pk), recipient_id)
     logger.debug(
-        'Message in exchange %s: notifying user %s.',
-        exchange.pk, recipient_id,
+        "Message in exchange %s: notifying user %s.",
+        exchange.pk,
+        recipient_id,
     )
 
 
 # ---------------------------------------------------------------------------
 # Rating — rating received
 # ---------------------------------------------------------------------------
+
 
 @receiver(post_save, sender=Rating)
 def on_rating_created(sender, instance, created, **kwargs):
@@ -117,4 +122,4 @@ def on_rating_created(sender, instance, created, **kwargs):
     from .tasks import send_rating_received_notification
 
     send_rating_received_notification.delay(str(instance.pk))
-    logger.debug('Rating %s created → dispatching rating_received task.', instance.pk)
+    logger.debug("Rating %s created → dispatching rating_received task.", instance.pk)

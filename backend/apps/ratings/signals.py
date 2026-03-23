@@ -4,6 +4,7 @@ Signals for the ratings app.
 Recalculates user aggregate stats (avg_rating, rating_count) when a rating
 is created. Dispatches the Celery task asynchronously.
 """
+
 import logging
 
 from django.db.models.signals import post_save
@@ -24,6 +25,9 @@ def on_rating_created(sender, instance, created, **kwargs):
 
     update_user_rating_stats.delay(str(instance.rated_id))
     logger.info(
-        'Rating %s created: %s → %s (%d★). Stats update dispatched.',
-        instance.pk, instance.rater_id, instance.rated_id, instance.score,
+        "Rating %s created: %s → %s (%d★). Stats update dispatched.",
+        instance.pk,
+        instance.rater_id,
+        instance.rated_id,
+        instance.score,
     )

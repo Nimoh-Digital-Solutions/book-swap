@@ -1,4 +1,5 @@
 """Custom permissions for the exchanges app."""
+
 from rest_framework.permissions import BasePermission
 
 

@@ -7,6 +7,7 @@ for profile, location, preferences, reputation, and onboarding state.
 Domain models (Book, BookPhoto, WishlistItem) live in ``apps.books``.
 Trust & Safety models (Block, Report) live in ``apps.trust_safety``.
 """
+
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -37,7 +38,7 @@ class User(AbstractNimohUser):
         help_text="Short bio shown on the public profile.",
     )
     avatar = models.ImageField(
-        upload_to='avatars/',
+        upload_to="avatars/",
         null=True,
         blank=True,
         help_text="Profile photo. Validated for size and content in Phase 2.",
@@ -66,7 +67,7 @@ class User(AbstractNimohUser):
     )
     preferred_language = models.CharField(
         max_length=20,
-        default='en',
+        default="en",
         help_text="Preferred book language: en, nl, both.",
     )
     preferred_radius = models.PositiveIntegerField(
@@ -120,14 +121,14 @@ class User(AbstractNimohUser):
         null=True,
         blank=True,
         help_text="Set when user requests account deletion; cleared on cancellation. "
-                  "Accounts are anonymized 30 days after this timestamp.",
+        "Accounts are anonymized 30 days after this timestamp.",
     )
 
     class Meta(AbstractNimohUser.Meta):
-        db_table = 'bookswap_user'
-        swappable = 'AUTH_USER_MODEL'
+        db_table = "bookswap_user"
+        swappable = "AUTH_USER_MODEL"
         indexes = [  # noqa: RUF012
             *AbstractNimohUser.Meta.indexes,
-            models.Index(fields=['onboarding_completed']),
-            models.Index(fields=['location'], name='user_location_gist'),
+            models.Index(fields=["onboarding_completed"]),
+            models.Index(fields=["location"], name="user_location_gist"),
         ]

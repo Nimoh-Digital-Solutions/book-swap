@@ -9,6 +9,7 @@ Endpoints:
   PATCH /api/v1/notifications/preferences/  — update email preferences
   GET  /api/v1/notifications/unsubscribe/{token}/ — one-click unsubscribe (no auth)
 """
+
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -27,17 +28,14 @@ class NotificationListView(APIView):
     permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def get(self, request: Request) -> Response:
-        qs = (
-            Notification.objects.filter(user=request.user)
-            .order_by('-created_at')[:50]
+        qs = Notification.objects.filter(user=request.user).order_by("-created_at")[:50]
+        unread_count = Notification.objects.filter(user=request.user, read_at__isnull=True).count()
+        return Response(
+            {
+                "unread_count": unread_count,
+                "results": NotificationSerializer(qs, many=True).data,
+            }
         )
-        unread_count = Notification.objects.filter(
-            user=request.user, read_at__isnull=True
-        ).count()
-        return Response({
-            'unread_count': unread_count,
-            'results': NotificationSerializer(qs, many=True).data,
-        })
 
 
 class MarkNotificationReadView(APIView):
@@ -46,10 +44,10 @@ class MarkNotificationReadView(APIView):
     permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def post(self, request: Request, pk: str) -> Response:
-        updated = Notification.objects.filter(
-            pk=pk, user=request.user, read_at__isnull=True
-        ).update(read_at=timezone.now())
-        return Response({'marked': updated}, status=status.HTTP_200_OK)
+        updated = Notification.objects.filter(pk=pk, user=request.user, read_at__isnull=True).update(
+            read_at=timezone.now()
+        )
+        return Response({"marked": updated}, status=status.HTTP_200_OK)
 
 
 class MarkAllReadView(APIView):
@@ -58,10 +56,8 @@ class MarkAllReadView(APIView):
     permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def post(self, request: Request) -> Response:
-        updated = Notification.objects.filter(
-            user=request.user, read_at__isnull=True
-        ).update(read_at=timezone.now())
-        return Response({'marked': updated}, status=status.HTTP_200_OK)
+        updated = Notification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
+        return Response({"marked": updated}, status=status.HTTP_200_OK)
 
 
 class NotificationPreferencesView(RetrieveUpdateAPIView):
@@ -69,7 +65,7 @@ class NotificationPreferencesView(RetrieveUpdateAPIView):
 
     permission_classes = [IsAuthenticated]  # noqa: RUF012
     serializer_class = NotificationPreferencesSerializer
-    http_method_names = ['get', 'patch']  # noqa: RUF012
+    http_method_names = ["get", "patch"]  # noqa: RUF012
 
     def get_object(self) -> NotificationPreferences:
         obj, _ = NotificationPreferences.objects.get_or_create(user=self.request.user)
@@ -86,7 +82,7 @@ class UnsubscribeView(APIView):
             prefs = NotificationPreferences.objects.get(unsubscribe_token=token)
         except NotificationPreferences.DoesNotExist:
             return Response(
-                {'detail': 'Invalid or expired unsubscribe link.'},
+                {"detail": "Invalid or expired unsubscribe link."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -99,4 +95,4 @@ class UnsubscribeView(APIView):
             email_exchange_completed=False,
             email_rating_received=False,
         )
-        return Response({'detail': 'You have been unsubscribed from all BookSwap emails.'})
+        return Response({"detail": "You have been unsubscribed from all BookSwap emails."})

@@ -8,64 +8,102 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Book',
+            name="Book",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('isbn', models.CharField(blank=True, db_index=True, max_length=13)),
-                ('title', models.CharField(max_length=300)),
-                ('author', models.CharField(max_length=200)),
-                ('description', models.TextField(blank=True)),
-                ('cover_url', models.URLField(blank=True)),
-                ('page_count', models.PositiveIntegerField(blank=True, null=True)),
-                ('publish_year', models.PositiveIntegerField(blank=True, null=True)),
-                ('condition', models.CharField(choices=[('new', 'New'), ('like_new', 'Like New'), ('good', 'Good'), ('acceptable', 'Acceptable')], max_length=20)),
-                ('genres', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=50), blank=True, default=list, size=3)),
-                ('language', models.CharField(choices=[('en', 'English'), ('nl', 'Dutch'), ('de', 'German'), ('fr', 'French'), ('es', 'Spanish'), ('other', 'Other')], max_length=10)),
-                ('status', models.CharField(choices=[('available', 'Available'), ('in_exchange', 'In Exchange'), ('returned', 'Returned')], db_index=True, default='available', max_length=20)),
-                ('notes', models.CharField(blank=True, max_length=200)),
-                ('search_vector', django.contrib.postgres.search.SearchVectorField(null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("isbn", models.CharField(blank=True, db_index=True, max_length=13)),
+                ("title", models.CharField(max_length=300)),
+                ("author", models.CharField(max_length=200)),
+                ("description", models.TextField(blank=True)),
+                ("cover_url", models.URLField(blank=True)),
+                ("page_count", models.PositiveIntegerField(blank=True, null=True)),
+                ("publish_year", models.PositiveIntegerField(blank=True, null=True)),
+                (
+                    "condition",
+                    models.CharField(
+                        choices=[
+                            ("new", "New"),
+                            ("like_new", "Like New"),
+                            ("good", "Good"),
+                            ("acceptable", "Acceptable"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "genres",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(max_length=50), blank=True, default=list, size=3
+                    ),
+                ),
+                (
+                    "language",
+                    models.CharField(
+                        choices=[
+                            ("en", "English"),
+                            ("nl", "Dutch"),
+                            ("de", "German"),
+                            ("fr", "French"),
+                            ("es", "Spanish"),
+                            ("other", "Other"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("available", "Available"), ("in_exchange", "In Exchange"), ("returned", "Returned")],
+                        db_index=True,
+                        default="available",
+                        max_length=20,
+                    ),
+                ),
+                ("notes", models.CharField(blank=True, max_length=200)),
+                ("search_vector", django.contrib.postgres.search.SearchVectorField(null=True)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='BookPhoto',
+            name="BookPhoto",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('image', models.ImageField(upload_to='book_photos/')),
-                ('position', models.PositiveSmallIntegerField(default=0, help_text='Display order. 0 = primary thumbnail.')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("image", models.ImageField(upload_to="book_photos/")),
+                (
+                    "position",
+                    models.PositiveSmallIntegerField(default=0, help_text="Display order. 0 = primary thumbnail."),
+                ),
             ],
             options={
-                'ordering': ['position', 'created_at'],
+                "ordering": ["position", "created_at"],
             },
         ),
         migrations.CreateModel(
-            name='WishlistItem',
+            name="WishlistItem",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('isbn', models.CharField(blank=True, max_length=13)),
-                ('title', models.CharField(blank=True, max_length=300)),
-                ('author', models.CharField(blank=True, max_length=200)),
-                ('genre', models.CharField(blank=True, max_length=50)),
-                ('cover_url', models.URLField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("isbn", models.CharField(blank=True, max_length=13)),
+                ("title", models.CharField(blank=True, max_length=300)),
+                ("author", models.CharField(blank=True, max_length=200)),
+                ("genre", models.CharField(blank=True, max_length=50)),
+                ("cover_url", models.URLField(blank=True)),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

@@ -1,4 +1,5 @@
 """Book photo validator for the books app."""
+
 import io
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -34,7 +35,7 @@ def validate_book_photo(uploaded_file) -> SimpleUploadedFile:
 
     valid = False
     for magic in ALLOWED_MAGIC_BYTES:
-        if header[:len(magic)] == magic:
+        if header[: len(magic)] == magic:
             valid = True
             break
     if not valid:

@@ -1,4 +1,5 @@
 """Tests for Epic 3 Phase 2 — Book, Photo, ISBN, and Wishlist API endpoints."""
+
 import io
 import uuid
 from unittest.mock import MagicMock, patch
@@ -85,17 +86,19 @@ class TestISBNLookupService:
         gb_resp.status_code = 200
         gb_resp.raise_for_status.return_value = None
         gb_resp.json.return_value = {
-            "items": [{
-                "volumeInfo": {
-                    "title": "Fallback Book",
-                    "authors": ["FB Author"],
-                    "industryIdentifiers": [
-                        {"type": "ISBN_13", "identifier": "9780000000001"},
-                    ],
-                    "publishedDate": "2019",
-                    "pageCount": 150,
+            "items": [
+                {
+                    "volumeInfo": {
+                        "title": "Fallback Book",
+                        "authors": ["FB Author"],
+                        "industryIdentifiers": [
+                            {"type": "ISBN_13", "identifier": "9780000000001"},
+                        ],
+                        "publishedDate": "2019",
+                        "pageCount": 150,
+                    }
                 }
-            }]
+            ]
         }
         mock_get.side_effect = [ol_resp, gb_resp]
 
@@ -149,6 +152,7 @@ class TestISBNLookupService:
     @patch("apps.books.services.httpx.get")
     def test_search_external_network_error_returns_empty(self, mock_get):
         import httpx
+
         mock_get.side_effect = httpx.ConnectError("fail")
         results = ISBNLookupService.search_external("anything")
         assert results == []
@@ -160,7 +164,6 @@ class TestISBNLookupService:
 
 
 class TestBookPhotoValidator:
-
     def test_valid_jpeg(self):
         img_bytes = _make_image("JPEG").read()
         uploaded = SimpleUploadedFile("test.jpg", img_bytes, content_type="image/jpeg")
@@ -176,12 +179,14 @@ class TestBookPhotoValidator:
 
     def test_rejects_non_image(self):
         from rest_framework import serializers
+
         uploaded = SimpleUploadedFile("test.txt", b"not an image", content_type="text/plain")
         with pytest.raises(serializers.ValidationError, match="JPEG and PNG"):
             validate_book_photo(uploaded)
 
     def test_rejects_oversized_file(self):
         from rest_framework import serializers
+
         big_bytes = b"\xff\xd8\xff" + b"\x00" * (6 * 1024 * 1024)
         uploaded = SimpleUploadedFile("big.jpg", big_bytes, content_type="image/jpeg")
         with pytest.raises(serializers.ValidationError, match="5 MB"):
@@ -490,8 +495,15 @@ class TestExternalSearchView:
     def test_search_returns_results(self, mock_search, auth_client):
         client, _ = auth_client
         mock_search.return_value = [
-            {"isbn": "123", "title": "Result", "author": "A", "description": "",
-             "cover_url": "", "page_count": None, "publish_year": None},
+            {
+                "isbn": "123",
+                "title": "Result",
+                "author": "A",
+                "description": "",
+                "cover_url": "",
+                "page_count": None,
+                "publish_year": None,
+            },
         ]
         response = client.get("/api/v1/books/search-external/?q=test+query")
         assert response.status_code == 200
@@ -579,7 +591,6 @@ class TestWishlistDeleteView:
 
 
 class TestBookCreateSerializer:
-
     def test_valid_data(self):
         from rest_framework.test import APIRequestFactory
 
@@ -624,31 +635,33 @@ class TestBookCreateSerializer:
 
 
 class TestISBNLookupSerializer:
-
     def test_valid_isbn13(self):
         from apps.books.serializers import ISBNLookupSerializer
+
         s = ISBNLookupSerializer(data={"isbn": "9781234567890"})
         assert s.is_valid()
 
     def test_valid_isbn10(self):
         from apps.books.serializers import ISBNLookupSerializer
+
         s = ISBNLookupSerializer(data={"isbn": "0123456789"})
         assert s.is_valid()
 
     def test_invalid_isbn(self):
         from apps.books.serializers import ISBNLookupSerializer
+
         s = ISBNLookupSerializer(data={"isbn": "abc"})
         assert not s.is_valid()
 
     def test_strips_dashes(self):
         from apps.books.serializers import ISBNLookupSerializer
+
         s = ISBNLookupSerializer(data={"isbn": "978-1-234-56789-0"})
         assert s.is_valid()
         assert s.validated_data["isbn"] == "9781234567890"
 
 
 class TestWishlistItemSerializer:
-
     def test_requires_at_least_one_field(self):
         from rest_framework.test import APIRequestFactory
 
@@ -677,9 +690,9 @@ class TestWishlistItemSerializer:
 
 
 class TestPermissionIsBookOwner:
-
     def test_owner_has_permission(self):
         from apps.books.permissions import IsBookOwner
+
         user = UserFactory()
         book = BookFactory(owner=user)
         perm = IsBookOwner()
@@ -689,6 +702,7 @@ class TestPermissionIsBookOwner:
 
     def test_non_owner_denied(self):
         from apps.books.permissions import IsBookOwner
+
         user = UserFactory()
         other = UserFactory()
         book = BookFactory(owner=other)

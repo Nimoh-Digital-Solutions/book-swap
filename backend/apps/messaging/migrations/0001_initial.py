@@ -8,47 +8,89 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('exchanges', '0001_initial'),
+        ("exchanges", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MeetupLocation',
+            name="MeetupLocation",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200)),
-                ('address', models.CharField(max_length=300)),
-                ('category', models.CharField(choices=[('library', 'Library'), ('cafe', 'Cafe'), ('park', 'Park'), ('station', 'Train Station')], max_length=30)),
-                ('location', django.contrib.gis.db.models.fields.PointField(srid=4326)),
-                ('city', models.CharField(max_length=100)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=200)),
+                ("address", models.CharField(max_length=300)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("library", "Library"),
+                            ("cafe", "Cafe"),
+                            ("park", "Park"),
+                            ("station", "Train Station"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("location", django.contrib.gis.db.models.fields.PointField(srid=4326)),
+                ("city", models.CharField(max_length=100)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'ordering': ['name'],
-                'indexes': [models.Index(fields=['category', 'is_active'], name='meetup_cat_active')],
+                "ordering": ["name"],
+                "indexes": [models.Index(fields=["category", "is_active"], name="meetup_cat_active")],
             },
         ),
         migrations.CreateModel(
-            name='Message',
+            name="Message",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('content', models.TextField(blank=True, help_text='Message text (max 1000 characters).')),
-                ('image', models.ImageField(blank=True, help_text='Optional image attachment (JPEG/PNG, max 5 MB).', null=True, upload_to='chat_images/')),
-                ('read_at', models.DateTimeField(blank=True, help_text='Set when the recipient opens the chat and this message is visible.', null=True)),
-                ('exchange', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='exchanges.exchangerequest')),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_messages', to=settings.AUTH_USER_MODEL)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("content", models.TextField(blank=True, help_text="Message text (max 1000 characters).")),
+                (
+                    "image",
+                    models.ImageField(
+                        blank=True,
+                        help_text="Optional image attachment (JPEG/PNG, max 5 MB).",
+                        null=True,
+                        upload_to="chat_images/",
+                    ),
+                ),
+                (
+                    "read_at",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="Set when the recipient opens the chat and this message is visible.",
+                        null=True,
+                    ),
+                ),
+                (
+                    "exchange",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="messages",
+                        to="exchanges.exchangerequest",
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sent_messages",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['created_at'],
-                'indexes': [models.Index(fields=['exchange', 'created_at'], name='msg_exchange_created'), models.Index(fields=['sender', 'created_at'], name='msg_sender_created')],
+                "ordering": ["created_at"],
+                "indexes": [
+                    models.Index(fields=["exchange", "created_at"], name="msg_exchange_created"),
+                    models.Index(fields=["sender", "created_at"], name="msg_sender_created"),
+                ],
             },
         ),
     ]

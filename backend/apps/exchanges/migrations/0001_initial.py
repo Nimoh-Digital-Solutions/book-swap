@@ -7,70 +7,171 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('books', '0001_initial'),
+        ("books", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExchangeRequest',
+            name="ExchangeRequest",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('conditions_pending', 'Conditions Pending'), ('active', 'Active'), ('swap_confirmed', 'Swap Confirmed'), ('completed', 'Completed'), ('declined', 'Declined'), ('cancelled', 'Cancelled'), ('expired', 'Expired'), ('return_requested', 'Return Requested'), ('returned', 'Returned')], db_index=True, default='pending', max_length=30)),
-                ('message', models.CharField(blank=True, help_text='Optional personal note from the requester.', max_length=200)),
-                ('decline_reason', models.CharField(blank=True, choices=[('not_interested', 'Not interested in offered book'), ('reserved', 'Book is reserved for someone else'), ('counter_proposed', 'Counter-proposed a different book'), ('other', 'Other')], max_length=30)),
-                ('requester_confirmed_at', models.DateTimeField(blank=True, null=True)),
-                ('owner_confirmed_at', models.DateTimeField(blank=True, null=True)),
-                ('return_requested_at', models.DateTimeField(blank=True, null=True)),
-                ('return_confirmed_requester', models.DateTimeField(blank=True, null=True)),
-                ('return_confirmed_owner', models.DateTimeField(blank=True, null=True)),
-                ('expired_at', models.DateTimeField(blank=True, null=True)),
-                ('counter_to', models.ForeignKey(blank=True, help_text='References the original request when counter-proposed.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='counter_requests', to='exchanges.exchangerequest')),
-                ('offered_book', models.ForeignKey(help_text="The requester's book offered in exchange.", on_delete=django.db.models.deletion.CASCADE, related_name='outgoing_requests', to='books.book')),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='received_exchanges', to=settings.AUTH_USER_MODEL)),
-                ('requested_book', models.ForeignKey(help_text="The owner's book the requester wants.", on_delete=django.db.models.deletion.CASCADE, related_name='incoming_requests', to='books.book')),
-                ('requester', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_exchanges', to=settings.AUTH_USER_MODEL)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("accepted", "Accepted"),
+                            ("conditions_pending", "Conditions Pending"),
+                            ("active", "Active"),
+                            ("swap_confirmed", "Swap Confirmed"),
+                            ("completed", "Completed"),
+                            ("declined", "Declined"),
+                            ("cancelled", "Cancelled"),
+                            ("expired", "Expired"),
+                            ("return_requested", "Return Requested"),
+                            ("returned", "Returned"),
+                        ],
+                        db_index=True,
+                        default="pending",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "message",
+                    models.CharField(
+                        blank=True, help_text="Optional personal note from the requester.", max_length=200
+                    ),
+                ),
+                (
+                    "decline_reason",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("not_interested", "Not interested in offered book"),
+                            ("reserved", "Book is reserved for someone else"),
+                            ("counter_proposed", "Counter-proposed a different book"),
+                            ("other", "Other"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("requester_confirmed_at", models.DateTimeField(blank=True, null=True)),
+                ("owner_confirmed_at", models.DateTimeField(blank=True, null=True)),
+                ("return_requested_at", models.DateTimeField(blank=True, null=True)),
+                ("return_confirmed_requester", models.DateTimeField(blank=True, null=True)),
+                ("return_confirmed_owner", models.DateTimeField(blank=True, null=True)),
+                ("expired_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "counter_to",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="References the original request when counter-proposed.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="counter_requests",
+                        to="exchanges.exchangerequest",
+                    ),
+                ),
+                (
+                    "offered_book",
+                    models.ForeignKey(
+                        help_text="The requester's book offered in exchange.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="outgoing_requests",
+                        to="books.book",
+                    ),
+                ),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="received_exchanges",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "requested_book",
+                    models.ForeignKey(
+                        help_text="The owner's book the requester wants.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="incoming_requests",
+                        to="books.book",
+                    ),
+                ),
+                (
+                    "requester",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sent_exchanges",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ConditionsAcceptance',
+            name="ConditionsAcceptance",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('accepted_at', models.DateTimeField(auto_now_add=True)),
-                ('conditions_version', models.CharField(default='1.0', help_text='Version of the conditions the user accepted.', max_length=10)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='conditions_acceptances', to=settings.AUTH_USER_MODEL)),
-                ('exchange', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='conditions_acceptances', to='exchanges.exchangerequest')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("accepted_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "conditions_version",
+                    models.CharField(
+                        default="1.0", help_text="Version of the conditions the user accepted.", max_length=10
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="conditions_acceptances",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "exchange",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="conditions_acceptances",
+                        to="exchanges.exchangerequest",
+                    ),
+                ),
             ],
         ),
         migrations.AddIndex(
-            model_name='exchangerequest',
-            index=models.Index(fields=['status', 'created_at'], name='exchange_status_created'),
+            model_name="exchangerequest",
+            index=models.Index(fields=["status", "created_at"], name="exchange_status_created"),
         ),
         migrations.AddIndex(
-            model_name='exchangerequest',
-            index=models.Index(fields=['requester', 'status'], name='exchange_requester_status'),
+            model_name="exchangerequest",
+            index=models.Index(fields=["requester", "status"], name="exchange_requester_status"),
         ),
         migrations.AddIndex(
-            model_name='exchangerequest',
-            index=models.Index(fields=['owner', 'status'], name='exchange_owner_status'),
+            model_name="exchangerequest",
+            index=models.Index(fields=["owner", "status"], name="exchange_owner_status"),
         ),
         migrations.AddConstraint(
-            model_name='exchangerequest',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'pending')), fields=('requester', 'requested_book'), name='unique_pending_request_per_book'),
+            model_name="exchangerequest",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("status", "pending")),
+                fields=("requester", "requested_book"),
+                name="unique_pending_request_per_book",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='conditionsacceptance',
-            constraint=models.UniqueConstraint(fields=('exchange', 'user'), name='unique_conditions_per_user_per_exchange'),
+            model_name="conditionsacceptance",
+            constraint=models.UniqueConstraint(
+                fields=("exchange", "user"), name="unique_conditions_per_user_per_exchange"
+            ),
         ),
     ]

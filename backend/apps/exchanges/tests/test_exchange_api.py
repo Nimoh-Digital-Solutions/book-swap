@@ -1,4 +1,5 @@
 """Tests for the exchanges API — Epic 5 Phase 2."""
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -31,10 +32,10 @@ def api_client(user):
 def exchange_url(pk=None, action=None):
     """Build exchange URL. Uses router-generated names."""
     if pk and action:
-        return reverse(f'exchanges:exchange-{action}', kwargs={'pk': pk})
+        return reverse(f"exchanges:exchange-{action}", kwargs={"pk": pk})
     if pk:
-        return reverse('exchanges:exchange-detail', kwargs={'pk': pk})
-    return reverse('exchanges:exchange-list')
+        return reverse("exchanges:exchange-detail", kwargs={"pk": pk})
+    return reverse("exchanges:exchange-list")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -54,7 +55,7 @@ class TestExchangeRequestModel:
 
     def test_transition_to_raises_on_invalid(self):
         exchange = ExchangeRequestFactory.build(status=ExchangeStatus.PENDING)
-        with pytest.raises(ValueError, match='Cannot transition'):
+        with pytest.raises(ValueError, match="Cannot transition"):
             exchange.transition_to(ExchangeStatus.ACTIVE)
 
     def test_transition_to_success(self):
@@ -64,6 +65,7 @@ class TestExchangeRequestModel:
 
     def test_is_swap_confirmed(self):
         from django.utils import timezone
+
         exchange = ExchangeRequestFactory.build(
             requester_confirmed_at=timezone.now(),
             owner_confirmed_at=timezone.now(),
@@ -99,18 +101,21 @@ class TestCreateExchange:
         offered_book = BookFactory(owner=requester)
 
         client = api_client(requester)
-        response = client.post(exchange_url(), {
-            'requested_book_id': str(requested_book.pk),
-            'offered_book_id': str(offered_book.pk),
-            'message': 'Great book!',
-        })
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(offered_book.pk),
+                "message": "Great book!",
+            },
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
-        assert data['status'] == 'pending'
-        assert data['message'] == 'Great book!'
-        assert data['requester']['id'] == str(requester.pk)
-        assert data['owner']['id'] == str(owner.pk)
+        assert data["status"] == "pending"
+        assert data["message"] == "Great book!"
+        assert data["requester"]["id"] == str(requester.pk)
+        assert data["owner"]["id"] == str(owner.pk)
 
     def test_cannot_request_own_book(self):
         user = UserFactory(with_location=True, onboarded=True)
@@ -118,10 +123,13 @@ class TestCreateExchange:
         offered = BookFactory(owner=user)
 
         client = api_client(user)
-        response = client.post(exchange_url(), {
-            'requested_book_id': str(book.pk),
-            'offered_book_id': str(offered.pk),
-        })
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(book.pk),
+                "offered_book_id": str(offered.pk),
+            },
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -133,10 +141,13 @@ class TestCreateExchange:
         not_my_book = BookFactory(owner=other)
 
         client = api_client(requester)
-        response = client.post(exchange_url(), {
-            'requested_book_id': str(requested_book.pk),
-            'offered_book_id': str(not_my_book.pk),
-        })
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(not_my_book.pk),
+            },
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -147,10 +158,13 @@ class TestCreateExchange:
         offered = BookFactory(owner=requester)
 
         client = api_client(requester)
-        response = client.post(exchange_url(), {
-            'requested_book_id': str(unavailable.pk),
-            'offered_book_id': str(offered.pk),
-        })
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(unavailable.pk),
+                "offered_book_id": str(offered.pk),
+            },
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -159,10 +173,13 @@ class TestCreateExchange:
         new_offered = BookFactory(owner=exchange.requester)
 
         client = api_client(exchange.requester)
-        response = client.post(exchange_url(), {
-            'requested_book_id': str(exchange.requested_book.pk),
-            'offered_book_id': str(new_offered.pk),
-        })
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(exchange.requested_book.pk),
+                "offered_book_id": str(new_offered.pk),
+            },
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -183,7 +200,7 @@ class TestListExchanges:
         client = api_client(exchange.requester)
         response = client.get(exchange_url())
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()['results']) == 1
+        assert len(response.json()["results"]) == 1
 
     def test_list_excludes_other_users(self):
         ExchangeRequestFactory()
@@ -191,14 +208,14 @@ class TestListExchanges:
         client = api_client(other)
         response = client.get(exchange_url())
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()['results']) == 0
+        assert len(response.json()["results"]) == 0
 
     def test_detail_as_participant(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
         response = client.get(exchange_url(pk=exchange.pk))
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['id'] == str(exchange.pk)
+        assert response.json()["id"] == str(exchange.pk)
 
     def test_detail_as_non_participant_denied(self):
         exchange = ExchangeRequestFactory()
@@ -217,9 +234,9 @@ class TestAcceptExchange:
     def test_owner_accepts_pending(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
-        response = client.post(exchange_url(pk=exchange.pk, action='accept'))
+        response = client.post(exchange_url(pk=exchange.pk, action="accept"))
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'accepted'
+        assert response.json()["status"] == "accepted"
 
     def test_auto_decline_other_pending(self):
         owner = UserFactory(with_location=True, onboarded=True)
@@ -228,7 +245,7 @@ class TestAcceptExchange:
         e2 = ExchangeRequestFactory(owner=owner, requested_book=book)
 
         client = api_client(owner)
-        client.post(exchange_url(pk=e1.pk, action='accept'))
+        client.post(exchange_url(pk=e1.pk, action="accept"))
 
         e2.refresh_from_db()
         assert e2.status == ExchangeStatus.DECLINED
@@ -237,13 +254,13 @@ class TestAcceptExchange:
     def test_requester_cannot_accept(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.requester)
-        response = client.post(exchange_url(pk=exchange.pk, action='accept'))
+        response = client.post(exchange_url(pk=exchange.pk, action="accept"))
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_cannot_accept_non_pending(self):
         exchange = ExchangeRequestFactory(accepted=True)
         client = api_client(exchange.owner)
-        response = client.post(exchange_url(pk=exchange.pk, action='accept'))
+        response = client.post(exchange_url(pk=exchange.pk, action="accept"))
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -257,24 +274,24 @@ class TestDeclineExchange:
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='decline'),
-            {'reason': 'not_interested'},
+            exchange_url(pk=exchange.pk, action="decline"),
+            {"reason": "not_interested"},
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'declined'
-        assert response.json()['decline_reason'] == 'not_interested'
+        assert response.json()["status"] == "declined"
+        assert response.json()["decline_reason"] == "not_interested"
 
     def test_decline_without_reason(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
-        response = client.post(exchange_url(pk=exchange.pk, action='decline'))
+        response = client.post(exchange_url(pk=exchange.pk, action="decline"))
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'declined'
+        assert response.json()["status"] == "declined"
 
     def test_requester_cannot_decline(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.requester)
-        response = client.post(exchange_url(pk=exchange.pk, action='decline'))
+        response = client.post(exchange_url(pk=exchange.pk, action="decline"))
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -290,14 +307,14 @@ class TestCounterPropose:
 
         client = api_client(exchange.owner)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='counter'),
-            {'offered_book_id': str(alt_book.pk)},
+            exchange_url(pk=exchange.pk, action="counter"),
+            {"offered_book_id": str(alt_book.pk)},
         )
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
-        assert data['counter_to'] == str(exchange.pk)
-        assert data['status'] == 'pending'
+        assert data["counter_to"] == str(exchange.pk)
+        assert data["status"] == "pending"
 
         exchange.refresh_from_db()
         assert exchange.status == ExchangeStatus.DECLINED
@@ -307,8 +324,8 @@ class TestCounterPropose:
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='counter'),
-            {'offered_book_id': str(exchange.offered_book.pk)},
+            exchange_url(pk=exchange.pk, action="counter"),
+            {"offered_book_id": str(exchange.offered_book.pk)},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -322,14 +339,14 @@ class TestCancelExchange:
     def test_requester_cancels(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.requester)
-        response = client.post(exchange_url(pk=exchange.pk, action='cancel'))
+        response = client.post(exchange_url(pk=exchange.pk, action="cancel"))
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'cancelled'
+        assert response.json()["status"] == "cancelled"
 
     def test_owner_cannot_cancel(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
-        response = client.post(exchange_url(pk=exchange.pk, action='cancel'))
+        response = client.post(exchange_url(pk=exchange.pk, action="cancel"))
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -343,32 +360,32 @@ class TestAcceptConditions:
         exchange = ExchangeRequestFactory(accepted=True)
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='accept-conditions'),
+            exchange_url(pk=exchange.pk, action="accept-conditions"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'conditions_pending'
-        assert response.json()['conditions_accepted_count'] == 1
+        assert response.json()["status"] == "conditions_pending"
+        assert response.json()["conditions_accepted_count"] == 1
 
     def test_both_acceptances_transitions_to_active(self):
         exchange = ExchangeRequestFactory(accepted=True)
         # First user accepts
         api_client(exchange.requester).post(
-            exchange_url(pk=exchange.pk, action='accept-conditions'),
+            exchange_url(pk=exchange.pk, action="accept-conditions"),
         )
         # Second user accepts
         response = api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action='accept-conditions'),
+            exchange_url(pk=exchange.pk, action="accept-conditions"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'active'
-        assert response.json()['conditions_accepted_count'] == 2
+        assert response.json()["status"] == "active"
+        assert response.json()["conditions_accepted_count"] == 2
 
     def test_cannot_accept_conditions_twice(self):
         exchange = ExchangeRequestFactory(accepted=True)
         client = api_client(exchange.requester)
-        client.post(exchange_url(pk=exchange.pk, action='accept-conditions'))
+        client.post(exchange_url(pk=exchange.pk, action="accept-conditions"))
         response = client.post(
-            exchange_url(pk=exchange.pk, action='accept-conditions'),
+            exchange_url(pk=exchange.pk, action="accept-conditions"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -376,7 +393,7 @@ class TestAcceptConditions:
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='accept-conditions'),
+            exchange_url(pk=exchange.pk, action="accept-conditions"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -385,13 +402,13 @@ class TestAcceptConditions:
         ConditionsAcceptanceFactory(exchange=exchange, user=exchange.requester)
         client = api_client(exchange.owner)
         response = client.get(
-            exchange_url(pk=exchange.pk, action='conditions'),
+            exchange_url(pk=exchange.pk, action="conditions"),
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data['conditions_version'] == '1.0'
-        assert len(data['acceptances']) == 1
-        assert data['both_accepted'] is False
+        assert data["conditions_version"] == "1.0"
+        assert len(data["acceptances"]) == 1
+        assert data["both_accepted"] is False
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -404,22 +421,22 @@ class TestConfirmSwap:
         exchange = ExchangeRequestFactory(active=True)
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='confirm-swap'),
+            exchange_url(pk=exchange.pk, action="confirm-swap"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'active'
-        assert response.json()['requester_confirmed_at'] is not None
+        assert response.json()["status"] == "active"
+        assert response.json()["requester_confirmed_at"] is not None
 
     def test_both_confirmations_transitions_to_swap_confirmed(self):
         exchange = ExchangeRequestFactory(active=True)
         api_client(exchange.requester).post(
-            exchange_url(pk=exchange.pk, action='confirm-swap'),
+            exchange_url(pk=exchange.pk, action="confirm-swap"),
         )
         response = api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action='confirm-swap'),
+            exchange_url(pk=exchange.pk, action="confirm-swap"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'swap_confirmed'
+        assert response.json()["status"] == "swap_confirmed"
 
         # Books should now be in_exchange
         exchange.requested_book.refresh_from_db()
@@ -436,9 +453,9 @@ class TestConfirmSwap:
     def test_cannot_confirm_swap_twice(self):
         exchange = ExchangeRequestFactory(active=True)
         client = api_client(exchange.requester)
-        client.post(exchange_url(pk=exchange.pk, action='confirm-swap'))
+        client.post(exchange_url(pk=exchange.pk, action="confirm-swap"))
         response = client.post(
-            exchange_url(pk=exchange.pk, action='confirm-swap'),
+            exchange_url(pk=exchange.pk, action="confirm-swap"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -446,7 +463,7 @@ class TestConfirmSwap:
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='confirm-swap'),
+            exchange_url(pk=exchange.pk, action="confirm-swap"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -461,28 +478,28 @@ class TestReturnFlow:
         exchange = ExchangeRequestFactory(swap_confirmed=True)
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='request-return'),
+            exchange_url(pk=exchange.pk, action="request-return"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'return_requested'
-        assert response.json()['return_requested_at'] is not None
+        assert response.json()["status"] == "return_requested"
+        assert response.json()["return_requested_at"] is not None
 
     def test_both_confirm_return(self):
         exchange = ExchangeRequestFactory(return_requested=True)
         # Set books to in_exchange for the return test
         exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=['status'])
+        exchange.requested_book.save(update_fields=["status"])
         exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=['status'])
+        exchange.offered_book.save(update_fields=["status"])
 
         api_client(exchange.requester).post(
-            exchange_url(pk=exchange.pk, action='confirm-return'),
+            exchange_url(pk=exchange.pk, action="confirm-return"),
         )
         response = api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action='confirm-return'),
+            exchange_url(pk=exchange.pk, action="confirm-return"),
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status'] == 'returned'
+        assert response.json()["status"] == "returned"
 
         # Books back to available
         exchange.requested_book.refresh_from_db()
@@ -494,7 +511,7 @@ class TestReturnFlow:
         exchange = ExchangeRequestFactory(active=True)
         client = api_client(exchange.requester)
         response = client.post(
-            exchange_url(pk=exchange.pk, action='request-return'),
+            exchange_url(pk=exchange.pk, action="request-return"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -508,16 +525,16 @@ class TestIncomingRequests:
     def test_incoming_shows_pending_as_owner(self):
         exchange = ExchangeRequestFactory()
         client = api_client(exchange.owner)
-        response = client.get(reverse('exchanges:exchange-incoming'))
+        response = client.get(reverse("exchanges:exchange-incoming"))
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()['results']) == 1
+        assert len(response.json()["results"]) == 1
 
     def test_incoming_excludes_non_pending(self):
         exchange = ExchangeRequestFactory(accepted=True)
         client = api_client(exchange.owner)
-        response = client.get(reverse('exchanges:exchange-incoming'))
+        response = client.get(reverse("exchanges:exchange-incoming"))
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.json()['results']) == 0
+        assert len(response.json()["results"]) == 0
 
     def test_incoming_count(self):
         exchange = ExchangeRequestFactory()
@@ -526,9 +543,9 @@ class TestIncomingRequests:
             requested_book=BookFactory(owner=exchange.owner),
         )
         client = api_client(exchange.owner)
-        response = client.get(reverse('exchanges:exchange-incoming-count'))
+        response = client.get(reverse("exchanges:exchange-incoming-count"))
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['count'] == 2
+        assert response.json()["count"] == 2
 
 
 # ══════════════════════════════════════════════════════════════════════════════

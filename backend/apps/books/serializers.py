@@ -1,4 +1,5 @@
 """Serializers for the books app."""
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -34,8 +35,16 @@ class BookListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = (
-            "id", "title", "author", "cover_url", "condition",
-            "language", "status", "primary_photo", "owner", "created_at",
+            "id",
+            "title",
+            "author",
+            "cover_url",
+            "condition",
+            "language",
+            "status",
+            "primary_photo",
+            "owner",
+            "created_at",
         )
         read_only_fields = fields
 
@@ -58,13 +67,30 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = (
-            "id", "isbn", "title", "author", "description", "cover_url",
-            "condition", "genres", "language", "status", "notes",
-            "page_count", "publish_year", "photos", "owner",
-            "created_at", "updated_at",
+            "id",
+            "isbn",
+            "title",
+            "author",
+            "description",
+            "cover_url",
+            "condition",
+            "genres",
+            "language",
+            "status",
+            "notes",
+            "page_count",
+            "publish_year",
+            "photos",
+            "owner",
+            "created_at",
+            "updated_at",
         )
         read_only_fields = (
-            "id", "owner", "photos", "created_at", "updated_at",
+            "id",
+            "owner",
+            "photos",
+            "created_at",
+            "updated_at",
         )
 
 
@@ -74,9 +100,17 @@ class BookCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = (
-            "isbn", "title", "author", "description", "cover_url",
-            "condition", "genres", "language", "notes",
-            "page_count", "publish_year",
+            "isbn",
+            "title",
+            "author",
+            "description",
+            "cover_url",
+            "condition",
+            "genres",
+            "language",
+            "notes",
+            "page_count",
+            "publish_year",
         )
 
     def validate_genres(self, value):
@@ -95,9 +129,17 @@ class BookUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = (
-            "title", "author", "description", "cover_url",
-            "condition", "genres", "language", "notes",
-            "page_count", "publish_year", "status",
+            "title",
+            "author",
+            "description",
+            "cover_url",
+            "condition",
+            "genres",
+            "language",
+            "notes",
+            "page_count",
+            "publish_year",
+            "status",
         )
 
     def validate_genres(self, value):
@@ -145,9 +187,7 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         title = attrs.get("title", "")
         genre = attrs.get("genre", "")
         if not any([isbn, title, genre]):
-            raise serializers.ValidationError(
-                "At least one of 'isbn', 'title', or 'genre' is required."
-            )
+            raise serializers.ValidationError("At least one of 'isbn', 'title', or 'genre' is required.")
         return attrs
 
     def create(self, validated_data):

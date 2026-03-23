@@ -23,4 +23,4 @@ class ReportFactory(factory.django.DjangoModelFactory):
     reporter = factory.SubFactory(UserFactory)
     reported_user = factory.SubFactory(UserFactory)
     category = ReportCategory.SPAM
-    description = ''
+    description = ""

@@ -45,6 +45,7 @@ class UserDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         from apps.trust_safety.services import get_blocked_user_ids
+
         blocked_ids = get_blocked_user_ids(self.request.user)
         return User.objects.filter(is_active=True).exclude(pk__in=blocked_ids)
 
@@ -67,9 +68,7 @@ class OnboardingCompleteView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = OnboardingCompleteSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = OnboardingCompleteSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.save(user=request.user)
         return Response(UserPrivateSerializer(user).data)
@@ -95,6 +94,7 @@ class CheckUsernameView(APIView):
             base = username.rstrip("0123456789")
             suggestions = []
             import random
+
             for _ in range(3):
                 candidate = f"{base}{random.randint(10, 999)}"  # noqa: S311
                 if not User.objects.filter(username=candidate).exists():
@@ -110,9 +110,7 @@ class AccountDeletionRequestView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        serializer = AccountDeletionRequestSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = AccountDeletionRequestSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -124,8 +122,7 @@ class AccountDeletionRequestView(APIView):
 
         return Response(
             {
-                "detail": "Your account has been scheduled for deletion. "
-                          "You have 30 days to cancel.",
+                "detail": "Your account has been scheduled for deletion. You have 30 days to cancel.",
                 "cancel_token": cancel_token,
             },
             status=status.HTTP_200_OK,
@@ -191,5 +188,5 @@ class DataExportView(APIView):
 
         data = build_data_export(request.user)
         response = Response(data)
-        response['Content-Disposition'] = 'attachment; filename="bookswap-data-export.json"'
+        response["Content-Disposition"] = 'attachment; filename="bookswap-data-export.json"'
         return response
