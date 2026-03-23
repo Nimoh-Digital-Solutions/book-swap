@@ -9,6 +9,7 @@ from __future__ import annotations
 import pathlib
 
 import environ
+from celery.schedules import crontab
 from nimoh_base.conf import NimohBaseSettings
 from nimoh_base.conf.social import (
     get_social_auth_pipeline,
@@ -205,7 +206,6 @@ CELERY_BEAT_SCHEDULE["anonymize-deleted-accounts"] = {
 }
 
 # Exchange expiry & auto-confirm tasks
-from celery.schedules import crontab  # noqa: E402
 CELERY_BEAT_SCHEDULE["expire-stale-exchange-requests"] = {
     "task": "exchanges.expire_stale_requests",
     "schedule": crontab(hour=2, minute=0),

@@ -19,4 +19,4 @@ app.autodiscover_tasks()
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     """Sanity-check task — prints the request to the worker log."""
-    print(f"Request: {self.request!r}")
+    print(f"Request: {self.request!r}")  # noqa: T201

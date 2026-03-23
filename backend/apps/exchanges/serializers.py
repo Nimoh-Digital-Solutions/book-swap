@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from apps.books.models import Book, BookStatus
 
-from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest, ExchangeStatus
+from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest
 
 User = get_user_model()
 
@@ -107,7 +107,7 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
         try:
             book = Book.objects.select_related('owner').get(pk=value)
         except Book.DoesNotExist:
-            raise serializers.ValidationError('Book not found.')
+            raise serializers.ValidationError('Book not found.') from None
         if book.owner_id == self.context['request'].user.pk:
             raise serializers.ValidationError('You cannot request your own book.')
         if book.status != BookStatus.AVAILABLE:
@@ -119,7 +119,7 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
         try:
             book = Book.objects.get(pk=value)
         except Book.DoesNotExist:
-            raise serializers.ValidationError('Book not found.')
+            raise serializers.ValidationError('Book not found.') from None
         if book.owner_id != self.context['request'].user.pk:
             raise serializers.ValidationError('You can only offer your own books.')
         if book.status != BookStatus.AVAILABLE:
@@ -145,7 +145,7 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
         except IntegrityError:
             raise serializers.ValidationError(
                 'You already have a pending request for this book.'
-            )
+            ) from None
 
 
 class CounterProposeSerializer(serializers.Serializer):
@@ -158,7 +158,7 @@ class CounterProposeSerializer(serializers.Serializer):
         try:
             book = Book.objects.get(pk=value)
         except Book.DoesNotExist:
-            raise serializers.ValidationError('Book not found.')
+            raise serializers.ValidationError('Book not found.') from None
         if book.owner_id != exchange.requester_id:
             raise serializers.ValidationError(
                 "You must pick a book from the requester's shelf."

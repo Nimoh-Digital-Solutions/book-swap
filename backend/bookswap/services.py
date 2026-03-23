@@ -5,7 +5,6 @@ Moved to dedicated apps:
 - ``get_blocked_user_ids`` → ``apps.trust_safety.services``
 """
 import logging
-from typing import Any
 
 import httpx
 from django.contrib.gis.geos import Point
@@ -102,7 +101,6 @@ def build_data_export(user) -> dict:
     from apps.exchanges.models import ExchangeRequest
     from apps.messaging.models import Message
     from apps.ratings.models import Rating
-
     from apps.trust_safety.models import Block, Report
 
     profile = {
@@ -170,7 +168,7 @@ def build_data_export(user) -> dict:
     )
     for r in ratings_given + ratings_received:
         for k in ('id', 'exchange_id', 'rated_id', 'rater_id'):
-            if k in r and r[k]:
+            if r.get(k):
                 r[k] = str(r[k])
         r['created_at'] = r['created_at'].isoformat()
 

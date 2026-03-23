@@ -1,9 +1,6 @@
 """Custom permissions for the messaging app."""
 from rest_framework.permissions import BasePermission
 
-from apps.exchanges.models import ExchangeRequest
-
-
 # Exchange statuses that allow sending new messages.
 CHAT_WRITABLE_STATUSES = frozenset({'active', 'swap_confirmed'})
 

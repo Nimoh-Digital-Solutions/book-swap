@@ -27,7 +27,7 @@ class ExchangeRatingViewSet(GenericViewSet):
     POST /api/v1/ratings/exchanges/{exchange_id}/  — submit rating
     """
 
-    permission_classes = [IsAuthenticated, IsExchangeParticipantForRating]
+    permission_classes = [IsAuthenticated, IsExchangeParticipantForRating]  # noqa: RUF012
 
     def initial(self, request, *args, **kwargs):
         """Resolve the exchange before permission checks."""
@@ -37,7 +37,7 @@ class ExchangeRatingViewSet(GenericViewSet):
                 'requester', 'owner',
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
-            raise NotFound('Exchange not found.')
+            raise NotFound('Exchange not found.') from None
         super().initial(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
@@ -100,7 +100,7 @@ class UserRatingsViewSet(GenericViewSet):
     GET /api/v1/ratings/users/{user_id}/  — paginated list
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
     serializer_class = RatingSerializer
 
     def list(self, request, *args, **kwargs):

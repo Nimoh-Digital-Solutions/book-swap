@@ -13,7 +13,7 @@ import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.notifications.models import Notification, NotificationPreferences, NotificationType
+from apps.notifications.models import Notification, NotificationPreferences
 from bookswap.tests.factories import UserFactory
 
 from .factories import NotificationFactory, NotificationPreferencesFactory

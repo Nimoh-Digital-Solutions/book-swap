@@ -17,13 +17,13 @@ from apps.books.models import (
     BookStatus,
     WishlistItem,
 )
-from bookswap.models import (
-    User,
-)
 from apps.books.tests.factories import (
     BookFactory,
     BookPhotoFactory,
     WishlistItemFactory,
+)
+from bookswap.models import (
+    User,
 )
 from bookswap.tests.factories import (
     UserFactory,

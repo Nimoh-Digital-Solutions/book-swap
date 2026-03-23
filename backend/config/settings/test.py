@@ -33,7 +33,7 @@ CSRF_COOKIE_SECURE = False
 REFRESH_TOKEN_COOKIE_SECURE = False
 
 # Remove the nimoh-base HTTPS redirect middleware in tests
-MIDDLEWARE = [  # noqa: F405
+MIDDLEWARE = [
     m for m in MIDDLEWARE  # noqa: F405
     if 'HTTPSRedirectMiddleware' not in m
 ]

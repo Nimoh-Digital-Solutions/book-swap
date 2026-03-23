@@ -4,7 +4,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.exchanges.models import ExchangeStatus
 from apps.exchanges.tests.factories import ExchangeRequestFactory
 from apps.messaging.models import Message
 from bookswap.tests.factories import UserFactory

@@ -50,8 +50,8 @@ class Notification(TimeStampedModel):
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
-        indexes = [
+        ordering = ['-created_at']  # noqa: RUF012
+        indexes = [  # noqa: RUF012
             models.Index(fields=['user', '-created_at']),
             models.Index(fields=['user', 'read_at']),
         ]

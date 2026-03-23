@@ -1,7 +1,7 @@
 """
 Rating model — post-exchange partner ratings (US-701).
 
-Allows exchange participants to rate their swap partner with a 1–5 star score
+Allows exchange participants to rate their swap partner with a 1-5 star score
 and an optional 300-character text review within 30 days of exchange completion.
 """
 import uuid
@@ -54,7 +54,7 @@ class Rating(TimeStampedModel):
     )
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-created_at']  # noqa: RUF012
         constraints = [  # noqa: RUF012
             models.UniqueConstraint(
                 fields=['exchange', 'rater'],

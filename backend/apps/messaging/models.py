@@ -45,7 +45,7 @@ class Message(TimeStampedModel):
     )
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ['created_at']  # noqa: RUF012
         indexes = [  # noqa: RUF012
             models.Index(
                 fields=['exchange', 'created_at'],
@@ -97,7 +97,7 @@ class MeetupLocation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['name']  # noqa: RUF012
         indexes = [  # noqa: RUF012
             models.Index(
                 fields=['category', 'is_active'],

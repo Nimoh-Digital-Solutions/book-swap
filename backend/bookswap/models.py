@@ -11,7 +11,6 @@ from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from nimoh_base.auth.models import AbstractNimohUser
-from nimoh_base.core.models import TimeStampedModel
 
 
 class User(AbstractNimohUser):

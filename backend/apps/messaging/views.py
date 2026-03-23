@@ -11,8 +11,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
-from bookswap.permissions import IsEmailVerified
 from apps.trust_safety.services import get_blocked_user_ids
+from bookswap.permissions import IsEmailVerified
 
 from .models import MeetupLocation, Message
 from .permissions import (
@@ -36,7 +36,7 @@ class MessageViewSet(GenericViewSet):
     mark_read: POST /api/v1/messaging/exchanges/{exchange_id}/messages/mark-read/
     """
 
-    permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]
+    permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]  # noqa: RUF012
 
     def initial(self, request, *args, **kwargs):
         """Resolve the exchange before permission checks."""
@@ -46,7 +46,7 @@ class MessageViewSet(GenericViewSet):
                 'requester', 'owner',
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
-            raise NotFound('Exchange not found.')
+            raise NotFound('Exchange not found.') from None
 
         # Block check: hide exchange if either party is blocked
         if request.user.is_authenticated:
@@ -143,7 +143,7 @@ class MeetupSuggestionViewSet(GenericViewSet):
     list: GET /api/v1/messaging/exchanges/{exchange_id}/meetup-suggestions/
     """
 
-    permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]
+    permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]  # noqa: RUF012
     serializer_class = MeetupLocationSerializer
 
     def initial(self, request, *args, **kwargs):
@@ -153,7 +153,7 @@ class MeetupSuggestionViewSet(GenericViewSet):
                 'requester', 'owner',
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
-            raise NotFound('Exchange not found.')
+            raise NotFound('Exchange not found.') from None
         super().initial(request, *args, **kwargs)
 
     def get_queryset(self):

@@ -11,7 +11,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = [
+        fields = [  # noqa: RUF012
             'id',
             'notification_type',
             'title',
@@ -27,7 +27,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 class NotificationPreferencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationPreferences
-        fields = [
+        fields = [  # noqa: RUF012
             'email_new_request',
             'email_request_accepted',
             'email_request_declined',

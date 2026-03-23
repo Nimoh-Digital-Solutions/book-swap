@@ -1,8 +1,5 @@
 """URL configuration for the notifications app."""
-
 from django.urls import path
-
-app_name = 'notifications'
 
 from .views import (
     MarkAllReadView,
@@ -11,6 +8,8 @@ from .views import (
     NotificationPreferencesView,
     UnsubscribeView,
 )
+
+app_name = 'notifications'
 
 urlpatterns = [
     path('', NotificationListView.as_view(), name='notification-list'),

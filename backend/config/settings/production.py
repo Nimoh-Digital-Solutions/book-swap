@@ -1,7 +1,8 @@
 """Production settings — always ensure secrets come from environment variables."""
-from config.settings.base import *  # noqa: F401, F403
-from config.settings.base import env  # noqa: F401
 from nimoh_base.conf import NimohBaseSettings
+
+from config.settings.base import *  # noqa: F403
+from config.settings.base import env
 
 DEBUG = False
 
@@ -17,5 +18,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 # Switch to single-line JSON for log aggregation in production
-LOGGING['handlers']['console']['formatter'] = 'json'  # type: ignore[index]
+LOGGING['handlers']['console']['formatter'] = 'json'  # type: ignore[index]  # noqa: F405
 

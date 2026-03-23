@@ -41,7 +41,7 @@ def _push_to_ws(user_id: str, payload: dict) -> None:
             f'notifications_{user_id}',
             {'type': 'notification.push', 'notification': payload},
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning('WS push failed for user %s: %s', user_id, exc)
 
 
@@ -61,6 +61,7 @@ def _maybe_send_email(user, subject: str, body_text: str, prefs_field: str) -> N
     """Send a transactional email if the user has opted in for that type."""
     from django.conf import settings
     from django.core.mail import send_mail
+
     from .models import NotificationPreferences
 
     prefs, _ = NotificationPreferences.objects.get_or_create(user=user)
@@ -84,7 +85,7 @@ def _maybe_send_email(user, subject: str, body_text: str, prefs_field: str) -> N
             fail_silently=False,
         )
         logger.info('Notification email (%s) sent to %s.', prefs_field, user.email)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.warning('Email send failed (%s → %s): %s', prefs_field, user.email, exc)
 
 
@@ -108,6 +109,7 @@ def _notification_payload(notification) -> dict:
 def send_new_request_notification(exchange_id: str) -> None:
     """Notify the book owner when a new swap request arrives."""
     from apps.exchanges.models import ExchangeRequest
+
     from .models import NotificationType
 
     try:
@@ -148,6 +150,7 @@ def send_new_request_notification(exchange_id: str) -> None:
 def send_request_accepted_notification(exchange_id: str) -> None:
     """Notify the requester that their swap request was accepted."""
     from apps.exchanges.models import ExchangeRequest
+
     from .models import NotificationType
 
     try:
@@ -188,6 +191,7 @@ def send_request_accepted_notification(exchange_id: str) -> None:
 def send_request_declined_notification(exchange_id: str) -> None:
     """Notify the requester that their swap request was declined."""
     from apps.exchanges.models import ExchangeRequest
+
     from .models import NotificationType
 
     try:
@@ -213,7 +217,7 @@ def send_request_declined_notification(exchange_id: str) -> None:
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
     _maybe_send_email(
         user=recipient,
-        subject=f'BookSwap: Your request was declined',
+        subject='BookSwap: Your request was declined',
         body_text=(
             f'Hi {recipient.username},\n\n'
             f'Unfortunately, {owner_name} has declined your swap request for "{book_title}".\n\n'
@@ -228,6 +232,7 @@ def send_request_declined_notification(exchange_id: str) -> None:
 def send_exchange_completed_notification(exchange_id: str) -> None:
     """Notify both parties when an exchange is marked completed."""
     from apps.exchanges.models import ExchangeRequest
+
     from .models import NotificationType
 
     try:
@@ -278,8 +283,10 @@ def send_new_message_notification(exchange_id: str, recipient_user_id: str) -> N
     when a conversation is active (cache key per exchange+recipient).
     """
     from django.core.cache import cache
+
     from apps.exchanges.models import ExchangeRequest
-    from .models import Notification, NotificationType
+
+    from .models import NotificationType
 
     try:
         exchange = ExchangeRequest.objects.select_related(
@@ -344,6 +351,7 @@ def send_new_message_notification(exchange_id: str, recipient_user_id: str) -> N
 def send_rating_received_notification(rating_id: str) -> None:
     """Notify a user that they received a new rating."""
     from apps.ratings.models import Rating
+
     from .models import NotificationType
 
     try:

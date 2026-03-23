@@ -28,7 +28,8 @@ LOCATIONS = [
     ('Amsterdam Amstel', 'Julianaplein 1, 1097 DN', MeetupCategory.STATION, 'Amsterdam', 4.9174, 52.3464),
     ('Amsterdam Sloterdijk', 'Orlyplein 1, 1043 DP', MeetupCategory.STATION, 'Amsterdam', 4.8382, 52.3890),
     ('Amsterdam Zuid', 'Arnold Schönberglaan 7, 1082 MJ', MeetupCategory.STATION, 'Amsterdam', 4.8729, 52.3389),
-    ('Amsterdam Science Park', 'Carolina MacGillavrylaan, 1098 XH', MeetupCategory.STATION, 'Amsterdam', 4.9480, 52.3527),
+    ('Amsterdam Science Park', 'Carolina MacGillavrylaan, 1098 XH',
+     MeetupCategory.STATION, 'Amsterdam', 4.9480, 52.3527),
 ]
 
 

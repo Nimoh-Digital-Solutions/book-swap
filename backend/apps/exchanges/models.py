@@ -136,7 +136,7 @@ class ExchangeRequest(TimeStampedModel):
     expired_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-created_at']  # noqa: RUF012
         constraints = [  # noqa: RUF012
             models.UniqueConstraint(
                 fields=['requester', 'requested_book'],

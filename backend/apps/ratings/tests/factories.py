@@ -1,7 +1,6 @@
 import factory
 
 from apps.exchanges.tests.factories import ExchangeRequestFactory
-from bookswap.tests.factories import UserFactory
 
 from ..models import Rating
 

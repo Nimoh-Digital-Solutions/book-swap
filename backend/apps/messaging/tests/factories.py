@@ -1,9 +1,8 @@
 import factory
+from django.contrib.gis.geos import Point
 
 from apps.exchanges.tests.factories import ExchangeRequestFactory
 from apps.messaging.models import MeetupCategory, MeetupLocation, Message
-from bookswap.tests.factories import UserFactory
-from django.contrib.gis.geos import Point
 
 
 class MessageFactory(factory.django.DjangoModelFactory):

@@ -24,7 +24,7 @@ from .serializers import NotificationPreferencesSerializer, NotificationSerializ
 class NotificationListView(APIView):
     """Return the last 50 notifications for the authenticated user."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def get(self, request: Request) -> Response:
         qs = (
@@ -43,7 +43,7 @@ class NotificationListView(APIView):
 class MarkNotificationReadView(APIView):
     """Mark a single notification as read."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def post(self, request: Request, pk: str) -> Response:
         updated = Notification.objects.filter(
@@ -55,7 +55,7 @@ class MarkNotificationReadView(APIView):
 class MarkAllReadView(APIView):
     """Mark all unread notifications for the current user as read."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
 
     def post(self, request: Request) -> Response:
         updated = Notification.objects.filter(
@@ -67,9 +67,9 @@ class MarkAllReadView(APIView):
 class NotificationPreferencesView(RetrieveUpdateAPIView):
     """Retrieve or update email notification preferences."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
     serializer_class = NotificationPreferencesSerializer
-    http_method_names = ['get', 'patch']
+    http_method_names = ['get', 'patch']  # noqa: RUF012
 
     def get_object(self) -> NotificationPreferences:
         obj, _ = NotificationPreferences.objects.get_or_create(user=self.request.user)
@@ -79,7 +79,7 @@ class NotificationPreferencesView(RetrieveUpdateAPIView):
 class UnsubscribeView(APIView):
     """One-click global unsubscribe via token — no authentication required."""
 
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # noqa: RUF012
 
     def get(self, request: Request, token: str) -> Response:
         try:
