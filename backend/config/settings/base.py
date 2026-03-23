@@ -199,6 +199,21 @@ CELERY_BEAT_SCHEDULE["anonymize-deleted-accounts"] = {
     "schedule": 86400,  # daily (24h in seconds)
 }
 
+# Exchange expiry & auto-confirm tasks
+from celery.schedules import crontab  # noqa: E402
+CELERY_BEAT_SCHEDULE["expire-stale-exchange-requests"] = {
+    "task": "exchanges.expire_stale_requests",
+    "schedule": crontab(hour=2, minute=0),
+}
+CELERY_BEAT_SCHEDULE["expire-stale-conditions"] = {
+    "task": "exchanges.expire_stale_conditions",
+    "schedule": crontab(hour=2, minute=30),
+}
+CELERY_BEAT_SCHEDULE["auto-confirm-stale-swaps"] = {
+    "task": "exchanges.auto_confirm_stale_swaps",
+    "schedule": crontab(hour=4, minute=0, day_of_week=1),
+}
+
 
 
 # ── Channels ──────────────────────────────────────────────────────────────────
