@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
+import { RatingPrompt } from '@features/ratings';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, X } from 'lucide-react';
@@ -372,6 +373,11 @@ export default function ExchangeDetailPage(): ReactElement {
           <div className="bg-[#1A251D] rounded-xl border border-[#28382D] p-6">
             <DetailActions exchange={exchange} />
           </div>
+
+          {/* Rating */}
+          {(exchange.status === 'completed' || exchange.status === 'returned') && (
+            <RatingPrompt exchangeId={exchange.id} />
+          )}
 
           {/* Chat */}
           {isChatEligible(exchange.status) && currentUserId && (
