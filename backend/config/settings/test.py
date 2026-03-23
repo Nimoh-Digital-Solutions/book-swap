@@ -31,3 +31,9 @@ MIDDLEWARE = [  # noqa: F405
     m for m in MIDDLEWARE  # noqa: F405
     if 'HTTPSRedirectMiddleware' not in m
 ]
+
+# Run Celery tasks synchronously in tests (no Redis dependency)
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'cache+memory://'
