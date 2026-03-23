@@ -95,6 +95,7 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     # Project apps
     'bookswap',
     'apps.exchanges',
+    'apps.messaging',
 ]
 
 # ── Middleware ────────────────────────────────────────────────────────────────
