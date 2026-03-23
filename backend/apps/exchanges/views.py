@@ -7,6 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from bookswap.models import BookStatus
+from bookswap.permissions import IsEmailVerified
+from bookswap.services import get_blocked_user_ids
 
 from .models import (
     ConditionsAcceptance,
@@ -56,12 +58,15 @@ class ExchangeRequestViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
+        blocked_ids = get_blocked_user_ids(self.request.user)
         return (
             ExchangeRequest.objects
             .filter(
                 db_models.Q(requester=self.request.user)
                 | db_models.Q(owner=self.request.user)
             )
+            .exclude(requester_id__in=blocked_ids)
+            .exclude(owner_id__in=blocked_ids)
             .select_related(
                 'requester', 'owner',
                 'requested_book', 'offered_book',
@@ -90,11 +95,23 @@ class ExchangeRequestViewSet(
             'confirm_swap', 'request_return', 'confirm_return',
         ):
             return [IsAuthenticated(), IsExchangeParticipant()]
+        if self.action == 'create':
+            return [IsAuthenticated(), IsEmailVerified()]
         return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # Check block relationship between requester and book owner
+        blocked_ids = get_blocked_user_ids(request.user)
+        requested_book = serializer._requested_book
+        if requested_book.owner_id in blocked_ids:
+            return Response(
+                {'detail': 'You cannot create an exchange with this user.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         exchange = serializer.save()
         detail = ExchangeRequestDetailSerializer(
             exchange, context={'request': request},

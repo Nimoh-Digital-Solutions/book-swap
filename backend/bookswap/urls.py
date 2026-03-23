@@ -17,8 +17,18 @@ urlpatterns = [
     path('users/me/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='user-onboarding-complete'),
     path('users/me/delete/', views.AccountDeletionRequestView.as_view(), name='user-delete-request'),
     path('users/me/delete/cancel/', views.AccountDeletionCancelView.as_view(), name='user-delete-cancel'),
+    path('users/me/data-export/', views.DataExportView.as_view(), name='user-data-export'),
     path('users/check-username/', views.CheckUsernameView.as_view(), name='user-check-username'),
     path('users/<uuid:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+
+    # ── Block / Unblock (Epic 8 — US-801) ────────────────────────────
+    path('users/block/', views.BlockViewSet.as_view({'get': 'list', 'post': 'create'}), name='block-list-create'),
+    path('users/block/<uuid:pk>/', views.BlockViewSet.as_view({'delete': 'destroy'}), name='block-destroy'),
+
+    # ── Reports (Epic 8 — US-802) ────────────────────────────────────
+    path('reports/', views.ReportCreateView.as_view(), name='report-create'),
+    path('reports/admin/', views.ReportAdminListView.as_view(), name='report-admin-list'),
+    path('reports/admin/<uuid:pk>/', views.ReportAdminUpdateView.as_view(), name='report-admin-update'),
 
     # ── Book Photos (nested under books) ─────────────────────────────
     path(

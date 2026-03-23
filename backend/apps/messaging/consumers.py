@@ -43,6 +43,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4003)
             return
 
+        # Block check: reject if the other party is blocked
+        other_id = (
+            exchange.owner_id if user.id == exchange.requester_id
+            else exchange.requester_id
+        )
+        if await self._is_blocked(user, other_id):
+            await self.close(code=4003)
+            return
+
         if exchange.status not in CHAT_ELIGIBLE_STATUSES:
             await self.close(code=4002)
             return
@@ -87,6 +96,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({
                 'type': 'chat.error',
                 'message': 'This chat is read-only.',
+            })
+            return
+
+        # Email verification gate (US-803)
+        if not await self._is_email_verified():
+            await self.send_json({
+                'type': 'chat.error',
+                'message': 'Please verify your email address before sending messages.',
             })
             return
 
@@ -230,3 +247,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             read_at__isnull=True,
         ).exclude(sender=self.user).update(read_at=now)
         return now if updated else None
+
+    @database_sync_to_async
+    def _is_blocked(self, user, other_id):
+        from bookswap.services import get_blocked_user_ids
+        return other_id in get_blocked_user_ids(user)
+
+    @database_sync_to_async
+    def _is_email_verified(self):
+        user = self.user
+        if getattr(user, 'is_social_account', False):
+            return True
+        return getattr(user, 'email_verified', False)
