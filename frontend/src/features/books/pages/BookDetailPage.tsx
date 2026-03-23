@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { useAuthStore } from '@features/auth/stores/authStore';
+import { RequestSwapButton } from '@features/exchanges/components/RequestSwapButton/RequestSwapButton';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, BookOpen, Edit2, MapPin, User } from 'lucide-react';
@@ -113,13 +114,11 @@ export function BookDetailPage(): ReactElement {
               {t('books.detail.editListing', 'Edit Listing')}
             </Link>
           ) : (
-            <button
-              type="button"
-              disabled={book.status !== 'available'}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] font-bold rounded-xl transition-colors disabled:opacity-50"
-            >
-              {t('books.detail.requestSwap', 'Request Swap')}
-            </button>
+            <RequestSwapButton
+              bookId={bookId}
+              bookOwnerId={book.owner?.id ?? ''}
+              currentUserId={currentUserId}
+            />
           )}
 
           {/* Meta details */}

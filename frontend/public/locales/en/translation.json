@@ -4,7 +4,8 @@
     "home": "Home",
     "components": "Components",
     "profile": "My Profile",
-    "myShelf": "My Shelf"
+    "myShelf": "My Shelf",
+    "exchanges": "Exchanges"
   },
   "theme": {
     "switchToDim": "Switch to dim mode",

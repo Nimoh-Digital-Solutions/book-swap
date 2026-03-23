@@ -8,6 +8,11 @@
  * import { useExchanges, useCreateExchange, exchangeService } from '@features/exchanges';
  */
 
+// Components
+export { ExchangeCard } from './components/ExchangeCard/ExchangeCard';
+export { ExchangeStatusBadge } from './components/ExchangeStatusBadge/ExchangeStatusBadge';
+export { RequestSwapButton } from './components/RequestSwapButton/RequestSwapButton';
+
 // Hooks
 export { exchangeKeys } from './hooks/exchangeKeys';
 export { useExchange } from './hooks/useExchange';
@@ -25,6 +30,11 @@ export {
 } from './hooks/useExchangeMutations';
 export { useIncomingRequestCount } from './hooks/useIncomingRequestCount';
 export { useIncomingRequests } from './hooks/useIncomingRequests';
+
+// Pages (default exports for lazy loading)
+export { default as ExchangeDetailPage } from './pages/ExchangeDetailPage';
+export { default as ExchangesPage } from './pages/ExchangesPage';
+export { default as IncomingRequestsPage } from './pages/IncomingRequestsPage';
 
 // Schemas
 export type {
