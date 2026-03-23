@@ -1,0 +1,20 @@
+{
+  "myRating": "Mijn beoordeling",
+  "partnerRating": "Beoordeling van partner",
+  "rateExchange": "Beoordeel deze ruil",
+  "ratePrompt": "Hoe was je ervaring met deze ruil?",
+  "commentPlaceholder": "Laat een optioneel commentaar achter (max 300 tekens)…",
+  "noComment": "Geen commentaar",
+  "noRatings": "Nog geen beoordelingen.",
+  "ratingsTitle": "Beoordelingen",
+  "loading": "Beoordelingen laden…",
+  "submit": {
+    "button": "Beoordeling indienen",
+    "loading": "Bezig met verzenden…",
+    "success": "Beoordeling ingediend!",
+    "error": "Beoordeling kon niet worden ingediend."
+  },
+  "error": {
+    "load": "Beoordelingen konden niet worden geladen."
+  }
+}

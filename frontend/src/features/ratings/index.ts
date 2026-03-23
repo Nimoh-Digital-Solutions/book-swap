@@ -8,6 +8,13 @@
  * import { useExchangeRatingStatus, useSubmitRating, ratingService } from '@features/ratings';
  */
 
+// Components
+export { RatingCard } from './components/RatingCard/RatingCard';
+export { RatingPrompt } from './components/RatingPrompt/RatingPrompt';
+export { RatingsList } from './components/RatingsList/RatingsList';
+export { StarDisplay } from './components/StarDisplay/StarDisplay';
+export { StarRating } from './components/StarRating/StarRating';
+
 // Hooks
 export { ratingKeys } from './hooks/ratingKeys';
 export { useExchangeRatingStatus } from './hooks/useExchangeRatingStatus';

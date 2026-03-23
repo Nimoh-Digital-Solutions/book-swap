@@ -1,0 +1,20 @@
+{
+  "myRating": "My Rating",
+  "partnerRating": "Partner's Rating",
+  "rateExchange": "Rate This Exchange",
+  "ratePrompt": "How was your experience with this swap?",
+  "commentPlaceholder": "Leave an optional comment (max 300 characters)…",
+  "noComment": "No comment",
+  "noRatings": "No ratings yet.",
+  "ratingsTitle": "Ratings",
+  "loading": "Loading ratings…",
+  "submit": {
+    "button": "Submit Rating",
+    "loading": "Submitting…",
+    "success": "Rating submitted!",
+    "error": "Failed to submit rating."
+  },
+  "error": {
+    "load": "Failed to load ratings."
+  }
+}

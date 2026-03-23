@@ -1,0 +1,20 @@
+{
+  "myRating": "Mon évaluation",
+  "partnerRating": "Évaluation du partenaire",
+  "rateExchange": "Évaluer cet échange",
+  "ratePrompt": "Comment s'est passé votre échange ?",
+  "commentPlaceholder": "Laissez un commentaire optionnel (max 300 caractères)…",
+  "noComment": "Pas de commentaire",
+  "noRatings": "Pas encore d'évaluations.",
+  "ratingsTitle": "Évaluations",
+  "loading": "Chargement des évaluations…",
+  "submit": {
+    "button": "Soumettre l'évaluation",
+    "loading": "Envoi…",
+    "success": "Évaluation soumise !",
+    "error": "Échec de l'envoi de l'évaluation."
+  },
+  "error": {
+    "load": "Échec du chargement des évaluations."
+  }
+}
