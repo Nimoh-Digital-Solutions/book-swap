@@ -97,6 +97,7 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     'apps.exchanges',
     'apps.messaging',
     'apps.ratings',
+    'apps.notifications',
 ]
 
 # ── Middleware ────────────────────────────────────────────────────────────────

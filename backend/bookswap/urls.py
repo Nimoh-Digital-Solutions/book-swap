@@ -64,6 +64,9 @@ urlpatterns = [
     ),
     path('books/nearby-count/', views.NearbyCountView.as_view(), name='nearby-count'),
 
+    # ── Notifications (Epic 9 — US-901/902) ──────────────────────────
+    path('notifications/', include('apps.notifications.urls', namespace='notifications')),
+
     # ── Router-generated Book & Wishlist CRUD ─────────────────────────
     path('', include(router.urls)),
 ]

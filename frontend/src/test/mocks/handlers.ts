@@ -875,6 +875,62 @@ const trustSafetyHandlers = [
 // Combined handlers
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Notification handlers
+// ---------------------------------------------------------------------------
+
+export const MOCK_NOTIFICATION = {
+  id: 'notif_001',
+  notification_type: 'new_request' as const,
+  title: 'New swap request',
+  body: 'Alice wants to swap for your book.',
+  link: '/exchanges/exch_001/',
+  is_read: false,
+  created_at: new Date().toISOString(),
+};
+
+export const MOCK_NOTIFICATION_PREFS = {
+  email_new_request: true,
+  email_request_accepted: true,
+  email_request_declined: true,
+  email_new_message: true,
+  email_exchange_completed: true,
+  email_rating_received: true,
+};
+
+const notificationHandlers = [
+  http.get('*/api/v1/notifications/', () => {
+    return HttpResponse.json({
+      unread_count: 1,
+      results: [MOCK_NOTIFICATION],
+    });
+  }),
+
+  http.post('*/api/v1/notifications/*/read/', () => {
+    return HttpResponse.json({ marked: 1 });
+  }),
+
+  http.post('*/api/v1/notifications/mark-all-read/', () => {
+    return HttpResponse.json({ marked: 1 });
+  }),
+
+  http.get('*/api/v1/notifications/preferences/', () => {
+    return HttpResponse.json(MOCK_NOTIFICATION_PREFS);
+  }),
+
+  http.patch('*/api/v1/notifications/preferences/', async ({ request }) => {
+    const body = (await request.json()) as Record<string, boolean>;
+    return HttpResponse.json({ ...MOCK_NOTIFICATION_PREFS, ...body });
+  }),
+
+  http.get('*/api/v1/notifications/unsubscribe/:token', ({ params }) => {
+    if ((params['token'] as string) === 'valid-token') {
+      return HttpResponse.json({ detail: 'You have been unsubscribed from all BookSwap emails.' });
+    }
+    return HttpResponse.json({ detail: 'Invalid link.' }, { status: 404 });
+  }),
+];
+
 /** Default MSW request handlers for all tests. */
 export const handlers = [
   ...authHandlers,
@@ -887,4 +943,5 @@ export const handlers = [
   ...messagingHandlers,
   ...ratingHandlers,
   ...trustSafetyHandlers,
+  ...notificationHandlers,
 ];

@@ -46,7 +46,7 @@ void i18n
     // --- Defaults -----------------------------------------------------------
     supportedLngs: [...SUPPORTED_LANGUAGES],
     fallbackLng: 'en',
-    ns: ['translation', 'exchanges', 'messaging', 'ratings', 'trust-safety'],
+    ns: ['translation', 'exchanges', 'messaging', 'notifications', 'ratings', 'trust-safety'],
     defaultNS: 'translation',
 
     interpolation: {

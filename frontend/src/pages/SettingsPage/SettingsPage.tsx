@@ -1,6 +1,7 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { NotificationPreferencesSection } from '@features/notifications';
 import { DeleteAccountDialog } from '@features/profile/components/DeleteAccountDialog';
 import {
   BlockedUsersList,
@@ -21,6 +22,9 @@ export default function SettingsPage(): ReactElement {
       <h1 className="text-2xl font-bold text-white">
         {t('settings.heading', 'Settings')}
       </h1>
+
+      {/* Notification Preferences */}
+      <NotificationPreferencesSection />
 
       {/* Blocked Users */}
       <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-6 space-y-4">

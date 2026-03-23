@@ -149,4 +149,12 @@ export const API = {
   },
 
   dataExport: `${USERS}/me/data-export/`,
+
+  notifications: {
+    list: `${V1}/notifications/`,
+    markRead: (id: string) => `${V1}/notifications/${id}/read/`,
+    markAllRead: `${V1}/notifications/mark-all-read/`,
+    preferences: `${V1}/notifications/preferences/`,
+    unsubscribe: (token: string) => `${V1}/notifications/unsubscribe/${token}/`,
+  },
 } as const;

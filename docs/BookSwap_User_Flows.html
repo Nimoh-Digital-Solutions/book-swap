@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookSwap — User & System Flows</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --success: #059669;
+    --success-light: #d1fae5;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    line-height: 1.6;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+    color: white;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+  header p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+  /* Nav tabs */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: white;
+    padding: 8px;
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { background: var(--gray-100); color: var(--gray-700); }
+  .tab-btn.active { background: var(--primary); color: white; }
+
+  /* Main container */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Tab panel */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Flow diagram */
+  .flow-section {
+    margin-bottom: 48px;
+  }
+  .flow-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--gray-900);
+  }
+  .flow-section .subtitle {
+    color: var(--gray-500);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+
+  /* Flow canvas — the actual diagram area */
+  .flow-canvas {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    padding: 32px;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+
+  /* Nodes */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .flow-row.centered { justify-content: center; }
+
+  .node {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: default;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center;
+    min-width: 120px;
+    justify-content: center;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+  .node-start {
+    background: var(--gray-800);
+    color: white;
+    border-radius: 24px;
+  }
+  .node-action {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .node-decision {
+    background: var(--warning-light);
+    color: #92400e;
+    border: 2px solid var(--warning);
+    border-radius: 4px;
+    transform: none;
+    clip-path: none;
+  }
+  .node-success {
+    background: var(--success-light);
+    color: #065f46;
+    border: 2px solid var(--success);
+  }
+  .node-danger {
+    background: var(--danger-light);
+    color: #991b1b;
+    border: 2px solid var(--danger);
+  }
+  .node-purple {
+    background: var(--purple-light);
+    color: #5b21b6;
+    border: 2px solid var(--purple);
+  }
+  .node-end {
+    background: var(--gray-700);
+    color: white;
+    border-radius: 24px;
+  }
+  .node-system {
+    background: #fef3c7;
+    color: #78350f;
+    border: 2px dashed var(--warning);
+  }
+
+  /* Arrows */
+  .arrow {
+    color: var(--gray-400);
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .arrow-down {
+    display: block;
+    text-align: center;
+    color: var(--gray-400);
+    font-size: 1.3rem;
+    margin: 4px 0;
+    user-select: none;
+  }
+
+  /* Branch container */
+  .branch {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .branch-path {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    min-width: 180px;
+  }
+  .branch-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    margin-bottom: 4px;
+  }
+
+  /* Vertical flow */
+  .v-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Story tag */
+  .story-tag {
+    font-size: 0.65rem;
+    background: rgba(0,0,0,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-family: monospace;
+  }
+
+  /* Tooltip */
+  .node[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gray-800);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+    z-index: 10;
+    max-width: 300px;
+    white-space: normal;
+    text-align: left;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* State machine table */
+  .state-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.85rem;
+  }
+  .state-table th {
+    background: var(--gray-100);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .state-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: top;
+  }
+  .state-table tr:hover td { background: var(--gray-50); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .badge-blue { background: var(--primary-light); color: var(--primary); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-yellow { background: var(--warning-light); color: var(--warning); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+
+  /* Swimlane */
+  .swimlane {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 0;
+    margin-top: 16px;
+  }
+  .swim-label {
+    padding: 16px 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: white;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 0 0 8px;
+  }
+  .swim-label-seeker { background: var(--primary); }
+  .swim-label-owner { background: var(--success); }
+  .swim-label-system { background: var(--warning); }
+  .swim-label-both { background: var(--purple); }
+  .swim-content {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 1px solid var(--gray-200);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    background: white;
+    min-height: 64px;
+  }
+  .swimlane + .swimlane .swim-content,
+  .swimlane + .swimlane .swim-label {
+    border-top: none;
+    border-radius: 0;
+  }
+  .swimlane:last-child .swim-content { border-radius: 0 0 8px 0; }
+  .swimlane:last-child .swim-label { border-radius: 0 0 0 8px; }
+  .swimlane:first-child .swim-content { border-radius: 0 8px 0 0; }
+  .swimlane:first-child .swim-label { border-radius: 8px 0 0 0; }
+
+  /* Step counter */
+  .step-num {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-700);
+    font-size: 0.75rem;
+    font-weight: 800;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Linked stories sidebar */
+  .stories-panel {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .stories-panel h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--gray-700);
+  }
+  .story-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin: 3px;
+    color: var(--gray-700);
+  }
+  .story-chip .id { font-family: monospace; color: var(--primary); margin-right: 4px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    header h1 { font-size: 1.6rem; }
+    .flow-canvas { padding: 16px; }
+    .swimlane { grid-template-columns: 80px 1fr; }
+    .swim-label { font-size: 0.7rem; padding: 8px; }
+    .node { font-size: 0.78rem; padding: 8px 14px; min-width: 100px; }
+    .branch { gap: 12px; }
+    .branch-path { min-width: 150px; padding: 12px; }
+  }
+
+  /* Annotations */
+  .annotation {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    font-style: italic;
+    text-align: center;
+    margin: 4px 0;
+  }
+
+  /* Phase banner */
+  .phase-banner {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .phase-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    background: white;
+    box-shadow: var(--shadow);
+  }
+  .phase-card h3 { font-size: 1rem; margin-bottom: 4px; }
+  .phase-card p { font-size: 0.82rem; color: var(--gray-500); }
+  .phase-card .count { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+
+  /* Vertical flow connector line */
+  .connector-v {
+    width: 2px;
+    height: 20px;
+    background: var(--gray-300);
+    margin: 0 auto;
+  }
+  .connector-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gray-300);
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BookSwap — User &amp; System Flows</h1>
+  <p>Complete flow diagrams mapped to PRD requirements and user stories for the Phase 1 MVP</p>
+</header>
+
+<!-- Tab Navigation -->
+<nav class="tab-nav" id="tabNav">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="onboarding">1. Onboarding</button>
+  <button class="tab-btn" data-tab="listing">2. Book Listing</button>
+  <button class="tab-btn" data-tab="discovery">3. Discovery</button>
+  <button class="tab-btn" data-tab="exchange">4. Exchange Flow</button>
+  <button class="tab-btn" data-tab="messaging">5. Messaging</button>
+  <button class="tab-btn" data-tab="trust">6. Trust &amp; Safety</button>
+  <button class="tab-btn" data-tab="notifications">7. Notifications</button>
+  <button class="tab-btn" data-tab="statemachine">State Machine</button>
+</nav>
+
+<div class="container">
+
+<!-- ============================================ -->
+<!-- OVERVIEW TAB -->
+<!-- ============================================ -->
+<div class="tab-panel active" id="overview">
+  <div class="flow-section">
+    <h2>Complete User Journey Map</h2>
+    <p class="subtitle">End-to-end flow from first visit to completed exchange — covering all 30 user stories across 9 epics</p>
+
+    <div class="phase-banner">
+      <div class="phase-card">
+        <div class="count">30</div>
+        <h3>User Stories</h3>
+        <p>22 P0 (must-have) + 8 P1</p>
+      </div>
+      <div class="phase-card">
+        <div class="count">9</div>
+        <h3>Epics</h3>
+        <p>Onboarding → Notifications</p>
+      </div>
+      <div class="phase-card">
+        <div class="count">7</div>
+        <h3>Exchange States</h3>
+        <p>Full lifecycle state machine</p>
+      </div>
+      <div class="phase-card">
+        <div class="count">12</div>
+        <h3>Sprint Weeks</h3>
+        <p>Solo founder timeline</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--gray-800)"></div> Start / End</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div> User Action</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div> Decision</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div> Success State</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Error / Exit</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Both Users</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--warning);border:2px dashed #92400e"></div> System Action</div>
+    </div>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start">New Visitor Lands on BookSwap</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-action" data-tooltip="US-101: Landing page with value prop, how-it-works, and live book counter">Sees Value Proposition &amp; Browse CTA</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision" data-tooltip="User can browse read-only before registering">Browse First or Sign Up?</div>
+
+        <div class="branch">
+          <div class="branch-path">
+            <div class="branch-label">Browse First</div>
+            <div class="node node-action">Browse Nearby Books (Read-Only)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Finds a Book They Want</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Sign Up Prompt</div>
+          </div>
+          <div class="branch-path">
+            <div class="branch-label">Sign Up Directly</div>
+            <div class="node node-decision">Auth Method?</div>
+            <div class="branch" style="margin:0">
+              <div class="v-flow">
+                <div class="annotation">Email</div>
+                <div class="node node-action" style="font-size:0.78rem">Register<br><span class="story-tag">US-102</span></div>
+                <div class="arrow-down">↓</div>
+                <div class="node node-system" style="font-size:0.78rem">Verify Email</div>
+              </div>
+              <div class="v-flow">
+                <div class="annotation">OAuth</div>
+                <div class="node node-action" style="font-size:0.78rem">Google / Apple<br><span class="story-tag">US-103</span></div>
+                <div class="arrow-down">↓</div>
+                <div class="node node-success" style="font-size:0.78rem">Auto-Verified</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-purple" data-tooltip="US-105: Set location via postcode, neighborhood dropdown, or map pin">Onboarding: Set Location <span class="story-tag">US-105</span></div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-action" data-tooltip="US-201: Display name, bio, photo, genres">Complete Profile <span class="story-tag">US-201</span></div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">What Does the User Want?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">List Books</div>
+            <div class="node node-action">Add Book (ISBN / Manual) <span class="story-tag">US-301/302</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Upload Photos <span class="story-tag">US-303</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Set Condition &amp; Genre <span class="story-tag">US-304</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-success">Book on My Shelf <span class="story-tag">US-305</span></div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Find Books</div>
+            <div class="node node-action">Browse Nearby <span class="story-tag">US-401</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Filter / Search <span class="story-tag">US-402–404</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">View Book Detail &amp; Owner Profile</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-purple">Send Partner Request <span class="story-tag">US-501</span></div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="annotation">Owner reviews incoming request</div>
+        <div class="node node-decision" data-tooltip="US-502: Owner can Accept, Decline, or Counter-propose">Owner Response? <span class="story-tag">US-502</span></div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Accept</div>
+            <div class="node node-purple">Both Accept Conditions <span class="story-tag">US-503</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-success">Chat Unlocked <span class="story-tag">US-601</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Arrange Meetup</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-purple">Both Confirm Swap <span class="story-tag">US-504</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Rate Partner <span class="story-tag">US-701</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-end">Exchange Complete ✓</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--danger)">
+            <div class="branch-label" style="color:var(--danger)">Decline</div>
+            <div class="node node-danger">Request Declined</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Requester Notified</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Try Another Book</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--warning)">
+            <div class="branch-label" style="color:var(--warning)">Counter</div>
+            <div class="node node-action">Owner Picks Different Book</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Counter Sent to Requester</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Requester Accepts?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>User Stories Covered in This Journey</h3>
+      <span class="story-chip"><span class="id">US-101</span> Landing Page</span>
+      <span class="story-chip"><span class="id">US-102</span> Email Register</span>
+      <span class="story-chip"><span class="id">US-103</span> OAuth Login</span>
+      <span class="story-chip"><span class="id">US-104</span> Secure Login</span>
+      <span class="story-chip"><span class="id">US-105</span> Location Setup</span>
+      <span class="story-chip"><span class="id">US-201</span> Create Profile</span>
+      <span class="story-chip"><span class="id">US-301</span> ISBN Scan</span>
+      <span class="story-chip"><span class="id">US-302</span> Manual Search</span>
+      <span class="story-chip"><span class="id">US-303</span> Upload Photos</span>
+      <span class="story-chip"><span class="id">US-304</span> Set Condition</span>
+      <span class="story-chip"><span class="id">US-305</span> My Shelf</span>
+      <span class="story-chip"><span class="id">US-401</span> Browse Nearby</span>
+      <span class="story-chip"><span class="id">US-402</span> Distance Filter</span>
+      <span class="story-chip"><span class="id">US-403</span> Search</span>
+      <span class="story-chip"><span class="id">US-404</span> Filters</span>
+      <span class="story-chip"><span class="id">US-501</span> Send Request</span>
+      <span class="story-chip"><span class="id">US-502</span> Review Request</span>
+      <span class="story-chip"><span class="id">US-503</span> Conditions</span>
+      <span class="story-chip"><span class="id">US-504</span> Confirm Swap</span>
+      <span class="story-chip"><span class="id">US-601</span> In-App Chat</span>
+      <span class="story-chip"><span class="id">US-701</span> Rate Partner</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ONBOARDING TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="onboarding">
+  <div class="flow-section">
+    <h2>Flow 1: Onboarding &amp; Authentication</h2>
+    <p class="subtitle">Epic 1 (US-101 to US-106) + Epic 2 (US-201) — from first visit to active profile</p>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start">New Visitor</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-action" data-tooltip="US-101: Landing page loads <2s, shows value prop, how-it-works, live counter, browse CTA">Landing Page <span class="story-tag">US-101</span></div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">Books available nearby?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--danger)">
+            <div class="branch-label" style="color:var(--danger)">No books nearby</div>
+            <div class="node node-danger">"No books near you yet. Be the first to list!"</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Yes — Books Found</div>
+            <div class="node node-action">Can Browse Books (read-only, blurred owner)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Clicks "Get Started" or Tries Gated Action</div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">Choose Auth Method</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">Email + Password</div>
+            <div class="node node-action" data-tooltip="Email (unique, case-insensitive), password (8+ chars, 1 number + 1 letter), display name">Registration Form <span class="story-tag">US-102</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Age ≥ 16?</div>
+            <div class="annotation">(Dutch UAVG requirement)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system" data-tooltip="Sent within 60s. Link expires 24h. Resend: max 3/hour">Verification Email Sent</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Email Verified?</div>
+            <div class="branch" style="margin:0">
+              <div class="v-flow">
+                <div class="annotation">Yes</div>
+                <div class="node node-success">Account Active</div>
+              </div>
+              <div class="v-flow">
+                <div class="annotation">No</div>
+                <div class="node node-danger">Browse Only (gated)</div>
+              </div>
+            </div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Google OAuth</div>
+            <div class="node node-action" data-tooltip="One-tap sign-in. If email matches existing account, link instead of duplicate">Continue with Google <span class="story-tag">US-103</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Google Consent Screen</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-success">Auto-Verified ✓</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--gray-600)">
+            <div class="branch-label">Apple Sign In</div>
+            <div class="node node-action">Continue with Apple <span class="story-tag">US-103</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Apple Consent Screen</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-success">Auto-Verified ✓</div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-system" data-tooltip="JWT access token (15min) + refresh token (7 days), httpOnly cookie">JWT Issued <span class="story-tag">US-104</span></div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">First Login?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">Yes — New User</div>
+            <div class="node node-purple" data-tooltip="Postcode, map pin, or browser geolocation — works for any location worldwide">Set Location <span class="story-tag">US-105</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Location snapped to 500m grid centroid</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action" data-tooltip="Display name (unique, 3-30 chars), bio (300 chars), photo (JPEG/PNG, 2MB, auto-crop 200x200), genres (max 5), language">Complete Profile <span class="story-tag">US-201</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-end">Onboarded → Home Feed</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">No — Returning</div>
+            <div class="node node-end">Dashboard / Home Feed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Linked User Stories</h3>
+      <span class="story-chip"><span class="id">US-101</span> Landing Page Value Prop</span>
+      <span class="story-chip"><span class="id">US-102</span> Email Registration</span>
+      <span class="story-chip"><span class="id">US-103</span> OAuth Login (Google &amp; Apple)</span>
+      <span class="story-chip"><span class="id">US-104</span> Secure Login</span>
+      <span class="story-chip"><span class="id">US-105</span> Onboarding — Location Setup</span>
+      <span class="story-chip"><span class="id">US-106</span> Password Reset (P1)</span>
+      <span class="story-chip"><span class="id">US-201</span> Create &amp; Edit Profile</span>
+      <span class="story-chip"><span class="id">US-203</span> Account Deletion / GDPR (P1)</span>
+      <span class="story-chip"><span class="id">US-803</span> Email Verification Gate</span>
+      <span class="story-chip"><span class="id">US-804</span> GDPR Privacy Compliance</span>
+      <br><br>
+      <h3>Linked PRD Requirements</h3>
+      <span class="story-chip"><span class="id">A-1</span> Email + password auth</span>
+      <span class="story-chip"><span class="id">A-2</span> OAuth2 (Google, Apple)</span>
+      <span class="story-chip"><span class="id">A-3</span> User profile</span>
+      <span class="story-chip"><span class="id">A-4</span> Location setup</span>
+      <span class="story-chip"><span class="id">A-5</span> Password reset</span>
+      <span class="story-chip"><span class="id">A-6</span> Account deletion</span>
+      <span class="story-chip"><span class="id">E-1</span> Email verification gate</span>
+      <span class="story-chip"><span class="id">E-5</span> GDPR compliance</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- LISTING TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="listing">
+  <div class="flow-section">
+    <h2>Flow 2: Book Listing &amp; Management</h2>
+    <p class="subtitle">Epic 3 (US-301 to US-306) — adding books to your shelf</p>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start">Authenticated User (verified email)</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-action">Clicks "Add Book"</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">How to Find the Book?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">Scan Barcode</div>
+            <div class="node node-action" data-tooltip="quagga2 or zxing-js for client-side scanning. MediaDevices API for camera access">Open Camera <span class="story-tag">US-301</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Camera Permission?</div>
+            <div class="branch" style="margin:0">
+              <div class="v-flow">
+                <div class="annotation">Granted</div>
+                <div class="node node-system">Scan ISBN Barcode</div>
+                <div class="arrow-down">↓</div>
+                <div class="node node-system" data-tooltip="Open Library API → Google Books API fallback. Cache results in DB">API Lookup (Open Library)</div>
+              </div>
+              <div class="v-flow">
+                <div class="annotation">Denied</div>
+                <div class="node node-danger">Fallback to Manual Search →</div>
+              </div>
+            </div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Search Manually</div>
+            <div class="node node-action" data-tooltip="Debounced 300ms, title/author/combination search">Type Title / Author <span class="story-tag">US-302</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Open Library Search API</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Select Correct Match from Results</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--warning)">
+            <div class="branch-label" style="color:var(--warning)">Manual Entry</div>
+            <div class="node node-action">"Can't Find Your Book?"</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action" data-tooltip="Title (req), Author (req), Description (opt), Cover upload (opt), Genre, Language">Fill Manual Form</div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-system">Auto-fill: Title, Author, Cover, Description, Page Count, Year</div>
+        <div class="annotation">All fields editable before saving</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-action" data-tooltip="JPEG/PNG, client-side compression to max 1200px/1MB. Min 1, max 3. Drag-and-drop reorder. CDN delivery">Upload 1–3 Photos <span class="story-tag">US-303</span></div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-action" data-tooltip="New / Like New / Good / Acceptable. Each with tooltip. Genre multi-select (max 3). Language required. Notes (200 chars)">Set Condition, Genre, Language <span class="story-tag">US-304</span></div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-decision">All Required Fields Complete?</div>
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--danger);min-width:140px">
+            <div class="branch-label" style="color:var(--danger)">No</div>
+            <div class="node node-danger">Validation Error</div>
+            <div class="annotation">Highlight missing fields</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Yes</div>
+            <div class="node node-success">Book Published!</div>
+            <div class="annotation">Status: Available</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action" data-tooltip="Cards with cover, title, author, condition, status (Available/In Exchange/Returned), date. Edit/Remove actions. Sort by date, title, status">Visible on My Shelf <span class="story-tag">US-305</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-end">Discoverable by Nearby Users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Linked User Stories</h3>
+      <span class="story-chip"><span class="id">US-301</span> Add Book via ISBN Scan</span>
+      <span class="story-chip"><span class="id">US-302</span> Add Book via Manual Search</span>
+      <span class="story-chip"><span class="id">US-303</span> Upload Book Photos</span>
+      <span class="story-chip"><span class="id">US-304</span> Set Condition &amp; Details</span>
+      <span class="story-chip"><span class="id">US-305</span> My Shelf Dashboard</span>
+      <span class="story-chip"><span class="id">US-306</span> Wishlist "Looking For" (P1)</span>
+      <br><br>
+      <h3>Linked PRD Requirements</h3>
+      <span class="story-chip"><span class="id">B-1</span> Add book via ISBN / manual</span>
+      <span class="story-chip"><span class="id">B-2</span> Upload condition photos</span>
+      <span class="story-chip"><span class="id">B-3</span> Set condition rating</span>
+      <span class="story-chip"><span class="id">B-4</span> Genre &amp; language tags</span>
+      <span class="story-chip"><span class="id">B-5</span> My Shelf dashboard</span>
+      <span class="story-chip"><span class="id">B-6</span> Wishlist</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- DISCOVERY TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="discovery">
+  <div class="flow-section">
+    <h2>Flow 3: Discovery &amp; Search</h2>
+    <p class="subtitle">Epic 4 (US-401 to US-405) — finding books to swap</p>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start">User on Home Feed</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">Location Set?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--danger);min-width:140px">
+            <div class="branch-label" style="color:var(--danger)">No</div>
+            <div class="node node-danger">Prompt: Set Location</div>
+            <div class="annotation">→ US-105</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Yes</div>
+            <div class="node node-system" data-tooltip="PostGIS ST_DWithin query. GiST index. Default 5km. Excludes own books and blocked users. Paginated 20/page">Load Nearby Books (PostGIS) <span class="story-tag">US-401</span></div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-action">Browse Available Books (Cards: cover, title, distance, condition, owner)</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-decision">Refine Results?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">Distance Filter</div>
+            <div class="node node-action" data-tooltip="Options: 1km, 3km, 5km (default), 10km, 25km. Persisted in user preferences. Shows book count per option">Adjust Radius <span class="story-tag">US-402</span></div>
+            <div class="annotation">Results update instantly</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Text Search</div>
+            <div class="node node-action" data-tooltip="PostgreSQL full-text search (tsvector). Composite score: text relevance (0.7) + proximity (0.3). Min 3 chars">Search Title / Author / ISBN <span class="story-tag">US-403</span></div>
+            <div class="annotation">Debounced 300ms</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--purple)">
+            <div class="branch-label" style="color:var(--purple)">Filters</div>
+            <div class="node node-action" data-tooltip="Genre (multi-select), Language (EN/NL/Other), Condition. AND between groups, OR within. Chips with clear. URL params">Genre / Language / Condition <span class="story-tag">US-404</span></div>
+            <div class="annotation">Combinable, shown as chips</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--warning)">
+            <div class="branch-label" style="color:var(--warning)">Map View (P1)</div>
+            <div class="node node-action" data-tooltip="Leaflet + OSM tiles. Approximate pins (neighborhood centroid). Clustering via Leaflet.markercluster. Clickable popups">Toggle to Map <span class="story-tag">US-405</span></div>
+            <div class="annotation">Clustered pins</div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-decision">Found a Book?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--danger);min-width:140px">
+            <div class="branch-label" style="color:var(--danger)">No Results</div>
+            <div class="node node-danger">"No books within X km"</div>
+            <div class="annotation">Suggest expanding radius</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Yes</div>
+            <div class="node node-action">Click Book Card</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action" data-tooltip="Full book details + owner profile (name, photo, rating, swap count, neighborhood). 'Request Swap' button. 'Report' option">Book Detail Page + Owner Profile <span class="story-tag">US-202</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-end">→ Exchange Flow (US-501)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Linked User Stories</h3>
+      <span class="story-chip"><span class="id">US-401</span> Browse Nearby Books</span>
+      <span class="story-chip"><span class="id">US-402</span> Distance Filter</span>
+      <span class="story-chip"><span class="id">US-403</span> Search by Title/Author/ISBN</span>
+      <span class="story-chip"><span class="id">US-404</span> Filter by Genre/Language/Condition</span>
+      <span class="story-chip"><span class="id">US-405</span> Map View (P1)</span>
+      <span class="story-chip"><span class="id">US-202</span> View Another User's Profile</span>
+      <br><br>
+      <h3>Linked PRD Requirements</h3>
+      <span class="story-chip"><span class="id">C-1</span> Browse nearby (PostGIS)</span>
+      <span class="story-chip"><span class="id">C-2</span> Distance filter</span>
+      <span class="story-chip"><span class="id">C-3</span> Text search (ts_vector)</span>
+      <span class="story-chip"><span class="id">C-4</span> Genre/language/condition filter</span>
+      <span class="story-chip"><span class="id">C-5</span> Map view (Leaflet)</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- EXCHANGE TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="exchange">
+  <div class="flow-section">
+    <h2>Flow 4: Exchange Flow (Book Partner System)</h2>
+    <p class="subtitle">Epic 5 (US-501 to US-505) — the core swap loop as a swimlane diagram</p>
+
+    <div class="flow-canvas">
+      <!-- Swimlane diagram -->
+      <div class="swimlane">
+        <div class="swim-label swim-label-seeker">Book Seeker</div>
+        <div class="swim-content">
+          <div class="step-num">1</div>
+          <div class="node node-action" data-tooltip="Must have ≥1 available book. Select their book + your offer book + optional message (200 chars). Only 1 active request per book per requester" style="margin:0">Send Partner Request <span class="story-tag">US-501</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-system" style="margin:0">Request Status: PENDING</div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-system">System</div>
+        <div class="swim-content">
+          <div class="step-num">2</div>
+          <div class="node node-system" style="margin:0">Email Notification to Owner <span class="story-tag">US-901</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-system" style="margin:0">In-App Notification <span class="story-tag">US-902</span></div>
+          <span class="arrow">→</span>
+          <div class="annotation">Auto-expire after 14 days if no response</div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-owner">Book Owner</div>
+        <div class="swim-content">
+          <div class="step-num">3</div>
+          <div class="node node-action" data-tooltip="See requester profile (name, photo, rating, swap count) + their offered book. Three actions: Accept, Decline, Counter" style="margin:0">Review Request <span class="story-tag">US-502</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-success" style="margin:0">Accept</div>
+          <span style="color:var(--gray-400);margin:0 4px">|</span>
+          <div class="node node-danger" style="margin:0">Decline</div>
+          <span style="color:var(--gray-400);margin:0 4px">|</span>
+          <div class="node node-action" style="margin:0;background:var(--warning-light);color:#92400e;border-color:var(--warning)">Counter</div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-both">Both Users</div>
+        <div class="swim-content">
+          <div class="step-num">4</div>
+          <div class="node node-purple" data-tooltip="Scrollable conditions: care for book, meet publicly, return in same condition, report issues, location shared, either can cancel. Each user checks 'I agree'. Timestamped + versioned" style="margin:0">Review &amp; Accept Conditions <span class="story-tag">US-503</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-system" style="margin:0">Status: CONDITIONS_PENDING → ACTIVE</div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-both">Both Users</div>
+        <div class="swim-content">
+          <div class="step-num">5</div>
+          <div class="node node-success" data-tooltip="Real-time WebSocket chat. Text (1000 chars) + images. Typing indicator. Read receipts. Rate limit: 5 msg/10s. Locked after completion" style="margin:0">Chat Unlocked — Arrange Meetup <span class="story-tag">US-601</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-action" style="margin:0">Meetup Suggestions (P1) <span class="story-tag">US-602</span></div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-both">Both Users</div>
+        <div class="swim-content">
+          <div class="step-num">6</div>
+          <div class="node node-action" style="margin:0">Meet In Person &amp; Swap Books</div>
+          <span class="arrow">→</span>
+          <div class="node node-purple" data-tooltip="Each user confirms independently. After both: status → SWAP_CONFIRMED, books → 'in_exchange'. Auto-confirm after 60 days if one side forgets" style="margin:0">Both Confirm Swap <span class="story-tag">US-504</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-system" style="margin:0">Status: SWAP_CONFIRMED</div>
+        </div>
+      </div>
+      <div class="swimlane">
+        <div class="swim-label swim-label-both">Both Users</div>
+        <div class="swim-content">
+          <div class="step-num">7</div>
+          <div class="node node-action" data-tooltip="1-5 stars (required) + text review (300 chars, optional). Within 30 days. Final — cannot edit. Skip allowed" style="margin:0">Rate Partner <span class="story-tag">US-701</span></div>
+          <span class="arrow">→</span>
+          <div class="node node-end" style="margin:0">Exchange COMPLETED ✓</div>
+          <span class="arrow">→</span>
+          <div class="annotation">Both users' swap counts incremented. Chat becomes read-only.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decline / Counter branches -->
+    <div class="flow-canvas" style="margin-top: 16px">
+      <h3 style="margin-bottom: 16px; font-size: 1rem; color: var(--gray-700);">Alternative Paths</h3>
+      <div class="branch">
+        <div class="branch-path" style="border-color:var(--danger)">
+          <div class="branch-label" style="color:var(--danger)">Decline Path</div>
+          <div class="node node-danger">Owner Declines</div>
+          <div class="annotation">Optional reason: "Not interested", "Reserved", "Other"</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system">Requester Notified</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-action">Both Books Stay Available</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-end">Requester Tries Another Book</div>
+        </div>
+        <div class="branch-path" style="border-color:var(--warning)">
+          <div class="branch-label" style="color:var(--warning)">Counter Path</div>
+          <div class="node node-action">Owner Browses Requester's Shelf</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-action">Picks Different Book</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system">Counter Request Sent</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-decision">Requester Accepts Counter?</div>
+          <div class="branch" style="margin:0">
+            <div class="v-flow">
+              <div class="annotation">Yes</div>
+              <div class="node node-success">→ Conditions</div>
+            </div>
+            <div class="v-flow">
+              <div class="annotation">No</div>
+              <div class="node node-danger">Cancelled</div>
+            </div>
+          </div>
+        </div>
+        <div class="branch-path" style="border-color:var(--gray-400)">
+          <div class="branch-label">Expiry Path</div>
+          <div class="node node-system">14 Days, No Response</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system">Auto-Expire</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-danger">Both Notified: "Request expired"</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-end">Books Back to Available</div>
+        </div>
+        <div class="branch-path" style="border-color:var(--purple)">
+          <div class="branch-label" style="color:var(--purple)">Cancel Path</div>
+          <div class="node node-action">Either User Cancels</div>
+          <div class="annotation">Available at any time before swap</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system">Both Notified</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-danger">Books Back to Available</div>
+          <div class="annotation">Cancellation count tracked</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return flow (P1) -->
+    <div class="flow-canvas" style="margin-top: 16px">
+      <h3 style="margin-bottom: 16px; font-size: 1rem; color: var(--gray-700);">Book Return Flow (P1) <span class="badge badge-blue">US-505</span></h3>
+      <div class="flow-row centered">
+        <div class="node node-action">Either Partner Initiates Return</div>
+        <span class="arrow">→</span>
+        <div class="node node-success">Chat Re-opens</div>
+        <span class="arrow">→</span>
+        <div class="node node-action">Arrange Return Meetup</div>
+        <span class="arrow">→</span>
+        <div class="node node-purple">Both Confirm Return</div>
+        <span class="arrow">→</span>
+        <div class="node node-end">Books → Available Again</div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Linked User Stories</h3>
+      <span class="story-chip"><span class="id">US-501</span> Send Partner Request</span>
+      <span class="story-chip"><span class="id">US-502</span> Review &amp; Respond</span>
+      <span class="story-chip"><span class="id">US-503</span> Accept Conditions</span>
+      <span class="story-chip"><span class="id">US-504</span> Confirm Completion</span>
+      <span class="story-chip"><span class="id">US-505</span> Book Return (P1)</span>
+      <span class="story-chip"><span class="id">US-601</span> In-App Chat</span>
+      <span class="story-chip"><span class="id">US-602</span> Meetup Suggestions (P1)</span>
+      <span class="story-chip"><span class="id">US-701</span> Rate Partner</span>
+      <br><br>
+      <h3>Linked PRD Requirements</h3>
+      <span class="story-chip"><span class="id">D-1</span> Send partner request</span>
+      <span class="story-chip"><span class="id">D-2</span> Accept / Decline / Counter</span>
+      <span class="story-chip"><span class="id">D-3</span> Conditions agreement</span>
+      <span class="story-chip"><span class="id">D-4</span> In-app chat</span>
+      <span class="story-chip"><span class="id">D-5</span> Mark completed</span>
+      <span class="story-chip"><span class="id">D-6</span> Rate partner</span>
+      <span class="story-chip"><span class="id">D-7</span> Return flow</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MESSAGING TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="messaging">
+  <div class="flow-section">
+    <h2>Flow 5: Messaging</h2>
+    <p class="subtitle">Epic 6 (US-601, US-602) — real-time chat between book partners</p>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start">Both Users Accepted Conditions</div>
+        <div class="annotation">Exchange status: ACTIVE</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-success">Chat Room Unlocked <span class="story-tag">US-601</span></div>
+        <div class="annotation">WebSocket connection established (Django Channels)</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-decision">What Can Users Do?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">Send Message</div>
+            <div class="node node-action">Type Text (max 1000 chars)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">WebSocket → Instant Delivery</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Status: Sent → Delivered → Read</div>
+            <div class="annotation">Rate limit: 5 msgs / 10 sec</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Share Image</div>
+            <div class="node node-action">Upload Photo (JPEG/PNG)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system">Compress + Store (R2)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Inline Image in Chat</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--warning)">
+            <div class="branch-label" style="color:var(--warning)">Suggest Meetup (P1)</div>
+            <div class="node node-action">Click "Suggest Meetup Spot" <span class="story-tag">US-602</span></div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-system" data-tooltip="Query nearby public places via POI/geocoding API. Libraries, cafes, parks, stations">Query Nearest Public Places</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Pick Location → Auto-Message</div>
+            <div class="annotation">"How about [Place]? X km from you, Y km from me"</div>
+          </div>
+        </div>
+
+        <div class="arrow-down">↓</div>
+        <div class="node node-action">Agree on Time &amp; Place</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-purple">Meet &amp; Swap → Confirm in Chat (US-504)</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-system">Chat Locked (Read-Only)</div>
+        <div class="annotation">After both rated or 7 days post-completion</div>
+      </div>
+    </div>
+
+    <!-- Edge cases -->
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Edge Cases &amp; System Behavior</h3>
+      <div class="branch">
+        <div class="branch-path">
+          <div class="branch-label">Partner Offline</div>
+          <div class="node node-system" style="font-size:0.78rem">Message stored in DB</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system" style="font-size:0.78rem">Email after 15min if unread</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-action" style="font-size:0.78rem">Shown on next login</div>
+        </div>
+        <div class="branch-path">
+          <div class="branch-label">Network Loss</div>
+          <div class="node node-danger" style="font-size:0.78rem">"Connecting..." status</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system" style="font-size:0.78rem">Queue locally</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-success" style="font-size:0.78rem">Auto-send on reconnect</div>
+        </div>
+        <div class="branch-path">
+          <div class="branch-label">Typing Indicator</div>
+          <div class="node node-system" style="font-size:0.78rem">WebSocket event</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-action" style="font-size:0.78rem">"[Name] is typing..."</div>
+          <div class="arrow-down">↓</div>
+          <div class="node node-system" style="font-size:0.78rem">Timeout after 3s idle</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- TRUST TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="trust">
+  <div class="flow-section">
+    <h2>Flow 6: Trust &amp; Safety</h2>
+    <p class="subtitle">Epic 8 (US-801 to US-804) — blocking, reporting, verification, and GDPR</p>
+
+    <div class="flow-canvas">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Block User Flow <span class="badge badge-red">US-801</span></h3>
+      <div class="flow-row centered">
+        <div class="node node-action">Click "Block User"</div>
+        <span class="arrow">→</span>
+        <div class="node node-decision">Confirm?</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Create Block Record</div>
+        <span class="arrow">→</span>
+        <div class="node node-danger">All Interaction Severed</div>
+      </div>
+      <div class="annotation" style="margin:12px 0">Blocked user: can't see profile, books, or send requests. Active exchange auto-cancelled. Chat hidden. Block is silent — no notification sent.</div>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Report Flow <span class="badge badge-yellow">US-802</span></h3>
+      <div class="v-flow">
+        <div class="node node-action">Click "Report" (on profile, listing, or in chat)</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-action" data-tooltip="Categories: Inappropriate content, Suspicious/fake listing, No-show, Misrepresented condition, Harassment, Spam, Other">Select Report Category</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-action">Add Description (500 chars, required for "Other")</div>
+        <div class="arrow-down">↓</div>
+        <div class="node node-system">Report Saved (status: OPEN)</div>
+        <div class="arrow-down">↓</div>
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--primary)">
+            <div class="branch-label" style="color:var(--primary)">User Side</div>
+            <div class="node node-success">"Thanks, we'll review within 48 hours"</div>
+            <div class="annotation">Reported user NOT notified</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--warning)">
+            <div class="branch-label" style="color:var(--warning)">Admin Side</div>
+            <div class="node node-system">Email Alert to Founder</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-action">Admin Dashboard Review</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-decision">Action?</div>
+            <div class="branch" style="margin:0">
+              <div class="v-flow">
+                <div class="node node-success" style="font-size:0.78rem">Dismiss</div>
+              </div>
+              <div class="v-flow">
+                <div class="node node-danger" style="font-size:0.78rem">Warn User</div>
+              </div>
+              <div class="v-flow">
+                <div class="node node-danger" style="font-size:0.78rem">Suspend</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Email Verification Gate <span class="badge badge-blue">US-803</span></h3>
+      <div class="flow-row centered">
+        <div class="node node-start">Unverified User</div>
+        <span class="arrow">→</span>
+        <div class="node node-success">Can: Browse, View, Search</div>
+        <span class="arrow">→</span>
+        <div class="node node-danger">Cannot: List Books, Send Requests, Chat</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Prompt: "Verify email to continue"</div>
+        <span class="arrow">→</span>
+        <div class="node node-action">Resend (max 3/hr)</div>
+      </div>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">GDPR Account Deletion <span class="badge badge-purple">US-203</span></h3>
+      <div class="flow-row centered" style="flex-wrap:wrap">
+        <div class="node node-action">Settings → Delete Account</div>
+        <span class="arrow">→</span>
+        <div class="node node-decision">Active Exchange?</div>
+        <span class="arrow">→</span>
+        <div class="node node-danger" data-tooltip="Block deletion if active exchange exists">Complete/Cancel First</div>
+      </div>
+      <div class="flow-row centered" style="flex-wrap:wrap;margin-top:12px">
+        <div class="node node-action">Re-authenticate</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Soft Delete (30-day grace)</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Cancel Link in Confirmation Email</div>
+        <span class="arrow">→</span>
+        <div class="node node-danger">Hard Delete: data anonymized, listings removed, photos purged</div>
+      </div>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Linked User Stories</h3>
+      <span class="story-chip"><span class="id">US-801</span> Block User</span>
+      <span class="story-chip"><span class="id">US-802</span> Report User/Listing</span>
+      <span class="story-chip"><span class="id">US-803</span> Email Verification Gate</span>
+      <span class="story-chip"><span class="id">US-804</span> GDPR Privacy Compliance</span>
+      <span class="story-chip"><span class="id">US-203</span> Account Deletion</span>
+      <br><br>
+      <h3>Linked PRD Requirements</h3>
+      <span class="story-chip"><span class="id">E-1</span> Verification gate</span>
+      <span class="story-chip"><span class="id">E-2</span> Location privacy</span>
+      <span class="story-chip"><span class="id">E-3</span> Report functionality</span>
+      <span class="story-chip"><span class="id">E-4</span> Block user</span>
+      <span class="story-chip"><span class="id">E-5</span> GDPR compliance</span>
+      <span class="story-chip"><span class="id">E-6</span> Exchange conditions</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- NOTIFICATIONS TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="notifications">
+  <div class="flow-section">
+    <h2>Flow 7: Notification System</h2>
+    <p class="subtitle">Epic 9 (US-901, US-902) — email and in-app notifications</p>
+
+    <div class="flow-canvas">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Notification Trigger Map</h3>
+      <table class="state-table">
+        <thead>
+          <tr>
+            <th>Trigger Event</th>
+            <th>Email <span class="badge badge-blue">US-901</span></th>
+            <th>In-App Bell <span class="badge badge-purple">US-902 (P1)</span></th>
+            <th>Timing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>New partner request received</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Within 2 min</td>
+          </tr>
+          <tr>
+            <td>Request accepted</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Within 2 min</td>
+          </tr>
+          <tr>
+            <td>Request declined</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Within 2 min</td>
+          </tr>
+          <tr>
+            <td>New chat message</td>
+            <td><span class="badge badge-yellow">✓ Batched (15 min)</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>No email if chat is open</td>
+          </tr>
+          <tr>
+            <td>Exchange completed</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Within 2 min</td>
+          </tr>
+          <tr>
+            <td>Rating received</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Within 2 min</td>
+          </tr>
+          <tr>
+            <td>Request auto-expired (14 days)</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-green">✓ Real-time</span></td>
+            <td>Celery Beat scheduled</td>
+          </tr>
+          <tr>
+            <td>Conditions reminder (7 days)</td>
+            <td><span class="badge badge-green">✓ Immediate</span></td>
+            <td><span class="badge badge-gray">—</span></td>
+            <td>Celery Beat scheduled</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">Email Notification Pipeline</h3>
+      <div class="flow-row centered" style="flex-wrap:wrap">
+        <div class="node node-start">Event Triggered</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Celery Task Queued</div>
+        <span class="arrow">→</span>
+        <div class="node node-decision">User Preferences?</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Render Template (Django)</div>
+        <span class="arrow">→</span>
+        <div class="node node-action">Send via Resend API</div>
+        <span class="arrow">→</span>
+        <div class="node node-decision">Delivered?</div>
+      </div>
+      <div class="flow-row centered" style="margin-top:12px">
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--success);min-width:140px">
+            <div class="branch-label" style="color:var(--success)">Yes</div>
+            <div class="node node-success">Done ✓</div>
+          </div>
+          <div class="branch-path" style="border-color:var(--danger);min-width:140px">
+            <div class="branch-label" style="color:var(--danger)">No</div>
+            <div class="node node-system">Retry in 5 min (1x)</div>
+            <div class="arrow-down">↓</div>
+            <div class="node node-danger">Log for Monitoring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">User Notification Preferences</h3>
+      <div class="flow-row centered" style="flex-wrap:wrap">
+        <div class="node node-action">Settings → Notifications</div>
+        <span class="arrow">→</span>
+        <div class="node node-action" data-tooltip="Per-category toggle: partner requests, messages, exchange updates. One-click unsubscribe in emails">Per-Category Toggles</div>
+        <span class="arrow">→</span>
+        <div class="node node-system">Stored in user preferences</div>
+        <span class="arrow">→</span>
+        <div class="node node-action">Unsubscribe Link in Every Email</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- STATE MACHINE TAB -->
+<!-- ============================================ -->
+<div class="tab-panel" id="statemachine">
+  <div class="flow-section">
+    <h2>Exchange State Machine</h2>
+    <p class="subtitle">Complete lifecycle of an exchange request — 7 primary states with all transitions mapped to PRD Section 9</p>
+
+    <div class="flow-canvas">
+      <div class="v-flow">
+        <div class="node node-start" style="font-size:1rem;padding:16px 28px">BROWSE</div>
+        <div class="annotation">User finds a book they want</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-action" style="font-size:1rem;padding:16px 28px">PENDING</div>
+        <div class="annotation">Partner request sent. Owner notified. Can be cancelled by requester.</div>
+        <div class="arrow-down">↓</div>
+
+        <div class="node node-decision" style="font-size:1rem;padding:16px 28px">Owner Response?</div>
+
+        <div class="branch">
+          <div class="branch-path" style="border-color:var(--danger)">
+            <div class="branch-label" style="color:var(--danger)">Decline</div>
+            <div class="node node-danger" style="font-size:1rem;padding:14px 24px">DECLINED</div>
+            <div class="annotation">Terminal state. Both books stay Available.</div>
+          </div>
+
+          <div class="branch-path" style="border-color:var(--gray-400)">
+            <div class="branch-label">14 Days Timeout</div>
+            <div class="node node-danger" style="font-size:1rem;padding:14px 24px">EXPIRED</div>
+            <div class="annotation">Terminal state. Auto-triggered by Celery Beat.</div>
+          </div>
+
+          <div class="branch-path" style="border-color:var(--danger)">
+            <div class="branch-label">User Cancels</div>
+            <div class="node node-danger" style="font-size:1rem;padding:14px 24px">CANCELLED</div>
+            <div class="annotation">Either user, any time before swap.</div>
+          </div>
+
+          <div class="branch-path" style="border-color:var(--success)">
+            <div class="branch-label" style="color:var(--success)">Accept</div>
+            <div class="v-flow">
+              <div class="node node-success" style="font-size:1rem;padding:14px 24px">ACCEPTED</div>
+              <div class="annotation">Both users prompted to review conditions</div>
+              <div class="arrow-down">↓</div>
+
+              <div class="node node-purple" style="font-size:1rem;padding:14px 24px">CONDITIONS_PENDING</div>
+              <div class="annotation">Waiting for both users to agree. Chat locked.</div>
+              <div class="arrow-down">↓</div>
+
+              <div class="node node-success" style="font-size:1rem;padding:14px 24px;background:#bbf7d0;border-color:#16a34a">ACTIVE</div>
+              <div class="annotation">Both accepted conditions. Chat unlocked. Books marked "In Exchange".</div>
+              <div class="arrow-down">↓</div>
+
+              <div class="node node-purple" style="font-size:1rem;padding:14px 24px;background:#c4b5fd;border-color:#7c3aed">SWAP_CONFIRMED</div>
+              <div class="annotation">Both users confirmed physical swap. Rating prompt shown. Swap count ++.</div>
+              <div class="arrow-down">↓</div>
+
+              <div class="node node-end" style="font-size:1rem;padding:16px 28px">COMPLETED</div>
+              <div class="annotation">Archived. Chat read-only. Books remain "In Exchange" until return (P1).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-canvas" style="margin-top:16px">
+      <h3 style="margin-bottom:16px;font-size:1rem;color:var(--gray-700)">State Transition Reference</h3>
+      <table class="state-table">
+        <thead>
+          <tr>
+            <th>From State</th>
+            <th>To State</th>
+            <th>Trigger</th>
+            <th>Who</th>
+            <th>Side Effects</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-blue">PENDING</span></td>
+            <td><span class="badge badge-green">ACCEPTED</span></td>
+            <td>Owner clicks Accept</td>
+            <td>Owner</td>
+            <td>Conditions screen shown to both. Other pending requests auto-declined.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">PENDING</span></td>
+            <td><span class="badge badge-red">DECLINED</span></td>
+            <td>Owner clicks Decline</td>
+            <td>Owner</td>
+            <td>Requester notified. Optional decline reason.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">PENDING</span></td>
+            <td><span class="badge badge-red">CANCELLED</span></td>
+            <td>Requester cancels</td>
+            <td>Requester</td>
+            <td>Owner notified. Books stay Available.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">PENDING</span></td>
+            <td><span class="badge badge-gray">EXPIRED</span></td>
+            <td>14 days no response</td>
+            <td>System</td>
+            <td>Both notified. Celery Beat cron job.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">ACCEPTED</span></td>
+            <td><span class="badge badge-purple">CONDITIONS_PENDING</span></td>
+            <td>Automatic after accept</td>
+            <td>System</td>
+            <td>Conditions screen presented to both users.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">CONDITIONS_PENDING</span></td>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+            <td>Both users accept conditions</td>
+            <td>Both</td>
+            <td>Chat unlocked. Books → "In Exchange". DB trigger on both rows present.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">CONDITIONS_PENDING</span></td>
+            <td><span class="badge badge-red">CANCELLED</span></td>
+            <td>Either cancels or 14-day timeout</td>
+            <td>Either / System</td>
+            <td>Both notified. Books back to Available.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+            <td><span class="badge badge-purple">SWAP_CONFIRMED</span></td>
+            <td>Both users confirm swap</td>
+            <td>Both</td>
+            <td>Rating prompt. Swap count ++. Chat → read-only.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">ACTIVE</span></td>
+            <td><span class="badge badge-red">CANCELLED</span></td>
+            <td>Either user cancels</td>
+            <td>Either</td>
+            <td>Books back to Available. Cancellation tracked.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">SWAP_CONFIRMED</span></td>
+            <td><span class="badge badge-gray">COMPLETED</span></td>
+            <td>Both rated (or 30-day timeout)</td>
+            <td>Both / System</td>
+            <td>Exchange archived. Final state.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stories-panel">
+      <h3>Technical Implementation (from Architecture Doc)</h3>
+      <span class="story-chip"><span class="id">Backend</span> state_machine.py with TRANSITIONS dict</span>
+      <span class="story-chip"><span class="id">DB</span> exchange_requests.status enum</span>
+      <span class="story-chip"><span class="id">Trigger</span> DB triggers for conditions + swap confirmation</span>
+      <span class="story-chip"><span class="id">Cron</span> Celery Beat for auto-expire + auto-confirm</span>
+      <span class="story-chip"><span class="id">API</span> ExchangeViewSet with transition actions</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// Animate nodes on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.flow-canvas').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.5s, transform 0.5s';
+  observer.observe(el);
+});
+</script>
+
+</body>
+</html>

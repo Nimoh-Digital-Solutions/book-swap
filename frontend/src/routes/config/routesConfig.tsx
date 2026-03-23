@@ -86,6 +86,10 @@ const PrivacyPolicyPage = lazy(() => import('@pages/PrivacyPolicyPage/PrivacyPol
 
 const TermsOfServicePage = lazy(() => import('@pages/TermsOfServicePage/TermsOfServicePage'));
 
+const NotificationUnsubscribePage = lazy(() =>
+  import('@features/notifications').then(m => ({ default: m.UnsubscribePage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -217,6 +221,10 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.TERMS_OF_SERVICE,
         element: <LazyPage component={TermsOfServicePage} />,
+      },
+      {
+        path: PATHS.NOTIFICATION_UNSUBSCRIBE,
+        element: <LazyPage component={NotificationUnsubscribePage} />,
       },
     ],
   },
