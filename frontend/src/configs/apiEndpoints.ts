@@ -35,6 +35,9 @@ const WISHLIST = `${V1}/wishlist` as const;
 /** Exchange endpoints. */
 const EXCHANGES = `${V1}/exchanges` as const;
 
+/** Messaging endpoints. */
+const MESSAGING = `${V1}/messaging` as const;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -111,5 +114,14 @@ export const API = {
     confirmReturn: (id: string) => `${EXCHANGES}/${id}/confirm-return/`,
     incoming: `${EXCHANGES}/incoming/`,
     incomingCount: `${EXCHANGES}/incoming/count/`,
+  },
+
+  messaging: {
+    messages: (exchangeId: string) =>
+      `${MESSAGING}/exchanges/${exchangeId}/messages/`,
+    markRead: (exchangeId: string) =>
+      `${MESSAGING}/exchanges/${exchangeId}/messages/mark-read/`,
+    meetupSuggestions: (exchangeId: string) =>
+      `${MESSAGING}/exchanges/${exchangeId}/meetup-suggestions/`,
   },
 } as const;
