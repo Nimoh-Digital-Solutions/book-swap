@@ -14,12 +14,14 @@ import i18n from 'i18next';
 // Read the canonical translation file directly from disk via a static import
 // that Vitest resolves at compile time.
 import en from '../../public/locales/en/translation.json';
+import enExchanges from '../../public/locales/en/exchanges.json';
+import enMessaging from '../../public/locales/en/messaging.json';
 
 // Re-initialise i18n (strip any plugins like HttpBackend that may have been
 // added by the app-level `src/i18n/index.ts` if it executes first).
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { translation: en },
+    en: { translation: en, exchanges: enExchanges, messaging: enMessaging },
   },
   lng: 'en',
   fallbackLng: 'en',
