@@ -74,7 +74,7 @@ AUTHENTICATION_BACKENDS = (
 SOCIAL_AUTH_PIPELINE = get_social_auth_pipeline()
 
 # Social auth redirect settings (frontend host allow-list)
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3070')
 globals().update(get_social_auth_settings(frontend_url=FRONTEND_URL))
 
 # Provider credentials — set in .env, leave blank until provisioned
@@ -94,6 +94,7 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     'django.contrib.postgres',
     # Project apps
     'bookswap',
+    'apps.exchanges',
 ]
 
 # ── Middleware ────────────────────────────────────────────────────────────────
@@ -180,8 +181,8 @@ TRUSTED_PROXY_IPS: list[str] = env.list('TRUSTED_PROXY_IPS', default=[])
 # Applied via globals().update() so CORS_ALLOW_CREDENTIALS, CORS_ALLOW_HEADERS,
 # and CORS_EXPOSE_HEADERS are active (not just CORS_ALLOWED_ORIGINS).
 globals().update(NimohBaseSettings.get_base_cors())
-CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:3000'])
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:3070'])
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3070')
 
 
 # ── Celery ────────────────────────────────────────────────────────────────────
