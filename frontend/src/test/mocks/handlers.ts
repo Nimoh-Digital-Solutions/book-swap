@@ -735,6 +735,64 @@ const messagingHandlers = [
 ];
 
 // ---------------------------------------------------------------------------
+// Rating mock data & handlers
+// ---------------------------------------------------------------------------
+
+const MOCK_RATING = {
+  id: 'rat_001',
+  exchange: 'exch_001',
+  rater: { id: 'usr_test_001', username: 'testuser', avatar: null },
+  rated: { id: 'usr_owner_001', username: 'bookworm', avatar: null },
+  score: 5,
+  comment: 'Great swap partner!',
+  created_at: '2025-07-20T12:00:00Z',
+};
+
+const MOCK_RATING_STATUS = {
+  exchange_id: 'exch_001',
+  my_rating: null as typeof MOCK_RATING | null,
+  partner_rating: null as typeof MOCK_RATING | null,
+  can_rate: true,
+  rating_deadline: '2025-08-15T10:00:00Z',
+};
+
+export { MOCK_RATING, MOCK_RATING_STATUS };
+
+const ratingHandlers = [
+  /** GET /api/v1/ratings/exchanges/:exchangeId/ — rating status */
+  http.get('*/api/v1/ratings/exchanges/:exchangeId/', () => {
+    return HttpResponse.json(MOCK_RATING_STATUS);
+  }),
+
+  /** POST /api/v1/ratings/exchanges/:exchangeId/ — submit rating */
+  http.post('*/api/v1/ratings/exchanges/:exchangeId/', async ({ request, params }) => {
+    const body = (await request.json()) as { score: number; comment?: string };
+    return HttpResponse.json(
+      {
+        id: 'rat_new_001',
+        exchange: params.exchangeId,
+        rater: { id: 'usr_test_001', username: 'testuser', avatar: null },
+        rated: { id: 'usr_owner_001', username: 'bookworm', avatar: null },
+        score: body.score,
+        comment: body.comment ?? '',
+        created_at: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
+  }),
+
+  /** GET /api/v1/ratings/users/:userId/ — user ratings list */
+  http.get('*/api/v1/ratings/users/:userId/', () => {
+    return HttpResponse.json({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [MOCK_RATING],
+    });
+  }),
+];
+
+// ---------------------------------------------------------------------------
 // Combined handlers
 // ---------------------------------------------------------------------------
 
@@ -748,4 +806,5 @@ export const handlers = [
   ...wishlistHandlers,
   ...exchangeHandlers,
   ...messagingHandlers,
+  ...ratingHandlers,
 ];
