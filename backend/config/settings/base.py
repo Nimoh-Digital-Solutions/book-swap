@@ -96,6 +96,7 @@ INSTALLED_APPS = NimohBaseSettings.get_base_apps(
     'bookswap',
     'apps.exchanges',
     'apps.messaging',
+    'apps.ratings',
 ]
 
 # ── Middleware ────────────────────────────────────────────────────────────────
@@ -151,7 +152,7 @@ SIMPLE_JWT = NimohBaseSettings.get_base_simple_jwt()
 
 # ── drf-spectacular ───────────────────────────────────────────────────────────
 SPECTACULAR_SETTINGS = NimohBaseSettings.get_base_spectacular_settings(
-    title='bookswap API',
+    title='Bookswap API',
     description='An app for booklovers to save on buying new books everytime they want read new books',
     version='1.0.0',
 )
