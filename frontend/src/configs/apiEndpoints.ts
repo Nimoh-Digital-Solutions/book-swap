@@ -135,4 +135,18 @@ export const API = {
       `${RATINGS}/exchanges/${exchangeId}/`,
     userRatings: (userId: string) => `${RATINGS}/users/${userId}/`,
   },
+
+  blocks: {
+    list: `${USERS}/block/`,
+    create: `${USERS}/block/`,
+    delete: (userId: string) => `${USERS}/block/${userId}/`,
+  },
+
+  reports: {
+    create: `${V1}/reports/`,
+    adminList: `${V1}/reports/admin/`,
+    adminUpdate: (id: string) => `${V1}/reports/admin/${id}/`,
+  },
+
+  dataExport: `${USERS}/me/data-export/`,
 } as const;
