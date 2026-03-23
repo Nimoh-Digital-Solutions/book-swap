@@ -38,6 +38,9 @@ const EXCHANGES = `${V1}/exchanges` as const;
 /** Messaging endpoints. */
 const MESSAGING = `${V1}/messaging` as const;
 
+/** Ratings endpoints. */
+const RATINGS = `${V1}/ratings` as const;
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -123,5 +126,13 @@ export const API = {
       `${MESSAGING}/exchanges/${exchangeId}/messages/mark-read/`,
     meetupSuggestions: (exchangeId: string) =>
       `${MESSAGING}/exchanges/${exchangeId}/meetup-suggestions/`,
+  },
+
+  ratings: {
+    exchangeStatus: (exchangeId: string) =>
+      `${RATINGS}/exchanges/${exchangeId}/`,
+    exchangeSubmit: (exchangeId: string) =>
+      `${RATINGS}/exchanges/${exchangeId}/`,
+    userRatings: (userId: string) => `${RATINGS}/users/${userId}/`,
   },
 } as const;
