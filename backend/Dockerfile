@@ -40,12 +40,16 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput --settings=config.settings.production
 
+# Run as a non-root user for security (GAP-I-003)
+RUN addgroup --system app && adduser --system --ingroup app app \
+    && chown -R app:app /app
+USER app
+
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", \
+CMD ["gunicorn", "config.asgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "4", \
-     "--worker-class", "gthread", \
-     "--threads", "2", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--timeout", "30", \
      "--log-level", "info"]

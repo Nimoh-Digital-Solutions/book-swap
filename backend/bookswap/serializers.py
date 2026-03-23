@@ -495,6 +495,8 @@ class BrowseFilterSerializer(serializers.Serializer):
     """Validate query params for the browse endpoint."""
 
     radius = serializers.IntegerField(min_value=500, max_value=50000, required=False)
+    lat = serializers.FloatField(min_value=-90, max_value=90, required=False)
+    lng = serializers.FloatField(min_value=-180, max_value=180, required=False)
     search = serializers.CharField(max_length=200, required=False, allow_blank=True)
     genre = serializers.CharField(max_length=500, required=False)
     language = serializers.CharField(max_length=100, required=False)

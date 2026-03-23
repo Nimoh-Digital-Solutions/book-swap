@@ -1137,3 +1137,12 @@ Independent (can be built in parallel):
 ---
 
 *— End of Document —*
+
+
+Run a gap analysis — check if the actual code covers everything the PRD + spec describes (e.g. edge cases, missing validations, UX flows). Trigger with: "run a gap analysis"
+
+Run a security audit — full OWASP-aligned review of the codebase. Trigger with: "run a security audit"
+
+Set up hosting/deployment — scaffold the Pi 5 + Cloudflare Tunnel + GitHub Actions CI/CD infrastructure. Trigger with: "scaffold hosting"
+
+Architecture review — check for deviations from nimoh-stack conventions across all 9 epics. Trigger with: "review the architecture"

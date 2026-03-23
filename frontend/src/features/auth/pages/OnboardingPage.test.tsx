@@ -1,6 +1,6 @@
 import { MemoryRouter } from 'react-router-dom';
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -11,6 +11,19 @@ const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
+});
+
+// Mock profile hooks
+const mockSetLocation = vi.fn().mockResolvedValue({});
+const mockCompleteOnboarding = vi.fn().mockResolvedValue({ onboarding_completed: true });
+
+vi.mock('@features/profile', async () => {
+  const actual = await vi.importActual('@features/profile');
+  return {
+    ...actual,
+    useSetLocation: () => ({ mutateAsync: mockSetLocation, isPending: false }),
+    useCompleteOnboarding: () => ({ mutateAsync: mockCompleteOnboarding, isPending: false }),
+  };
 });
 
 const renderPage = () =>
@@ -63,5 +76,34 @@ describe('OnboardingPage', () => {
   it('renders BookSwap branding', () => {
     renderPage();
     expect(screen.getAllByText('BookSwap').length).toBeGreaterThan(0);
+  });
+
+  it('calls setLocation and completeOnboarding on submit, then navigates', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const input = screen.getByLabelText(/city, neighborhood, or zip code/i);
+    await user.type(input, '1012 AB');
+    await user.click(screen.getByText(/complete setup/i));
+
+    await waitFor(() => {
+      expect(mockSetLocation).toHaveBeenCalledWith({ postcode: '1012 AB' });
+      expect(mockCompleteOnboarding).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    });
+  });
+
+  it('shows error message when setLocation fails', async () => {
+    mockSetLocation.mockRejectedValueOnce(new Error('Network error'));
+    const user = userEvent.setup();
+    renderPage();
+
+    const input = screen.getByLabelText(/city, neighborhood, or zip code/i);
+    await user.type(input, 'Amsterdam');
+    await user.click(screen.getByText(/complete setup/i));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
   });
 });

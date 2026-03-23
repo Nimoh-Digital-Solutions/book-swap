@@ -18,7 +18,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgis/postgis:16-3.4
         env:
           POSTGRES_DB: speaklinka_test
           POSTGRES_USER: test_user
@@ -59,6 +59,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Enable PostGIS extension
+        run: |
+          psql -h localhost -U test_user -d speaklinka_test \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+        env:
+          PGPASSWORD: test_password
 
       - name: Lint (ruff check)
         run: ruff check .

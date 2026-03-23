@@ -5,12 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { ArrowLeft, Loader2, Search } from 'lucide-react';
+import { ArrowLeft, Camera, Loader2, Search } from 'lucide-react';
 
+import { BarcodeScanner } from '../components/BarcodeScanner/BarcodeScanner';
 import { BookForm } from '../components/BookForm/BookForm';
 import { useCreateBook } from '../hooks/useCreateBook';
 import { useISBNLookup } from '../hooks/useISBNLookup';
-import type { BookMetadata, CreateBookPayload } from '../types/book.types';
+import type { CreateBookPayload } from '../types/book.types';
 
 export function AddBookPage(): ReactElement {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ export function AddBookPage(): ReactElement {
   // ISBN lookup state
   const [isbnInput, setIsbnInput] = useState('');
   const [lookupEnabled, setLookupEnabled] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const { data: isbnData, isLoading: isbnLoading, isError: isbnError } = useISBNLookup(
     isbnInput,
     lookupEnabled,
@@ -35,6 +37,12 @@ export function AddBookPage(): ReactElement {
     if (isbnInput.length >= 10) {
       setLookupEnabled(true);
     }
+  };
+
+  const handleScanResult = (isbn: string) => {
+    setIsbnInput(isbn);
+    setLookupEnabled(true);
+    setScannerOpen(false);
   };
 
   // When ISBN data arrives, pre-fill the form
@@ -56,7 +64,7 @@ export function AddBookPage(): ReactElement {
       createBook.mutate(values, {
         onSuccess: () => {
           addNotification(t('books.addBook.success', 'Book listed successfully!'), { variant: 'success' });
-          navigate(PATHS.MY_SHELF);
+          void navigate(PATHS.MY_SHELF);
         },
         onError: () => {
           addNotification(t('books.addBook.error', 'Failed to list book. Please try again.'), { variant: 'error' });
@@ -71,6 +79,14 @@ export function AddBookPage(): ReactElement {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Barcode scanner modal */}
+      {scannerOpen && (
+        <BarcodeScanner
+          onScan={handleScanResult}
+          onClose={() => setScannerOpen(false)}
+        />
+      )}
+
       {/* Back link */}
       <button
         type="button"
@@ -103,6 +119,14 @@ export function AddBookPage(): ReactElement {
               className={inputBase}
               aria-label={t('books.addBook.isbnLabel', 'ISBN')}
             />
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              aria-label={t('books.addBook.scanBarcode', 'Scan barcode with camera')}
+              className="flex items-center gap-2 px-3 py-3 bg-[#28382D] hover:bg-[#354A3A] text-[#E4B643] text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
+            >
+              <Camera className="w-4 h-4" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={handleLookup}

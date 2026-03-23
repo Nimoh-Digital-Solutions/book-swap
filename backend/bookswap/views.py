@@ -11,7 +11,7 @@ from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser, MultiPartParser
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -452,13 +452,34 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     - ``GET /books/browse/radius-counts/`` — book count per radius bucket.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = BrowseBookListSerializer
     pagination_class = BrowsePagination
 
     def _get_user_location(self):
-        """Return the authenticated user's location or None."""
-        return self.request.user.location
+        """Return the browsing location as a GEOSGeometry Point or None.
+
+        For authenticated users their saved profile location is used.
+        Anonymous users (and authenticated users without a saved location)
+        may supply ``lat`` / ``lng`` query params instead.
+        """
+        from django.contrib.gis.geos import Point
+
+        user = self.request.user
+        if user.is_authenticated and user.location is not None:
+            return user.location
+
+        # Fallback: caller-supplied coordinates (anonymous browse or users
+        # who haven't set a profile location yet).
+        try:
+            lat = float(self.request.query_params.get("lat", ""))
+            lng = float(self.request.query_params.get("lng", ""))
+            if -90 <= lat <= 90 and -180 <= lng <= 180:
+                return Point(lng, lat, srid=4326)
+        except (TypeError, ValueError):
+            pass
+
+        return None
 
     def _get_validated_filters(self):
         """Parse and validate all browse query params."""
@@ -467,12 +488,19 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return filter_ser.validated_data
 
     def _get_radius(self, filters):
-        return filters.get("radius", self.request.user.preferred_radius or 5000)
+        user = self.request.user
+        default_radius = (
+            user.preferred_radius
+            if user.is_authenticated and user.preferred_radius
+            else 5000
+        )
+        return filters.get("radius", default_radius)
 
     def _base_queryset(self, user_location, radius):
         """Queryset of available books within radius, excluding own books and blocked users."""
-        blocked_ids = get_blocked_user_ids(self.request.user)
-        return (
+        user = self.request.user
+        blocked_ids = get_blocked_user_ids(user) if user.is_authenticated else set()
+        qs = (
             Book.objects.select_related("owner")
             .prefetch_related("photos")
             .filter(
@@ -480,10 +508,11 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 owner__location__isnull=False,
                 owner__location__distance_lte=(user_location, D(m=radius)),
             )
-            .exclude(owner=self.request.user)
-            .exclude(owner_id__in=blocked_ids)
             .annotate(distance=Distance("owner__location", user_location))
         )
+        if user.is_authenticated:
+            qs = qs.exclude(owner=user).exclude(owner_id__in=blocked_ids)
+        return qs
 
     @staticmethod
     def _is_isbn(term: str) -> bool:
@@ -556,9 +585,9 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return qs
 
     def list(self, request, *args, **kwargs):
-        if request.user.location is None:
+        if self._get_user_location() is None:
             return Response(
-                {"detail": "Set your location first."},
+                {"detail": "Provide 'lat' and 'lng' query params or set your profile location first."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().list(request, *args, **kwargs)
@@ -569,7 +598,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         user_location = self._get_user_location()
         if user_location is None:
             return Response(
-                {"detail": "Set your location first."},
+                {"detail": "Provide 'lat' and 'lng' query params or set your profile location first."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -578,8 +607,9 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 status=BookStatus.AVAILABLE,
                 owner__location__isnull=False,
             )
-            .exclude(owner=request.user)
         )
+        if request.user.is_authenticated:
+            base_qs = base_qs.exclude(owner=request.user)
 
         whens = [
             When(

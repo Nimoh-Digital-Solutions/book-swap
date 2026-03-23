@@ -13,6 +13,7 @@ nimoh-be-django-base[monitoring]>=0.9.1
 nimoh-be-django-base[social]>=0.9.1
 
 gunicorn>=22.0
+uvicorn[standard]>=0.30
 django-environ>=0.11
 
 psycopg[binary]>=3.2

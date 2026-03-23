@@ -1,16 +1,28 @@
+import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import HomePage from './HomePage';
 
+function makeWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>{children}</MemoryRouter>
+      </QueryClientProvider>
+    );
+  }
+  return Wrapper;
+}
+
 const renderPage = () =>
-  render(
-    <MemoryRouter>
-      <HomePage />
-    </MemoryRouter>,
-  );
+  render(<HomePage />, { wrapper: makeWrapper() });
 
 describe('HomePage', () => {
   it('renders the hero headline', () => {
