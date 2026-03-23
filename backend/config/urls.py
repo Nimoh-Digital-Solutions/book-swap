@@ -22,6 +22,7 @@ urlpatterns = [
 
     # Project-specific routes — add new apps here:
     path('api/v1/', include('bookswap.urls')),
+    path('api/v1/exchanges/', include('apps.exchanges.urls')),
 ]
 
 # In development, redirect the root URL to the API docs for convenience
