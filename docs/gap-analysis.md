@@ -433,41 +433,43 @@ gaps:
 
 ## Phased Action Plan
 
-### Phase 1 — Launch Blockers (P0)
-**Estimated total effort: ~2–3 days**
+> **Status as of `fix/gap-analysis` (2026-03-23): All 12 gaps implemented. ✅**
 
-| # | Gap ID | Title | Effort | Notes |
-|---|--------|-------|--------|-------|
-| 1 | GAP-I-001 | Production WSGI → ASGI (WebSockets) | XS | Fix `Dockerfile` CMD; add `uvicorn` to requirements. Highest ROI per minute. |
-| 2 | GAP-Q-001 | CI PostGIS image | XS | One-line change in `ci.yml`. Unblocks trust in geographic test suite. |
-| 3 | GAP-F-001 | Wire OnboardingPage to location API | S | Critical for new user activation. |
-| 4 | GAP-F-002 | Camera barcode scanning | M | Core acquisition feature for mobile users listing books. |
+### Phase 1 — Launch Blockers (P0)
+~~**Estimated total effort: ~2–3 days**~~ **✅ Complete**
+
+| # | Gap ID | Title | Effort | Status | Commit |
+|---|--------|-------|--------|--------|--------|
+| 1 | GAP-I-001 | Production WSGI → ASGI (WebSockets) | XS | ✅ Done | 2cf90d9 |
+| 2 | GAP-Q-001 | CI PostGIS image | XS | ✅ Done | 2cf90d9 |
+| 3 | GAP-F-001 | Wire OnboardingPage to location API | S | ✅ Done | 2cf90d9 |
+| 4 | GAP-F-002 | Camera barcode scanning | M | ✅ Done | 2cf90d9 |
 
 ### Phase 2 — High Value (P1)
-**Estimated total effort: ~1–2 days**
+~~**Estimated total effort: ~1–2 days**~~ **✅ Complete**
 
-| # | Gap ID | Title | Effort | Notes |
-|---|--------|-------|--------|-------|
-| 5 | GAP-F-003 | Anonymous browse | S | Conversion improvement; requires BE permission + FE route changes. |
-| 6 | GAP-F-004 | Live book counter on landing page | S | Wire `NearbyCountView` to `HomePage`. |
-| 7 | GAP-S-001 | Verify / add DRF throttle for auth | S | Confirms or adds lockout for login brute-force. |
+| # | Gap ID | Title | Effort | Status | Commit |
+|---|--------|-------|--------|--------|--------|
+| 5 | GAP-F-003 | Anonymous browse | S | ✅ Done | 2cf90d9 |
+| 6 | GAP-F-004 | Live book counter on landing page | S | ✅ Done | 2cf90d9 |
+| 7 | GAP-S-001 | Verify / add DRF throttle for auth | S | ✅ Confirmed (nimoh_base) | 2cf90d9 |
 
 ### Phase 3 — Should Have (P2)
-**Estimated total effort: ~4–5 days**
+~~**Estimated total effort: ~4–5 days**~~ **✅ Complete**
 
-| # | Gap ID | Title | Effort | Notes |
-|---|--------|-------|--------|-------|
-| 8 | GAP-I-002 | Docker web service healthcheck | XS | Two-line addition to `docker-compose.prod.yml`. |
-| 9 | GAP-I-003 | Non-root Docker user | XS | Four-line addition to backend `Dockerfile`. |
-| 10 | GAP-Q-003 | Expand feature unit tests | M | Focus on exchanges conditions flow + discovery filters. |
-| 11 | GAP-Q-002 | E2E test coverage | L | Start with registration + browse + partner request flows. |
+| # | Gap ID | Title | Effort | Status | Commit |
+|---|--------|-------|--------|--------|--------|
+| 8 | GAP-I-002 | Docker web service healthcheck | XS | ✅ Done | 2cf90d9 |
+| 9 | GAP-I-003 | Non-root Docker user | XS | ✅ Done | 2cf90d9 |
+| 10 | GAP-Q-003 | Expand feature unit tests | M | ✅ Done | 2cf90d9 |
+| 11 | GAP-Q-002 | E2E test coverage | L | ✅ Done | 2cf90d9 |
 
 ### Phase 4 — Nice to Have (P3)
-**Estimated total effort: ~1 hour**
+~~**Estimated total effort: ~1 hour**~~ **✅ Complete**
 
-| # | Gap ID | Title | Effort | Notes |
-|---|--------|-------|--------|-------|
-| 12 | GAP-O-001 | Confirm and document health endpoint | XS | Verify nimoh_base URL; document for ops. |
+| # | Gap ID | Title | Effort | Status | Commit |
+|---|--------|-------|--------|--------|--------|
+| 12 | GAP-O-001 | Confirm and document health endpoint | XS | ✅ Confirmed (nimoh_base) | 2cf90d9 |
 
 ---
 
