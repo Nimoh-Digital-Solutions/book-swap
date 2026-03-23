@@ -62,6 +62,8 @@ NIMOH_BASE = {
     # Set to False to skip the Celery worker check in /api/v1/health/.
     # Disable when running without a Celery worker (local dev without Docker Celery).
     "HEALTH_CHECK_CELERY": env.bool("HEALTH_CHECK_CELERY", default=True),
+    # Separate profile model required by nimoh_base.privacy.
+    "PROFILE_MODEL": "profiles.UserProfile",
 }
 
 # ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -99,6 +101,7 @@ INSTALLED_APPS = (
         "django.contrib.postgres",
         # Project apps
         "bookswap",
+        "apps.profiles",
         "apps.books",
         "apps.trust_safety",
         "apps.exchanges",

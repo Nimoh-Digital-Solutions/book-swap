@@ -149,7 +149,8 @@ dev-build: ## Build Docker development images
 
 dev-rebuild: ## Rebuild Docker images with no cache
 	@echo "$(BLUE)🔨 Rebuilding images (no cache) ...$(NC)"
-	$(DOCKER_COMPOSE) build --no-cache
+	$(DOCKER_COMPOSE) build
+# 	$(DOCKER_COMPOSE) build --no-cache
 
 dev-up: ## Start all services in the background
 	@echo "$(BLUE)⬆️  Starting services ...$(NC)"
