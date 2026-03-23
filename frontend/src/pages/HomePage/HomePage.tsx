@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { useNearbyCount } from '@features/discovery';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
@@ -12,6 +13,11 @@ import {
   Search,
   Star,
 } from 'lucide-react';
+
+// Amsterdam city centre — fallback coordinates for the public landing page.
+const AMSTERDAM_LAT = 52.3676;
+const AMSTERDAM_LNG = 4.9041;
+const DEFAULT_RADIUS = 10000; // 10 km
 
 const POPULAR_TAGS = ['Sci-Fi', 'Dutch Literature', 'Cookbooks', 'Biographies'];
 
@@ -78,6 +84,8 @@ const STEPS = [
 const HomePage = (): ReactElement => {
   const { t } = useTranslation();
   useDocumentTitle(routeMetadata[PATHS.HOME].title);
+
+  const { data: nearbyData } = useNearbyCount(AMSTERDAM_LAT, AMSTERDAM_LNG, DEFAULT_RADIUS);
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
@@ -282,7 +290,9 @@ const HomePage = (): ReactElement => {
 
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-[#152018] rounded-2xl p-6 text-center border border-[#28382D]">
-                  <div className="text-3xl font-bold text-[#E4B643] mb-1">12,408</div>
+                  <div className="text-3xl font-bold text-[#E4B643] mb-1">
+                    {nearbyData ? nearbyData.count.toLocaleString() : '—'}
+                  </div>
                   <div className="text-[10px] font-bold text-[#5A6A60] uppercase tracking-wider">
                     {t('home.community.booksAvailable', 'Books Available')}
                   </div>

@@ -43,9 +43,9 @@ export function AuthSplitPanel({
 }: AuthSplitPanelProps) {
   return (
     <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+      <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
         {/* ── Branding panel (left) ────────────────────────────── */}
-        <div className="md:w-5/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
+        <div className="md:w-6/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
 
@@ -56,10 +56,10 @@ export function AuthSplitPanel({
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </Link>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 mt-6">
               {brandingTitle}
             </h1>
-            <p className="text-text-secondary text-lg leading-relaxed">
+            <p className="text-text-secondary text-lg leading-relaxed mt-12">
               {brandingSubtitle}
             </p>
           </div>
@@ -75,7 +75,7 @@ export function AuthSplitPanel({
               <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
-                  {authorName.charAt(0)}
+                  {authorName ? authorName.charAt(0) + authorName.split(' ').slice(-1)[0]?.charAt(0) : 'AB'}
                 </div>
                 <div>
                   <p className="font-bold text-sm text-white">{authorName}</p>
@@ -87,7 +87,7 @@ export function AuthSplitPanel({
         </div>
 
         {/* ── Form panel (right) ──────────────────────────────── */}
-        <div className="md:w-7/12 bg-surface-dark p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
+        <div className="md:w-6/12 bg-surface-dark p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
           {/* Progress bar */}
           <div className="absolute top-0 left-0 w-full h-1 bg-[#28382D]" aria-hidden="true">
             <div

@@ -96,4 +96,19 @@ describe('AddBookPage', () => {
     renderPage();
     expect(screen.getByText(/back to my shelf/i)).toBeInTheDocument();
   });
+
+  it('renders scan barcode button', () => {
+    renderPage();
+    expect(screen.getByLabelText(/scan barcode with camera/i)).toBeInTheDocument();
+  });
+
+  it('opens barcode scanner modal when scan button is clicked', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByLabelText(/scan barcode with camera/i));
+    // BarcodeScanner uses navigator.mediaDevices which is not available in jsdom;
+    // the component is lazy — just verify the dialog role appears.
+    expect(screen.queryByRole('dialog')).not.toBeNull();
+  });
 });

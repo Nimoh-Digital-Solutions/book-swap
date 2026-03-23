@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { useCompleteOnboarding, useSetLocation } from '@features/profile';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { Info, MapPin, Star } from 'lucide-react';
@@ -17,13 +18,25 @@ export function OnboardingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [location, setLocation] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useDocumentTitle(routeMetadata[PATHS.ONBOARDING].title);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const setLocationMutation = useSetLocation();
+  const completeOnboardingMutation = useCompleteOnboarding();
+
+  const isPending = setLocationMutation.isPending || completeOnboardingMutation.isPending;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Wire to profile update API (POST /api/v1/users/me/location/)
-    void navigate(PATHS.HOME, { replace: true });
+    setError(null);
+    try {
+      await setLocationMutation.mutateAsync({ postcode: location });
+      await completeOnboardingMutation.mutateAsync();
+      void navigate(PATHS.HOME, { replace: true });
+    } catch {
+      setError(t('onboarding.error', 'Could not save your location. Please try again.'));
+    }
   };
 
   return (
@@ -111,7 +124,7 @@ export function OnboardingPage() {
               {t('onboarding.subtitle', 'This helps us show you the closest available books.')}
             </p>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={(e) => { void handleSubmit(e); }}>
               <div>
                 <label
                   className="block text-sm font-medium text-text-secondary mb-2"
@@ -147,19 +160,29 @@ export function OnboardingPage() {
                 </p>
               </div>
 
+              {error && (
+                <p role="alert" className="text-sm text-red-400">
+                  {error}
+                </p>
+              )}
+
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
-                  className="flex-1 flex justify-center py-3.5 px-4 border border-border-dark rounded-xl text-sm font-bold text-white bg-surface-dark hover:bg-border-dark transition-colors"
+                  disabled={isPending}
+                  className="flex-1 flex justify-center py-3.5 px-4 border border-border-dark rounded-xl text-sm font-bold text-white bg-surface-dark hover:bg-border-dark transition-colors disabled:opacity-50"
                 >
                   {t('common.back', 'Back')}
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-[#152018] bg-[#E4B643] hover:bg-[#d9b93e] transition-colors"
+                  disabled={isPending}
+                  className="flex-[2] flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-[#152018] bg-[#E4B643] hover:bg-[#d9b93e] transition-colors disabled:opacity-60"
                 >
-                  {t('onboarding.submit', 'Complete Setup')}
+                  {isPending
+                    ? t('common.saving', 'Saving…')
+                    : t('onboarding.submit', 'Complete Setup')}
                 </button>
               </div>
             </form>

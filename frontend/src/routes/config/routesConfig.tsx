@@ -161,7 +161,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: PATHS.CATALOGUE,
-        element: <ProtectedPage component={BrowsePage} />,
+        element: <LazyPage component={BrowsePage} />,
       },
       // -- Protected routes -------------------------------------------------
       // Add your authenticated routes here using the ProtectedPage wrapper:
