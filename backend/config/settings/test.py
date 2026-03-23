@@ -14,6 +14,12 @@ DATABASES['default']['TEST'] = {  # type: ignore[index]  # noqa: F405
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
+# Disable throttling so unauthenticated endpoints (e.g. unsubscribe) are not rate-limited.
+REST_FRAMEWORK.update({  # type: ignore[name-defined]  # noqa: F405
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+})
+
 # Silence unused logging in tests
 LOGGING = {}  # type: ignore[assignment]
 

@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all as read",
+    "unreadCount": "{{count}} unread",
+    "unreadCount_one": "{{count}} unread",
+    "unreadCount_other": "{{count}} unread"
+  },
+  "types": {
+    "new_request": "New swap request",
+    "request_accepted": "Request accepted",
+    "request_declined": "Request declined",
+    "request_expired": "Request expired",
+    "exchange_completed": "Exchange completed",
+    "new_message": "New message",
+    "rating_received": "Rating received"
+  },
+  "preferences": {
+    "title": "Email Notifications",
+    "description": "Choose which emails you want to receive from BookSwap.",
+    "email_new_request": "New swap requests",
+    "email_request_accepted": "Request accepted",
+    "email_request_declined": "Request declined",
+    "email_new_message": "New messages",
+    "email_exchange_completed": "Exchange completed",
+    "email_rating_received": "Ratings received",
+    "saveSuccess": "Preferences saved",
+    "saveError": "Failed to save preferences"
+  },
+  "unsubscribe": {
+    "loading": "Processing…",
+    "success": "You have been unsubscribed from all BookSwap emails.",
+    "successDetail": "You can re-enable notifications at any time from your account settings.",
+    "error": "This unsubscribe link is invalid or has already been used.",
+    "goHome": "Back to BookSwap"
+  }
+}

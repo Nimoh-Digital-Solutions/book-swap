@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "empty": "Aucune notification",
+    "markAllRead": "Tout marquer comme lu",
+    "unreadCount": "{{count}} non lu",
+    "unreadCount_one": "{{count}} non lu",
+    "unreadCount_other": "{{count}} non lus"
+  },
+  "types": {
+    "new_request": "Nouvelle demande d'échange",
+    "request_accepted": "Demande acceptée",
+    "request_declined": "Demande refusée",
+    "request_expired": "Demande expirée",
+    "exchange_completed": "Échange terminé",
+    "new_message": "Nouveau message",
+    "rating_received": "Évaluation reçue"
+  },
+  "preferences": {
+    "title": "Notifications par e-mail",
+    "description": "Choisissez les e-mails que vous souhaitez recevoir de BookSwap.",
+    "email_new_request": "Nouvelles demandes d'échange",
+    "email_request_accepted": "Demande acceptée",
+    "email_request_declined": "Demande refusée",
+    "email_new_message": "Nouveaux messages",
+    "email_exchange_completed": "Échange terminé",
+    "email_rating_received": "Évaluations reçues",
+    "saveSuccess": "Préférences sauvegardées",
+    "saveError": "Échec de la sauvegarde des préférences"
+  },
+  "unsubscribe": {
+    "loading": "Traitement en cours…",
+    "success": "Vous avez été désabonné de tous les e-mails de BookSwap.",
+    "successDetail": "Vous pouvez réactiver les notifications à tout moment depuis vos paramètres.",
+    "error": "Ce lien de désabonnement est invalide ou a déjà été utilisé.",
+    "goHome": "Retour à BookSwap"
+  }
+}

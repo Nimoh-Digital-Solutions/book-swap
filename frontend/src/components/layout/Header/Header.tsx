@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { useAuthStore } from '@features/auth/stores/authStore';
+import { NotificationBell } from '@features/notifications';
 import { PATHS } from '@routes/config/paths';
 
 export const Header = ({ className }: { className?: string }): ReactElement => {
@@ -34,7 +35,9 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
             <a href={PATHS.COMMUNITY} className="hover:text-white transition-colors">{t('home.nav.community', 'Community')}</a>
           </div>
         </div>
-         {isAuthenticated ? (
+        <div className="flex items-center gap-3">
+          {isAuthenticated && <NotificationBell enabled={isAuthenticated} />}
+          {isAuthenticated ? (
           <Link to={PATHS.PROFILE} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-5 py-2 rounded-full font-bold text-sm transition-colors">
             {t('navigation.profile', 'My Profile')}
           </Link>
@@ -43,6 +46,7 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
           {t('home.nav.signIn', 'Sign In')} 
         </Link>
         )}
+        </div>
       </nav>
     </header>
   );

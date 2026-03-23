@@ -32,6 +32,7 @@ export const PATHS = {
   TERMS_OF_SERVICE: '/terms-of-service',
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
+  NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
   NOT_FOUND: '*',
 } as const;
 
