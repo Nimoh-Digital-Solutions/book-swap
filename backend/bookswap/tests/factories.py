@@ -22,6 +22,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     preferred_language = 'en'
     preferred_radius = 5000
     onboarding_completed = False
+    email_verified = True
 
     class Params:
         with_location = factory.Trait(
@@ -32,6 +33,9 @@ class UserFactory(factory.django.DjangoModelFactory):
             onboarding_completed=True,
             bio=factory.Faker('sentence', nb_words=10),
             preferred_genres=['fiction', 'mystery'],
+        )
+        unverified = factory.Trait(
+            email_verified=False,
         )
 
 

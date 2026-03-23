@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
+from bookswap.permissions import IsEmailVerified
+from bookswap.services import get_blocked_user_ids
 
 from .models import MeetupLocation, Message
 from .permissions import (
@@ -45,6 +47,18 @@ class MessageViewSet(GenericViewSet):
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
             raise NotFound('Exchange not found.')
+
+        # Block check: hide exchange if either party is blocked
+        if request.user.is_authenticated:
+            blocked_ids = get_blocked_user_ids(request.user)
+            other_id = (
+                self.exchange.owner_id
+                if self.exchange.requester_id == request.user.pk
+                else self.exchange.requester_id
+            )
+            if other_id in blocked_ids:
+                raise NotFound('Exchange not found.')
+
         super().initial(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -78,6 +92,13 @@ class MessageViewSet(GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         """Send a message in this exchange."""
+        # Email verification gate (US-803)
+        if not IsEmailVerified().has_permission(request, self):
+            return Response(
+                {'detail': IsEmailVerified.message},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         if self.exchange.status not in CHAT_WRITABLE_STATUSES:
             return Response(
                 {'detail': 'Chat is read-only for this exchange.'},

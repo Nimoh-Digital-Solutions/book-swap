@@ -1,4 +1,4 @@
-"""bookswap views — user profile, location, onboarding, account, book, wishlist, and browse endpoints."""
+"""bookswap views — user profile, location, onboarding, account, book, wishlist, browse, and trust & safety endpoints."""
 
 from django.contrib.auth import get_user_model
 from django.contrib.gis.db.models.functions import Distance
@@ -11,14 +11,16 @@ from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser, MultiPartParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Book, BookPhoto, BookStatus, WishlistItem
-from .permissions import IsBookOwner
+from .models import Block, Book, BookPhoto, BookStatus, Report, WishlistItem
+from .permissions import IsBookOwner, IsEmailVerified
 from .serializers import (
     AccountDeletionRequestSerializer,
+    BlockCreateSerializer,
+    BlockSerializer,
     BookCreateSerializer,
     BookListSerializer,
     BookPhotoSerializer,
@@ -31,13 +33,16 @@ from .serializers import (
     ISBNLookupSerializer,
     OnboardingCompleteSerializer,
     PhotoReorderSerializer,
+    ReportAdminUpdateSerializer,
+    ReportCreateSerializer,
+    ReportListSerializer,
     SetLocationSerializer,
     UserPrivateSerializer,
     UserPublicSerializer,
     UserUpdateSerializer,
     WishlistItemSerializer,
 )
-from .services import ISBNLookupError, ISBNLookupService
+from .services import ISBNLookupError, ISBNLookupService, get_blocked_user_ids
 from .validators import validate_book_photo
 
 from rest_framework import serializers as drf_serializers
@@ -66,8 +71,11 @@ class UserDetailView(generics.RetrieveAPIView):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = UserPublicSerializer
-    queryset = User.objects.filter(is_active=True)
     lookup_field = "pk"
+
+    def get_queryset(self):
+        blocked_ids = get_blocked_user_ids(self.request.user)
+        return User.objects.filter(is_active=True).exclude(pk__in=blocked_ids)
 
 
 class SetLocationView(APIView):
@@ -246,13 +254,18 @@ class BookViewSet(
         owner_param = self.request.query_params.get("owner")
         if owner_param == "me":
             return qs.filter(owner=self.request.user)
+
+        # Public listings: exclude blocked users' books
+        blocked_ids = get_blocked_user_ids(self.request.user)
         if owner_param:
-            return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE)
-        return qs.filter(status=BookStatus.AVAILABLE)
+            return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
+        return qs.filter(status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
 
     def get_permissions(self):
         if self.action in ("update", "partial_update", "destroy"):
             return [IsAuthenticated(), IsBookOwner()]
+        if self.action == "create":
+            return [IsAuthenticated(), IsEmailVerified()]
         return [IsAuthenticated()]
 
     def perform_destroy(self, instance):
@@ -457,7 +470,8 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return filters.get("radius", self.request.user.preferred_radius or 5000)
 
     def _base_queryset(self, user_location, radius):
-        """Queryset of available books within radius, excluding own books."""
+        """Queryset of available books within radius, excluding own books and blocked users."""
+        blocked_ids = get_blocked_user_ids(self.request.user)
         return (
             Book.objects.select_related("owner")
             .prefetch_related("photos")
@@ -467,6 +481,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 owner__location__distance_lte=(user_location, D(m=radius)),
             )
             .exclude(owner=self.request.user)
+            .exclude(owner_id__in=blocked_ids)
             .annotate(distance=Distance("owner__location", user_location))
         )
 
@@ -627,3 +642,148 @@ class NearbyCountView(APIView):
         )
 
         return Response({"count": count, "radius": radius})
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Trust & Safety endpoints (Epic 8)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class BlockViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Block / Unblock / List blocked users.
+
+    - ``POST /users/block/``           — block a user
+    - ``GET  /users/block/``           — list blocked users
+    - ``DELETE /users/block/{user_id}/`` — unblock a user
+    """
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = BlockSerializer
+
+    def get_queryset(self):
+        return (
+            Block.objects.filter(blocker=self.request.user)
+            .select_related('blocked_user')
+        )
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return BlockCreateSerializer
+        return BlockSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = BlockCreateSerializer(
+            data=request.data, context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        blocked_user_id = serializer.validated_data['blocked_user_id']
+
+        block, created = Block.objects.get_or_create(
+            blocker=request.user,
+            blocked_user_id=blocked_user_id,
+        )
+
+        if not created:
+            return Response(
+                {'detail': 'User is already blocked.'},
+                status=status.HTTP_200_OK,
+            )
+
+        # Auto-cancel pending/accepted exchanges between the pair
+        self._cancel_exchanges_between(request.user.pk, blocked_user_id)
+
+        result = BlockSerializer(block).data
+        return Response(result, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        """Unblock — lookup by blocked_user's UUID (not Block PK)."""
+        blocked_user_id = kwargs.get('pk')
+        try:
+            block = Block.objects.get(
+                blocker=request.user, blocked_user_id=blocked_user_id,
+            )
+        except Block.DoesNotExist:
+            return Response(
+                {'detail': 'Block not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        block.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def _cancel_exchanges_between(user_a_id, user_b_id):
+        """Cancel all pending/accepted/active exchanges between two users."""
+        from apps.exchanges.models import ExchangeRequest, ExchangeStatus
+        from django.db import models as db_models
+
+        cancelable = [
+            ExchangeStatus.PENDING,
+            ExchangeStatus.ACCEPTED,
+            ExchangeStatus.CONDITIONS_PENDING,
+            ExchangeStatus.ACTIVE,
+        ]
+        ExchangeRequest.objects.filter(
+            db_models.Q(
+                requester_id=user_a_id, owner_id=user_b_id,
+            ) | db_models.Q(
+                requester_id=user_b_id, owner_id=user_a_id,
+            ),
+            status__in=cancelable,
+        ).update(status=ExchangeStatus.CANCELLED)
+
+
+class ReportCreateView(generics.CreateAPIView):
+    """POST /reports/ — create a report about a user/listing/exchange."""
+
+    permission_classes = (IsAuthenticated, IsEmailVerified)
+    serializer_class = ReportCreateSerializer
+
+    def perform_create(self, serializer):
+        report = serializer.save()
+        # Fire Celery task to notify admin
+        from .tasks import send_report_notification_email
+        send_report_notification_email.delay(str(report.pk))
+
+
+class ReportAdminListView(generics.ListAPIView):
+    """GET /reports/admin/ — admin-only list of all reports."""
+
+    permission_classes = (IsAdminUser,)
+    serializer_class = ReportListSerializer
+
+    def get_queryset(self):
+        qs = Report.objects.select_related('reporter', 'reported_user').order_by('-created_at')
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+
+class ReportAdminUpdateView(generics.UpdateAPIView):
+    """PATCH /reports/admin/{id}/ — update report status/notes (admin only)."""
+
+    permission_classes = (IsAdminUser,)
+    serializer_class = ReportAdminUpdateSerializer
+    queryset = Report.objects.all()
+    lookup_field = 'pk'
+    http_method_names = ['patch']
+
+
+class DataExportView(APIView):
+    """GET /users/me/data-export/ — download all personal data as JSON."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        from .services import build_data_export
+
+        data = build_data_export(request.user)
+        response = Response(data)
+        response['Content-Disposition'] = 'attachment; filename="bookswap-data-export.json"'
+        return response
