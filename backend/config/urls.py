@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/v1/', include('bookswap.urls')),
     path('api/v1/exchanges/', include('apps.exchanges.urls')),
     path('api/v1/messaging/', include('apps.messaging.urls')),
+    path('api/v1/ratings/', include('apps.ratings.urls')),
 ]
 
 # In development, redirect the root URL to the API docs for convenience
