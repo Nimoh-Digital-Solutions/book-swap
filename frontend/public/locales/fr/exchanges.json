@@ -1,0 +1,108 @@
+{
+  "page": {
+    "title": "Mes échanges",
+    "description": "Suivez et gérez vos échanges de livres."
+  },
+  "tabs": {
+    "active": "Actifs",
+    "pending": "En attente",
+    "history": "Historique"
+  },
+  "empty": {
+    "active": "Aucun échange actif",
+    "pending": "Aucune demande en attente",
+    "history": "Aucun historique d'échanges",
+    "activeHint": "Vos échanges actifs apparaîtront ici.",
+    "pendingHint": "Parcourez le catalogue pour trouver des livres et demander un échange.",
+    "historyHint": "Vos échanges terminés et passés apparaîtront ici."
+  },
+  "status": {
+    "pending": "En attente",
+    "accepted": "Accepté",
+    "conditions_pending": "Conditions en attente",
+    "active": "Actif",
+    "swap_confirmed": "Échange confirmé",
+    "completed": "Terminé",
+    "declined": "Refusé",
+    "cancelled": "Annulé",
+    "expired": "Expiré",
+    "return_requested": "Retour demandé",
+    "returned": "Retourné"
+  },
+  "request": {
+    "swap": "Demander un échange",
+    "selectBook": "Choisissez un livre à offrir",
+    "send": "Envoyer la demande",
+    "sent": "Demande envoyée !",
+    "cancel": "Annuler la demande",
+    "noBooks": "Ajoutez d'abord un livre pour commencer à échanger !"
+  },
+  "incoming": {
+    "title": "Demandes reçues",
+    "back": "Retour aux échanges",
+    "empty": "Aucune demande reçue",
+    "emptyHint": "Lorsque quelqu'un demande un de vos livres, il apparaîtra ici.",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "view": "Voir",
+    "theyWant": "Ils veulent",
+    "theyOffer": "Ils offrent",
+    "swaps": "échanges",
+    "acceptSuccess": "Demande acceptée !",
+    "acceptError": "Impossible d'accepter la demande.",
+    "declineSuccess": "Demande refusée.",
+    "declineError": "Impossible de refuser la demande."
+  },
+  "conditions": {
+    "confirm": "Accepter les conditions d'échange",
+    "accepted": "Conditions acceptées !",
+    "youAccepted": "Vous avez accepté les conditions",
+    "waiting": "En attente de {{partner}} pour accepter les conditions",
+    "bothAccepted": "Les deux parties ont accepté les conditions !"
+  },
+  "swap": {
+    "confirm": "Confirmer l'échange",
+    "confirmed": "Échange confirmé !",
+    "youConfirmed": "Vous avez confirmé l'échange",
+    "partnerConfirmed": "{{partner}} a confirmé",
+    "waiting": "En attente de {{partner}}"
+  },
+  "return": {
+    "request": "Demander le retour",
+    "requested": "Retour demandé.",
+    "confirm": "Confirmer le retour",
+    "confirmed": "Retour confirmé !",
+    "youConfirmed": "Vous avez confirmé le retour",
+    "waiting": "En attente de {{partner}}"
+  },
+  "action": {
+    "accepted": "Échange accepté !",
+    "declined": "Échange refusé.",
+    "cancelled": "Demande annulée."
+  },
+  "detail": {
+    "back": "Retour",
+    "title": "Détails de l'échange",
+    "progress": "Progression",
+    "requester": "Demandeur",
+    "owner": "Propriétaire",
+    "message": "Message"
+  },
+  "timeline": {
+    "requested": "Demandé",
+    "accepted": "Accepté",
+    "conditions": "Conditions",
+    "active": "Actif",
+    "swapConfirmed": "Échange confirmé",
+    "completed": "Terminé"
+  },
+  "card": {
+    "with": "avec"
+  },
+  "error": {
+    "load": "Impossible de charger les échanges.",
+    "notFound": "Échange introuvable.",
+    "action": "Action échouée. Veuillez réessayer.",
+    "create": "Impossible d'envoyer la demande."
+  }
+}

@@ -17,6 +17,12 @@ vi.mock('../hooks/useBook', () => ({
   useBook: (...args: unknown[]) => mockUseBook(...args),
 }));
 
+vi.mock('@features/exchanges/components/RequestSwapButton/RequestSwapButton', () => ({
+  RequestSwapButton: ({ bookId }: { bookId: string }) => (
+    <button data-testid="request-swap-btn" data-book-id={bookId}>Request Swap</button>
+  ),
+}));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------

@@ -1,0 +1,108 @@
+{
+  "page": {
+    "title": "My Exchanges",
+    "description": "Track and manage your book swaps."
+  },
+  "tabs": {
+    "active": "Active",
+    "pending": "Pending",
+    "history": "History"
+  },
+  "empty": {
+    "active": "No active exchanges",
+    "pending": "No pending requests",
+    "history": "No exchange history yet",
+    "activeHint": "When you have active swaps, they will appear here.",
+    "pendingHint": "Browse the catalogue to find books and request a swap.",
+    "historyHint": "Your completed and past exchanges will show up here."
+  },
+  "status": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "conditions_pending": "Awaiting Conditions",
+    "active": "Active",
+    "swap_confirmed": "Swap Confirmed",
+    "completed": "Completed",
+    "declined": "Declined",
+    "cancelled": "Cancelled",
+    "expired": "Expired",
+    "return_requested": "Return Requested",
+    "returned": "Returned"
+  },
+  "request": {
+    "swap": "Request Swap",
+    "selectBook": "Select a book to offer",
+    "send": "Send Request",
+    "sent": "Request sent!",
+    "cancel": "Cancel Request",
+    "noBooks": "List a book first to start swapping!"
+  },
+  "incoming": {
+    "title": "Incoming Requests",
+    "back": "Back to Exchanges",
+    "empty": "No incoming requests",
+    "emptyHint": "When someone requests one of your books, it will appear here.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "view": "View",
+    "theyWant": "They want",
+    "theyOffer": "They offer",
+    "swaps": "swaps",
+    "acceptSuccess": "Request accepted!",
+    "acceptError": "Failed to accept request.",
+    "declineSuccess": "Request declined.",
+    "declineError": "Failed to decline request."
+  },
+  "conditions": {
+    "confirm": "Accept Exchange Conditions",
+    "accepted": "Conditions accepted!",
+    "youAccepted": "You accepted the conditions",
+    "waiting": "Waiting for {{partner}} to accept the exchange conditions",
+    "bothAccepted": "Both parties accepted the conditions!"
+  },
+  "swap": {
+    "confirm": "Confirm Swap",
+    "confirmed": "Swap confirmed!",
+    "youConfirmed": "You confirmed the swap",
+    "partnerConfirmed": "{{partner}} confirmed",
+    "waiting": "Waiting for {{partner}}"
+  },
+  "return": {
+    "request": "Request Return",
+    "requested": "Return requested.",
+    "confirm": "Confirm Return",
+    "confirmed": "Return confirmed!",
+    "youConfirmed": "You confirmed the return",
+    "waiting": "Waiting for {{partner}}"
+  },
+  "action": {
+    "accepted": "Exchange accepted!",
+    "declined": "Exchange declined.",
+    "cancelled": "Request cancelled."
+  },
+  "detail": {
+    "back": "Back",
+    "title": "Exchange Details",
+    "progress": "Progress",
+    "requester": "Requester",
+    "owner": "Owner",
+    "message": "Message"
+  },
+  "timeline": {
+    "requested": "Requested",
+    "accepted": "Accepted",
+    "conditions": "Conditions",
+    "active": "Active",
+    "swapConfirmed": "Swap Confirmed",
+    "completed": "Completed"
+  },
+  "card": {
+    "with": "with"
+  },
+  "error": {
+    "load": "Unable to load exchanges.",
+    "notFound": "Exchange not found.",
+    "action": "Action failed. Please try again.",
+    "create": "Failed to send request."
+  }
+}

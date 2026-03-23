@@ -25,6 +25,9 @@ export const PATHS = {
   BOOK_DETAIL: '/books/:id',
   EDIT_BOOK: '/books/:id/edit',
   CATALOGUE: '/catalogue',
+  EXCHANGES: '/exchanges',
+  EXCHANGE_DETAIL: '/exchanges/:id',
+  INCOMING_REQUESTS: '/exchanges/incoming',
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
   NOT_FOUND: '*',
@@ -105,6 +108,18 @@ export const routeMetadata = {
   [PATHS.EDIT_BOOK]: {
     title: 'Edit Book',
     description: 'Edit your book listing',
+  },
+  [PATHS.EXCHANGES]: {
+    title: 'My Exchanges',
+    description: 'Manage your book exchange requests',
+  },
+  [PATHS.EXCHANGE_DETAIL]: {
+    title: 'Exchange Details',
+    description: 'View exchange details and manage the swap',
+  },
+  [PATHS.INCOMING_REQUESTS]: {
+    title: 'Incoming Requests',
+    description: 'Review and respond to incoming swap requests',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',

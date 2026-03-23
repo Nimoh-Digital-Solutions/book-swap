@@ -70,6 +70,18 @@ const EditBookPage = lazy(() =>
   import('@features/books').then(m => ({ default: m.EditBookPage }))
 );
 
+const ExchangesPage = lazy(() =>
+  import('@features/exchanges').then(m => ({ default: m.ExchangesPage }))
+);
+
+const ExchangeDetailPage = lazy(() =>
+  import('@features/exchanges').then(m => ({ default: m.ExchangeDetailPage }))
+);
+
+const IncomingRequestsPage = lazy(() =>
+  import('@features/exchanges').then(m => ({ default: m.IncomingRequestsPage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -181,6 +193,18 @@ export const routes: RouteObject[] = [
       {
         path: PATHS.EDIT_BOOK,
         element: <ProtectedPage component={EditBookPage} />,
+      },
+      {
+        path: PATHS.INCOMING_REQUESTS,
+        element: <ProtectedPage component={IncomingRequestsPage} />,
+      },
+      {
+        path: PATHS.EXCHANGE_DETAIL,
+        element: <ProtectedPage component={ExchangeDetailPage} />,
+      },
+      {
+        path: PATHS.EXCHANGES,
+        element: <ProtectedPage component={ExchangesPage} />,
       },
     ],
   },
