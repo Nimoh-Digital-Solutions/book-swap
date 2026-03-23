@@ -1,0 +1,37 @@
+{
+  "chat": {
+    "title": "Chat",
+    "readOnly": "This chat is read-only.",
+    "connecting": "Connecting…",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "noMessages": "No messages yet. Say hello!",
+    "loadMore": "Load older messages",
+    "sendPlaceholder": "Type a message…",
+    "send": "Send",
+    "attachImage": "Attach image",
+    "removeImage": "Remove image",
+    "charsRemaining": "{{count}} / 1000",
+    "locked": "Chat locked",
+    "readReceipt": "Read",
+    "sent": "Sent",
+    "typing": "{{name}} is typing…",
+    "imageAlt": "Image attachment from {{name}}",
+    "expand": "Expand image"
+  },
+  "meetup": {
+    "title": "Meetup Suggestions",
+    "suggest": "Suggest Meetup",
+    "close": "Close",
+    "noSuggestions": "No meetup suggestions available.",
+    "select": "Select",
+    "distance": "{{distance}} km away",
+    "suggestionMessage": "How about meeting at {{name}}? It's {{distance}} km from the midpoint.",
+    "category": {
+      "library": "Library",
+      "cafe": "Café",
+      "park": "Park",
+      "station": "Station"
+    }
+  }
+}

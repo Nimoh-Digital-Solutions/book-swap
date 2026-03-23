@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
+import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, X } from 'lucide-react';
@@ -257,11 +258,27 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
   return <></>;
 }
 
+const CHAT_ELIGIBLE_STATUSES = new Set([
+  'active', 'swap_confirmed', 'completed', 'return_requested', 'returned',
+]);
+const CHAT_READ_ONLY_STATUSES = new Set([
+  'completed', 'return_requested', 'returned',
+]);
+
+function isChatEligible(status: string): boolean {
+  return CHAT_ELIGIBLE_STATUSES.has(status);
+}
+
+function isChatReadOnly(status: string): boolean {
+  return CHAT_READ_ONLY_STATUSES.has(status);
+}
+
 export default function ExchangeDetailPage(): ReactElement {
   const { t } = useTranslation('exchanges');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { data: exchange, isLoading, isError } = useExchange(id!);
+  const currentUserId = useAuthStore(s => s.user?.id);
 
   useDocumentTitle(routeMetadata[PATHS.EXCHANGE_DETAIL].title);
 
@@ -280,6 +297,8 @@ export default function ExchangeDetailPage(): ReactElement {
       </div>
     );
   }
+
+  const isOwner = currentUserId === exchange.owner.id;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
@@ -353,6 +372,17 @@ export default function ExchangeDetailPage(): ReactElement {
           <div className="bg-[#1A251D] rounded-xl border border-[#28382D] p-6">
             <DetailActions exchange={exchange} />
           </div>
+
+          {/* Chat */}
+          {isChatEligible(exchange.status) && currentUserId && (
+            <ChatPanel
+              exchangeId={exchange.id}
+              currentUserId={currentUserId}
+              partnerName={isOwner ? exchange.requester.username : exchange.owner.username}
+              partnerAvatar={isOwner ? exchange.requester.avatar : exchange.owner.avatar}
+              isReadOnly={isChatReadOnly(exchange.status)}
+            />
+          )}
         </div>
       </div>
     </div>

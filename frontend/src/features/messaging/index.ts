@@ -5,8 +5,16 @@
  * into sub-directories directly from outside this feature.
  *
  * @example
- * import { useMessages, useSendMessage, useChatWebSocket } from '@features/messaging';
+ * import { useMessages, useSendMessage, useChatWebSocket, ChatPanel } from '@features/messaging';
  */
+
+// Components
+export { ChatHeader } from './components/ChatHeader/ChatHeader';
+export { ChatPanel } from './components/ChatPanel/ChatPanel';
+export { MeetupSuggestionPanel } from './components/MeetupSuggestionPanel/MeetupSuggestionPanel';
+export { MessageBubble } from './components/MessageBubble/MessageBubble';
+export { MessageInput } from './components/MessageInput/MessageInput';
+export { TypingIndicator } from './components/TypingIndicator/TypingIndicator';
 
 // Hooks
 export { messagingKeys } from './hooks/messagingKeys';

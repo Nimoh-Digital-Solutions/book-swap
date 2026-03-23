@@ -1,0 +1,37 @@
+{
+  "chat": {
+    "title": "Discussion",
+    "readOnly": "Cette discussion est en lecture seule.",
+    "connecting": "Connexion…",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "noMessages": "Aucun message. Dites bonjour !",
+    "loadMore": "Charger les messages précédents",
+    "sendPlaceholder": "Écrire un message…",
+    "send": "Envoyer",
+    "attachImage": "Joindre une image",
+    "removeImage": "Supprimer l'image",
+    "charsRemaining": "{{count}} / 1000",
+    "locked": "Discussion verrouillée",
+    "readReceipt": "Lu",
+    "sent": "Envoyé",
+    "typing": "{{name}} est en train d'écrire…",
+    "imageAlt": "Image jointe par {{name}}",
+    "expand": "Agrandir l'image"
+  },
+  "meetup": {
+    "title": "Suggestions de rencontre",
+    "suggest": "Suggérer un lieu",
+    "close": "Fermer",
+    "noSuggestions": "Aucune suggestion de rencontre disponible.",
+    "select": "Choisir",
+    "distance": "{{distance}} km",
+    "suggestionMessage": "Et si on se retrouvait à {{name}} ? C'est à {{distance}} km du point médian.",
+    "category": {
+      "library": "Bibliothèque",
+      "cafe": "Café",
+      "park": "Parc",
+      "station": "Gare"
+    }
+  }
+}

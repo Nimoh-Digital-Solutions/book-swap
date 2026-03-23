@@ -1,0 +1,37 @@
+{
+  "chat": {
+    "title": "Chat",
+    "readOnly": "Deze chat is alleen-lezen.",
+    "connecting": "Verbinden…",
+    "connected": "Verbonden",
+    "disconnected": "Niet verbonden",
+    "noMessages": "Nog geen berichten. Zeg hallo!",
+    "loadMore": "Oudere berichten laden",
+    "sendPlaceholder": "Typ een bericht…",
+    "send": "Verstuur",
+    "attachImage": "Afbeelding toevoegen",
+    "removeImage": "Afbeelding verwijderen",
+    "charsRemaining": "{{count}} / 1000",
+    "locked": "Chat vergrendeld",
+    "readReceipt": "Gelezen",
+    "sent": "Verzonden",
+    "typing": "{{name}} typt…",
+    "imageAlt": "Afbeelding van {{name}}",
+    "expand": "Afbeelding vergroten"
+  },
+  "meetup": {
+    "title": "Ontmoetingssuggesties",
+    "suggest": "Suggereer ontmoeting",
+    "close": "Sluiten",
+    "noSuggestions": "Geen ontmoetingssuggesties beschikbaar.",
+    "select": "Selecteer",
+    "distance": "{{distance}} km afstand",
+    "suggestionMessage": "Zullen we afspreken bij {{name}}? Het is {{distance}} km van het middelpunt.",
+    "category": {
+      "library": "Bibliotheek",
+      "cafe": "Café",
+      "park": "Park",
+      "station": "Station"
+    }
+  }
+}
