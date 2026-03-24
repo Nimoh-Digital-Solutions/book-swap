@@ -191,7 +191,7 @@ const HomePage = (): ReactElement => {
             </p>
           </div>
           <Link
-            to={PATHS.HOME}
+            to={PATHS.CATALOGUE}
             className="text-[#E4B643] font-semibold text-sm hover:text-white transition-colors flex items-center gap-1 no-underline"
           >
             {t('home.recentlyAdded.viewAll', 'View all books')}{' '}
