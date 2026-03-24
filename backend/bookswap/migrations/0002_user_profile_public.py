@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('bookswap', '0001_initial'),
+        ("bookswap", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='profile_public',
-            field=models.BooleanField(default=True, help_text='Whether this profile is visible to other users.'),
+            model_name="user",
+            name="profile_public",
+            field=models.BooleanField(default=True, help_text="Whether this profile is visible to other users."),
         ),
     ]
