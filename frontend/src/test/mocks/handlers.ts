@@ -944,4 +944,9 @@ export const handlers = [
   ...ratingHandlers,
   ...trustSafetyHandlers,
   ...notificationHandlers,
+
+  /** IP geolocation fallback used by useUserCity hook */
+  http.get('https://ipapi.co/json/', () => {
+    return HttpResponse.json({ city: 'Amsterdam' });
+  }),
 ];
