@@ -44,6 +44,7 @@ class UserPrivateSerializer(serializers.ModelSerializer):
             "onboarding_completed",
             "email_verified",
             "member_since",
+            "profile_public",
         )
         read_only_fields = (
             "id",
@@ -78,6 +79,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "preferred_genres",
             "preferred_language",
             "preferred_radius",
+            "profile_public",
         )
 
     def validate_avatar(self, value):

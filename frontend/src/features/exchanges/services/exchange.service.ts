@@ -115,10 +115,10 @@ export const exchangeService = {
 
   /** List incoming requests (owner perspective). */
   async incoming(): Promise<ExchangeListItem[]> {
-    const { data } = await http.get<ExchangeListItem[]>(
+    const { data } = await http.get<PaginatedExchanges>(
       API.exchanges.incoming,
     );
-    return data;
+    return data.results;
   },
 
   /** Get count of pending incoming requests (for nav badge). */

@@ -26,14 +26,14 @@ class UserMeView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        serializer = UserPrivateSerializer(request.user)
+        serializer = UserPrivateSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request):
         serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(UserPrivateSerializer(request.user).data)
+        return Response(UserPrivateSerializer(request.user, context={'request': request}).data)
 
 
 class UserDetailView(generics.RetrieveAPIView):

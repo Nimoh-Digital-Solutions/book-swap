@@ -1,4 +1,4 @@
-import { useCallback, type ReactElement } from 'react';
+import { type ReactElement,useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@data/useAppStore';

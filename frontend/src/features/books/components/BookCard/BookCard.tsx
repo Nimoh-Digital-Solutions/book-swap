@@ -27,9 +27,9 @@ export function BookCard({ book }: BookCardProps): ReactElement {
     >
       {/* Cover image */}
       <div className="aspect-[3/4] bg-[#152018] relative overflow-hidden">
-        {book.cover_url ? (
+        {(book.primary_photo ?? book.cover_url) ? (
           <img
-            src={book.cover_url}
+            src={(book.primary_photo ?? book.cover_url) as string}
             alt={book.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"

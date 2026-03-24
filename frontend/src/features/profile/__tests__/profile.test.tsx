@@ -48,6 +48,7 @@ const MOCK_PROFILE: UserProfile = {
   auth_provider: 'email',
   onboarding_completed: true,
   email_verified: true,
+  profile_public: true,
   member_since: '2025-06-01T10:00:00Z',
 };
 

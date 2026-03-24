@@ -57,8 +57,8 @@ const authHandlers = [
     return HttpResponse.json({ csrfToken: TEST_CSRF_TOKEN });
   }),
 
-  /** GET /api/v1/auth/me/ — current user profile */
-  http.get('*/api/v1/auth/me/', () => {
+  /** GET /api/v1/users/me/ — current user profile */
+  http.get('*/api/v1/users/me/', () => {
     return HttpResponse.json(TEST_USER);
   }),
 ];
@@ -516,12 +516,12 @@ const MOCK_EXCHANGE_DETAIL = {
 };
 
 export {
-  MOCK_EXCHANGE_LIST_ITEM,
-  MOCK_EXCHANGE_DETAIL,
-  MOCK_EXCHANGE_PARTICIPANT_REQUESTER,
-  MOCK_EXCHANGE_PARTICIPANT_OWNER,
-  MOCK_EXCHANGE_BOOK_REQUESTED,
   MOCK_EXCHANGE_BOOK_OFFERED,
+  MOCK_EXCHANGE_BOOK_REQUESTED,
+  MOCK_EXCHANGE_DETAIL,
+  MOCK_EXCHANGE_LIST_ITEM,
+  MOCK_EXCHANGE_PARTICIPANT_OWNER,
+  MOCK_EXCHANGE_PARTICIPANT_REQUESTER,
 };
 
 const exchangeHandlers = [

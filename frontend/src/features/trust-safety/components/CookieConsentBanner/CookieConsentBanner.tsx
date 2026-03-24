@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactElement } from 'react';
+import { type ReactElement,useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Cookie } from 'lucide-react';

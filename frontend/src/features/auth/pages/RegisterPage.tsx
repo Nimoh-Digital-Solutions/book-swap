@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
+import { HttpError } from '@services';
 
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
 import { RegisterForm } from '../components/RegisterForm/RegisterForm';
@@ -10,14 +12,34 @@ import type { RegisterPayload } from '../types/auth.types';
 
 export function RegisterPage() {
   useDocumentTitle(routeMetadata[PATHS.REGISTER].title);
+  const { city } = useUserCity();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const handleSubmit = async (payload: RegisterPayload) => {
-    await authService.register(payload);
-    void navigate(PATHS.LOGIN, {
-      replace: true,
-      state: { registered: true },
-    });
+    setIsLoading(true);
+    setServerError(null);
+    try {
+      await authService.register(payload);
+      void navigate(PATHS.LOGIN, {
+        replace: true,
+        state: { registered: true },
+      });
+    } catch (err) {
+      if (err instanceof HttpError) {
+        const detail = (err.body as Record<string, unknown> | null)?.detail;
+        setServerError(
+          typeof detail === 'string'
+            ? detail
+            : 'Registration failed. Please check your details and try again.',
+        );
+      } else {
+        setServerError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleToggle = () => void navigate(PATHS.LOGIN, { replace: true });
@@ -31,7 +53,7 @@ export function RegisterPage() {
           <span className="text-[#E4B643] italic">Community</span>
         </>
       }
-      brandingSubtitle="Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam."
+      brandingSubtitle={`Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in ${city}.`}
       quote="I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion."
       authorName="Sarah Jenkins"
       authorDetails="Swapping since 2021"
@@ -39,8 +61,8 @@ export function RegisterPage() {
       formContent={
         <RegisterForm
           onSubmit={handleSubmit}
-          onToggle={handleToggle}
-        />
+          onToggle={handleToggle}          isLoading={isLoading}
+          serverError={serverError}        />
       }
     />
   );

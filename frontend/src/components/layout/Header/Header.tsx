@@ -6,6 +6,8 @@ import { useAuthStore } from '@features/auth/stores/authStore';
 import { NotificationBell } from '@features/notifications';
 import { PATHS } from '@routes/config/paths';
 
+import { ProfileDropdown } from './ProfileDropdown';
+
 export const Header = ({ className }: { className?: string }): ReactElement => {
   const { t } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -38,9 +40,7 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
         <div className="flex items-center gap-3">
           {isAuthenticated && <NotificationBell enabled={isAuthenticated} />}
           {isAuthenticated ? (
-          <Link to={PATHS.PROFILE} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-5 py-2 rounded-full font-bold text-sm transition-colors">
-            {t('navigation.profile', 'My Profile')}
-          </Link>
+          <ProfileDropdown />
         ) : (
         <Link to={PATHS.LOGIN} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-6 py-2 rounded-full font-bold text-sm transition-colors">
           {t('home.nav.signIn', 'Sign In')} 

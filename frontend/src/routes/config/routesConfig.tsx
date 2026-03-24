@@ -90,6 +90,14 @@ const NotificationUnsubscribePage = lazy(() =>
   import('@features/notifications').then(m => ({ default: m.UnsubscribePage }))
 );
 
+const SocialAuthCallbackPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.SocialAuthCallbackPage }))
+);
+
+const SocialAuthErrorPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.SocialAuthErrorPage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -231,6 +239,14 @@ export const routes: RouteObject[] = [
   {
     path: PATHS.NOT_FOUND,
     element: <LazyPage component={NotFoundPage} />,
+  },
+  {
+    path: PATHS.SOCIAL_AUTH_CALLBACK,
+    element: <LazyPage component={SocialAuthCallbackPage} />,
+  },
+  {
+    path: PATHS.SOCIAL_AUTH_ERROR,
+    element: <LazyPage component={SocialAuthErrorPage} />,
   },
 ];
 

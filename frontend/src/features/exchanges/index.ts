@@ -16,7 +16,6 @@ export { RequestSwapButton } from './components/RequestSwapButton/RequestSwapBut
 // Hooks
 export { exchangeKeys } from './hooks/exchangeKeys';
 export { useExchange } from './hooks/useExchange';
-export { useExchanges } from './hooks/useExchanges';
 export {
   useAcceptConditions,
   useAcceptExchange,
@@ -28,6 +27,7 @@ export {
   useDeclineExchange,
   useRequestReturn,
 } from './hooks/useExchangeMutations';
+export { useExchanges } from './hooks/useExchanges';
 export { useIncomingRequestCount } from './hooks/useIncomingRequestCount';
 export { useIncomingRequests } from './hooks/useIncomingRequests';
 

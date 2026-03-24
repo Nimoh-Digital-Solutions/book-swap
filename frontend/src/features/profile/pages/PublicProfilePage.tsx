@@ -2,11 +2,10 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { BlockUserButton, ReportButton } from '@features/trust-safety';
 import { useDocumentTitle } from '@hooks';
 import { routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Globe, MapPin, Star, UserX } from 'lucide-react';
-
-import { BlockUserButton, ReportButton } from '@features/trust-safety';
 
 import { NewMemberBadge } from '../components/NewMemberBadge';
 import { usePublicProfile } from '../hooks/usePublicProfile';

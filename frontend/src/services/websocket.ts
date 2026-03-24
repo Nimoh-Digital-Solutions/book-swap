@@ -200,8 +200,19 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
         retryTimer = null;
       }
 
-      if (
-        socket &&
+      if (!socket) return;
+
+      if (socket.readyState === WebSocket.CONNECTING) {
+        // Calling close() while CONNECTING triggers the browser warning
+        // "WebSocket is closed before the connection is established".
+        // Instead, null out all handlers and let the socket self-close
+        // once it finishes opening (happens during React Strict Mode teardown).
+        const s = socket;
+        s.onopen = () => s.close(code, reason);
+        s.onmessage = null;
+        s.onerror = null;
+        s.onclose = null;
+      } else if (
         socket.readyState !== WebSocket.CLOSED &&
         socket.readyState !== WebSocket.CLOSING
       ) {

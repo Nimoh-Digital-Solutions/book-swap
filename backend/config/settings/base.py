@@ -62,6 +62,9 @@ NIMOH_BASE = {
     # Set to False to skip the Celery worker check in /api/v1/health/.
     # Disable when running without a Celery worker (local dev without Docker Celery).
     "HEALTH_CHECK_CELERY": env.bool("HEALTH_CHECK_CELERY", default=True),
+    # The API legitimately returns PII (email) to authenticated callers (e.g.
+    # GET /users/me/). Log-level redaction via SensitiveDataFilter stays active.
+    "SECURITY_SCRUB_PII": False,
     # Separate profile model required by nimoh_base.privacy.
     "PROFILE_MODEL": "profiles.UserProfile",
 }

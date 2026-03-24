@@ -70,6 +70,19 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+/**
+ * Response from `POST /api/v1/auth/exchange-token/`.
+ * Used for both email-verification and social OAuth callbacks.
+ * Note: access token field is `access_token`, not `access`.
+ */
+export interface ExchangeTokenResponse {
+  access_token: string;
+  user_id: string;
+  email: string;
+  expires_in: number;
+  first_login: boolean;
+}
+
 /** Response from `POST /api/v1/auth/token/refresh/`. */
 export interface RefreshResponse {
   /** JWT access token. nimoh_base returns this as `access`. */

@@ -48,6 +48,7 @@ export interface UserProfile {
   onboarding_completed: boolean;
   email_verified: boolean;
   member_since: string;
+  profile_public: boolean;
 }
 
 /**
@@ -86,6 +87,7 @@ export interface UpdateProfilePayload {
   preferred_genres?: string[];
   preferred_language?: PreferredLanguage;
   preferred_radius?: number;
+  profile_public?: boolean;
 }
 
 /**

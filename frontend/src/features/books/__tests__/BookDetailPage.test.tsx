@@ -4,8 +4,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '../../auth/stores/authStore';
-import type { Book } from '../types/book.types';
 import { BookDetailPage } from '../pages/BookDetailPage';
+import type { Book } from '../types/book.types';
 
 // ---------------------------------------------------------------------------
 // Mock hooks

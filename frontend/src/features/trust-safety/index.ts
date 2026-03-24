@@ -6,14 +6,14 @@
  */
 
 // Components
-export { BlockUserButton } from './components/BlockUserButton/BlockUserButton';
-export { UnblockButton } from './components/UnblockButton/UnblockButton';
 export { BlockedUsersList } from './components/BlockedUsersList/BlockedUsersList';
+export { BlockUserButton } from './components/BlockUserButton/BlockUserButton';
+export { CookieConsentBanner } from './components/CookieConsentBanner/CookieConsentBanner';
+export { DataExportButton } from './components/DataExportButton/DataExportButton';
+export { EmailVerificationGate } from './components/EmailVerificationGate/EmailVerificationGate';
 export { ReportButton } from './components/ReportButton/ReportButton';
 export { ReportDialog } from './components/ReportDialog/ReportDialog';
-export { EmailVerificationGate } from './components/EmailVerificationGate/EmailVerificationGate';
-export { DataExportButton } from './components/DataExportButton/DataExportButton';
-export { CookieConsentBanner } from './components/CookieConsentBanner/CookieConsentBanner';
+export { UnblockButton } from './components/UnblockButton/UnblockButton';
 
 // Types
 export type {
@@ -30,18 +30,18 @@ export type {
 
 // Services
 export { blockService } from './services/blockService';
-export { reportService } from './services/reportService';
 export { dataExportService } from './services/dataExportService';
+export { reportService } from './services/reportService';
 
 // Hooks
 export { blockKeys } from './hooks/blockKeys';
 export { useBlocks } from './hooks/useBlocks';
 export { useBlockUser } from './hooks/useBlockUser';
-export { useUnblockUser } from './hooks/useUnblockUser';
+export { useDataExport } from './hooks/useDataExport';
 export { useIsBlocked } from './hooks/useIsBlocked';
 export { useReportUser } from './hooks/useReportUser';
-export { useDataExport } from './hooks/useDataExport';
+export { useUnblockUser } from './hooks/useUnblockUser';
 
 // Schemas
-export { reportSchema } from './schemas/reportSchema';
 export type { ReportFormValues } from './schemas/reportSchema';
+export { reportSchema } from './schemas/reportSchema';

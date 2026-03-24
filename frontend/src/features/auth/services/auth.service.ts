@@ -4,6 +4,7 @@ import { http } from '@services';
 import type {
   AuthUser,
   CsrfResponse,
+  ExchangeTokenResponse,
   LoginPayload,
   LoginResponse,
   RefreshResponse,
@@ -88,7 +89,7 @@ export const authService = {
    * Used during session restore after a successful token refresh.
    */
   async getProfile(): Promise<AuthUser> {
-    const { data } = await http.get<AuthUser>(API.auth.me);
+    const { data } = await http.get<AuthUser>(API.users.me);
     return data;
   },
 
@@ -113,5 +114,17 @@ export const authService = {
       new_password: newPassword,
       new_password_confirm: newPassword,
     });
+  },
+
+  /**
+   * Exchange a one-time social-auth token (from the PSA pipeline) for a
+   * short-lived access_token. Caller must subsequently fetch /me to hydrate
+   * the full user object.
+   */
+  async exchangeSocialToken(exchangeToken: string): Promise<ExchangeTokenResponse> {
+    const { data } = await http.post<ExchangeTokenResponse>(API.auth.exchangeToken, {
+      exchange_token: exchangeToken,
+    });
+    return data;
   },
 };

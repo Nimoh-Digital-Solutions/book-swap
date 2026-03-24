@@ -53,6 +53,7 @@ export interface RadiusCounts {
 /** Nearby-count response (public). */
 export interface NearbyCount {
   count: number;
+  user_count: number;
   radius: number;
 }
 

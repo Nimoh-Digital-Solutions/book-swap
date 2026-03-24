@@ -3,9 +3,8 @@
  *
  * TanStack Query mutation hook for submitting a rating for an exchange.
  */
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { exchangeKeys } from '@features/exchanges';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { ratingService } from '../services/rating.service';
 import type { Rating, SubmitRatingPayload } from '../types/rating.types';

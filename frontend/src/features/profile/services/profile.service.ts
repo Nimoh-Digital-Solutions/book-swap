@@ -29,7 +29,24 @@ export const profileService = {
 
   /** Partially update the authenticated user's profile. */
   async updateMe(payload: UpdateProfilePayload): Promise<UserProfile> {
-    const { data } = await http.patch<UserProfile>(API.users.me, payload);
+    const hasFile = Object.values(payload).some((v) => v instanceof File);
+
+    let body: UpdateProfilePayload | FormData = payload;
+
+    if (hasFile) {
+      const form = new FormData();
+      for (const [key, value] of Object.entries(payload)) {
+        if (value === undefined || value === null) continue;
+        if (Array.isArray(value)) {
+          value.forEach((item) => form.append(key, String(item)));
+        } else {
+          form.append(key, value as string | File);
+        }
+      }
+      body = form;
+    }
+
+    const { data } = await http.patch<UserProfile>(API.users.me, body);
     return data;
   },
 

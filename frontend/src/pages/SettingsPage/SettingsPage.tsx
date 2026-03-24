@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 
 import { NotificationPreferencesSection } from '@features/notifications';
 import { DeleteAccountDialog } from '@features/profile/components/DeleteAccountDialog';
+import { PasswordChangeSection } from '@features/profile/components/PasswordChangeSection/PasswordChangeSection';
+import { PrivacySection } from '@features/profile/components/PrivacySection/PrivacySection';
+import { useProfile } from '@features/profile/hooks/useProfile';
 import {
   BlockedUsersList,
   DataExportButton,
@@ -16,6 +19,10 @@ export default function SettingsPage(): ReactElement {
   const { t } = useTranslation();
   useDocumentTitle(routeMetadata[PATHS.SETTINGS].title);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { data: profile } = useProfile();
+
+  // Only show password-change section for email-authenticated users
+  const isEmailUser = !profile?.auth_provider || profile.auth_provider === 'email';
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
@@ -25,6 +32,12 @@ export default function SettingsPage(): ReactElement {
 
       {/* Notification Preferences */}
       <NotificationPreferencesSection />
+
+      {/* Privacy & Visibility */}
+      <PrivacySection />
+
+      {/* Password Change (email users only) */}
+      {isEmailUser && <PasswordChangeSection />}
 
       {/* Blocked Users */}
       <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-6 space-y-4">

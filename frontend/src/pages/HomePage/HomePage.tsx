@@ -1,9 +1,9 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useNearbyCount } from '@features/discovery';
-import { useDocumentTitle } from '@hooks';
+import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   ArrowLeftRight,
@@ -14,9 +14,6 @@ import {
   Star,
 } from 'lucide-react';
 
-// Amsterdam city centre — fallback coordinates for the public landing page.
-const AMSTERDAM_LAT = 52.3676;
-const AMSTERDAM_LNG = 4.9041;
 const DEFAULT_RADIUS = 10000; // 10 km
 
 const POPULAR_TAGS = ['Sci-Fi', 'Dutch Literature', 'Cookbooks', 'Biographies'];
@@ -83,9 +80,19 @@ const STEPS = [
 
 const HomePage = (): ReactElement => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { city, lat, lng, loading: cityLoading } = useUserCity();
+
   useDocumentTitle(routeMetadata[PATHS.HOME].title);
 
-  const { data: nearbyData } = useNearbyCount(AMSTERDAM_LAT, AMSTERDAM_LNG, DEFAULT_RADIUS);
+  const { data: nearbyData } = useNearbyCount(lat, lng, DEFAULT_RADIUS);
+
+  const handleSearch = (term: string) => {
+    const q = term.trim();
+    if (!q) return;
+    void navigate(`${PATHS.CATALOGUE}?search=${encodeURIComponent(q)}`);
+  };
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
@@ -104,7 +111,16 @@ const HomePage = (): ReactElement => {
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center" style={{ marginInline: 'auto' }}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
             <span className="w-2 h-2 rounded-full bg-[#E4B643] animate-pulse" />
-            {t('home.hero.badge', '15,248 Active Swappers in Amsterdam')}
+            {cityLoading || !nearbyData ? (
+              <span
+                className="inline-block w-44 h-3 bg-[#28382D] rounded-full animate-pulse"
+                aria-hidden="true"
+              />
+            ) : nearbyData.user_count === 0 ? (
+              `Be the first swapper in ${city}!`
+            ) : (
+              `${nearbyData.user_count.toLocaleString()} Active Swappers in ${city}`
+            )}
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
@@ -122,20 +138,28 @@ const HomePage = (): ReactElement => {
           </p>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto relative mb-6">
+          <form
+            className="max-w-2xl mx-auto relative mb-6"
+            onSubmit={(e) => { e.preventDefault(); handleSearch(searchQuery); }}
+          >
             <div className="flex items-center bg-[#1A251D] border border-[#28382D] rounded-full p-2 pl-6 shadow-2xl focus-within:border-[#E4B643]/50 transition-colors">
               <Search className="w-5 h-5 text-[#8C9C92]" aria-hidden="true" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('home.hero.searchPlaceholder', 'Search by title, author, or ISBN...')}
                 className="flex-1 bg-transparent border-none outline-none text-white px-4 placeholder-[#5A6A60]"
                 aria-label={t('home.hero.searchLabel', 'Search books')}
               />
-              <button className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-8 py-3 rounded-full font-bold transition-colors">
+              <button
+                type="submit"
+                className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-8 py-3 rounded-full font-bold transition-colors"
+              >
                 {t('home.hero.search', 'Search')}
               </button>
             </div>
-          </div>
+          </form>
 
           {/* Popular Tags */}
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
@@ -145,6 +169,8 @@ const HomePage = (): ReactElement => {
             {POPULAR_TAGS.map((tag) => (
               <button
                 key={tag}
+                type="button"
+                onClick={() => handleSearch(tag)}
                 className="px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] hover:border-[#E4B643]/50 hover:text-white transition-colors"
               >
                 {tag}

@@ -436,10 +436,12 @@ class NearbyCountView(APIView):
         radius = max(500, min(radius, 50000))
 
         point = Point(lng, lat, srid=4326)
-        count = Book.objects.filter(
+        nearby_qs = Book.objects.filter(
             status=BookStatus.AVAILABLE,
             owner__location__isnull=False,
             owner__location__distance_lte=(point, D(m=radius)),
-        ).count()
+        )
+        count = nearby_qs.count()
+        user_count = nearby_qs.values("owner").distinct().count()
 
-        return Response({"count": count, "radius": radius})
+        return Response({"count": count, "user_count": user_count, "radius": radius})

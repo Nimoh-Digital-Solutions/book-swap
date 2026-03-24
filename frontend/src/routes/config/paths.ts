@@ -33,6 +33,8 @@ export const PATHS = {
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
   NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
+  SOCIAL_AUTH_CALLBACK: '/auth/verified',
+  SOCIAL_AUTH_ERROR: '/auth/verify-error',
   NOT_FOUND: '*',
 } as const;
 
@@ -131,6 +133,14 @@ export const routeMetadata = {
   [PATHS.TERMS_OF_SERVICE]: {
     title: 'Terms of Service',
     description: 'Rules and conditions for using BookSwap',
+  },
+  [PATHS.SOCIAL_AUTH_CALLBACK]: {
+    title: 'Signing in…',
+    description: 'Completing Google sign-in',
+  },
+  [PATHS.SOCIAL_AUTH_ERROR]: {
+    title: 'Sign-in Failed',
+    description: 'An error occurred during social sign-in',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',

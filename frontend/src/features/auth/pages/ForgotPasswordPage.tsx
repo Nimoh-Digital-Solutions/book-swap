@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
@@ -18,6 +18,7 @@ import { authService } from '../services/auth.service';
  */
 export function ForgotPasswordPage() {
   useDocumentTitle(routeMetadata[PATHS.FORGOT_PASSWORD].title);
+  const { city } = useUserCity();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -49,7 +50,7 @@ export function ForgotPasswordPage() {
           <span className="text-[#E4B643] italic">Community</span>
         </>
       }
-      brandingSubtitle="Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam."
+      brandingSubtitle={`Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in ${city}.`}
       quote="I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion."
       authorName="Sarah Jenkins"
       authorDetails="Swapping since 2021"

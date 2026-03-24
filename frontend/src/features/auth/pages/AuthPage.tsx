@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -91,6 +91,11 @@ export function AuthPage() {
 
   const view = pathToView(location.pathname);
   const branding = BRANDING[view];
+  const { city } = useUserCity();
+  const citySubtitles: Partial<Record<AuthView, string>> = {
+    login: `Your next favorite story is waiting. Reconnect with fellow book lovers in ${city}.`,
+    register: `Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in ${city}.`,
+  };
 
   useDocumentTitle(
     view === 'register'
@@ -165,7 +170,7 @@ export function AuthPage() {
     <AuthSplitPanel
       view={view}
       brandingTitle={branding.title}
-      brandingSubtitle={branding.subtitle}
+      brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
       quote={branding.quote}
       authorName={branding.authorName}
       authorDetails={branding.authorDetails}

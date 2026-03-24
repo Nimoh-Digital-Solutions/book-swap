@@ -26,6 +26,8 @@ export { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 export { LoginPage } from './pages/LoginPage';
 export { OnboardingPage } from './pages/OnboardingPage';
 export { RegisterPage } from './pages/RegisterPage';
+export { SocialAuthCallbackPage } from './pages/SocialAuthCallbackPage';
+export { SocialAuthErrorPage } from './pages/SocialAuthErrorPage';
 export { authService } from './services/auth.service';
 export type { AuthStore } from './stores/authStore';
 export { getCsrfToken, setCsrfToken,useAuthStore } from './stores/authStore';

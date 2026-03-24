@@ -1,6 +1,7 @@
 """URL configuration for bookswap."""
 
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
@@ -17,7 +18,9 @@ urlpatterns = [
     ),
     # Social auth (Google, Apple — OAuth dance + done redirect)
     path("api/v1/auth/social/done/", social_login_done_view, name="social-auth-done"),
-    path("api/v1/auth/social/", include("nimoh_base.auth.url_modules.social")),
+    # Include social_django.urls directly (not via nimoh_base wrapper) so PSA can
+    # reverse 'social:complete' without double-namespace nesting.
+    path("api/v1/auth/social/", include("social_django.urls", namespace="social")),
     # Project-specific routes — add new apps here:
     path("api/v1/", include("bookswap.urls")),
     path("api/v1/", include("apps.books.urls")),
@@ -32,3 +35,4 @@ if settings.DEBUG:
     urlpatterns += [
         path("", RedirectView.as_view(url="/api/v1/schema/docs/", permanent=False)),
     ]
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

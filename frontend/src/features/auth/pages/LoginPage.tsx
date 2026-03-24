@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
@@ -10,6 +10,7 @@ import type { LoginPayload } from '../types/auth.types';
 
 export function LoginPage() {
   useDocumentTitle(routeMetadata[PATHS.LOGIN].title);
+  const { city } = useUserCity();
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,7 +38,7 @@ export function LoginPage() {
           <span className="text-[#E4B643] italic">Community</span>
         </>
       }
-      brandingSubtitle="Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam."
+      brandingSubtitle={`Your next favorite story is waiting. Reconnect with fellow book lovers in ${city}.`}
       quote="The quality of books I've found here is incredible. It feels like browsing a curated boutique, but everything is free to swap!"
       authorName="Elena Rodriguez"
       authorDetails="Member since 2022"

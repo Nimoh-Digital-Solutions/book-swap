@@ -15,6 +15,8 @@ export { useTheme } from './useTheme';
 export type { ToastItem, ToastVariant, UseToastReturn } from './useToast';
 export { useToast } from './useToast';
 export { useToggle } from './useToggle';
+export type { UserCityResult } from './useUserCity';
+export { useUserCity } from './useUserCity';
 export type { WindowSize } from './useWindowSize';
 export { useWindowSize } from './useWindowSize';
 

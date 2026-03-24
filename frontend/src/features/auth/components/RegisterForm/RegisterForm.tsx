@@ -2,6 +2,8 @@ import type { FieldValues, Resolver } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { API } from '@configs/apiEndpoints';
+import { APP_CONFIG } from '@configs/appConfig';
 import { ArrowRight, Calendar, Lock, Mail, User } from 'lucide-react';
 import { z } from 'zod';
 
@@ -39,8 +41,8 @@ export interface RegisterFormProps {
 // ---------------------------------------------------------------------------
 const registerSchema = z
   .object({
-    first_name: z.string().min(1, 'First name is required').max(50),
-    last_name: z.string().min(1, 'Last name is required').max(50),
+    first_name: z.string().max(50).optional().default(''),
+    last_name: z.string().max(50).optional().default(''),
     username: z.string().min(3, 'Username must be at least 3 characters').max(30),
     email: z.string().email('Please enter a valid email address'),
     date_of_birth: z.string().min(1, 'Date of birth is required'),
@@ -142,7 +144,7 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
         <button
           type="button"
           className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
-          aria-disabled="true"
+          onClick={() => { window.location.href = APP_CONFIG.apiUrl + API.auth.socialLoginStart('google-oauth2'); }}
         >
           <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

@@ -11,12 +11,12 @@ import { initReactI18next } from 'react-i18next';
 
 import i18n from 'i18next';
 
-// Read the canonical translation file directly from disk via a static import
-// that Vitest resolves at compile time.
-import en from '../../public/locales/en/translation.json';
 import enExchanges from '../../public/locales/en/exchanges.json';
 import enMessaging from '../../public/locales/en/messaging.json';
 import enRatings from '../../public/locales/en/ratings.json';
+// Read the canonical translation file directly from disk via a static import
+// that Vitest resolves at compile time.
+import en from '../../public/locales/en/translation.json';
 import enTrustSafety from '../../public/locales/en/trust-safety.json';
 
 // Re-initialise i18n (strip any plugins like HttpBackend that may have been

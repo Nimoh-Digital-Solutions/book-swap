@@ -91,6 +91,12 @@ class User(AbstractNimohUser):
         help_text="Total ratings received.",
     )
 
+    # ── Privacy ───────────────────────────────────────────────────────
+    profile_public = models.BooleanField(
+        default=True,
+        help_text="Whether this profile is visible to other users.",
+    )
+
     # ── Community Code of Conduct ─────────────────────────────────────
     coc_accepted_at = models.DateTimeField(
         null=True,
