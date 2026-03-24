@@ -7,7 +7,6 @@ import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   ArrowLeftRight,
-  ArrowRight,
   BookOpen,
   Clock,
   Search,
@@ -196,7 +195,7 @@ const HomePage = (): ReactElement => {
             className="text-[#E4B643] font-semibold text-sm hover:text-white transition-colors flex items-center gap-1 no-underline"
           >
             {t('home.recentlyAdded.viewAll', 'View all books')}{' '}
-            <ArrowRight className="w-4 h-4" />
+            {/* <ArrowRight className="w-4 h-4" /> */}
           </Link>
         </div>
 

@@ -14,9 +14,9 @@ export function useUnblockUser() {
   return useMutation({
     mutationFn: (userId: string) => blockService.remove(userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: blockKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['exchanges'] });
-      queryClient.invalidateQueries({ queryKey: ['browse'] });
+      void queryClient.invalidateQueries({ queryKey: blockKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ['exchanges'] });
+      void queryClient.invalidateQueries({ queryKey: ['browse'] });
     },
   });
 }

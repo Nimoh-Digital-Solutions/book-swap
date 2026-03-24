@@ -14,8 +14,8 @@ export function useDeleteBook() {
   return useMutation<void, Error, string>({
     mutationFn: (bookId) => bookService.remove(bookId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
     },
   });
 }

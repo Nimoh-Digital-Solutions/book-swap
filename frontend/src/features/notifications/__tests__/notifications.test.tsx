@@ -17,7 +17,7 @@ import { renderWithProviders } from '@test/renderWithProviders';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NotificationBell } from '../components/NotificationBell/NotificationBell';
 import { NotificationPanel } from '../components/NotificationPanel/NotificationPanel';

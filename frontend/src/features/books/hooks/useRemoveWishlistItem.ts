@@ -14,7 +14,7 @@ export function useRemoveWishlistItem() {
   return useMutation<void, Error, string>({
     mutationFn: (id) => wishlistService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
     },
   });
 }

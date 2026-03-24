@@ -15,10 +15,10 @@ export function useSubmitRating(exchangeId: string) {
   return useMutation<Rating, Error, SubmitRatingPayload>({
     mutationFn: (payload) => ratingService.submitRating(exchangeId, payload),
     onSuccess: () => {
-      qc.invalidateQueries({
+      void qc.invalidateQueries({
         queryKey: ratingKeys.exchangeStatus(exchangeId),
       });
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(exchangeId) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(exchangeId) });
     },
   });
 }

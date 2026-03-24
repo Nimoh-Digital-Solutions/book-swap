@@ -11,7 +11,7 @@ import {
   MOCK_MEETUP_LOCATION,
 } from '@test/mocks/handlers';
 import { renderWithProviders } from '@test/renderWithProviders';
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

@@ -15,8 +15,8 @@ export function useCreateBook() {
   return useMutation<Book, Error, CreateBookPayload>({
     mutationFn: (payload) => bookService.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
     },
   });
 }

@@ -36,7 +36,7 @@ export function RequestSwapButton({ bookId, bookOwnerId, currentUserId }: Reques
         onSuccess: (data) => {
           addNotification(t('request.sent', 'Request sent!'), { variant: 'success' });
           setShowPicker(false);
-          navigate(`/exchanges/${data.id}`);
+          void navigate(`/exchanges/${data.id}`);
         },
         onError: () => addNotification(t('error.create', 'Failed to send request.'), { variant: 'error' }),
       },

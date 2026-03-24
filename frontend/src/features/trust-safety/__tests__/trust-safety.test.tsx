@@ -10,7 +10,6 @@ import {
   BlockUserButton,
   CookieConsentBanner,
   DataExportButton,
-  EmailVerificationGate,
   ReportButton,
   UnblockButton,
 } from '../index';

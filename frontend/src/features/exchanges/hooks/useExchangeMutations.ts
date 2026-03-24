@@ -25,8 +25,8 @@ export function useCreateExchange() {
   return useMutation<ExchangeDetail, Error, CreateExchangePayload>({
     mutationFn: (payload) => exchangeService.create(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
-      qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
     },
   });
 }
@@ -40,9 +40,9 @@ export function useAcceptExchange() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.accept(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
-      qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
     },
   });
 }
@@ -60,9 +60,9 @@ export function useDeclineExchange() {
   >({
     mutationFn: ({ id, payload }) => exchangeService.decline(id, payload),
     onSuccess: (_data, { id }) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
-      qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
     },
   });
 }
@@ -80,8 +80,8 @@ export function useCounterExchange() {
   >({
     mutationFn: ({ id, payload }) => exchangeService.counter(id, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
-      qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
     },
   });
 }
@@ -95,8 +95,8 @@ export function useCancelExchange() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.cancel(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
     },
   });
 }
@@ -110,7 +110,7 @@ export function useAcceptConditions() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.acceptConditions(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
     },
   });
 }
@@ -124,9 +124,9 @@ export function useConfirmSwap() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.confirmSwap(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: bookKeys.lists() });
-      qc.invalidateQueries({ queryKey: bookKeys.myShelf() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: bookKeys.lists() });
+      void qc.invalidateQueries({ queryKey: bookKeys.myShelf() });
     },
   });
 }
@@ -140,7 +140,7 @@ export function useRequestReturn() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.requestReturn(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
     },
   });
 }
@@ -154,9 +154,9 @@ export function useConfirmReturn() {
   return useMutation<ExchangeDetail, Error, string>({
     mutationFn: (id) => exchangeService.confirmReturn(id),
     onSuccess: (_data, id) => {
-      qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
-      qc.invalidateQueries({ queryKey: bookKeys.lists() });
-      qc.invalidateQueries({ queryKey: bookKeys.myShelf() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: bookKeys.lists() });
+      void qc.invalidateQueries({ queryKey: bookKeys.myShelf() });
     },
   });
 }

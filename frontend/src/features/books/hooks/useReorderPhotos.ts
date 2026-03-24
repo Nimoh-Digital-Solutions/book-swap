@@ -15,7 +15,7 @@ export function useReorderPhotos(bookId: string) {
   return useMutation<BookPhoto[], Error, ReorderPhotosPayload>({
     mutationFn: (payload) => bookService.reorderPhotos(bookId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
     },
   });
 }

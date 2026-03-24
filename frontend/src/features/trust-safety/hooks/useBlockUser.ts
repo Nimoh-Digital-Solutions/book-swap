@@ -15,9 +15,9 @@ export function useBlockUser() {
     mutationFn: (blockedUserId: string) =>
       blockService.create({ blocked_user_id: blockedUserId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: blockKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['exchanges'] });
-      queryClient.invalidateQueries({ queryKey: ['browse'] });
+      void queryClient.invalidateQueries({ queryKey: blockKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ['exchanges'] });
+      void queryClient.invalidateQueries({ queryKey: ['browse'] });
     },
   });
 }

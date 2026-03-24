@@ -15,7 +15,7 @@ export function useAddWishlistItem() {
   return useMutation<WishlistItem, Error, CreateWishlistPayload>({
     mutationFn: (payload) => wishlistService.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
+      void queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
     },
   });
 }

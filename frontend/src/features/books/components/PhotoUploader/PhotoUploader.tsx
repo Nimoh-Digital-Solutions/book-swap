@@ -2,7 +2,7 @@ import { type ChangeEvent, type ReactElement, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@data/useAppStore';
-import { Camera, Trash2, X } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 
 import type { BookPhoto } from '../../types/book.types';
 
@@ -56,7 +56,7 @@ export function PhotoUploader({ photos, onUpload, onDelete, isUploading }: Photo
           <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden border border-[#28382D] group">
             <img
               src={photo.image}
-              alt={`Photo ${idx + 1}`}
+              alt={`${idx + 1}`}
               className="w-full h-full object-cover"
             />
             {idx === 0 && (

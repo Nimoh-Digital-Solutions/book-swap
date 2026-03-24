@@ -1,6 +1,6 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
@@ -19,7 +19,6 @@ type Tab = 'listings' | 'wishlist';
 
 export function MyShelfPage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const [activeTab, setActiveTab] = useState<Tab>('listings');
 

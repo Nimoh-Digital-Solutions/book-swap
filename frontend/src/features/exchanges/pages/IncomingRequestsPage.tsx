@@ -26,7 +26,7 @@ function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElemen
     acceptMutation.mutate(exchange.id, {
       onSuccess: () => {
         addNotification(t('incoming.acceptSuccess', 'Request accepted!'), { variant: 'success' });
-        navigate(`/exchanges/${exchange.id}`);
+        void navigate(`/exchanges/${exchange.id}`);
       },
       onError: () => addNotification(t('incoming.acceptError', 'Failed to accept request.'), { variant: 'error' }),
     });

@@ -37,7 +37,7 @@ export function EditBookPage(): ReactElement {
       updateBook.mutate(values, {
         onSuccess: () => {
           addNotification(t('books.editBook.success', 'Book updated successfully!'), { variant: 'success' });
-          navigate(`/books/${id}`);
+          void navigate(`/books/${id}`);
         },
         onError: () => {
           addNotification(t('books.editBook.error', 'Failed to update book. Please try again.'), { variant: 'error' });
@@ -51,7 +51,7 @@ export function EditBookPage(): ReactElement {
     deleteBook.mutate(id!, {
       onSuccess: () => {
         addNotification(t('books.editBook.deleteSuccess', 'Book deleted.'), { variant: 'success' });
-        navigate(PATHS.MY_SHELF);
+        void navigate(PATHS.MY_SHELF);
       },
       onError: () => {
         addNotification(t('books.editBook.deleteError', 'Failed to delete book.'), { variant: 'error' });

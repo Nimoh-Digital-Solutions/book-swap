@@ -14,7 +14,7 @@ export function useDeleteBookPhoto(bookId: string) {
   return useMutation<void, Error, string>({
     mutationFn: (photoId) => bookService.deletePhoto(bookId, photoId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
     },
   });
 }

@@ -15,7 +15,7 @@ export function useUploadBookPhoto(bookId: string) {
   return useMutation<BookPhoto, Error, File>({
     mutationFn: (file) => bookService.uploadPhoto(bookId, file),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
     },
   });
 }

@@ -16,8 +16,8 @@ export function useUpdateBook(bookId: string) {
     mutationFn: (payload) => bookService.update(bookId, payload),
     onSuccess: (updatedBook) => {
       queryClient.setQueryData(bookKeys.detail(bookId), updatedBook);
-      queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: bookKeys.myShelf() });
     },
   });
 }

@@ -85,7 +85,7 @@ export function BookDetailPage(): ReactElement {
                 <div key={photo.id} className="aspect-square rounded-lg overflow-hidden border border-[#28382D]">
                   <img
                     src={photo.image}
-                    alt={`Photo ${idx + 2}`}
+                    alt={`${idx + 2}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
