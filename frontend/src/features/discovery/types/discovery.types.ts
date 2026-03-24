@@ -71,4 +71,5 @@ export interface BrowseFilters {
   condition?: string[] | undefined;
   ordering?: BrowseOrdering | undefined;
   page_size?: number | undefined;
+  page?: number | undefined;
 }

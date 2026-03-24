@@ -95,8 +95,8 @@ describe('BrowseBookCard', () => {
   it('links to book detail page', () => {
     const book = makeBrowseBook({ id: 'book_123' });
     renderWithProviders(<BrowseBookCard book={book} />);
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/books/book_123');
+    const links = screen.getAllByRole('link');
+    expect(links.some(l => l.getAttribute('href') === '/books/book_123')).toBe(true);
   });
 
   it('shows owner neighborhood', () => {
@@ -213,9 +213,9 @@ describe('FilterPanel', () => {
 
   it('renders genre, language, and condition sections', () => {
     renderWithProviders(<FilterPanel {...defaultProps} />);
-    expect(screen.getByText(/genre/i)).toBeInTheDocument();
-    expect(screen.getByText(/language/i)).toBeInTheDocument();
-    expect(screen.getByText(/condition/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /genre/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^language$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /condition/i })).toBeInTheDocument();
   });
 
   it('calls onGenreChange when a genre is toggled', async () => {
@@ -223,7 +223,7 @@ describe('FilterPanel', () => {
     const onGenreChange = vi.fn();
     renderWithProviders(<FilterPanel {...defaultProps} onGenreChange={onGenreChange} />);
 
-    await user.click(screen.getByRole('checkbox', { name: 'Fiction' }));
+    await user.click(screen.getByRole('button', { name: 'Fiction' }));
     expect(onGenreChange).toHaveBeenCalledWith(['Fiction']);
   });
 
@@ -249,8 +249,8 @@ describe('FilterPanel', () => {
         filters={{ genre: ['Fiction', 'Fantasy'] }}
       />,
     );
-    expect(screen.getByRole('checkbox', { name: 'Fiction' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('checkbox', { name: 'Fantasy' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('button', { name: 'Fiction' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Fantasy' })).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
@@ -457,7 +457,7 @@ describe('BrowsePage', () => {
     });
   });
 
-  it('renders search bar and radius selector', async () => {
+  it('renders search bar and distance filter', async () => {
     mockUseProfile.mockReturnValue({
       data: mockProfileData,
       isLoading: false,
@@ -467,11 +467,11 @@ describe('BrowsePage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('searchbox')).toBeInTheDocument();
-      expect(screen.getByRole('radiogroup', { name: /distance/i })).toBeInTheDocument();
+      expect(screen.getByRole('slider', { name: /distance/i })).toBeInTheDocument();
     });
   });
 
-  it('renders view toggle with list and map options', async () => {
+  it('renders filter panel with genre options', async () => {
     mockUseProfile.mockReturnValue({
       data: mockProfileData,
       isLoading: false,
@@ -480,8 +480,7 @@ describe('BrowsePage', () => {
     renderWithProviders(<BrowsePage />);
 
     await waitFor(() => {
-      expect(screen.getByRole('radio', { name: /list/i })).toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: /map/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Fiction' })).toBeInTheDocument();
     });
   });
 

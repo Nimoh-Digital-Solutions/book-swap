@@ -36,6 +36,7 @@ export const discoveryService = {
       params.set('condition', filters.condition.join(','));
     if (filters.ordering) params.set('ordering', filters.ordering);
     if (filters.page_size) params.set('page_size', String(filters.page_size));
+    if (filters.page) params.set('page', String(filters.page));
 
     const qs = params.toString();
     const url = qs

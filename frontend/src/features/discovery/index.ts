@@ -20,6 +20,7 @@ export { MobileFilterSheet } from './components/MobileFilterSheet';
 export { RadiusSelector } from './components/RadiusSelector';
 export { SearchBar } from './components/SearchBar';
 export { SetLocationPrompt } from './components/SetLocationPrompt';
+export { SwapFlowModal } from './components/SwapFlowModal';
 export { ViewToggle } from './components/ViewToggle';
 
 // Hooks

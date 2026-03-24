@@ -1,159 +1,117 @@
 /**
- * BrowsePage — main discovery page.
+ * BrowsePage — reference-styled catalogue.
  *
- * Authenticated users see nearby books with infinite scroll.
- * Desktop: FilterPanel sidebar + book grid.
- * Mobile: "Filters" button opens bottom sheet.
- * If the user hasn't set a location, shows SetLocationPrompt.
+ * Layout: hero header + left filter sidebar + paginated 3-col book grid.
+ * Desktop: sticky sidebar with dark card filters.
+ * Mobile: "Filters" button opens the MobileFilterSheet.
+ * No location → SetLocationPrompt.
  */
-import { lazy, type ReactElement, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useProfile } from '@features/profile';
-import { Loader2, SlidersHorizontal } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
-import { FilterChips } from '../../components/FilterChips';
 import { FilterPanel } from '../../components/FilterPanel';
 import { MobileFilterSheet } from '../../components/MobileFilterSheet';
-import { RadiusSelector } from '../../components/RadiusSelector';
 import { SearchBar } from '../../components/SearchBar';
 import { SetLocationPrompt } from '../../components/SetLocationPrompt';
-import { type ViewMode, ViewToggle } from '../../components/ViewToggle';
+import { SwapFlowModal } from '../../components/SwapFlowModal';
 import { useBrowseBooks } from '../../hooks/useBrowseBooks';
 import { useBrowseFilters } from '../../hooks/useBrowseFilters';
-import { useMapBooks } from '../../hooks/useMapBooks';
-import { useRadiusCounts } from '../../hooks/useRadiusCounts';
-
-// Lazy-load MapView to avoid loading Leaflet JS on list view
-const LazyMapView = lazy(() =>
-  import('../../components/MapView/MapView').then(m => ({ default: m.MapView })),
-);
+import type { BrowseBook } from '../../types/discovery.types';
 
 const DEFAULT_RADIUS = 5000;
-const EXPAND_RADIUS = 10000;
+const PAGE_SIZE = 12;
+
+// ---------------------------------------------------------------------------
+// Pagination helpers
+// ---------------------------------------------------------------------------
+
+function buildPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | '...')[] = [1];
+  if (current > 3) pages.push('...');
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (current < total - 2) pages.push('...');
+  if (total > 1) pages.push(total);
+  return pages;
+}
 
 export function BrowsePage(): ReactElement {
   const { t } = useTranslation();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { filters, setFilters, clearFilters } = useBrowseFilters();
+
+  const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedBook, setSelectedBook] = useState<BrowseBook | null>(null);
 
-  // Default radius from user profile, fallback to 5 km
   const activeRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
-
   const hasLocation = profile?.location != null;
 
-  const { data: radiusCounts } = useRadiusCounts(hasLocation);
-
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-  } = useBrowseBooks(
-    { ...filters, radius: activeRadius },
+  const { data, isLoading, isError } = useBrowseBooks(
+    { ...filters, radius: activeRadius, page: currentPage, page_size: PAGE_SIZE },
     hasLocation,
   );
 
-  // Map data — fetched only when map is active
-  const { data: mapData, isLoading: mapLoading } = useMapBooks(
-    { ...filters, radius: activeRadius },
-    hasLocation && viewMode === 'map',
+  const books = data?.results ?? [];
+  const totalCount = data?.count ?? 0;
+  const totalPages = totalCount ? Math.ceil(totalCount / PAGE_SIZE) : 0;
+  const pageNumbers = buildPageNumbers(currentPage, totalPages);
+
+  // ---------------------------------------------------------------------------
+  // Filter handlers — all reset to page 1
+  // ---------------------------------------------------------------------------
+
+  const handleFilterChange = useCallback(
+    (partial: Parameters<typeof setFilters>[0]) => {
+      setFilters(partial);
+      setCurrentPage(1);
+    },
+    [setFilters],
   );
 
-  // Flatten paginated results
-  const books = data?.pages.flatMap(page => page.results) ?? [];
-  const totalCount = data?.pages[0]?.count;
-
-  // --- Infinite scroll sentinel ----
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          void fetchNextPage();
-        }
-      },
-      { rootMargin: '200px' },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  // --- Filter handlers ---
   const handleSearchChange = useCallback(
-    (search: string) => setFilters({ search: search || undefined }),
-    [setFilters],
+    (search: string) => handleFilterChange({ search: search || undefined }),
+    [handleFilterChange],
   );
 
   const handleRadiusChange = useCallback(
-    (radius: number) => setFilters({ radius }),
-    [setFilters],
+    (radius: number) => handleFilterChange({ radius }),
+    [handleFilterChange],
   );
 
-  const handleExpandRadius = useCallback(() => {
-    setFilters({ radius: EXPAND_RADIUS });
-  }, [setFilters]);
-
-  const removeFromArray = (arr: string[] | undefined, item: string) =>
-    arr?.filter(v => v !== item) ?? [];
-
-  const handleRemoveGenre = useCallback(
-    (genre: string) => {
-      const next = removeFromArray(filters.genre, genre);
-      setFilters({ genre: next.length ? next : undefined });
-    },
-    [filters.genre, setFilters],
-  );
-
-  const handleRemoveLanguage = useCallback(
-    (lang: string) => {
-      const next = removeFromArray(filters.language, lang);
-      setFilters({ language: next.length ? next : undefined });
-    },
-    [filters.language, setFilters],
-  );
-
-  const handleRemoveCondition = useCallback(
-    (cond: string) => {
-      const next = removeFromArray(filters.condition, cond);
-      setFilters({ condition: next.length ? next : undefined });
-    },
-    [filters.condition, setFilters],
-  );
-
-  // --- FilterPanel handlers (set full arrays) ---
   const handleGenreChange = useCallback(
-    (genres: string[]) => setFilters({ genre: genres.length ? genres : undefined }),
-    [setFilters],
+    (genre: string[]) => handleFilterChange({ genre: genre.length ? genre : undefined }),
+    [handleFilterChange],
   );
 
   const handleLanguageChange = useCallback(
-    (languages: string[]) => setFilters({ language: languages.length ? languages : undefined }),
-    [setFilters],
+    (language: string[]) =>
+      handleFilterChange({ language: language.length ? language : undefined }),
+    [handleFilterChange],
   );
 
   const handleConditionChange = useCallback(
-    (conditions: string[]) => setFilters({ condition: conditions.length ? conditions : undefined }),
-    [setFilters],
+    (condition: string[]) =>
+      handleFilterChange({ condition: condition.length ? condition : undefined }),
+    [handleFilterChange],
   );
 
-  const activeFilterCount =
-    (filters.genre?.length ?? 0) +
-    (filters.language?.length ?? 0) +
-    (filters.condition?.length ?? 0);
+  const handleClearAll = useCallback(() => {
+    clearFilters();
+    setCurrentPage(1);
+  }, [clearFilters]);
 
-  // --- Loading state ---
+  // ---------------------------------------------------------------------------
+  // Profile loading
+  // ---------------------------------------------------------------------------
+
   if (profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -162,7 +120,10 @@ export function BrowsePage(): ReactElement {
     );
   }
 
-  // --- No location set ---
+  // ---------------------------------------------------------------------------
+  // No location set
+  // ---------------------------------------------------------------------------
+
   if (!hasLocation) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -174,183 +135,207 @@ export function BrowsePage(): ReactElement {
     );
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">
-          {t('discovery.title', 'Browse Books')}
-        </h1>
-        <p className="text-[#8C9C92] text-sm">
-          {t('discovery.subtitle', 'Discover books available for swap near you')}
-        </p>
-      </div>
+  // ---------------------------------------------------------------------------
+  // Main layout
+  // ---------------------------------------------------------------------------
 
-      {/* Search + Radius controls */}
-      <div className="space-y-4">
-        <SearchBar
-          value={filters.search ?? ''}
-          onChange={handleSearchChange}
-          isLoading={isLoading && !isFetchingNextPage}
-        />
-        <div className="flex items-center gap-3 flex-wrap">
-          <RadiusSelector
-            value={activeRadius}
-            onChange={handleRadiusChange}
-            counts={radiusCounts}
+  const filterPanelProps = {
+    filters,
+    radius: activeRadius,
+    onRadiusChange: handleRadiusChange,
+    onGenreChange: handleGenreChange,
+    onLanguageChange: handleLanguageChange,
+    onConditionChange: handleConditionChange,
+    onClearAll: handleClearAll,
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* ── Hero ── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-white mb-3">
+            {t('discovery.heroTitle', 'Find your next story')}
+          </h1>
+          <p className="text-[#E4B643] text-lg">
+            {t('discovery.heroSubtitle', 'Browse books available for swap near you.')}
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="w-full md:w-96">
+          <SearchBar
+            value={filters.search ?? ''}
+            onChange={handleSearchChange}
+            isLoading={isLoading}
           />
-          <ViewToggle value={viewMode} onChange={setViewMode} />
-          {/* Mobile filter button */}
-          <button
-            type="button"
-            onClick={() => setMobileFiltersOpen(true)}
-            className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-[#1A251D] border border-[#28382D] rounded-xl text-xs font-medium text-[#8C9C92] hover:text-white transition-colors"
-            aria-label={t('discovery.filters.title', 'Filters')}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            {t('discovery.filters.title', 'Filters')}
-            {activeFilterCount > 0 && (
-              <span className="bg-[#E4B643] text-[#152018] text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
         </div>
       </div>
 
-      {/* Active filters + result count */}
-      <FilterChips
-        filters={filters}
-        totalCount={totalCount}
-        onRemoveGenre={handleRemoveGenre}
-        onRemoveLanguage={handleRemoveLanguage}
-        onRemoveCondition={handleRemoveCondition}
-        onClearAll={clearFilters}
-      />
-
-      {/* Sidebar + Content layout */}
-      <div className="flex gap-8">
-        {/* Desktop filter sidebar */}
-        <aside className="hidden lg:block w-[280px] shrink-0">
-          <div className="sticky top-24 bg-[#1A251D] border border-[#28382D] rounded-2xl p-5">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* ── Sidebar (desktop) ── */}
+        <aside className="hidden lg:block w-72 shrink-0">
+          <div className="sticky top-24">
             <FilterPanel
-              filters={filters}
-              onGenreChange={handleGenreChange}
-              onLanguageChange={handleLanguageChange}
-              onConditionChange={handleConditionChange}
-              onClearAll={clearFilters}
+              {...filterPanelProps}
+              onApplyFilters={() => undefined}
             />
           </div>
         </aside>
 
-        {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {viewMode === 'map' ? (
-            /* ── Map View ── */
-            <>
-              {mapLoading && (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
-                </div>
+        {/* ── Main content ── */}
+        <div className="flex-1 min-w-0">
+          {/* Mobile filter + result count row */}
+          <div className="flex items-center justify-between mb-6 text-sm">
+            <span className="text-gray-300">
+              {isLoading ? (
+                <span className="text-gray-500">{t('discovery.loading', 'Loading…')}</span>
+              ) : (
+                <>
+                  {t('discovery.showing', 'Showing')}{' '}
+                  <strong className="text-white">{totalCount}</strong>{' '}
+                  {t('discovery.booksNearby', 'books near you')}
+                </>
               )}
-              {!mapLoading && profile?.location && (
-                <Suspense
-                  fallback={
-                    <div className="flex items-center justify-center py-20">
-                      <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
-                    </div>
-                  }
+            </span>
+
+            {/* Mobile filter trigger */}
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(true)}
+              className="lg:hidden inline-flex items-center gap-1.5 px-4 py-2 bg-surface-dark border border-white/10 rounded-full text-xs font-medium text-gray-300 hover:text-white transition-colors"
+              aria-label={t('discovery.filters.title', 'Filters')}
+            >
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                tune
+              </span>
+              {t('discovery.filters.title', 'Filters')}
+            </button>
+          </div>
+
+          {/* Error state */}
+          {isError && (
+            <div className="text-center py-10">
+              <p className="text-red-400">{t('error.somethingWentWrong')}</p>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !isError && books.length === 0 && (
+            <BrowseEmptyState
+              search={filters.search}
+              radiusKm={activeRadius / 1000}
+            />
+          )}
+
+          {/* Loading skeleton */}
+          {isLoading && books.length === 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-surface-dark rounded-2xl border border-white/5 overflow-hidden animate-pulse"
                 >
-                  <LazyMapView
-                    books={mapData?.results ?? []}
-                    userLocation={profile.location}
-                    radiusMetres={activeRadius}
-                  />
-                </Suspense>
-              )}
-              {!mapLoading && mapData && mapData.results.length === 0 && (
-                <BrowseEmptyState
-                  search={filters.search}
-                  radiusKm={activeRadius / 1000}
-                  onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
+                  <div className="aspect-[3/4] bg-white/5" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-5 bg-white/5 rounded w-3/4" />
+                    <div className="h-3 bg-white/5 rounded w-1/2" />
+                    <div className="h-8 bg-white/5 rounded-full mt-4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Book grid */}
+          {books.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {books.map(book => (
+                <BrowseBookCard
+                  key={book.id}
+                  book={book}
+                  onRequestSwap={setSelectedBook}
                 />
-              )}
-            </>
-          ) : (
-            /* ── List View ── */
-            <>
-              {/* Error state */}
-              {isError && (
-                <div className="text-center py-10">
-                  <p className="text-red-400">
-                    {t('error.somethingWentWrong')}
-                  </p>
-                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <nav
+              className="flex items-center justify-center gap-2 mt-12"
+              aria-label={t('discovery.pagination', 'Pagination')}
+            >
+              {/* Previous */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label={t('discovery.previousPage', 'Previous page')}
+              >
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  chevron_left
+                </span>
+              </button>
+
+              {/* Page numbers */}
+              {pageNumbers.map((pg, idx) =>
+                pg === '...' ? (
+                  <span key={`ellipsis-${idx}`} className="text-gray-500 px-1">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={pg}
+                    type="button"
+                    onClick={() => setCurrentPage(pg as number)}
+                    aria-current={currentPage === pg ? 'page' : undefined}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${
+                      currentPage === pg
+                        ? 'bg-[#E4B643] text-[#152018] font-bold'
+                        : 'border border-white/10 text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ),
               )}
 
-              {/* Empty state */}
-              {!isLoading && !isError && books.length === 0 && (
-                <BrowseEmptyState
-                  search={filters.search}
-                  radiusKm={activeRadius / 1000}
-                  onExpandRadius={activeRadius < EXPAND_RADIUS ? handleExpandRadius : undefined}
-                />
-              )}
-
-              {/* Book grid */}
-              {books.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {books.map(book => (
-                    <BrowseBookCard key={book.id} book={book} />
-                  ))}
-                </div>
-              )}
-
-              {/* Loading skeleton for initial load */}
-              {isLoading && books.length === 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
-                    >
-                      <div className="aspect-[3/4] bg-[#28382D]" />
-                      <div className="p-4 space-y-2">
-                        <div className="h-4 bg-[#28382D] rounded w-3/4" />
-                        <div className="h-3 bg-[#28382D] rounded w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} className="h-1" />
-
-              {/* Loading more indicator */}
-              {isFetchingNextPage && (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="w-6 h-6 text-[#E4B643] animate-spin" />
-                </div>
-              )}
-            </>
+              {/* Next */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label={t('discovery.nextPage', 'Next page')}
+              >
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  chevron_right
+                </span>
+              </button>
+            </nav>
           )}
         </div>
       </div>
 
-      {/* Mobile filter sheet */}
+      {/* ── Mobile filter sheet ── */}
       <MobileFilterSheet
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
       >
         <FilterPanel
-          filters={filters}
-          onGenreChange={handleGenreChange}
-          onLanguageChange={handleLanguageChange}
-          onConditionChange={handleConditionChange}
-          onClearAll={clearFilters}
+          {...filterPanelProps}
+          onApplyFilters={() => setMobileFiltersOpen(false)}
         />
       </MobileFilterSheet>
+
+      {/* ── Swap flow modal ── */}
+      <SwapFlowModal
+        isOpen={!!selectedBook}
+        onClose={() => setSelectedBook(null)}
+        requestedBook={selectedBook}
+      />
     </div>
   );
 }
