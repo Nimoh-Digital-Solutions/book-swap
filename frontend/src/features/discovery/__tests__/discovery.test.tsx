@@ -423,7 +423,7 @@ vi.mock('@features/profile', () => ({
 const { BrowsePage } = await import('../pages/BrowsePage/BrowsePage');
 
 describe('BrowsePage', () => {
-  it('shows SetLocationPrompt when user has no location', async () => {
+  it('renders main layout even when user has no location (seed books always shown)', async () => {
     mockUseProfile.mockReturnValue({
       data: { ...mockProfileData, location: null },
       isLoading: false,
@@ -432,7 +432,7 @@ describe('BrowsePage', () => {
     renderWithProviders(<BrowsePage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/set your location/i)).toBeInTheDocument();
+      expect(screen.getByText(/browse books/i)).toBeInTheDocument();
     });
   });
 

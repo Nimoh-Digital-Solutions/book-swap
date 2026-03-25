@@ -4,7 +4,7 @@
  * Layout: hero header + left filter sidebar + paginated 3-col book grid.
  * Desktop: sticky sidebar with dark card filters.
  * Mobile: "Filters" button opens the MobileFilterSheet.
- * No location → SetLocationPrompt.
+ * No location → seed books are always shown; no location gate.
  */
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,6 @@ import { BrowseEmptyState } from '../../components/BrowseEmptyState';
 import { FilterPanel } from '../../components/FilterPanel';
 import { MobileFilterSheet } from '../../components/MobileFilterSheet';
 import { SearchBar } from '../../components/SearchBar';
-import { SetLocationPrompt } from '../../components/SetLocationPrompt';
 import { SwapFlowModal } from '../../components/SwapFlowModal';
 import { useBrowseBooks } from '../../hooks/useBrowseBooks';
 import { useBrowseFilters } from '../../hooks/useBrowseFilters';
@@ -52,11 +51,9 @@ export function BrowsePage(): ReactElement {
   const [selectedBook, setSelectedBook] = useState<BrowseBook | null>(null);
 
   const activeRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
-  const hasLocation = profile?.location != null;
 
   const { data, isLoading, isError } = useBrowseBooks(
     { ...filters, radius: activeRadius, page: currentPage, page_size: PAGE_SIZE },
-    hasLocation,
   );
 
   const books = data?.results ?? [];
@@ -116,21 +113,6 @@ export function BrowsePage(): ReactElement {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
-      </div>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // No location set
-  // ---------------------------------------------------------------------------
-
-  if (!hasLocation) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-white mb-2">
-          {t('discovery.title', 'Browse Books')}
-        </h1>
-        <SetLocationPrompt />
       </div>
     );
   }
