@@ -70,6 +70,13 @@ class Book(TimeStampedModel):
     )
     notes = models.CharField(max_length=200, blank=True)
 
+    # ── Seed / demo data ─────────────────────────────────────────────
+    is_seed = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Seed/demo book — always shown in browse regardless of the requesting user's location.",
+    )
+
     # ── Full-text search ──────────────────────────────────────────────
     search_vector = SearchVectorField(null=True)
 
