@@ -2,10 +2,11 @@ import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { EmptyPlaceholder } from '@components/common';
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { BookOpen, Plus } from 'lucide-react';
+import { BookMarked, BookOpen, Plus } from 'lucide-react';
 
 import { BookCard } from '../components/BookCard/BookCard';
 import { WishlistForm } from '../components/WishlistForm/WishlistForm';
@@ -123,22 +124,15 @@ export function MyShelfPage(): ReactElement {
       {activeTab === 'listings' && (
         <div role="tabpanel">
           {books.length === 0 ? (
-            <div className="text-center py-16">
-              <BookOpen className="w-16 h-16 text-[#28382D] mx-auto mb-4" aria-hidden="true" />
-              <h2 className="text-xl font-semibold text-white mb-2">
-                {t('books.myShelf.emptyTitle', 'Your shelf is empty')}
-              </h2>
-              <p className="text-[#8C9C92] mb-6 max-w-md mx-auto">
-                {t('books.myShelf.emptyDescription', 'List your first book to start swapping with readers in your community.')}
-              </p>
-              <Link
-                to={PATHS.ADD_BOOK}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] font-bold rounded-xl transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-                {t('books.myShelf.addFirstBook', 'Add Your First Book')}
-              </Link>
-            </div>
+            <EmptyPlaceholder
+              icon={BookOpen}
+              title={t('books.myShelf.emptyTitle', 'Your shelf is empty')}
+              description={t(
+                'books.myShelf.emptyDescription',
+                'List your first book to start swapping with readers in your community.',
+              )}
+              action={{ label: t('books.myShelf.addFirstBook', 'Add Your First Book'), href: PATHS.ADD_BOOK }}
+            />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {books.map(book => (
@@ -155,12 +149,14 @@ export function MyShelfPage(): ReactElement {
 
           {wishlistItems.length === 0 ? (
             <div className="text-center py-12">
-              <h2 className="text-lg font-semibold text-white mb-2">
-                {t('books.wishlist.emptyTitle', 'Your wishlist is empty')}
-              </h2>
-              <p className="text-[#8C9C92] max-w-md mx-auto">
-                {t('books.wishlist.emptyDescription', "Add books you're looking for and we'll let you know when they become available nearby.")}
-              </p>
+              <EmptyPlaceholder
+                icon={BookMarked}
+                title={t('books.wishlist.emptyTitle', 'Your wishlist is empty')}
+                description={t(
+                  'books.wishlist.emptyDescription',
+                  "Add books you're looking for and we'll let you know when they become available nearby.",
+                )}
+              />
             </div>
           ) : (
             <div className="space-y-3">

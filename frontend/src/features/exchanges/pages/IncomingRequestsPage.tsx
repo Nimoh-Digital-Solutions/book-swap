@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { EmptyPlaceholder } from '@components/common';
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
@@ -155,13 +156,14 @@ export default function IncomingRequestsPage(): ReactElement {
       <h1 className="text-3xl font-bold text-white mb-8">{t('incoming.title', 'Incoming Requests')}</h1>
 
       {items.length === 0 ? (
-        <div className="text-center py-16">
-          <Inbox className="w-16 h-16 text-[#28382D] mx-auto mb-4" aria-hidden="true" />
-          <h2 className="text-xl font-semibold text-white mb-2">{t('incoming.empty', 'No incoming requests')}</h2>
-          <p className="text-[#8C9C92] max-w-md mx-auto">
-            {t('incoming.emptyHint', 'When someone requests one of your books, it will appear here.')}
-          </p>
-        </div>
+        <EmptyPlaceholder
+          icon={Inbox}
+          title={t('incoming.empty', 'No incoming requests')}
+          description={t(
+            'incoming.emptyHint',
+            'When someone requests one of your books, it will appear here.',
+          )}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map(exchange => (

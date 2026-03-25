@@ -333,11 +333,13 @@ describe('BrowseEmptyState', () => {
     expect(screen.getByText(/alchemist/i)).toBeInTheDocument();
   });
 
-  it('shows expand radius button when onExpandRadius is provided', () => {
+  it('still renders correctly when deprecated onExpandRadius is provided', () => {
     renderWithProviders(
       <BrowseEmptyState radiusKm={5} onExpandRadius={vi.fn()} />,
     );
-    expect(screen.getByText(/expand/i)).toBeInTheDocument();
+    // onExpandRadius is deprecated; radius is now adjusted via the filter panel.
+    // Component should still render the no-results message without a dedicated expand button.
+    expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
   });
 
   it('does not show expand button when onExpandRadius is not provided', () => {

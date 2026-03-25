@@ -27,12 +27,6 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link to={PATHS.CATALOGUE} className="text-white hover:text-[#E4B643] transition-colors">{t('home.nav.browse', 'Browse')}</Link>
-            {isAuthenticated && (
-              <Link to={PATHS.MY_SHELF} className="text-white hover:text-[#E4B643] transition-colors">{t('navigation.myShelf', 'My Shelf')}</Link>
-            )}
-            {isAuthenticated && (
-              <Link to={PATHS.EXCHANGES} className="text-white hover:text-[#E4B643] transition-colors">{t('navigation.exchanges', 'Exchanges')}</Link>
-            )}
             <a href={PATHS.HOW_IT_WORKS} className="hover:text-white transition-colors">{t('home.nav.howItWorks', 'How it Works')}</a>
             <a href={PATHS.COMMUNITY} className="hover:text-white transition-colors">{t('home.nav.community', 'Community')}</a>
           </div>

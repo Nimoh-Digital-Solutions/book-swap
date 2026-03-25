@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { useProfile } from '@features/profile/hooks/useProfile';
 import { PATHS } from '@routes/config/paths';
-import { LogOut, Settings, User } from 'lucide-react';
+import { ArrowLeftRight,BookMarked, LogOut, Settings, User } from 'lucide-react';
 
 function getInitials(firstName: string, lastName: string, email: string): string {
   const first = firstName.trim();
@@ -113,6 +113,26 @@ export function ProfileDropdown(): ReactElement {
           >
             <User className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
             {t('navigation.myProfile', 'Profile')}
+          </Link>
+
+          <Link
+            to={PATHS.MY_SHELF}
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#28382D] transition-colors"
+          >
+            <BookMarked className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
+            {t('navigation.myShelf', 'My Shelf')}
+          </Link>
+
+          <Link
+            to={PATHS.EXCHANGES}
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#28382D] transition-colors"
+          >
+            <ArrowLeftRight className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
+            {t('navigation.exchanges', 'Exchanges')}
           </Link>
 
           <Link

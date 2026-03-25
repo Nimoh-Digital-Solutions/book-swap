@@ -2,6 +2,7 @@ import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
+import HeroBackground from '@assets/hero-image.png';
 import { useNearbyCount } from '@features/discovery';
 import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
@@ -101,8 +102,8 @@ const HomePage = (): ReactElement => {
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#E4B643]/10 blur-[120px] rounded-full" />
           <div
-            className="absolute inset-0 opacity-10 bg-center bg-no-repeat bg-cover"
-            style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2000&auto=format&fit=crop")' }}
+            className="absolute inset-0 opacity-60 bg-center bg-no-repeat bg-cover"
+             style={{ backgroundImage: `url(${HeroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundColor: 'rgba(26, 47, 35, 0.10)', backgroundBlendMode: 'multiply', backdropFilter: 'blur(3px)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#152018]/80 to-[#152018]" />
         </div>

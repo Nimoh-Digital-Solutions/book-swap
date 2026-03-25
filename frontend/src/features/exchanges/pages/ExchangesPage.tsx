@@ -2,9 +2,10 @@ import { type ReactElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { EmptyPlaceholder } from '@components/common';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { ArrowRightLeft, Inbox } from 'lucide-react';
+import { ArrowRightLeft, Clock, Inbox } from 'lucide-react';
 
 import { ExchangeCard } from '../components/ExchangeCard/ExchangeCard';
 import { useExchanges } from '../hooks/useExchanges';
@@ -112,19 +113,20 @@ export default function ExchangesPage(): ReactElement {
       {/* Tab panel */}
       <div role="tabpanel">
         {filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <ArrowRightLeft className="w-16 h-16 text-[#28382D] mx-auto mb-4" aria-hidden="true" />
-            <h2 className="text-xl font-semibold text-white mb-2">
-              {t(`empty.${activeTab}`, 'No exchanges here yet')}
-            </h2>
-            <p className="text-[#8C9C92] max-w-md mx-auto">
-              {activeTab === 'active'
+          <EmptyPlaceholder
+            icon={activeTab === 'history' ? Clock : activeTab === 'pending' ? Inbox : ArrowRightLeft}
+            title={t(`empty.${activeTab}`, 'No exchanges here yet')}
+            description={
+              activeTab === 'active'
                 ? t('empty.activeHint', 'When you have active swaps, they will appear here.')
                 : activeTab === 'pending'
                 ? t('empty.pendingHint', 'Browse the catalogue to find books and request a swap.')
-                : t('empty.historyHint', 'Your completed and past exchanges will show up here.')}
-            </p>
-          </div>
+                : t('empty.historyHint', 'Your completed and past exchanges will show up here.')
+            }
+            {...(activeTab !== 'history'
+              ? { action: { label: t('empty.browseCta', 'Browse books'), href: PATHS.CATALOGUE } }
+              : {})}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map(exchange => (

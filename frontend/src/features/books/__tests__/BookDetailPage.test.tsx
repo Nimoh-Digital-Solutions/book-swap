@@ -17,10 +17,14 @@ vi.mock('../hooks/useBook', () => ({
   useBook: (...args: unknown[]) => mockUseBook(...args),
 }));
 
-vi.mock('@features/exchanges/components/RequestSwapButton/RequestSwapButton', () => ({
-  RequestSwapButton: ({ bookId }: { bookId: string }) => (
-    <button data-testid="request-swap-btn" data-book-id={bookId}>Request Swap</button>
-  ),
+vi.mock('../hooks/useAddWishlistItem', () => ({
+  useAddWishlistItem: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
+// SwapFlowModal has its own query/store dependencies — render a stub
+vi.mock('@features/discovery', () => ({
+  SwapFlowModal: () => null,
+  BrowseBook: {},
 }));
 
 // ---------------------------------------------------------------------------
@@ -71,7 +75,7 @@ describe('BookDetailPage', () => {
   it('shows loading state', () => {
     mockUseBook.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     renderPage();
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /loading/i })).toBeInTheDocument();
   });
 
   it('shows error / not found state', () => {
@@ -90,7 +94,9 @@ describe('BookDetailPage', () => {
   it('renders the condition badge', () => {
     mockUseBook.mockReturnValue({ data: MOCK_BOOK, isLoading: false, isError: false });
     renderPage();
-    expect(screen.getByText(/good|Good/i)).toBeInTheDocument();
+    // New layout shows condition in both the cover badge and the quick-stat card
+    const matches = screen.getAllByText(/good/i);
+    expect(matches.length).toBeGreaterThan(0);
   });
 
   it('renders book description', () => {
@@ -120,7 +126,7 @@ describe('BookDetailPage', () => {
   it('renders page count and publish year', () => {
     mockUseBook.mockReturnValue({ data: MOCK_BOOK, isLoading: false, isError: false });
     renderPage();
-    expect(screen.getByText('180')).toBeInTheDocument();
+    expect(screen.getByText('180 pages')).toBeInTheDocument();
     expect(screen.getByText('1925')).toBeInTheDocument();
   });
 

@@ -9,8 +9,10 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyPlaceholder } from '@components/common';
 import { useProfile } from '@features/profile';
 import { Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
@@ -105,6 +107,13 @@ export function BrowsePage(): ReactElement {
     setCurrentPage(1);
   }, [clearFilters]);
 
+  const hasActiveFilters = Boolean(
+    filters.search ||
+    (filters.genre && filters.genre.length > 0) ||
+    (filters.language && filters.language.length > 0) ||
+    (filters.condition && filters.condition.length > 0),
+  );
+
   // ---------------------------------------------------------------------------
   // Profile loading
   // ---------------------------------------------------------------------------
@@ -172,13 +181,13 @@ export function BrowsePage(): ReactElement {
             <span className="text-gray-300">
               {isLoading ? (
                 <span className="text-gray-500">{t('discovery.loading', 'Loading…')}</span>
-              ) : (
+              ) : !isError ? (
                 <>
                   {t('discovery.showing', 'Showing')}{' '}
                   <strong className="text-white">{totalCount}</strong>{' '}
                   {t('discovery.booksNearby', 'books near you')}
                 </>
-              )}
+              ) : null}
             </span>
 
             {/* Mobile filter trigger */}
@@ -197,9 +206,14 @@ export function BrowsePage(): ReactElement {
 
           {/* Error state */}
           {isError && (
-            <div className="text-center py-10">
-              <p className="text-red-400">{t('error.somethingWentWrong')}</p>
-            </div>
+            <EmptyPlaceholder
+              icon={AlertTriangle}
+              title={t('error.somethingWentWrong', 'Something went wrong')}
+              description={t(
+                'error.somethingWentWrongHint',
+                'We could not load books right now. Please try again.',
+              )}
+            />
           )}
 
           {/* Empty state */}
@@ -207,6 +221,8 @@ export function BrowsePage(): ReactElement {
             <BrowseEmptyState
               search={filters.search}
               radiusKm={activeRadius / 1000}
+              hasFilters={hasActiveFilters}
+              onClearFilters={hasActiveFilters ? handleClearAll : undefined}
             />
           )}
 
