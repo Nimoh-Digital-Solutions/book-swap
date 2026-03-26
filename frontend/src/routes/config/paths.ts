@@ -33,6 +33,8 @@ export const PATHS = {
   HOW_IT_WORKS: '/#how-it-works',
   COMMUNITY: '/#community',
   NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
+  EMAIL_VERIFY_PENDING: '/auth/email/verify-pending',
+  EMAIL_VERIFY_CONFIRM: '/auth/email/verify',
   SOCIAL_AUTH_CALLBACK: '/auth/verified',
   SOCIAL_AUTH_ERROR: '/auth/verify-error',
   NOT_FOUND: '*',
@@ -133,6 +135,14 @@ export const routeMetadata = {
   [PATHS.TERMS_OF_SERVICE]: {
     title: 'Terms of Service',
     description: 'Rules and conditions for using BookSwap',
+  },
+  [PATHS.EMAIL_VERIFY_PENDING]: {
+    title: 'Verify Your Email',
+    description: 'Check your inbox for a verification link',
+  },
+  [PATHS.EMAIL_VERIFY_CONFIRM]: {
+    title: 'Email Verification',
+    description: 'Confirming your email address',
   },
   [PATHS.SOCIAL_AUTH_CALLBACK]: {
     title: 'Signing in…',

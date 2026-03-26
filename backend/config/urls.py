@@ -8,8 +8,13 @@ from django.views.generic import RedirectView
 from nimoh_base.auth.views.social import social_login_done_view
 from nimoh_base.conf.urls import nimoh_base_urlpatterns
 
+from bookswap.views import login_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # US-104 AC4: project-level login view returns 423 for locked accounts.
+    # Must be placed before nimoh_base_urlpatterns to take precedence.
+    path("api/v1/auth/login/", login_view, name="login"),
     # nimoh_base built-in routes (auth, monitoring health, privacy, API schema)
     *nimoh_base_urlpatterns(
         include_monitoring=True,

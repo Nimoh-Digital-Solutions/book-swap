@@ -19,7 +19,7 @@ describe('useRouteAnnouncer', () => {
     renderHook(() => useRouteAnnouncer(), { wrapper });
 
     expect(main.getAttribute('tabindex')).toBe('-1');
-    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: false });
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
 
     document.body.removeChild(main);
   });

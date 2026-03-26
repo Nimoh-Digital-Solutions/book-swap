@@ -22,8 +22,11 @@ export {
   csrfRequestInterceptor,
 } from './interceptors/authInterceptors';
 export { AuthPage } from './pages/AuthPage';
+export { EmailVerifyConfirmPage } from './pages/EmailVerifyConfirmPage';
+export { EmailVerifyPendingPage } from './pages/EmailVerifyPendingPage';
 export { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 export { LoginPage } from './pages/LoginPage';
+export { PasswordResetConfirmPage } from './pages/PasswordResetConfirmPage';
 export { OnboardingPage } from './pages/OnboardingPage';
 export { RegisterPage } from './pages/RegisterPage';
 export { SocialAuthCallbackPage } from './pages/SocialAuthCallbackPage';

@@ -67,6 +67,9 @@ NIMOH_BASE = {
     "SECURITY_SCRUB_PII": False,
     # Separate profile model required by nimoh_base.privacy.
     "PROFILE_MODEL": "profiles.UserProfile",
+    # US-104 AC4: lock account after 5 failed login attempts for 15 minutes.
+    "MAX_LOGIN_ATTEMPTS": 5,
+    "ACCOUNT_LOCK_DURATION_MINUTES": 15,
 }
 
 # ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -127,6 +130,9 @@ DATABASES = {
     )
 }
 
+# ── GDAL / GEOS (macOS Homebrew) ─────────────────────────────────────────────
+GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="")
+GEOS_LIBRARY_PATH = env("GEOS_LIBRARY_PATH", default="")
 
 # ── Caches ────────────────────────────────────────────────────────────────────
 CACHES = NimohBaseSettings.get_base_caches(

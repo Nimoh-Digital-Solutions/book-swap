@@ -24,7 +24,7 @@ export function useRouteAnnouncer(): void {
       if (!main.hasAttribute('tabindex')) {
         main.setAttribute('tabindex', '-1');
       }
-      main.focus({ preventScroll: false });
+      main.focus({ preventScroll: true });
     }
   }, [pathname]);
 }

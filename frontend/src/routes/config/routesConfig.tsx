@@ -98,6 +98,18 @@ const SocialAuthErrorPage = lazy(() =>
   import('@features/auth').then(m => ({ default: m.SocialAuthErrorPage }))
 );
 
+const EmailVerifyPendingPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.EmailVerifyPendingPage }))
+);
+
+const EmailVerifyConfirmPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.EmailVerifyConfirmPage }))
+);
+
+const PasswordResetConfirmPage = lazy(() =>
+  import('@features/auth').then(m => ({ default: m.PasswordResetConfirmPage }))
+);
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -247,6 +259,18 @@ export const routes: RouteObject[] = [
   {
     path: PATHS.SOCIAL_AUTH_ERROR,
     element: <LazyPage component={SocialAuthErrorPage} />,
+  },
+  {
+    path: PATHS.EMAIL_VERIFY_PENDING,
+    element: <LazyPage component={EmailVerifyPendingPage} />,
+  },
+  {
+    path: PATHS.EMAIL_VERIFY_CONFIRM,
+    element: <LazyPage component={EmailVerifyConfirmPage} />,
+  },
+  {
+    path: PATHS.PASSWORD_RESET_CONFIRM,
+    element: <LazyPage component={PasswordResetConfirmPage} />,
   },
 ];
 

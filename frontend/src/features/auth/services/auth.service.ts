@@ -127,4 +127,22 @@ export const authService = {
     });
     return data;
   },
+
+  /**
+   * Verify the user's email using the token from the verification link.
+   */
+  async verifyEmail(token: string): Promise<{ detail: string }> {
+    const { data } = await http.post<{ detail: string }>(API.auth.emailVerify, {
+      token,
+    });
+    return data;
+  },
+
+  /**
+   * Resend the verification email to the authenticated user.
+   */
+  async resendVerificationEmail(): Promise<{ detail: string }> {
+    const { data } = await http.post<{ detail: string }>(API.auth.emailResend, {});
+    return data;
+  },
 };
