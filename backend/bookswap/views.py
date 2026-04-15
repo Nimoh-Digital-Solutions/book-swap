@@ -350,3 +350,19 @@ def login_view(request):
             detail="Login failed. Please try again later.",
             code="login_error",
         ) from None
+
+
+class MobileDeviceProxyView(APIView):
+    """Thin proxy so ``/api/v1/users/me/devices/`` resolves in the bookswap URL namespace."""
+
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
+
+    def post(self, request, *args, **kwargs):
+        from apps.notifications.views import MobileDeviceView
+
+        return MobileDeviceView().post(request)
+
+    def delete(self, request, *args, **kwargs):
+        from apps.notifications.views import MobileDeviceView
+
+        return MobileDeviceView().delete(request)

@@ -7,10 +7,14 @@
     "postinstall": "cd packages/shared && npm install && cd ../../frontend && yarn install",
     "dev": "yarn --cwd frontend dev",
     "dev:backend": "cd backend && make dev",
+    "dev:mobile": "cd mobile && npm start",
     "build": "yarn --cwd frontend build",
     "test": "yarn --cwd frontend test",
     "test:shared": "cd packages/shared && npm test",
     "lint": "yarn --cwd frontend lint",
-    "type-check": "yarn --cwd frontend type-check"
+    "type-check": "yarn --cwd frontend type-check",
+    "type-check:mobile": "cd mobile && npx tsc --noEmit",
+    "mobile:ios": "cd mobile && npm run ios",
+    "mobile:android": "cd mobile && npm run android"
   }
 }

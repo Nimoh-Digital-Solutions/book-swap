@@ -1,0 +1,75 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "success": "Succès",
+    "done": "OK",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé",
+    "search": "Rechercher"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "username": "Nom d'utilisateur",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordTitle": "Réinitialiser le mot de passe",
+    "resetHint": "Saisissez votre e-mail ; si un compte existe, vous recevrez des instructions.",
+    "sendResetLink": "Envoyer le lien",
+    "resetSent": "Si un compte existe pour cet e-mail, vous recevrez bientôt des instructions.",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "registerSuccess": "Compte créé. Vous pouvez vous connecter.",
+    "fillRequired": "Veuillez remplir les champs obligatoires.",
+    "biometricPrompt": "Authentifiez-vous pour continuer"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "browse": "Explorer",
+    "scan": "Scanner",
+    "messages": "Messages",
+    "profile": "Profil"
+  },
+  "books": {
+    "addBook": "Ajouter un livre",
+    "myBooks": "Mes livres",
+    "scanBarcode": "Scanner le code-barres",
+    "condition": "État",
+    "description": "Description"
+  },
+  "exchanges": {
+    "requestSwap": "Demander un échange",
+    "incoming": "Demandes reçues",
+    "outgoing": "Mes demandes",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "counter": "Contre-offre"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Pas encore de notifications"
+  },
+  "errorBoundary": {
+    "message": "Une erreur inattendue s'est produite. Vous pouvez réessayer."
+  },
+  "network": {
+    "offline": "Vous êtes hors ligne",
+    "backOnline": "De nouveau en ligne",
+    "degraded": "Connexion instable — nouvel essai"
+  },
+  "biometricGate": {
+    "hint": "Déverrouillez avec la biométrie ou déconnectez-vous pour continuer."
+  }
+}

@@ -18,7 +18,7 @@ jobs:
 
     services:
       postgres:
-        image: postgis/postgis:16-3.4
+        image: postgres:16
         env:
           POSTGRES_DB: speaklinka_test
           POSTGRES_USER: test_user
@@ -46,29 +46,22 @@ jobs:
         working-directory: backend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements*.txt
-
-      - name: Install GDAL system library
-        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gdal-bin libgdal-dev
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Enable PostGIS extension
-        run: |
-          psql -h localhost -U test_user -d speaklinka_test \
-            -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-        env:
-          PGPASSWORD: test_password
+      - name: Audit Python dependencies
+        run: pip-audit --strict --desc
 
       - name: Lint (ruff check)
         run: ruff check .
@@ -76,13 +69,24 @@ jobs:
       - name: Lint (ruff format)
         run: ruff format --check .
 
+      - name: Type-check (mypy)
+        run: mypy apps speaklinka --no-error-summary
+        continue-on-error: true
+
+      - name: Check for migration conflicts
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          REDIS_URL: redis://localhost:6379/0
+        run: python manage.py makemigrations --check --dry-run
+
       - name: Run tests
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
-          DATABASE_URL: postgis://test_user:test_password@localhost:5432/speaklinka_test
+          SECRET_KEY: ci-test-secret-key-not-for-production
           CELERY_TASK_ALWAYS_EAGER: "True"
           REDIS_URL: redis://localhost:6379/0
-        run: python -m pytest --tb=short -q
+        run: python -m pytest --tb=short -q --cov=apps --cov=speaklinka --cov-report=term-missing --cov-fail-under=80
 
   # ── Frontend ───────────────────────────────────────────────────────────────
   frontend:
@@ -94,13 +98,13 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Enable Corepack (Yarn 4)
         run: corepack enable
 
       - name: Set up Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: yarn
@@ -108,6 +112,14 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+
+      - name: Install shared package dependencies
+        run: npm install
+        working-directory: packages/shared
+
+      - name: Audit JS dependencies
+        run: yarn npm audit --severity high || true
+        continue-on-error: true
 
       - name: Type-check
         run: yarn type-check
@@ -118,8 +130,8 @@ jobs:
       - name: Lint (Stylelint)
         run: yarn stylelint
 
-      - name: Tests
-        run: yarn test:run
+      - name: Tests (with coverage)
+        run: yarn test:coverage
 
       - name: Build
         run: yarn build
@@ -147,3 +159,126 @@ jobs:
             exit 1
           fi
           echo "✅ Bundle size OK (${GZIP_KB} KB gzipped, limit 200 KB)"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 1
+
+  # ── E2E (Playwright) ──────────────────────────────────────────────────
+  e2e:
+    name: "E2E — Playwright"
+    needs: frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Start preview server
+        run: npx vite preview --port 4173 &
+
+      - name: Wait for preview server
+        run: npx wait-on http://localhost:4173 --timeout 30000
+
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+  # ── Mobile ──────────────────────────────────────────────────────────────
+  mobile:
+    name: "Mobile — type-check + lint + test"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install shared package dependencies
+        run: npm install
+        working-directory: packages/shared
+
+      - name: Audit JS dependencies
+        run: npm audit --audit-level=high || true
+        continue-on-error: true
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test -- --ci --forceExit
+
+  # ── Shared Package ─────────────────────────────────────────────────────
+  shared:
+    name: "Shared — test"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: packages/shared
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Tests
+        run: npm test

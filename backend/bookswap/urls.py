@@ -16,6 +16,8 @@ urlpatterns = [
     path("users/me/data-export/", views.DataExportView.as_view(), name="user-data-export"),
     path("users/check-username/", views.CheckUsernameView.as_view(), name="user-check-username"),
     path("users/<uuid:pk>/", views.UserDetailView.as_view(), name="user-detail"),
+    # ── Mobile devices (push tokens) ──────────────────────────────────
+    path("users/me/devices/", views.MobileDeviceProxyView.as_view(), name="user-devices"),
     # ── Notifications ─────────────────────────────────────────────────
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
 ]

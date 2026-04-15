@@ -1,0 +1,49 @@
+# Dependencies (reinstalled inside container)
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# Version control
+.git
+.gitignore
+
+# CI / GitHub configuration
+.github
+
+# Environment files — never bake secrets into image layers
+.env
+.env.*
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Editor / OS artefacts
+.DS_Store
+.vscode
+.idea
+*.log
+
+# Salesforce tooling (not needed in container)
+.sfdx
+
+# Test / coverage output
+htmlcov
+.coverage
+.pytest_cache
+.mypy_cache
+
+# Docker files (not needed inside the image)
+.dockerignore
+docker-compose*.yml
+Dockerfile
+
+# Documentation
+*.md
+*.local.md
+
+# Build artefacts
+staticfiles/
+mediafiles/

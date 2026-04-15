@@ -103,3 +103,32 @@ class NotificationPreferences(models.Model):
 
     def __str__(self) -> str:
         return f"NotificationPreferences({self.user_id})"
+
+
+class MobileDevice(models.Model):
+    """Registered mobile device for push notifications via Expo."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mobile_devices",
+    )
+    push_token = models.CharField(max_length=255, unique=True)
+    platform = models.CharField(
+        max_length=10,
+        choices=[("ios", "iOS"), ("android", "Android")],
+    )
+    device_name = models.CharField(max_length=150, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]  # noqa: RUF012
+        indexes = [  # noqa: RUF012
+            models.Index(fields=["user", "is_active"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.platform} — {self.user_id} ({self.push_token[:20]}…)"

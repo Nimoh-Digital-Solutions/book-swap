@@ -18,8 +18,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Notification, NotificationPreferences
-from .serializers import NotificationPreferencesSerializer, NotificationSerializer
+from .models import MobileDevice, Notification, NotificationPreferences
+from .serializers import MobileDeviceSerializer, NotificationPreferencesSerializer, NotificationSerializer
 
 
 class NotificationListView(APIView):
@@ -70,6 +70,25 @@ class NotificationPreferencesView(RetrieveUpdateAPIView):
     def get_object(self) -> NotificationPreferences:
         obj, _ = NotificationPreferences.objects.get_or_create(user=self.request.user)
         return obj
+
+
+class MobileDeviceView(APIView):
+    """Register or update a mobile device push token."""
+
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
+
+    def post(self, request: Request) -> Response:
+        serializer = MobileDeviceSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request: Request) -> Response:
+        push_token = request.data.get("push_token")
+        if not push_token:
+            return Response({"detail": "push_token is required."}, status=status.HTTP_400_BAD_REQUEST)
+        MobileDevice.objects.filter(user=request.user, push_token=push_token).update(is_active=False)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UnsubscribeView(APIView):

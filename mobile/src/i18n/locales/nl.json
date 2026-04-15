@@ -1,0 +1,75 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "success": "Gelukt",
+    "done": "OK",
+    "error": "Er is iets misgegaan",
+    "retry": "Opnieuw proberen",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "done": "Klaar",
+    "search": "Zoeken"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "register": "Registreren",
+    "logout": "Uitloggen",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "username": "Gebruikersnaam",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "forgotPasswordTitle": "Wachtwoord resetten",
+    "resetHint": "Vul je e-mail in; als er een account is, sturen we instructies.",
+    "sendResetLink": "Resetlink versturen",
+    "resetSent": "Als er een account voor dat e-mailadres is, ontvang je zo instructies.",
+    "noAccount": "Nog geen account?",
+    "hasAccount": "Al een account?",
+    "registerSuccess": "Account aangemaakt. Je kunt nu inloggen.",
+    "fillRequired": "Vul de verplichte velden in.",
+    "biometricPrompt": "Verifieer om door te gaan"
+  },
+  "tabs": {
+    "home": "Home",
+    "browse": "Bladeren",
+    "scan": "Scannen",
+    "messages": "Berichten",
+    "profile": "Profiel"
+  },
+  "books": {
+    "addBook": "Boek toevoegen",
+    "myBooks": "Mijn boeken",
+    "scanBarcode": "Barcode scannen",
+    "condition": "Staat",
+    "description": "Beschrijving"
+  },
+  "exchanges": {
+    "requestSwap": "Ruil aanvragen",
+    "incoming": "Ontvangen verzoeken",
+    "outgoing": "Mijn verzoeken",
+    "accept": "Accepteren",
+    "decline": "Afwijzen",
+    "counter": "Tegenbod"
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "markAllRead": "Alles als gelezen markeren",
+    "empty": "Nog geen meldingen"
+  },
+  "errorBoundary": {
+    "message": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
+  },
+  "network": {
+    "offline": "Je bent offline",
+    "backOnline": "Weer online",
+    "degraded": "Verbinding is onstabiel — opnieuw proberen"
+  },
+  "biometricGate": {
+    "hint": "Ontgrendel met biometrie of log uit om verder te gaan."
+  }
+}

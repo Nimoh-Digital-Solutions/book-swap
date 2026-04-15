@@ -57,7 +57,7 @@ NIMOH_BASE = {
     "PASSWORD_CHECKER_USER_AGENT": "Django-Password-Validator",
     "CELERY_APP_NAME": "bookswap",
     "CACHE_KEY_PREFIX": "bookswap",
-    "MOBILE_APP_IDENTIFIERS": [],
+    "MOBILE_APP_IDENTIFIERS": ["BookSwap-Mobile"],
     "ENABLE_MONITORING_PERSISTENCE": True,
     # Set to False to skip the Celery worker check in /api/v1/health/.
     # Disable when running without a Celery worker (local dev without Docker Celery).

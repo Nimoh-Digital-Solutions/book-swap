@@ -3,6 +3,12 @@ name: Deploy — Staging
 on:
   push:
     branches: [staging]
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: "Force deploy all layers (backend + frontend + mobile OTA)"
+        type: boolean
+        default: true
 
 concurrency:
   group: deploy-staging
@@ -28,6 +34,17 @@ jobs:
           git fetch origin
           git reset --hard origin/staging
 
+      - name: Verify CI passed for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          STATUS=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '.state' 2>/dev/null || echo "unknown")
+          echo "CI status for $SHA: $STATUS"
+          if [ "$STATUS" != "success" ] && [ "$STATUS" != "pending" ]; then
+            echo "::warning::CI has not passed for this commit ($STATUS). Proceeding with caution."
+          fi
+
       # ── Detect which layers changed ───────────────────────────────────────────
       # Compares the push's before/after SHAs to decide whether to rebuild the
       # backend, the frontend, or both.  Falls back to a full deploy when the
@@ -35,6 +52,15 @@ jobs:
       - name: Detect changed layers
         id: detect
         run: |
+          # Manual trigger with deploy_all → rebuild everything
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.deploy_all }}" = "true" ]; then
+            echo "backend=true"  >> $GITHUB_OUTPUT
+            echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "Manual full deploy requested."
+            exit 0
+          fi
+
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.sha }}"
 
@@ -42,7 +68,8 @@ jobs:
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             echo "backend=true"  >> $GITHUB_OUTPUT
             echo "frontend=true" >> $GITHUB_OUTPUT
-            echo "First push / force-push → deploying both layers."
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "First push / force-push → deploying all layers."
             exit 0
           fi
 
@@ -50,7 +77,8 @@ jobs:
           if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
             echo "backend=true"  >> $GITHUB_OUTPUT
             echo "frontend=true" >> $GITHUB_OUTPUT
-            echo "Before SHA not in local history → deploying both layers."
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "Before SHA not in local history → deploying all layers."
             exit 0
           fi
 
@@ -70,10 +98,16 @@ jobs:
             echo "frontend=false" >> $GITHUB_OUTPUT
           fi
 
+          if echo "$CHANGED" | grep -qE '^mobile/|^packages/shared/'; then
+            echo "mobile=true"  >> $GITHUB_OUTPUT
+          else
+            echo "mobile=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Nothing to deploy
-        if: steps.detect.outputs.backend != 'true' && steps.detect.outputs.frontend != 'true'
+        if: steps.detect.outputs.backend != 'true' && steps.detect.outputs.frontend != 'true' && steps.detect.outputs.mobile != 'true'
         run: |
-          echo "No backend or frontend files changed in this push — skipping deploy."
+          echo "No backend, frontend, or mobile files changed in this push — skipping deploy."
 
       # ── Backend ──────────────────────────────────────────────────────────────
       # .env.staging is a symlink → ~/envs/speaklinka.backend.staging.env (created once on the Pi).
@@ -83,6 +117,11 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker compose -p sl_staging \
             -f docker-compose.staging.yml build --no-cache
+
+      - name: Remove old backend containers
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          docker rm -f sl_web_staging sl_celery_staging sl_beat_staging 2>/dev/null || true
 
       - name: Deploy backend
         if: steps.detect.outputs.backend == 'true'
@@ -98,7 +137,12 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker compose -p sl_frontend_staging \
             -f docker-compose.staging.yml build --no-cache \
-            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_STAGING }}"
+            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_STAGING }}" \
+            --build-arg VITE_AGORA_APP_ID="${{ secrets.VITE_AGORA_APP_ID_STAGING }}"
+
+      - name: Remove old frontend container
+        if: steps.detect.outputs.frontend == 'true'
+        run: docker rm -f sl_frontend_staging 2>/dev/null || true
 
       - name: Deploy frontend
         if: steps.detect.outputs.frontend == 'true'
@@ -106,6 +150,40 @@ jobs:
         run: |
           docker compose -p sl_frontend_staging -f docker-compose.staging.yml \
             up -d --force-recreate
+
+      # ── Mobile OTA update ──────────────────────────────────────────────────────
+      # Run OTA publish on the self-hosted Pi. Use --no-bytecode to avoid Hermes
+      # compiler binary incompatibility on ARM64 runners.
+      - name: Set up Node.js for mobile OTA
+        if: steps.detect.outputs.mobile == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify Node/npm toolchain
+        if: steps.detect.outputs.mobile == 'true'
+        run: |
+          node --version
+          npm --version
+          npx --version
+
+      - name: Install mobile dependencies for EAS update
+        if: steps.detect.outputs.mobile == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/mobile
+        run: npm ci
+
+      - name: Publish mobile OTA update
+        if: steps.detect.outputs.mobile == 'true'
+        working-directory: /home/gnimoh001/apps/speak-linka/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+        run: |
+          npx eas-cli update \
+            --branch staging \
+            --message "deploy: staging $(date -u +'%Y-%m-%d %H:%M') — ${GITHUB_SHA::8}" \
+            --no-bytecode \
+            --non-interactive
 
       # ── Health checks ─────────────────────────────────────────────────────────
       - name: Health check — backend
@@ -131,16 +209,38 @@ jobs:
             sleep 5
           done
 
+      # ── Smoke test — critical API endpoints ───────────────────────────────────
+      - name: Smoke test — API endpoints
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          BASE="http://localhost:8109/api/v1"
+          FAIL=0
+          for endpoint in \
+            "$BASE/health/" \
+            "$BASE/languages/" \
+            "$BASE/subscriptions/plans/" \
+            "$BASE/partners/cities/"; do
+            HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+              echo "  ✓ $endpoint ($HTTP_CODE)"
+            else
+              echo "  ✗ $endpoint ($HTTP_CODE)"
+              FAIL=1
+            fi
+          done
+          [ $FAIL -eq 1 ] && echo "WARNING: Some smoke tests failed" || echo "All smoke tests passed ✓"
+
       # ── Summary ───────────────────────────────────────────────────────────────
       - name: Container status
         if: always()
         run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "sl_|NAMES" || true
 
       - name: Deployment summary
-        if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true'
+        if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true' || steps.detect.outputs.mobile == 'true'
         run: |
           echo "================================================="
           echo " SpeakLinka Staging — deployed successfully!"
           [ "${{ steps.detect.outputs.backend }}"  = "true" ] && echo " Backend  : https://api-stag.speaklinka.com  ✓"
           [ "${{ steps.detect.outputs.frontend }}" = "true" ] && echo " Frontend : https://stag.speaklinka.com      ✓"
+          [ "${{ steps.detect.outputs.mobile }}"   = "true" ] && echo " Mobile   : OTA update published (staging)   ✓"
           echo "================================================="
