@@ -48,7 +48,7 @@ services:
   celery:
     image: ${IMAGE_NAME:-bookswap/web:latest}
     container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info
+    command: celery -A config.celery worker --loglevel=info -Q default,email,maintenance
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.staging
       DATABASE_URL: ${DATABASE_URL}

@@ -39,7 +39,7 @@ services:
   celery:
     build: .
     container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info
+    command: celery -A config.celery worker --loglevel=info -Q default,email,maintenance
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.development
       DATABASE_URL: postgresql://gnimoh001:${DB_PASSWORD:-changeme}@host.docker.internal:5432/bookswap

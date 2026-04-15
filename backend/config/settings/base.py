@@ -118,7 +118,10 @@ INSTALLED_APPS = (
 )
 
 # ── Middleware ────────────────────────────────────────────────────────────────
-MIDDLEWARE = NimohBaseSettings.get_base_middleware()
+MIDDLEWARE = [
+    *NimohBaseSettings.get_base_middleware(),
+    "bookswap.middleware.BookSwapSecurityHeadersMiddleware",
+]
 
 # ── Database ──────────────────────────────────────────────────────────────────
 
@@ -236,6 +239,27 @@ CELERY_BEAT_SCHEDULE["expire-stale-conditions"] = {
 CELERY_BEAT_SCHEDULE["auto-confirm-stale-swaps"] = {
     "task": "exchanges.auto_confirm_stale_swaps",
     "schedule": crontab(hour=4, minute=0, day_of_week=1),
+}
+
+# ── Celery queue routing ─────────────────────────────────────────────────────
+# Three queues: default (general), email (transactional messages),
+# maintenance (scheduled cron-style tasks).
+CELERY_TASK_QUEUES = {
+    "default": {"exchange": "default", "routing_key": "default"},
+    "email": {"exchange": "email", "routing_key": "email"},
+    "maintenance": {"exchange": "maintenance", "routing_key": "maintenance"},
+}
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_ROUTES = {
+    # Notification tasks → email queue (they send transactional emails)
+    "notifications.*": {"queue": "email"},
+    # Trust & safety email alerts → email queue
+    "trust_safety.send_report_notification_email": {"queue": "email"},
+    # Scheduled maintenance tasks → maintenance queue
+    "exchanges.expire_stale_requests": {"queue": "maintenance"},
+    "exchanges.expire_stale_conditions": {"queue": "maintenance"},
+    "exchanges.auto_confirm_stale_swaps": {"queue": "maintenance"},
+    "bookswap.anonymize_deleted_accounts": {"queue": "maintenance"},
 }
 
 

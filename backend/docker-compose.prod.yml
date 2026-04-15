@@ -63,7 +63,41 @@ services:
   celery:
     image: ${IMAGE_NAME:-bookswap/web:latest}
     container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info
+    command: celery -A config.celery worker --loglevel=info -Q default
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-email:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery-email
+    command: celery -A config.celery worker --loglevel=info -Q email --concurrency=2
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-maintenance:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery-maintenance
+    command: celery -A config.celery worker --loglevel=info -Q maintenance --concurrency=1
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
       DATABASE_URL: ${DATABASE_URL}

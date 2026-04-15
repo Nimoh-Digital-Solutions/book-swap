@@ -26,7 +26,9 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.production
+    DJANGO_SETTINGS_MODULE=config.settings.production \
+    GDAL_LIBRARY_PATH="" \
+    GEOS_LIBRARY_PATH=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
@@ -38,7 +40,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 COPY . .
 
-RUN python manage.py collectstatic --noinput --settings=config.settings.production
+RUN chmod +x scripts/entrypoint.sh scripts/check-env.sh start.sh \
+    && python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Run as a non-root user for security (GAP-I-003)
 RUN addgroup --system app && adduser --system --ingroup app app \
@@ -47,9 +50,5 @@ USER app
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.asgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "4", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--timeout", "30", \
-     "--log-level", "info"]
+ENTRYPOINT ["scripts/entrypoint.sh"]
+CMD ["./start.sh"]
