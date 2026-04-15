@@ -3,6 +3,7 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import checker from 'vite-plugin-checker';
+import mkcert from 'vite-plugin-mkcert';
 import { visualizer } from 'rollup-plugin-visualizer';
 import autoprefixer from 'autoprefixer';
 import pxtorem from 'postcss-pxtorem';
@@ -24,6 +25,10 @@ export default defineConfig(({ mode }) => {
   // DOCKER is not a VITE_ var — read it directly from process.env
   const isDocker = process.env['DOCKER'] === 'true'; // Automatically set in docker-compose.
 
+  // HTTPS in dev via mkcert — opt-in with VITE_HTTPS=true or always on when DOCKER is false.
+  // Needed for secure cookie testing, WebAuthn, and media APIs that require a secure context.
+  const enableHttps = !isTest && !isProd && env.VITE_HTTPS === 'true';
+
   /**
    * PWA strategy:
    * - Production: always enabled (when PWA feature is installed)
@@ -38,6 +43,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      // Local HTTPS via mkcert — auto-generates trusted certs on first run.
+      // Enable with: VITE_HTTPS=true yarn dev
+      ...(enableHttps ? [mkcert()] : []),
       // PWA always enabled in prod, opt-in in dev
       pwaPlugin({ isProd, enableDev: enableDevPwa }),
       // Remove PWA manifest link when disabled in dev

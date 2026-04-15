@@ -1,13 +1,15 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { EmptyPlaceholder } from '@components/common';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import type { BrowseBook } from '@features/discovery';
 import { SwapFlowModal } from '@features/discovery';
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   ArrowLeft,
@@ -39,7 +41,7 @@ function relativeDate(dateStr: string): string {
 
 export function BookDetailPage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUserId = useAuthStore(s => s.user?.id);
   const addNotification = useAppStore(s => s.addNotification);
@@ -300,7 +302,7 @@ export function BookDetailPage(): ReactElement {
                   <ShieldCheck className="w-4 h-4 text-[#E4B643]" aria-hidden="true" />
                   {t('books.detail.verifiedCurator', 'Verified Curator')}
                 </h3>
-                <Link
+                <LocaleLink
                   to={isOwner ? PATHS.PROFILE : `/profile/${book.owner.id}`}
                   className="flex items-center gap-4 mb-6 hover:opacity-80 transition-opacity"
                 >
@@ -319,7 +321,7 @@ export function BookDetailPage(): ReactElement {
                     <p className="text-white font-bold">{book.owner.username}</p>
                     <p className="text-xs text-[#8C9C92]">{book.owner.neighborhood}</p>
                   </div>
-                </Link>
+                </LocaleLink>
                 {ownerRating > 0 && (
                   <div className="flex items-center gap-1 pt-4 border-t border-[#28382D]">
                     <Star className="w-3 h-3 text-[#E4B643] fill-current" aria-hidden="true" />
@@ -335,13 +337,13 @@ export function BookDetailPage(): ReactElement {
           {/* Action buttons */}
           {isOwner ? (
             <div className="flex gap-4">
-              <Link
+              <LocaleLink
                 to={`/books/${book.id}/edit`}
                 className="flex-1 flex items-center justify-center gap-3 border border-[#28382D] text-white py-5 rounded-2xl font-bold hover:bg-[#28382D] transition-colors"
               >
                 <Edit2 className="w-5 h-5" aria-hidden="true" />
                 {t('books.detail.editListing', 'Edit Listing')}
-              </Link>
+              </LocaleLink>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4">

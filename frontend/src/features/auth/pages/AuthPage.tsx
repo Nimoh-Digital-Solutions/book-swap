@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { useDocumentTitle, useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -19,8 +20,8 @@ import type { LoginPayload, RegisterPayload } from '../types/auth.types';
 const VIEW_ORDER: Record<AuthView, number> = { register: -1, login: 0, forgot: 1 };
 
 function pathToView(pathname: string): AuthView {
-  if (pathname === PATHS.REGISTER) return 'register';
-  if (pathname === PATHS.FORGOT_PASSWORD) return 'forgot';
+  if (pathname.endsWith('/register')) return 'register';
+  if (pathname.endsWith('/forgot-password')) return 'forgot';
   return 'login';
 }
 
@@ -86,7 +87,7 @@ const BRANDING: Record<
 export function AuthPage() {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const view = pathToView(location.pathname);

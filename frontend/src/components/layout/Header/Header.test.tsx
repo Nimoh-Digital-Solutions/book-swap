@@ -1,4 +1,4 @@
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -10,10 +10,12 @@ import { Header } from './Header';
 // Test helpers
 // ---------------------------------------------------------------------------
 
-function renderHeader(initialRoute = '/') {
+function renderHeader(initialRoute = '/en') {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <Header />
+      <Routes>
+        <Route path="/:lng/*" element={<Header />} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -44,7 +46,7 @@ describe('Header', () => {
   it('renders the Browse link pointing to catalogue', () => {
     renderHeader();
     const browseLink = screen.getByText('Browse');
-    expect(browseLink.closest('a')).toHaveAttribute('href', '/catalogue');
+    expect(browseLink.closest('a')).toHaveAttribute('href', '/en/catalogue');
   });
 
   it('has no a11y violations', async () => {

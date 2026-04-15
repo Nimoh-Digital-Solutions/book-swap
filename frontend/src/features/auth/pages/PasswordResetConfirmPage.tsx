@@ -1,13 +1,13 @@
 import { type ReactElement, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { Link, useSearchParams } from 'react-router-dom';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { HttpError } from '@services';
 import { AlertCircle, CheckCircle, Lock } from 'lucide-react';
+import { z } from 'zod';
 
 import { authService } from '../services/auth.service';
 

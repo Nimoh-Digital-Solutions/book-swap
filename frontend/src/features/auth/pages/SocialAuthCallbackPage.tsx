@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { API } from '@configs/apiEndpoints';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS } from '@routes/config/paths';
 import { http } from '@services';
 
@@ -22,7 +23,7 @@ import type { AuthUser } from '../types/auth.types';
  */
 export function SocialAuthCallbackPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const setAuth = useAuthStore(s => s.setAuth);
   const hasFired = useRef(false);
 

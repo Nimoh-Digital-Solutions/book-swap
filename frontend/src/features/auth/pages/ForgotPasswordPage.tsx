@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { useDocumentTitle, useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
@@ -20,7 +20,7 @@ export function ForgotPasswordPage() {
   useDocumentTitle(routeMetadata[PATHS.FORGOT_PASSWORD].title);
   const { city } = useUserCity();
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

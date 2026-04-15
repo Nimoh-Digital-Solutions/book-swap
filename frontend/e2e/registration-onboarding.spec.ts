@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Registration page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/register');
+    await page.goto('/en/register');
   });
 
   test('loads registration form', async ({ page }) => {
@@ -36,11 +36,17 @@ test.describe('Registration page', () => {
   test('has link to login page', async ({ page }) => {
     await expect(page.getByRole('link', { name: /sign in|log in/i })).toBeVisible();
   });
+
+  test('toggle to login preserves locale prefix', async ({ page }) => {
+    const loginLink = page.getByRole('link', { name: /sign in|log in/i });
+    await loginLink.click();
+    await expect(page).toHaveURL(/\/en\/login/);
+  });
 });
 
 test.describe('Onboarding page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/onboarding');
+    await page.goto('/en/onboarding');
   });
 
   test('loads onboarding form with step indicator', async ({ page }) => {
@@ -55,7 +61,6 @@ test.describe('Onboarding page', () => {
 
   test('skip link navigates away', async ({ page }) => {
     await page.getByText(/skip for now/i).click();
-    // Should navigate away from /onboarding
     await expect(page).not.toHaveURL(/\/onboarding/);
   });
 

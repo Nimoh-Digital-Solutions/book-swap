@@ -1,12 +1,13 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
 import { RatingPrompt } from '@features/ratings';
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, X } from 'lucide-react';
 
@@ -276,7 +277,7 @@ function isChatReadOnly(status: string): boolean {
 
 export default function ExchangeDetailPage(): ReactElement {
   const { t } = useTranslation('exchanges');
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const { data: exchange, isLoading, isError } = useExchange(id!);
   const currentUserId = useAuthStore(s => s.user?.id);

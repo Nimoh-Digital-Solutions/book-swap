@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Edit2, Globe, MapPin, Star } from 'lucide-react';
 
@@ -18,7 +18,7 @@ import { useProfile } from '../hooks/useProfile';
  */
 export function ProfilePage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { data: profile, isLoading, isError } = useProfile();
 
   useDocumentTitle(routeMetadata[PATHS.PROFILE].title);

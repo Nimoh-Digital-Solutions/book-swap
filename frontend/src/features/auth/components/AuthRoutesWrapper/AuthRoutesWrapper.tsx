@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useParams } from 'react-router-dom';
 
 import { PATHS } from '@routes/config/paths';
 
@@ -7,8 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 /**
  * AuthRoutesWrapper
  *
- * Layout route wrapper for all authentication screens (/login, /register,
- * /forgot-password, /password-reset/confirm).
+ * Layout route wrapper for all authentication screens (/:lng/login, etc.).
  *
  * Behaviour:
  *  - If the user is already authenticated, immediately redirects to the
@@ -20,9 +19,10 @@ import { useAuth } from '../../hooks/useAuth';
  */
 export function AuthRoutesWrapper() {
   const { isAuthenticated } = useAuth();
+  const { lng = 'en' } = useParams<{ lng: string }>();
 
   if (isAuthenticated) {
-    return <Navigate to={PATHS.HOME} replace />;
+    return <Navigate to={`/${lng}${PATHS.HOME}`} replace />;
   }
 
   return <Outlet />;

@@ -1,6 +1,7 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { useDocumentTitle, useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 import { AuthSplitPanel } from '../components/AuthSplitPanel/AuthSplitPanel';
@@ -12,7 +13,7 @@ export function LoginPage() {
   useDocumentTitle(routeMetadata[PATHS.LOGIN].title);
   const { city } = useUserCity();
   const { login, isLoading, error } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const location = useLocation();
 
   const returnUrl = (location.state as { returnUrl?: string } | null)?.returnUrl;

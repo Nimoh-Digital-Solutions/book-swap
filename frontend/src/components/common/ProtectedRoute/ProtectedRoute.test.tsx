@@ -26,26 +26,27 @@ function renderProtectedRoute({
   redirectTo?: string;
 } = {}) {
   return render(
-    <MemoryRouter initialEntries={['/protected']}>
+    <MemoryRouter initialEntries={['/en/protected']}>
       <Routes>
-        <Route
-          path="/protected"
-          element={
-            redirectTo ? (
-              <ProtectedRoute redirectTo={redirectTo}>
-                <p>Protected content</p>
-              </ProtectedRoute>
-            ) : (
-              <ProtectedRoute>
-                <p>Protected content</p>
-              </ProtectedRoute>
-            )
-          }
-        />
-        {/* Default redirect destination is /login */}
-        <Route path="/login" element={<p>Login page</p>} />
-        <Route path="/custom-login" element={<p>Custom login page</p>} />
-        <Route path="/" element={<p>Home page</p>} />
+        <Route path="/:lng">
+          <Route
+            path="protected"
+            element={
+              redirectTo ? (
+                <ProtectedRoute redirectTo={redirectTo}>
+                  <p>Protected content</p>
+                </ProtectedRoute>
+              ) : (
+                <ProtectedRoute>
+                  <p>Protected content</p>
+                </ProtectedRoute>
+              )
+            }
+          />
+          <Route path="login" element={<p>Login page</p>} />
+          <Route path="custom-login" element={<p>Custom login page</p>} />
+          <Route index element={<p>Home page</p>} />
+        </Route>
       </Routes>
     </MemoryRouter>
   );
@@ -100,17 +101,19 @@ describe('ProtectedRoute', () => {
     setAuthState({ isAuthenticated: true, accessToken: 'tok' });
 
     render(
-      <MemoryRouter initialEntries={['/protected']}>
+      <MemoryRouter initialEntries={['/en/protected']}>
         <Routes>
-          <Route
-            path="/protected"
-            element={
-              <ProtectedRoute redirectTo="/custom-login">
-                <p>Authenticated content</p>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/custom-login" element={<p>Custom login page</p>} />
+          <Route path="/:lng">
+            <Route
+              path="protected"
+              element={
+                <ProtectedRoute redirectTo="/custom-login">
+                  <p>Authenticated content</p>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="custom-login" element={<p>Custom login page</p>} />
+          </Route>
         </Routes>
       </MemoryRouter>
     );

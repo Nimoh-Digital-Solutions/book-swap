@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
 
 import { EmptyPlaceholder } from '@components/common';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, BookOpen, Inbox } from 'lucide-react';
 
@@ -15,7 +16,7 @@ import type { ExchangeListItem } from '../types/exchange.types';
 
 function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElement {
   const { t } = useTranslation('exchanges');
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
@@ -105,12 +106,12 @@ function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElemen
         >
           {t('incoming.decline', 'Decline')}
         </button>
-        <Link
+        <LocaleLink
           to={`/exchanges/${exchange.id}`}
           className="px-4 py-2 border border-[#28382D] hover:border-[#8C9C92] text-[#8C9C92] text-sm rounded-full transition-colors text-center"
         >
           {t('incoming.view', 'View')}
-        </Link>
+        </LocaleLink>
       </div>
     </div>
   );
@@ -118,7 +119,7 @@ function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElemen
 
 export default function IncomingRequestsPage(): ReactElement {
   const { t } = useTranslation('exchanges');
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   useDocumentTitle(routeMetadata[PATHS.INCOMING_REQUESTS].title);
 

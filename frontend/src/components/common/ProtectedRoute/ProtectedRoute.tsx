@@ -1,5 +1,5 @@
 import { type ReactElement,type ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { PATHS } from '@routes/config/paths';
@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   /** Content to render when authenticated. */
   children: ReactNode;
   /**
-   * Where to redirect unauthenticated users.
+   * Where to redirect unauthenticated users (bare path without language prefix).
    * Defaults to the login page.
    */
   redirectTo?: string;
@@ -31,16 +31,20 @@ const ProtectedRoute = ({
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const isLoading = useAuthStore(s => s.isLoading);
   const location = useLocation();
+  const { lng = 'en' } = useParams<{ lng: string }>();
 
   if (isLoading) {
-    // Show a minimal loading state while auth bootstraps (silent refresh)
     return <div aria-busy="true" aria-live="polite">Loading…</div>;
   }
 
   if (!isAuthenticated) {
+    const target = redirectTo.startsWith('/')
+      ? `/${lng}${redirectTo}`
+      : redirectTo;
+
     return (
       <Navigate
-        to={redirectTo}
+        to={target}
         replace
         state={{ returnUrl: location.pathname }}
       />

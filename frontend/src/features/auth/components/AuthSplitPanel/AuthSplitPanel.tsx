@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { PATHS } from '@routes/config/paths';
 import { Star } from 'lucide-react';
 
@@ -50,12 +50,12 @@ export function AuthSplitPanel({
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
 
           <div className="relative z-10">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
               <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
                 <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 mt-6">
               {brandingTitle}
             </h1>
@@ -98,12 +98,12 @@ export function AuthSplitPanel({
 
           {/* Mobile logo (hidden on desktop) */}
           <div className="md:hidden mb-8">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3">
               <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
                 <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">

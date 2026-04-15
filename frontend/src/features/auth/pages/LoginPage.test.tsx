@@ -23,13 +23,15 @@ function resetStore() {
   });
 }
 
-function renderLoginPage(initialEntries: string[] = ['/login']) {
+function renderLoginPage(initialEntries: string[] = ['/en/login']) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<p>Home page</p>} />
-        <Route path="/dashboard" element={<p>Dashboard page</p>} />
+        <Route path="/:lng">
+          <Route path="login" element={<LoginPage />} />
+          <Route index element={<p>Home page</p>} />
+          <Route path="dashboard" element={<p>Dashboard page</p>} />
+        </Route>
       </Routes>
     </MemoryRouter>,
   );
@@ -98,13 +100,15 @@ describe('LoginPage', () => {
     render(
       <MemoryRouter
         initialEntries={[
-          { pathname: '/login', state: { returnUrl: '/dashboard' } },
+          { pathname: '/en/login', state: { returnUrl: '/dashboard' } },
         ]}
       >
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<p>Home page</p>} />
-          <Route path="/dashboard" element={<p>Dashboard page</p>} />
+          <Route path="/:lng">
+            <Route path="login" element={<LoginPage />} />
+            <Route index element={<p>Home page</p>} />
+            <Route path="dashboard" element={<p>Dashboard page</p>} />
+          </Route>
         </Routes>
       </MemoryRouter>,
     );

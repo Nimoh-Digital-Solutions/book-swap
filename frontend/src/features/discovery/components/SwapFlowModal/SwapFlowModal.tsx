@@ -8,10 +8,11 @@
  * Real data: useMyShelf + useCreateExchange.
  */
 import { type ReactElement,useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useMyShelf } from '@features/books';
 import { useCreateExchange } from '@features/exchanges';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS } from '@routes/config/paths';
 
 import type { BrowseBook } from '../../types/discovery.types';
@@ -29,7 +30,7 @@ export function SwapFlowModal({
   onClose,
   requestedBook,
 }: SwapFlowModalProps): ReactElement | null {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [step, setStep] = useState<Step>('SELECT_OFFER');
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -145,7 +146,7 @@ export function SwapFlowModal({
                   <p className="text-gray-400 text-sm mb-6">
                     Add a book to your shelf before requesting a swap.
                   </p>
-                  <Link
+                  <LocaleLink
                     to={PATHS.ADD_BOOK}
                     onClick={handleClose}
                     className="inline-flex items-center gap-2 bg-[#E4B643] text-[#152018] font-bold px-6 py-2.5 rounded-full text-sm hover:bg-[#d9b93e] transition-colors"
@@ -154,7 +155,7 @@ export function SwapFlowModal({
                       add
                     </span>
                     Add a Book
-                  </Link>
+                  </LocaleLink>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -214,7 +215,7 @@ export function SwapFlowModal({
                   })}
 
                   {/* Add new book shortcut */}
-                  <Link
+                  <LocaleLink
                     to={PATHS.ADD_BOOK}
                     onClick={handleClose}
                     className="rounded-2xl border-2 border-dashed border-white/20 hover:border-[#E4B643]/50 hover:bg-white/5 transition-all flex flex-col items-center justify-center aspect-[3/4] p-4 group"
@@ -228,7 +229,7 @@ export function SwapFlowModal({
                     <span className="text-xs font-bold tracking-widest uppercase text-[#E4B643]">
                       Add New
                     </span>
-                  </Link>
+                  </LocaleLink>
                 </div>
               )}
             </div>

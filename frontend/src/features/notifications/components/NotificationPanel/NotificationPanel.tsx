@@ -6,7 +6,6 @@
  */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import type { Notification } from '@features/notifications';
 import {
@@ -14,6 +13,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from '@features/notifications';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,7 +39,7 @@ interface NotificationRowProps {
 }
 
 function NotificationRow({ notification, onRead }: NotificationRowProps): ReactElement {
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
 
   const handleClick = (): void => {
     if (!notification.is_read) {

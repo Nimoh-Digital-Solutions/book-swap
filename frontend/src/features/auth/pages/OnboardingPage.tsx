@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useCompleteOnboarding, useSetLocation } from '@features/profile';
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { Info, MapPin, Star } from 'lucide-react';
 
@@ -16,7 +17,7 @@ import { Info, MapPin, Star } from 'lucide-react';
  */
 export function OnboardingPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [location, setLocation] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -47,12 +48,12 @@ export function OnboardingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
 
           <div className="relative z-10">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
               <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
                 <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
               Find Books <span className="text-[#E4B643] italic">Near You</span>
             </h1>
@@ -95,12 +96,12 @@ export function OnboardingPage() {
 
           {/* Mobile logo */}
           <div className="md:hidden mb-8">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3">
               <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
                 <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">
@@ -109,12 +110,12 @@ export function OnboardingPage() {
               <span className="uppercase tracking-widest text-xs font-bold text-text-secondary">
                 {t('onboarding.step', 'Step 2 of 2')}
               </span>
-              <Link
+              <LocaleLink
                 to={PATHS.HOME}
                 className="text-sm font-medium text-text-secondary hover:text-[#E4B643] transition-colors"
               >
                 {t('onboarding.skip', 'Skip for now')}
-              </Link>
+              </LocaleLink>
             </div>
 
             <h2 className="text-3xl font-bold text-white mb-2">

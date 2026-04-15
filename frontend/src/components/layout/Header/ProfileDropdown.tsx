@@ -1,9 +1,10 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { useProfile } from '@features/profile/hooks/useProfile';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS } from '@routes/config/paths';
 import { ArrowLeftRight,BookMarked, LogOut, Settings, User } from 'lucide-react';
 
@@ -17,7 +18,7 @@ function getInitials(firstName: string, lastName: string, email: string): string
 
 export function ProfileDropdown(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
   const { data: profile } = useProfile();
@@ -105,7 +106,7 @@ export function ProfileDropdown(): ReactElement {
             )}
           </div>
 
-          <Link
+          <LocaleLink
             to={PATHS.PROFILE}
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -113,9 +114,9 @@ export function ProfileDropdown(): ReactElement {
           >
             <User className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
             {t('navigation.myProfile', 'Profile')}
-          </Link>
+          </LocaleLink>
 
-          <Link
+          <LocaleLink
             to={PATHS.MY_SHELF}
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -123,9 +124,9 @@ export function ProfileDropdown(): ReactElement {
           >
             <BookMarked className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
             {t('navigation.myShelf', 'My Shelf')}
-          </Link>
+          </LocaleLink>
 
-          <Link
+          <LocaleLink
             to={PATHS.EXCHANGES}
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -133,9 +134,9 @@ export function ProfileDropdown(): ReactElement {
           >
             <ArrowLeftRight className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
             {t('navigation.exchanges', 'Exchanges')}
-          </Link>
+          </LocaleLink>
 
-          <Link
+          <LocaleLink
             to={PATHS.SETTINGS}
             role="menuitem"
             onClick={() => setOpen(false)}
@@ -143,7 +144,7 @@ export function ProfileDropdown(): ReactElement {
           >
             <Settings className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
             {t('navigation.settings', 'Settings')}
-          </Link>
+          </LocaleLink>
 
           <div className="border-t border-[#28382D]">
             <button

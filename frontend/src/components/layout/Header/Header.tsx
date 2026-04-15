@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { NotificationBell } from '@features/notifications';
 import { PATHS } from '@routes/config/paths';
@@ -26,9 +26,9 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
             <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <Link to={PATHS.CATALOGUE} className="text-white hover:text-[#E4B643] transition-colors">{t('home.nav.browse', 'Browse')}</Link>
-            <a href={PATHS.HOW_IT_WORKS} className="hover:text-white transition-colors">{t('home.nav.howItWorks', 'How it Works')}</a>
-            <a href={PATHS.COMMUNITY} className="hover:text-white transition-colors">{t('home.nav.community', 'Community')}</a>
+            <LocaleLink to={PATHS.CATALOGUE} className="text-white hover:text-[#E4B643] transition-colors">{t('home.nav.browse', 'Browse')}</LocaleLink>
+            <LocaleLink to={PATHS.HOW_IT_WORKS} className="hover:text-white transition-colors">{t('home.nav.howItWorks', 'How it Works')}</LocaleLink>
+            <LocaleLink to={PATHS.COMMUNITY} className="hover:text-white transition-colors">{t('home.nav.community', 'Community')}</LocaleLink>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -36,9 +36,9 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
           {isAuthenticated ? (
           <ProfileDropdown />
         ) : (
-        <Link to={PATHS.LOGIN} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-6 py-2 rounded-full font-bold text-sm transition-colors">
+        <LocaleLink to={PATHS.LOGIN} className="bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] px-6 py-2 rounded-full font-bold text-sm transition-colors">
           {t('home.nav.signIn', 'Sign In')} 
-        </Link>
+        </LocaleLink>
         )}
         </div>
       </nav>

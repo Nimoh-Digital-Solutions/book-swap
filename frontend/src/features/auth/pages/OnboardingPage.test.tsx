@@ -1,4 +1,4 @@
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -28,8 +28,10 @@ vi.mock('@features/profile', async () => {
 
 const renderPage = () =>
   render(
-    <MemoryRouter>
-      <OnboardingPage />
+    <MemoryRouter initialEntries={['/en/onboarding']}>
+      <Routes>
+        <Route path="/:lng/onboarding" element={<OnboardingPage />} />
+      </Routes>
     </MemoryRouter>,
   );
 
@@ -89,7 +91,7 @@ describe('OnboardingPage', () => {
     await waitFor(() => {
       expect(mockSetLocation).toHaveBeenCalledWith({ postcode: '1012 AB' });
       expect(mockCompleteOnboarding).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('/en/', { replace: true });
     });
   });
 

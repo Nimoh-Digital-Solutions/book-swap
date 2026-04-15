@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useDocumentTitle, useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { HttpError } from '@services';
 
@@ -13,7 +13,7 @@ import type { RegisterPayload } from '../types/auth.types';
 export function RegisterPage() {
   useDocumentTitle(routeMetadata[PATHS.REGISTER].title);
   const { city } = useUserCity();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 

@@ -2110,7 +2110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/eslint-config@npm:^1.0.0":
+"@nimoh-digital-solutions/eslint-config@npm:^1.0.5":
   version: 1.0.5
   resolution: "@nimoh-digital-solutions/eslint-config@npm:1.0.5"
   peerDependencies:
@@ -2128,7 +2128,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/stylelint-config@npm:^1.0.0":
+"@nimoh-digital-solutions/stylelint-config@npm:^1.0.4":
   version: 1.0.4
   resolution: "@nimoh-digital-solutions/stylelint-config@npm:1.0.4"
   dependencies:
@@ -2142,7 +2142,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/tast-hooks@npm:^1.0.0":
+"@nimoh-digital-solutions/tast-hooks@npm:^1.2.6":
   version: 1.2.6
   resolution: "@nimoh-digital-solutions/tast-hooks@npm:1.2.6"
   dependencies:
@@ -2153,7 +2153,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/tast-styles@npm:^1.1.0":
+"@nimoh-digital-solutions/tast-styles@npm:^1.1.5":
   version: 1.1.5
   resolution: "@nimoh-digital-solutions/tast-styles@npm:1.1.5"
   dependencies:
@@ -2162,7 +2162,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/tast-ui@npm:^1.1.0":
+"@nimoh-digital-solutions/tast-ui@npm:^1.5.0":
   version: 1.5.0
   resolution: "@nimoh-digital-solutions/tast-ui@npm:1.5.0"
   dependencies:
@@ -2177,14 +2177,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/tast-utils@npm:^1.1.0, @nimoh-digital-solutions/tast-utils@npm:^1.1.5":
+"@nimoh-digital-solutions/tast-utils@npm:^1.1.5, @nimoh-digital-solutions/tast-utils@npm:^1.1.6":
   version: 1.1.6
   resolution: "@nimoh-digital-solutions/tast-utils@npm:1.1.6"
   checksum: 10c0/55527127468daec47e13766b1bffaeda25a485bd20d98bf6e69f940b150636aa50235f4e49b2054fba28f1e41dd2382cbae24823f374e026adf5aa3710f5e7ee
   languageName: node
   linkType: hard
 
-"@nimoh-digital-solutions/tsconfig@npm:^1.0.0":
+"@nimoh-digital-solutions/tsconfig@npm:^1.0.4":
   version: 1.0.4
   resolution: "@nimoh-digital-solutions/tsconfig@npm:1.0.4"
   checksum: 10c0/ac0e32da0a28ca5dfae0674c7cad037f08b5259a04b91e51f1499a4492a8bba9bc74c00164f6270dffc0b023b92a17b8da73da4024fa08cbeb32b352a2c20ea9
@@ -4375,13 +4375,13 @@ __metadata:
     "@commitlint/config-conventional": "npm:^20.4.1"
     "@eslint/js": "npm:^8.57.1"
     "@hookform/resolvers": "npm:^5.2.2"
-    "@nimoh-digital-solutions/eslint-config": "npm:^1.0.0"
-    "@nimoh-digital-solutions/stylelint-config": "npm:^1.0.0"
-    "@nimoh-digital-solutions/tast-hooks": "npm:^1.0.0"
-    "@nimoh-digital-solutions/tast-styles": "npm:^1.1.0"
-    "@nimoh-digital-solutions/tast-ui": "npm:^1.1.0"
-    "@nimoh-digital-solutions/tast-utils": "npm:^1.1.0"
-    "@nimoh-digital-solutions/tsconfig": "npm:^1.0.0"
+    "@nimoh-digital-solutions/eslint-config": "npm:^1.0.5"
+    "@nimoh-digital-solutions/stylelint-config": "npm:^1.0.4"
+    "@nimoh-digital-solutions/tast-hooks": "npm:^1.2.6"
+    "@nimoh-digital-solutions/tast-styles": "npm:^1.1.5"
+    "@nimoh-digital-solutions/tast-ui": "npm:^1.5.0"
+    "@nimoh-digital-solutions/tast-utils": "npm:^1.1.6"
+    "@nimoh-digital-solutions/tsconfig": "npm:^1.0.4"
     "@playwright/test": "npm:^1.58.2"
     "@react-leaflet/core": "npm:^3.0.0"
     "@sentry/react": "npm:^10.40.0"
@@ -4457,6 +4457,7 @@ __metadata:
     vite: "npm:^7.0.5"
     vite-plugin-checker: "npm:^0.10.0"
     vite-plugin-compression2: "npm:^2.4.0"
+    vite-plugin-mkcert: "npm:^2.0.0"
     vite-plugin-pwa: "npm:^1.0.3"
     vite-plugin-svgr: "npm:^4.3.0"
     vitest: "npm:^4.0.18"
@@ -9995,6 +9996,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"supports-color@npm:^10.2.2":
+  version: 10.2.2
+  resolution: "supports-color@npm:10.2.2"
+  checksum: 10c0/fb28dd7e0cdf80afb3f2a41df5e068d60c8b4f97f7140de2eaed5b42e075d82a0e980b20a2c0efd2b6d73cfacb55555285d8cc719fa0472220715aefeaa1da7c
+  languageName: node
+  linkType: hard
+
 "supports-color@npm:^7.0.0, supports-color@npm:^7.1.0":
   version: 7.2.0
   resolution: "supports-color@npm:7.2.0"
@@ -10422,6 +10430,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"undici@npm:^8.0.2":
+  version: 8.1.0
+  resolution: "undici@npm:8.1.0"
+  checksum: 10c0/c55ad57f10efb9b55ab683104dde1c6f620496b9facde640ba26cffdc53a53694c12a8c3f7196069017c5c1b5031ef0843e232d9c04dcc834b3baa046d3ea678
+  languageName: node
+  linkType: hard
+
 "unicode-canonical-property-names-ecmascript@npm:^2.0.0":
   version: 2.0.1
   resolution: "unicode-canonical-property-names-ecmascript@npm:2.0.1"
@@ -10583,6 +10598,19 @@ __metadata:
     "@rollup/pluginutils": "npm:^5.1.0"
     tar-mini: "npm:^0.2.0"
   checksum: 10c0/d231ba2606a3c83f54a309d3d92acc8e57f4e5017c2a9de6c32de22221b027b4d06eb0038bbba679aefb3149ee6f3e6298889ba318adbbb51492d0beed4da136
+  languageName: node
+  linkType: hard
+
+"vite-plugin-mkcert@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "vite-plugin-mkcert@npm:2.0.0"
+  dependencies:
+    debug: "npm:^4.4.3"
+    supports-color: "npm:^10.2.2"
+    undici: "npm:^8.0.2"
+  peerDependencies:
+    vite: ">=3"
+  checksum: 10c0/1b2aa8ece2661dd6b80246dd8c11efa3534ceb63adde36823994d154dd15eb897debd71d2b460290c68953180f74f5ad1e1a3bb7b9e8570e10be47aec0c1996a
   languageName: node
   linkType: hard
 

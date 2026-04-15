@@ -1,9 +1,9 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { useAppStore } from '@data/useAppStore';
 import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, Camera, Loader2, Search } from 'lucide-react';
 
@@ -15,7 +15,7 @@ import type { CreateBookPayload } from '../types/book.types';
 
 export function AddBookPage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const createBook = useCreateBook();
 

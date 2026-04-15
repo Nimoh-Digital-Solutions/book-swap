@@ -2,6 +2,7 @@
 export type { EmptyPlaceholderProps } from './EmptyState';
 export { EmptyPlaceholder } from './EmptyState';
 export * from './ErrorBoundary';
+export * from './LocaleLink';
 export * from './OptimizedImage';
 export * from './PrefetchLink';
 export * from './ProtectedRoute';
