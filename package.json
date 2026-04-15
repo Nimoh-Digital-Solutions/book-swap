@@ -1,0 +1,16 @@
+{
+  "name": "bookswap",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BookSwap monorepo — web frontend, mobile app, shared packages, and Django backend",
+  "scripts": {
+    "postinstall": "cd packages/shared && npm install && cd ../../frontend && yarn install",
+    "dev": "yarn --cwd frontend dev",
+    "dev:backend": "cd backend && make dev",
+    "build": "yarn --cwd frontend build",
+    "test": "yarn --cwd frontend test",
+    "test:shared": "cd packages/shared && npm test",
+    "lint": "yarn --cwd frontend lint",
+    "type-check": "yarn --cwd frontend type-check"
+  }
+}
