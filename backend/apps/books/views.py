@@ -296,9 +296,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 status=BookStatus.AVAILABLE,
                 owner__location__isnull=False,
             )
-            .filter(
-                Q(is_seed=True) | Q(owner__location__distance_lte=(user_location, D(m=radius)))
-            )
+            .filter(Q(is_seed=True) | Q(owner__location__distance_lte=(user_location, D(m=radius))))
             .annotate(distance=Distance("owner__location", user_location))
         )
         if user.is_authenticated:
@@ -394,9 +392,10 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         # Seed books are always available; only block the request if there is
         # no location AND no seed books so the caller gets a clear error.
-        if self._get_user_location() is None and not Book.objects.filter(
-            is_seed=True, status=BookStatus.AVAILABLE
-        ).exists():
+        if (
+            self._get_user_location() is None
+            and not Book.objects.filter(is_seed=True, status=BookStatus.AVAILABLE).exists()
+        ):
             return Response(
                 {"detail": "Provide 'lat' and 'lng' query params or set your profile location first."},
                 status=status.HTTP_400_BAD_REQUEST,

@@ -18,9 +18,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: postgis/postgis:16-3.5
         env:
-          POSTGRES_DB: speaklinka_test
+          POSTGRES_DB: bookswap_test
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
         ports:
@@ -70,7 +70,7 @@ jobs:
         run: ruff format --check .
 
       - name: Type-check (mypy)
-        run: mypy apps speaklinka --no-error-summary
+        run: mypy apps bookswap --no-error-summary
         continue-on-error: true
 
       - name: Check for migration conflicts
@@ -86,7 +86,7 @@ jobs:
           SECRET_KEY: ci-test-secret-key-not-for-production
           CELERY_TASK_ALWAYS_EAGER: "True"
           REDIS_URL: redis://localhost:6379/0
-        run: python -m pytest --tb=short -q --cov=apps --cov=speaklinka --cov-report=term-missing --cov-fail-under=80
+        run: python -m pytest --tb=short -q --cov=apps --cov=bookswap --cov-report=term-missing --cov-fail-under=80
 
   # ── Frontend ───────────────────────────────────────────────────────────────
   frontend:

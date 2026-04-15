@@ -69,7 +69,5 @@ class BookSwapSecurityHeadersMiddleware:
 
         response["Content-Security-Policy"] = "; ".join(csp_parts)
         response["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response["Permissions-Policy"] = (
-            "camera=(), microphone=(), geolocation=(self), payment=()"
-        )
+        response["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self), payment=()"
         response["Cross-Origin-Opener-Policy"] = "same-origin"

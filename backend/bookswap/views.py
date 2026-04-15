@@ -284,9 +284,7 @@ def login_view(request):
         raise ValidationError(serializer.errors)
 
     try:
-        auth_data = AuthenticationService.authenticate_user(
-            validated_data=serializer.validated_data, request=request
-        )
+        auth_data = AuthenticationService.authenticate_user(validated_data=serializer.validated_data, request=request)
 
         if auth_data.get("two_factor_required"):
             return Response(
