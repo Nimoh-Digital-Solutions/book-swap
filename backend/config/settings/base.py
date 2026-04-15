@@ -46,6 +46,11 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 
+# ── Request body size limits (SEC-003) ────────────────────────────────────────
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+
 # ── NIMOH_BASE configuration ──────────────────────────────────────────────────
 NIMOH_BASE = {
     # Required
@@ -171,6 +176,23 @@ MEDIA_ROOT = "mediafiles/"
 
 # ── REST Framework ────────────────────────────────────────────────────────────
 REST_FRAMEWORK = NimohBaseSettings.get_base_rest_framework()
+
+REST_FRAMEWORK.setdefault(
+    "DEFAULT_THROTTLE_CLASSES",
+    [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+)
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"].update(
+    {
+        "anon": "100/hour",
+        "user": "1000/hour",
+        "auth": "20/minute",
+        "auth_sensitive": "5/minute",
+    }
+)
 
 SIMPLE_JWT = NimohBaseSettings.get_base_simple_jwt()
 

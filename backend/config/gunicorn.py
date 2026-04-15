@@ -39,5 +39,10 @@ proc_name = "bookswap"
 # Trust X-Forwarded-* headers from reverse proxy (nginx / Cloudflare Tunnel).
 forwarded_allow_ips = os.environ.get("GUNICORN_FORWARDED_ALLOW_IPS", "*")
 
+# ── Request limits ────────────────────────────────────────────────────────────
+limit_request_body = int(os.environ.get("GUNICORN_LIMIT_REQUEST_BODY", str(10 * 1024 * 1024)))  # 10 MB
+limit_request_line = int(os.environ.get("GUNICORN_LIMIT_REQUEST_LINE", "8190"))
+limit_request_fields = int(os.environ.get("GUNICORN_LIMIT_REQUEST_FIELDS", "100"))
+
 # ── Preload ──────────────────────────────────────────────────────────────────
 preload_app = os.environ.get("GUNICORN_PRELOAD", "false").lower() == "true"

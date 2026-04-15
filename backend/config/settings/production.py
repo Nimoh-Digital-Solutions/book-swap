@@ -13,6 +13,21 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 _prod_security = NimohBaseSettings.get_base_security_settings(https=True)
 globals().update(_prod_security)
 
+# ── CORS / CSRF hardening (SEC-007) ──────────────────────────────────────────
+CORS_ALLOW_ALL_ORIGINS = False
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+if not CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = [
+        origin
+        for origin in CORS_ALLOWED_ORIGINS  # noqa: F405
+        if origin.startswith("https://")
+    ]
+
+# ── HSTS hardening ───────────────────────────────────────────────────────────
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
 # Static files — WhiteNoise is already in get_base_middleware() at index 1;
 # only the compressed storage class needs to be overridden here.
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

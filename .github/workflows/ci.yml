@@ -260,6 +260,33 @@ jobs:
       - name: Tests
         run: npm test -- --ci --forceExit
 
+  # ── Container Image Scanning ─────────────────────────────────────────────
+  container-scan:
+    name: "Security — container image scan"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        context:
+          - { name: backend, file: backend/Dockerfile, dir: backend }
+          - { name: frontend, file: frontend/Dockerfile, dir: frontend }
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build image
+        run: |
+          docker build -t bookswap-${{ matrix.context.name }}:scan \
+            -f ${{ matrix.context.file }} ${{ matrix.context.dir }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: bookswap-${{ matrix.context.name }}:scan
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
   # ── Shared Package ─────────────────────────────────────────────────────
   shared:
     name: "Shared — test"

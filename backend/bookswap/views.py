@@ -300,6 +300,10 @@ def login_view(request):
         # Reset failed login counter on successful authentication
         auth_data["user"].record_successful_login()
 
+        # Rotate session key to prevent session fixation (SEC-006)
+        if hasattr(request, "session"):
+            request.session.cycle_key()
+
         response_data = {
             "access_token": auth_data["access_token"],
             "expires_in": auth_data["expires_in"],
