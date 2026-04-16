@@ -1,6 +1,12 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+let AsyncStorage: typeof import('@react-native-async-storage/async-storage').default | null = null;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch {
+  // Native module unavailable in some Expo Go versions
+}
 
 let mmkvInstance: import('react-native-mmkv').MMKV | null = null;
 if (Platform.OS !== 'web') {
@@ -12,6 +18,8 @@ if (Platform.OS !== 'web') {
     // Expo Go — MMKV unavailable
   }
 }
+
+const memoryStore = new Map<string, string>();
 
 export const usesMmkv = mmkvInstance !== null;
 
@@ -72,20 +80,23 @@ export const syncQueryStorage = mmkvInstance
 export const asyncQueryStorage = {
   getItem: async (key: string): Promise<string | null> => {
     if (Platform.OS === 'web') return localStorage.getItem(key);
-    return AsyncStorage.getItem(key);
+    if (AsyncStorage) {
+      try { return await AsyncStorage.getItem(key); } catch { /* native module unavailable */ }
+    }
+    return memoryStore.get(key) ?? null;
   },
   setItem: async (key: string, value: string): Promise<void> => {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-      return;
+    if (Platform.OS === 'web') { localStorage.setItem(key, value); return; }
+    if (AsyncStorage) {
+      try { await AsyncStorage.setItem(key, value); return; } catch { /* native module unavailable */ }
     }
-    await AsyncStorage.setItem(key, value);
+    memoryStore.set(key, value);
   },
   removeItem: async (key: string): Promise<void> => {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
-      return;
+    if (Platform.OS === 'web') { localStorage.removeItem(key); return; }
+    if (AsyncStorage) {
+      try { await AsyncStorage.removeItem(key); return; } catch { /* native module unavailable */ }
     }
-    await AsyncStorage.removeItem(key);
+    memoryStore.delete(key);
   },
 };

@@ -34,39 +34,41 @@ export function OfflineBanner() {
   const label = isOffline ? t('network.offline') : t('network.degraded');
 
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.wrap,
-        {
-          paddingTop: Platform.OS === 'web' ? 8 : insets.top,
-          transform: [{ translateY }],
-          opacity: showBanner ? 1 : 0,
-        },
-      ]}
-    >
-      <View
+    <View pointerEvents="none" style={styles.outer}>
+      <Animated.View
         style={[
-          styles.banner,
+          styles.wrap,
           {
-            backgroundColor: isOffline ? c.status.error : c.status.warning,
+            paddingTop: Platform.OS === 'web' ? 8 : insets.top,
+            transform: [{ translateY }],
+            opacity: showBanner ? 1 : 0,
           },
         ]}
       >
-        <Text style={[styles.text, { color: c.text.inverse }]}>{label}</Text>
-      </View>
-    </Animated.View>
+        <View
+          style={[
+            styles.banner,
+            {
+              backgroundColor: isOffline ? c.status.error : c.status.warning,
+            },
+          ]}
+        >
+          <Text style={[styles.text, { color: c.text.inverse }]}>{label}</Text>
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  outer: {
     position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
     zIndex: 1000,
   },
+  wrap: {},
   banner: {
     marginHorizontal: 12,
     paddingVertical: 10,

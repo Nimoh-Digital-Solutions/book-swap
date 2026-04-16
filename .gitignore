@@ -171,3 +171,7 @@ Support/
 # Base reference design repo (read-only, never committed)
 .base-reference/
 .sfdx/
+
+# Asset generation working files
+.extracted/
+asset.png

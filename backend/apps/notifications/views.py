@@ -11,6 +11,7 @@ Endpoints:
 """
 
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -96,6 +97,15 @@ class UnsubscribeView(APIView):
 
     permission_classes = [AllowAny]  # noqa: RUF012
 
+    @extend_schema(
+        summary="One-click email unsubscribe",
+        description="Disable all email notifications for the user identified by the unsubscribe token.",
+        responses={
+            200: OpenApiResponse(description="Successfully unsubscribed"),
+            404: OpenApiResponse(description="Invalid or expired token"),
+        },
+        tags=["notifications"],
+    )
     def get(self, request: Request, token: str) -> Response:
         try:
             prefs = NotificationPreferences.objects.get(unsubscribe_token=token)

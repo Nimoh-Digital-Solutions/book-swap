@@ -20,7 +20,7 @@ export function pwaPlugin({ isProd, enableDev }: { isProd: boolean; enableDev: b
     manifest: false,
 
     // Additional static assets to include
-    includeAssets: ['favicon.svg', 'icons/*.png'],
+    includeAssets: ['favicon.ico', 'og-image.png', 'icons/*.png'],
 
     workbox: {
       // SPA navigation fallback (React Router)

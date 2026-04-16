@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { logoMark } from '@assets';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { NotificationBell } from '@features/notifications';
@@ -19,12 +20,10 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
       {/* Navigation */}
       <nav className="flex items-center justify-between px-6 py-5 max-w-7xl mx-auto border-b border-[#28382D]/50" aria-label="Main navigation" style={{ marginInline: 'auto' }}>
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-              <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-            </div>
+          <LocaleLink to={PATHS.HOME} className="flex items-center gap-3">
+            <img src={logoMark} alt="" width={32} height={32} />
             <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-          </div>
+          </LocaleLink>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <LocaleLink to={PATHS.CATALOGUE} className="text-white hover:text-[#E4B643] transition-colors">{t('home.nav.browse', 'Browse')}</LocaleLink>
             <LocaleLink to={PATHS.HOW_IT_WORKS} className="hover:text-white transition-colors">{t('home.nav.howItWorks', 'How it Works')}</LocaleLink>

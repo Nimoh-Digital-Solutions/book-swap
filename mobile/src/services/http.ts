@@ -3,12 +3,11 @@ import { tokenStorage } from '@/lib/storage';
 import { captureException, addBreadcrumb } from '@/lib/sentry';
 import { showErrorToast } from '@/components/Toast';
 import { useAuthStore } from '@/stores/authStore';
+import { env } from '@/configs/env';
 import i18next from '@/lib/i18n';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export const http = axios.create({
-  baseURL: API_URL,
+  baseURL: env.apiUrl,
   timeout: 30_000,
   headers: {
     'Content-Type': 'application/json',
@@ -126,7 +125,7 @@ http.interceptors.response.use(
     try {
       const refreshToken = tokenStorage.getRefresh();
       if (!refreshToken) throw new Error('No refresh token');
-      const { data } = await axios.post(`${API_URL}/auth/token/refresh/`, { refresh: refreshToken }, {
+      const { data } = await axios.post(`${env.apiUrl}/auth/token/refresh/`, { refresh: refreshToken }, {
         headers: { 'X-Client-Type': 'mobile' },
       });
       const newAccess = data.access as string;

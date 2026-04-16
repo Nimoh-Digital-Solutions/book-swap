@@ -11,11 +11,11 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2563EB"
+      "backgroundColor": "#1a2f23"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bookswap.app",
+      "bundleIdentifier": "com.gnimoh.bookswap",
       "infoPlist": {
         "NSCameraUsageDescription": "BookSwap needs camera access to scan book barcodes.",
         "NSLocationWhenInUseUsageDescription": "BookSwap uses your location to find books nearby.",
@@ -24,10 +24,10 @@
       }
     },
     "android": {
-      "package": "com.bookswap.app",
+      "package": "com.gnimoh.bookswap",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2563EB"
+        "backgroundColor": "#1a2f23"
       },
       "softwareKeyboardLayoutMode": "resize",
       "edgeToEdgeEnabled": true,
@@ -40,18 +40,19 @@
       ]
     },
     "updates": {
-      "url": "https://u.expo.dev/your-eas-project-id"
+      "url": "https://u.expo.dev/eb323114-a697-4df4-98e6-d413ef08e943"
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "plugins": [
+      "expo-dev-client",
       "expo-secure-store",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#2563EB"
+          "color": "#1a2f23"
         }
       ],
       "expo-local-authentication",
@@ -62,9 +63,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "eb323114-a697-4df4-98e6-d413ef08e943"
       }
     },
-    "owner": "your-expo-owner"
+    "owner": "info_nimoh"
   }
 }

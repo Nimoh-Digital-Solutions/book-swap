@@ -23,3 +23,5 @@ whitenoise>=6.0
 Pillow>=10.0
 
 httpx>=0.27
+
+django-storages[boto3]>=1.14

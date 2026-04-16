@@ -234,15 +234,15 @@ db-ensure: ## Ensure the PostgreSQL database exists (safe to run repeatedly)
 
 migrate-dev: db-ensure ## Apply migrations inside Docker
 	@echo "$(GREEN)🔄 Running migrations in Docker ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) python manage.py migrate
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) python manage.py migrate
 
 makemigrations-dev: ## Create migrations inside Docker
 	@echo "$(GREEN)📝 Creating migrations in Docker ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) python manage.py makemigrations
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) python manage.py makemigrations
 
 showmigrations-dev: ## Show migration status inside Docker
 	@echo "$(GREEN)📋 Migration status:$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) python manage.py showmigrations
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) python manage.py showmigrations
 
 superuser-dev: ## Create a superuser inside Docker
 	@echo "$(GREEN)👤 Creating superuser ...$(NC)"
@@ -250,26 +250,26 @@ superuser-dev: ## Create a superuser inside Docker
 
 collectstatic-dev: ## Collect static files inside Docker
 	@echo "$(GREEN)📦 Collecting static files ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) python manage.py collectstatic --noinput
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) python manage.py collectstatic --noinput
 
 # ── Docker: quality ───────────────────────────────────────────────────────────
 
 test-dev: ## Run tests inside Docker
 	@echo "$(GREEN)🧪 Running tests in Docker ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) pytest --cov=apps --cov-report=html --cov-report=term-missing
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) pytest --cov=apps --cov-report=html --cov-report=term-missing
 
 check-dev: ## Run Django system checks inside Docker
 	@echo "$(GREEN)✅ Running system checks ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) python manage.py check
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) python manage.py check
 
 fmt-dev: ## Format code inside Docker
 	@echo "$(GREEN)🎨 Formatting code ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) ruff format .
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) ruff check --select I --fix .
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) ruff format .
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) ruff check --select I --fix .
 
 lint-dev: ## Lint code inside Docker
 	@echo "$(GREEN)🔍 Linting code ...$(NC)"
-	$(DOCKER_COMPOSE) exec $(WEB_SERVICE) ruff check .
+	$(DOCKER_COMPOSE) exec -T $(WEB_SERVICE) ruff check .
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 

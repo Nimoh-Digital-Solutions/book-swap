@@ -4,6 +4,7 @@ from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db.models import Case, Count, F, IntegerField, Q, When
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import mixins, status, viewsets
 from rest_framework import serializers as drf_serializers
 from rest_framework.decorators import action
@@ -439,6 +440,22 @@ class NearbyCountView(APIView):
 
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        summary="Count nearby books",
+        description="Returns the count of available books within a given radius of the provided coordinates.",
+        parameters=[
+            OpenApiParameter(name="lat", type=float, required=True, description="Latitude (-90 to 90)"),
+            OpenApiParameter(name="lng", type=float, required=True, description="Longitude (-180 to 180)"),
+            OpenApiParameter(
+                name="radius", type=int, required=False, description="Search radius in meters (default 5000)"
+            ),
+        ],
+        responses={
+            200: inline_serializer("NearbyCountResponse", fields={"count": drf_serializers.IntegerField()}),
+            400: OpenApiResponse(description="Invalid coordinates"),
+        },
+        tags=["books"],
+    )
     def get(self, request):
         from django.contrib.gis.geos import Point
 

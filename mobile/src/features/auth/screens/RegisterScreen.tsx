@@ -1,153 +1,336 @@
-import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { http } from '@/services/http';
-import { API } from '@/configs/apiEndpoints';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { User, AtSign, Mail, Lock, Check } from 'lucide-react-native';
+
 import type { AuthStackParamList } from '@/navigation/types';
-import type { RegisterPayload } from '@/types';
+import { useColors } from '@/hooks/useColors';
+import { spacing, typography, radius } from '@/constants/theme';
+import { showErrorToast, showSuccessToast } from '@/components/Toast';
+
+import { registerSchema, type RegisterInput } from '../schemas/auth.schemas';
+import { useRegister } from '../hooks/useRegister';
+import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
+import { AuthLogo } from '../components/AuthLogo';
+import { AuthInput } from '../components/AuthInput';
+import { AuthButton } from '../components/AuthButton';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen() {
   const { t } = useTranslation();
-  const navigation = useNavigation<Nav>();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const c = useColors();
+  const nav = useNavigation<Nav>();
+  const register = useRegister();
 
-  const handleRegister = useCallback(async () => {
-    if (!email.trim() || !password.trim() || !username.trim()) {
-      Alert.alert(t('common.error'), t('auth.fillRequired'));
-      return;
-    }
-    setLoading(true);
-    const payload: RegisterPayload = {
-      email: email.trim(),
-      username: username.trim(),
-      password,
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-    };
-    try {
-      await http.post(API.auth.register, payload);
-      Alert.alert(t('common.success'), t('auth.registerSuccess'), [
-        { text: t('common.done'), onPress: () => navigation.navigate('Login') },
-      ]);
-    } catch (err: unknown) {
-      const ax = err as { response?: { data?: Record<string, unknown> } };
-      const raw = ax.response?.data;
-      const msg =
-        typeof raw?.detail === 'string'
-          ? raw.detail
-          : raw
-            ? JSON.stringify(raw)
-            : t('common.error');
-      Alert.alert(t('common.error'), String(msg));
-    } finally {
-      setLoading(false);
-    }
-  }, [email, password, username, firstName, lastName, navigation, t]);
+  const lastNameRef = useRef<TextInput>(null);
+  const usernameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      first_name: '',
+      last_name: '',
+      username: '',
+      email: '',
+      password: '',
+      password_confirm: '',
+      terms_accepted: false as unknown as true,
+    },
+  });
+
+  const onSubmit = useCallback(
+    (data: RegisterInput) => {
+      register.mutate(data, {
+        onSuccess: () => {
+          showSuccessToast(t('auth.registerSuccess'));
+          nav.navigate('Login');
+        },
+        onError: (err) => {
+          const ax = err as { response?: { data?: Record<string, unknown> } };
+          const raw = ax.response?.data;
+          const msg =
+            typeof raw?.detail === 'string'
+              ? raw.detail
+              : raw
+                ? Object.values(raw).flat().join('. ')
+                : t('common.error');
+          showErrorToast(String(msg));
+        },
+      });
+    },
+    [register, nav, t],
+  );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{t('auth.register')}</Text>
+    <AuthScreenWrapper>
+      <View style={s.hero}>
+        <AuthLogo size="md" />
+        <Text style={[s.title, { color: c.auth.cream }]}>
+          {t('auth.createAccount')}
+        </Text>
+        <Text style={[s.subtitle, { color: c.auth.textMuted }]}>
+          {t('auth.registerSubtitle')}
+        </Text>
+      </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.firstName')}
-          value={firstName}
-          onChangeText={setFirstName}
-          autoComplete="name-given"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.lastName')}
-          value={lastName}
-          onChangeText={setLastName}
-          autoComplete="name-family"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.username')}
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-          autoComplete="username"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.email')}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.password')}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="new-password"
-        />
+      <View style={s.nameRow}>
+        <View style={s.nameCol}>
+          <Controller
+            control={control}
+            name="first_name"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <AuthInput
+                ref={ref}
+                icon={User}
+                placeholder={t('auth.firstName')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.first_name?.message}
+                autoCapitalize="words"
+                textContentType="givenName"
+                autoComplete="name-given"
+                returnKeyType="next"
+                onSubmitEditing={() => lastNameRef.current?.focus()}
+              />
+            )}
+          />
+        </View>
+        <View style={s.nameCol}>
+          <Controller
+            control={control}
+            name="last_name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <AuthInput
+                ref={lastNameRef}
+                icon={User}
+                placeholder={t('auth.lastName')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.last_name?.message}
+                autoCapitalize="words"
+                textContentType="familyName"
+                autoComplete="name-family"
+                returnKeyType="next"
+                onSubmitEditing={() => usernameRef.current?.focus()}
+              />
+            )}
+          />
+        </View>
+      </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>{t('auth.register')}</Text>
-          )}
-        </TouchableOpacity>
+      <Controller
+        control={control}
+        name="username"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <AuthInput
+            ref={usernameRef}
+            icon={AtSign}
+            placeholder={t('auth.username')}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            error={errors.username?.message}
+            autoCapitalize="none"
+            textContentType="username"
+            autoComplete="username-new"
+            returnKeyType="next"
+            onSubmitEditing={() => emailRef.current?.focus()}
+          />
+        )}
+      />
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.link}>{t('auth.hasAccount')}</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <Controller
+        control={control}
+        name="email"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <AuthInput
+            ref={emailRef}
+            icon={Mail}
+            placeholder={t('auth.email')}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            error={errors.email?.message}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            autoComplete="email"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="password"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <AuthInput
+            ref={passwordRef}
+            icon={Lock}
+            placeholder={t('auth.password')}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            error={errors.password?.message}
+            secureTextEntry
+            textContentType="newPassword"
+            autoComplete="new-password"
+            returnKeyType="next"
+            onSubmitEditing={() => confirmRef.current?.focus()}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="password_confirm"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <AuthInput
+            ref={confirmRef}
+            icon={Lock}
+            placeholder={t('auth.confirmPassword')}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            error={errors.password_confirm?.message}
+            secureTextEntry
+            textContentType="newPassword"
+            autoComplete="new-password"
+            returnKeyType="go"
+            onSubmitEditing={handleSubmit(onSubmit)}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="terms_accepted"
+        render={({ field: { onChange, value } }) => (
+          <View style={s.termsField}>
+            <Pressable
+              onPress={() => onChange(!value)}
+              style={s.termsRow}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: value === true }}
+              hitSlop={8}
+            >
+              <View
+                style={[
+                  s.checkbox,
+                  {
+                    borderColor: errors.terms_accepted
+                      ? c.status.error
+                      : value
+                        ? c.auth.golden
+                        : c.auth.borderGlass,
+                    backgroundColor: value ? c.auth.golden : 'transparent',
+                  },
+                ]}
+              >
+                {value === true && <Check size={14} color={c.auth.bg} strokeWidth={3} />}
+              </View>
+              <Text style={[s.termsText, { color: c.auth.textMuted }]}>
+                {t('auth.agreeTerms')}
+              </Text>
+            </Pressable>
+            {errors.terms_accepted && (
+              <Text style={[s.termsError, { color: c.status.error }]}>
+                {t('auth.mustAcceptTerms')}
+              </Text>
+            )}
+          </View>
+        )}
+      />
+
+      <AuthButton
+        label={t('auth.register')}
+        onPress={handleSubmit(onSubmit)}
+        loading={register.isPending}
+      />
+
+      <Pressable onPress={() => nav.navigate('Login')} style={s.footer} hitSlop={12}>
+        <Text style={[s.footerText, { color: c.auth.textMuted }]}>
+          {t('auth.hasAccountPrompt')}{' '}
+          <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
+            {t('auth.login')}
+          </Text>
+        </Text>
+      </Pressable>
+    </AuthScreenWrapper>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  scroll: { paddingHorizontal: 24, paddingVertical: 32 },
-  title: { fontSize: 24, fontWeight: '700', textAlign: 'center', marginBottom: 24, color: '#111827' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    paddingVertical: 16,
+const s = StyleSheet.create({
+  hero: {
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: spacing.lg,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  link: { color: '#2563EB', textAlign: 'center', marginTop: 20, fontSize: 14 },
+  title: {
+    ...typography.title,
+    fontSize: 24,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...typography.body,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  nameCol: {
+    flex: 1,
+  },
+  termsField: {
+    marginBottom: spacing.lg,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 1,
+  },
+  termsText: {
+    ...typography.small,
+    flex: 1,
+    lineHeight: 18,
+  },
+  termsError: {
+    ...typography.small,
+    marginTop: spacing.xs,
+    marginLeft: 30,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  footerText: {
+    ...typography.body,
+  },
 });

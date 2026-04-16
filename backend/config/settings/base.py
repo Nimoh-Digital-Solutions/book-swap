@@ -110,6 +110,7 @@ INSTALLED_APPS = (
     + [
         "django.contrib.gis",
         "django.contrib.postgres",
+        "storages",
         # Project apps
         "bookswap",
         "apps.profiles",
@@ -173,6 +174,34 @@ STATIC_URL = "/static/"
 STATIC_ROOT = "staticfiles/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "mediafiles/"
+
+# ── Object storage (S3 / MinIO) ──────────────────────────────────────────────
+USE_S3 = env.bool("USE_S3", default=False)
+
+if USE_S3:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="bookswap-media")
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="us-east-1")
+    AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 3600
+
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    elif AWS_S3_ENDPOINT_URL:
+        MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
 
 # ── REST Framework ────────────────────────────────────────────────────────────
 REST_FRAMEWORK = NimohBaseSettings.get_base_rest_framework()

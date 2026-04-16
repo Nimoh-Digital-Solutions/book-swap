@@ -1,4 +1,6 @@
-// Export all assets from this file
-// Example: export { default as logo } from './logo.svg';
-// Importing assets through this barrel enables path-alias usage:
-//   import { logo } from '@assets';
+export { default as appIcon } from './images/app-icon.png';
+export { default as logoHorizontal } from './images/logo-horizontal.png';
+export { default as logoMark } from './images/logo-mark.png';
+export { default as logoStacked } from './images/logo-stacked.png';
+export { default as logoSymbol } from './images/logo-symbol.png';
+export { default as logoSymbolDark } from './images/logo-symbol-dark.png';

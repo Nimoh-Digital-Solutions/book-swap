@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import MapView, { Region, PROVIDER_DEFAULT, MapMarker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +18,23 @@ import { API } from '@/configs/apiEndpoints';
 import type { BrowseStackParamList } from '@/navigation/types';
 import type { Book, PaginatedResponse } from '@/types';
 
+// react-native-maps requires a dev build (not available in Expo Go)
+let MapView: typeof import('react-native-maps').default | null = null;
+let MapMarker: typeof import('react-native-maps').MapMarker | null = null;
+let PROVIDER_DEFAULT: any = null;
+let mapsAvailable = false;
+
+try {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  MapMarker = maps.MapMarker;
+  PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
+  mapsAvailable = true;
+} catch {
+  // Native maps module not available (Expo Go)
+}
+
+type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
 type Nav = NativeStackNavigationProp<BrowseStackParamList, 'BrowseMap'>;
 
 const DEFAULT_REGION: Region = {
@@ -93,6 +109,18 @@ export function BrowseMapScreen() {
     );
   }, [t]);
 
+  if (!mapsAvailable || !MapView) {
+    return (
+      <View style={styles.centered}>
+        <Ionicons name="map-outline" size={48} color="#9CA3AF" />
+        <Text style={styles.fallbackTitle}>{t('browse.mapUnavailable', 'Map unavailable')}</Text>
+        <Text style={styles.fallbackText}>
+          {t('browse.mapRequiresDevBuild', 'Maps require a development build.\nUse the list view to browse books.')}
+        </Text>
+      </View>
+    );
+  }
+
   if (!locationReady) {
     return (
       <View style={styles.centered}>
@@ -117,13 +145,15 @@ export function BrowseMapScreen() {
           const coords = (book as any).location?.coordinates;
           if (!coords) return null;
           return (
-            <MapMarker
-              key={book.id}
-              coordinate={{ latitude: coords[1], longitude: coords[0] }}
-              title={book.title}
-              description={book.author}
-              onCalloutPress={() => handleMarkerPress(book.id)}
-            />
+            MapMarker ? (
+              <MapMarker
+                key={book.id}
+                coordinate={{ latitude: coords[1], longitude: coords[0] }}
+                title={book.title}
+                description={book.author}
+                onCalloutPress={() => handleMarkerPress(book.id)}
+              />
+            ) : null
           );
         })}
       </MapView>
@@ -145,7 +175,9 @@ export function BrowseMapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  fallbackTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginTop: 16, marginBottom: 8 },
+  fallbackText: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
   recenterButton: {
     position: 'absolute',
     bottom: 24,

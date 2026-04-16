@@ -1,12 +1,10 @@
 import { AppState, type AppStateStatus } from 'react-native';
 import { tokenStorage } from '@/lib/storage';
 import { addBreadcrumb } from '@/lib/sentry';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+import { env } from '@/configs/env';
 
 function getWsBaseUrl(): string {
-  const base = API_URL.replace(/\/api\/v1\/?$/i, '');
-  return base.replace(/^http/i, (m: string) => (m.toLowerCase() === 'https' ? 'wss' : 'ws'));
+  return env.wsUrl;
 }
 
 type MessageHandler = (data: unknown) => void;

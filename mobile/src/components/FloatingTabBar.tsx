@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Pressable, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import { BlurView } from 'expo-blur';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useColors, useIsDark } from '@/hooks/useColors';
 
@@ -27,12 +26,12 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const focusedChild = getFocusedRouteNameFromRoute(activeRoute);
   if (focusedChild && HIDDEN_CHILD_ROUTES.has(focusedChild)) return null;
 
-  const pillBg = isDark ? 'rgba(17, 24, 39, 0.75)' : 'rgba(255, 255, 255, 0.72)';
+  const pillBg = isDark ? 'rgba(17, 24, 39, 0.92)' : 'rgba(255, 255, 255, 0.92)';
 
   return (
     <View style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) }]}>
-      <BlurView intensity={90} tint={isDark ? 'dark' : 'light'} style={styles.pill}>
-        <View style={[styles.inner, { backgroundColor: pillBg, borderColor: c.border.default + '60' }]}>
+      <View style={[styles.pill, { backgroundColor: pillBg }]}>
+        <View style={[styles.inner, { borderColor: c.border.default + '60' }]}>
           {state.routes.map((route, index) => {
             const descriptor = descriptors[route.key];
             if (!descriptor) return null;
@@ -97,7 +96,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             );
           })}
         </View>
-      </BlurView>
+      </View>
     </View>
   );
 }

@@ -5,12 +5,14 @@ import logging
 from django.contrib.auth import get_user_model
 from django.core import signing
 from django.core.exceptions import ImproperlyConfigured
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from nimoh_base.auth.serializers import UserLoginSerializer
 from nimoh_base.auth.services import AuthenticationService
 from nimoh_base.core.exceptions import ProblemDetailException
 from nimoh_base.core.throttling import AuthenticationRateThrottle
 from nimoh_base.core.utils import get_client_ip
 from rest_framework import generics, status
+from rest_framework import serializers as drf_fields
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes as perm_classes
 from rest_framework.exceptions import Throttled, ValidationError
@@ -146,6 +148,17 @@ class AccountDeletionCancelView(APIView):
 
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        summary="Cancel account deletion",
+        description="Cancel a pending account deletion using the cancellation token from the deletion request.",
+        request=inline_serializer("CancelDeletionRequest", fields={"token": drf_fields.CharField()}),
+        responses={
+            200: OpenApiResponse(description="Deletion cancelled"),
+            400: OpenApiResponse(description="Invalid or expired token"),
+            404: OpenApiResponse(description="User not found"),
+        },
+        tags=["users"],
+    )
     def post(self, request):
         token = request.data.get("token")
         if not token:
@@ -210,6 +223,38 @@ class DataExportView(APIView):
 # The frontend already handles 423 in errorHandlers.ts.
 
 
+@extend_schema(
+    summary="Authenticate user",
+    description="Authenticate with email/username + password. Returns access token and user profile. "
+    "Returns HTTP 423 if the account is locked due to failed attempts.",
+    request=UserLoginSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="Login successful",
+            response=inline_serializer(
+                "LoginResponse",
+                fields={
+                    "access_token": drf_fields.CharField(),
+                    "expires_in": drf_fields.IntegerField(),
+                    "token_type": drf_fields.CharField(),
+                    "user": inline_serializer(
+                        "LoginUser",
+                        fields={
+                            "id": drf_fields.UUIDField(),
+                            "email": drf_fields.EmailField(),
+                            "username": drf_fields.CharField(),
+                            "first_name": drf_fields.CharField(),
+                            "last_name": drf_fields.CharField(),
+                            "email_verified": drf_fields.BooleanField(),
+                        },
+                    ),
+                },
+            ),
+        ),
+        423: OpenApiResponse(description="Account locked"),
+    },
+    tags=["auth"],
+)
 @api_view(["POST"])
 @perm_classes([AllowAny])
 def login_view(request):
@@ -359,11 +404,32 @@ class MobileDeviceProxyView(APIView):
 
     permission_classes = [IsAuthenticated]  # noqa: RUF012
 
+    @extend_schema(
+        summary="Register mobile device",
+        description="Register or update a mobile device push token for push notifications.",
+        request=inline_serializer(
+            "MobileDeviceRequest",
+            fields={
+                "push_token": drf_fields.CharField(),
+                "platform": drf_fields.ChoiceField(choices=["ios", "android"]),
+                "device_name": drf_fields.CharField(required=False),
+            },
+        ),
+        responses={201: OpenApiResponse(description="Device registered")},
+        tags=["users"],
+    )
     def post(self, request, *args, **kwargs):
         from apps.notifications.views import MobileDeviceView
 
         return MobileDeviceView().post(request)
 
+    @extend_schema(
+        summary="Deactivate mobile device",
+        description="Deactivate a mobile device by push token.",
+        request=inline_serializer("MobileDeviceDeleteRequest", fields={"push_token": drf_fields.CharField()}),
+        responses={204: OpenApiResponse(description="Device deactivated")},
+        tags=["users"],
+    )
     def delete(self, request, *args, **kwargs):
         from apps.notifications.views import MobileDeviceView
 

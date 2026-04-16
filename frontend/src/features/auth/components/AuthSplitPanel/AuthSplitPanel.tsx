@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { logoMark } from '@assets';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { PATHS } from '@routes/config/paths';
 import { Star } from 'lucide-react';
@@ -51,9 +52,7 @@ export function AuthSplitPanel({
 
           <div className="relative z-10">
             <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </LocaleLink>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 mt-6">
@@ -99,9 +98,7 @@ export function AuthSplitPanel({
           {/* Mobile logo (hidden on desktop) */}
           <div className="md:hidden mb-8">
             <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </LocaleLink>
           </div>

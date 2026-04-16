@@ -5,21 +5,46 @@
   "scripts": {
     "start": "expo start --reset-cache --dev-client",
     "android": "expo run:android",
-    "ios": "expo run:ios",
+    "ios": "SENTRY_DISABLE_AUTO_UPLOAD=true expo run:ios",
     "prebuild": "expo prebuild",
-    "web": "expo start --web",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "type-check": "tsc --noEmit",
-    "lint": "npx eslint src/"
+    "prebuild:check": "bash scripts/check-env.sh",
+    "build:android": "npm run prebuild:check && eas build --profile development:device --platform android",
+    "build:ios": "npm run prebuild:check && eas build --profile development:device --platform ios",
+    "build:ios:local": "npm run prebuild:check && eas build --profile development:device --platform ios --local",
+    "build:android:local": "npm run prebuild:check && eas build --profile preview:store --platform android --local",
+    "build:android:preview": "npm run prebuild:check && eas build --profile preview:store --platform android",
+    "build:ios:preview": "npm run prebuild:check && eas build --profile preview --platform ios",
+    "build:android:prod": "npm run prebuild:check && eas build --profile production --platform android",
+    "build:ios:prod": "npm run prebuild:check && eas build --profile production --platform ios",
+    "update:staging": "eas update --branch staging --message",
+    "update:production": "eas update --branch production --message"
   },
   "jest": {
     "transform": {
-      "^.+\\.(ts|tsx|js|jsx)$": ["babel-jest", { "presets": ["babel-preset-expo"] }]
+      "^.+\\.(ts|tsx|js|jsx)$": [
+        "babel-jest",
+        {
+          "presets": [
+            [
+              "babel-preset-expo",
+              {
+                "reanimated": false
+              }
+            ]
+          ]
+        }
+      ]
     },
     "testEnvironment": "node",
     "preset": "jest-expo/ios",
-    "setupFiles": ["react-native/jest/setup", "<rootDir>/jest.setup.ts"],
+    "setupFiles": [
+      "react-native/jest/setup",
+      "<rootDir>/jest.setup.ts"
+    ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|expo/virtual/.*|@sentry/.*|react-navigation|@react-navigation/.*|@shopify/flash-list|react-native-mmkv|react-native-reanimated|react-native-gesture-handler|react-native-safe-area-context|react-native-screens|react-native-toast-message|react-native-svg|@tanstack/.*|zustand|i18next|react-i18next|zod|lucide-react-native)"
     ],
@@ -27,51 +52,57 @@
       "^@/(.*)$": "<rootDir>/src/$1",
       "^@shared/(.*)$": "<rootDir>/../packages/shared/src/$1"
     },
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"]
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
     "@hookform/resolvers": "^5.2.2",
-    "@react-native-async-storage/async-storage": "^3.0.2",
-    "@react-native-community/netinfo": "^12.0.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/bottom-tabs": "^7.15.9",
     "@react-navigation/native": "^7.2.2",
     "@react-navigation/native-stack": "^7.14.11",
-    "@sentry/react-native": "^8.7.0",
+    "@sentry/react-native": "~7.2.0",
     "@tanstack/query-async-storage-persister": "^5.99.0",
     "@tanstack/query-sync-storage-persister": "^5.99.0",
     "@tanstack/react-query": "^5.99.0",
     "@tanstack/react-query-persist-client": "^5.99.0",
     "axios": "^1.15.0",
     "expo": "~54.0.33",
-    "expo-barcode-scanner": "^13.0.1",
-    "expo-blur": "^55.0.14",
-    "expo-camera": "^55.0.15",
-    "expo-constants": "^55.0.14",
-    "expo-device": "^55.0.15",
-    "expo-image": "^55.0.8",
-    "expo-linking": "^55.0.13",
-    "expo-local-authentication": "^55.0.13",
-    "expo-location": "^55.1.8",
-    "expo-notifications": "^55.0.19",
-    "expo-secure-store": "^55.0.13",
-    "expo-splash-screen": "^55.0.18",
+    "expo-blur": "~15.0.8",
+    "expo-camera": "~17.0.10",
+    "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.20",
+    "expo-device": "~8.0.10",
+    "expo-image": "~3.0.11",
+    "expo-linking": "~8.0.11",
+    "expo-local-authentication": "~17.0.8",
+    "expo-location": "~19.0.8",
+    "expo-notifications": "~0.32.16",
+    "expo-secure-store": "~15.0.8",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
-    "expo-updates": "^55.0.20",
+    "expo-updates": "~29.0.16",
     "i18next": "^26.0.5",
     "lucide-react-native": "^1.8.0",
     "react": "19.1.0",
     "react-hook-form": "^7.72.1",
     "react-i18next": "^17.0.3",
     "react-native": "0.81.5",
-    "react-native-gesture-handler": "^2.31.1",
-    "react-native-maps": "^1.27.2",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-maps": "1.20.1",
     "react-native-maps-clustering": "^1.2.4",
     "react-native-mmkv": "^4.3.1",
-    "react-native-reanimated": "^4.3.0",
-    "react-native-safe-area-context": "^5.7.0",
-    "react-native-screens": "^4.24.0",
-    "react-native-svg": "^15.15.4",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1",
     "react-native-toast-message": "^2.3.3",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
@@ -81,8 +112,9 @@
     "@types/react": "~19.1.0",
     "babel-plugin-dynamic-import-node": "^2.3.3",
     "babel-plugin-module-resolver": "^5.0.3",
+    "babel-preset-expo": "~54.0.10",
     "jest": "^29.7.0",
-    "jest-expo": "^55.0.16",
+    "jest-expo": "~54.0.17",
     "typescript": "~5.9.2"
   },
   "private": true

@@ -15,9 +15,8 @@ module.exports = function (api) {
   if (isTest) {
     plugins.push('babel-plugin-dynamic-import-node');
   }
-  plugins.push('react-native-reanimated/plugin');
   return {
-    presets: ['babel-preset-expo'],
+    presets: [['babel-preset-expo', isTest ? { reanimated: false } : {}]],
     plugins,
   };
 };
