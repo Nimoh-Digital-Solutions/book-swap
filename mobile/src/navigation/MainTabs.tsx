@@ -57,6 +57,7 @@ export function MainTabs() {
         options={{
           title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>

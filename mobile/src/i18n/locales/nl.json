@@ -76,6 +76,24 @@
     "markAllRead": "Alles als gelezen markeren",
     "empty": "Nog geen meldingen"
   },
+  "home": {
+    "greeting": "Hey, {{name}}!",
+    "greetingDefault": "Welkom terug!",
+    "activeSwappers": "Actieve ruilers",
+    "searchPlaceholder": "Zoek op titel, auteur of ISBN...",
+    "scan": "Scannen",
+    "browseMap": "Kaart",
+    "myBooks": "Mijn boeken",
+    "recentlyAdded": "Recent toegevoegd",
+    "freshArrivals": "Nieuwe aanwinsten uit de buurt.",
+    "viewAll": "Alles bekijken",
+    "liveCommunity": "Live Community",
+    "communityTitle": "Jouw buurt",
+    "booksAvailable": "Boeken beschikbaar",
+    "swapsThisWeek": "Ruilen deze week",
+    "viewFullMap": "Bekijk de kaart",
+    "emptyState": "Nog geen boeken in de buurt — wees de eerste!"
+  },
   "errorBoundary": {
     "message": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
   },

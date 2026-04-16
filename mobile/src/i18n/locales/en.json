@@ -76,6 +76,24 @@
     "markAllRead": "Mark all as read",
     "empty": "No notifications yet"
   },
+  "home": {
+    "greeting": "Hey, {{name}}!",
+    "greetingDefault": "Welcome back!",
+    "activeSwappers": "Active Swappers",
+    "searchPlaceholder": "Search by title, author, or ISBN...",
+    "scan": "Scan",
+    "browseMap": "Browse Map",
+    "myBooks": "My Books",
+    "recentlyAdded": "Recently Added",
+    "freshArrivals": "Fresh arrivals from the community.",
+    "viewAll": "View all",
+    "liveCommunity": "Live Community",
+    "communityTitle": "Your Neighbourhood",
+    "booksAvailable": "Books Available",
+    "swapsThisWeek": "Swaps This Week",
+    "viewFullMap": "Browse Full Map",
+    "emptyState": "No books nearby yet — be the first to list one!"
+  },
   "errorBoundary": {
     "message": "The app hit an unexpected error. You can try again."
   },

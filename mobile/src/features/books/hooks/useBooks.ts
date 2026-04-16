@@ -74,12 +74,21 @@ export function useIsbnLookup(isbn: string) {
   });
 }
 
-export function useNearbyCount() {
+export interface NearbyCount {
+  count: number;
+  user_count: number;
+  radius: number;
+}
+
+export function useNearbyCount(lat?: number, lng?: number, radius = 10000) {
   return useQuery({
-    queryKey: ['nearbyCount'],
+    queryKey: ['nearbyCount', lat, lng, radius],
     queryFn: async () => {
-      const { data } = await http.get<{ count: number }>(API.browse.nearbyCount);
-      return data.count;
+      const { data } = await http.get<NearbyCount>(API.browse.nearbyCount, {
+        params: { lat, lng, radius },
+      });
+      return data;
     },
+    enabled: lat != null && lng != null,
   });
 }

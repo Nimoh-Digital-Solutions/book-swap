@@ -26,16 +26,17 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
   const focusedChild = getFocusedRouteNameFromRoute(activeRoute);
   if (focusedChild && HIDDEN_CHILD_ROUTES.has(focusedChild)) return null;
 
-  const pillBg = isDark ? 'rgba(17, 24, 39, 0.92)' : 'rgba(255, 255, 255, 0.92)';
+  const pillBg = isDark ? 'rgba(15, 26, 20, 0.95)' : 'rgba(255, 255, 255, 0.92)';
 
   return (
     <View style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) }]}>
       <View style={[styles.pill, { backgroundColor: pillBg }]}>
-        <View style={[styles.inner, { borderColor: c.border.default + '60' }]}>
+        <View style={[styles.inner, { borderColor: isDark ? c.auth.cardBorder + '60' : c.border.default + '60' }]}>
           {state.routes.map((route, index) => {
             const descriptor = descriptors[route.key];
             if (!descriptor) return null;
             const { options } = descriptor;
+            if (route.name === 'ProfileTab') return null;
             const isFocused = state.index === index;
 
             const label =
@@ -47,8 +48,8 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
             const badge = options.tabBarBadge;
             const color = isFocused
-              ? (isDark ? c.brand.primaryDark : c.brand.primary)
-              : c.text.placeholder;
+              ? (isDark ? c.auth.golden : c.brand.primary)
+              : (isDark ? c.auth.textMuted : c.text.placeholder);
 
             const onPress = () => {
               const event = navigation.emit({
@@ -70,7 +71,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                 key={route.key}
                 style={({ pressed }) => [
                   styles.tab,
-                  isFocused && [styles.tabActive, { backgroundColor: (isDark ? c.brand.primaryDark : c.brand.primary) + '12' }],
+                  isFocused && [styles.tabActive, { backgroundColor: (isDark ? c.auth.golden : c.brand.primary) + '12' }],
                   pressed && styles.tabPressed,
                 ]}
                 onPress={onPress}

@@ -76,6 +76,24 @@
     "markAllRead": "Tout marquer comme lu",
     "empty": "Pas encore de notifications"
   },
+  "home": {
+    "greeting": "Salut, {{name}} !",
+    "greetingDefault": "Bon retour !",
+    "activeSwappers": "Échangeurs actifs",
+    "searchPlaceholder": "Chercher par titre, auteur ou ISBN...",
+    "scan": "Scanner",
+    "browseMap": "Carte",
+    "myBooks": "Mes livres",
+    "recentlyAdded": "Récemment ajoutés",
+    "freshArrivals": "Nouveautés de la communauté.",
+    "viewAll": "Tout voir",
+    "liveCommunity": "Communauté en direct",
+    "communityTitle": "Votre quartier",
+    "booksAvailable": "Livres disponibles",
+    "swapsThisWeek": "Échanges cette semaine",
+    "viewFullMap": "Voir la carte",
+    "emptyState": "Pas encore de livres à proximité — soyez le premier !"
+  },
   "errorBoundary": {
     "message": "Une erreur inattendue s'est produite. Vous pouvez réessayer."
   },

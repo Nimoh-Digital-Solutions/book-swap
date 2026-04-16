@@ -30,6 +30,10 @@ export const darkColors = {
     borderGlassFocus: 'rgba(228, 182, 67, 0.4)',
     textOnDark: '#fff',
     textMuted: 'rgba(255, 255, 255, 0.45)',
+    card: '#1c3028',
+    cardBorder: '#264035',
+    textSage: '#7a8a80',
+    textDimmed: '#4a5a50',
   },
   text: {
     primary: '#F9FAFB',

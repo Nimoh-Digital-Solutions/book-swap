@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
+import { Camera, PenLine, RotateCcw, AlertCircle } from 'lucide-react-native';
+
+import { useColors, useIsDark } from '@/hooks/useColors';
+import { spacing, radius } from '@/constants/theme';
 import type { ScanStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<ScanStackParamList, 'Scanner'>;
 
 export function ScannerScreen() {
   const { t } = useTranslation();
+  const c = useColors();
+  const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
@@ -36,134 +35,245 @@ export function ScannerScreen() {
       if (/^(97[89])?\d{9}[\dX]$/i.test(isbn.replace(/-/g, ''))) {
         navigation.navigate('ScanResult', { isbn: isbn.replace(/-/g, '') });
       } else {
-        Alert.alert(t('common.error'), 'Not a valid ISBN barcode', [
-          { text: t('common.retry'), onPress: () => setScanned(false) },
-        ]);
+        setScanned(false);
       }
     },
-    [scanned, navigation, t],
+    [scanned, navigation],
   );
+
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+  const cardBg = isDark ? c.auth.card : c.surface.white;
+  const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
+  const accent = c.auth.golden;
 
   if (!permission) {
     return (
-      <View style={styles.centered}>
-        <Text>Requesting camera permission...</Text>
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <Text style={[s.permissionText, { color: c.text.secondary }]}>
+          {t('scanner.requestingPermission', 'Requesting camera permission...')}
+        </Text>
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.centered}>
-        <Ionicons name="camera-outline" size={64} color="#9CA3AF" />
-        <Text style={styles.permissionText}>
-          Camera access is required to scan barcodes
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <View style={[s.permissionIcon, { backgroundColor: isDark ? c.auth.card : accent + '18' }]}>
+          <Camera size={40} color={accent} />
+        </View>
+        <Text style={[s.permissionTitle, { color: c.text.primary }]}>
+          {t('scanner.cameraRequired', 'Camera Access Required')}
         </Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
-        </TouchableOpacity>
+        <Text style={[s.permissionText, { color: c.text.secondary }]}>
+          {t('scanner.cameraExplain', 'We need camera access to scan book barcodes and look them up instantly.')}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [s.grantBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+          onPress={requestPermission}
+        >
+          <Text style={s.grantBtnText}>
+            {t('scanner.grantPermission', 'Grant Permission')}
+          </Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[s.container, { backgroundColor: isDark ? c.auth.bgDeep : '#000' }]}>
       <CameraView
-        style={styles.camera}
+        style={s.camera}
         barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8'] }}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       >
-        <View style={styles.overlay}>
-          <View style={styles.scanArea} />
-          <Text style={styles.hint}>{t('books.scanBarcode')}</Text>
+        <View style={[s.overlay, { backgroundColor: isDark ? 'rgba(10, 18, 14, 0.6)' : 'rgba(0,0,0,0.45)' }]}>
+          {/* Top hint */}
+          <Text style={[s.hintTop, { color: isDark ? c.auth.cream : '#fff' }]}>
+            {t('scanner.hint', 'Align the barcode within the frame')}
+          </Text>
+
+          {/* Scan frame */}
+          <View style={[s.scanFrame, { borderColor: accent }]}>
+            <View style={[s.cornerTL, { borderColor: accent }]} />
+            <View style={[s.cornerTR, { borderColor: accent }]} />
+            <View style={[s.cornerBL, { borderColor: accent }]} />
+            <View style={[s.cornerBR, { borderColor: accent }]} />
+          </View>
+
+          <Text style={[s.hintSub, { color: isDark ? c.auth.textMuted : 'rgba(255,255,255,0.6)' }]}>
+            {t('scanner.isbnHint', 'ISBN barcodes are usually on the back cover')}
+          </Text>
         </View>
       </CameraView>
 
-      {scanned && (
-        <TouchableOpacity
-          style={styles.rescanButton}
-          onPress={() => setScanned(false)}
-        >
-          <Text style={styles.rescanText}>{t('common.retry')}</Text>
-        </TouchableOpacity>
-      )}
+      {/* Bottom actions */}
+      <View style={s.actionsWrap}>
+        {scanned ? (
+          <Pressable
+            style={({ pressed }) => [s.actionBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+            onPress={() => setScanned(false)}
+          >
+            <RotateCcw size={18} color="#fff" />
+            <Text style={s.actionBtnText}>{t('common.retry', 'Scan Again')}</Text>
+          </Pressable>
+        ) : null}
 
-      <TouchableOpacity
-        style={styles.manualButton}
-        onPress={() => navigation.navigate('AddBook', {})}
-      >
-        <Ionicons name="create-outline" size={20} color="#2563EB" />
-        <Text style={styles.manualText}>Add manually</Text>
-      </TouchableOpacity>
+        <Pressable
+          style={({ pressed }) => [
+            s.manualBtn,
+            { backgroundColor: cardBg, borderColor: cardBorder, opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => navigation.navigate('AddBook', {})}
+        >
+          <PenLine size={18} color={accent} />
+          <Text style={[s.manualBtnText, { color: c.text.primary }]}>
+            {t('scanner.addManually', 'Add manually')}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const CORNER_SIZE = 24;
+const CORNER_WIDTH = 3;
+
+const s = StyleSheet.create({
+  container: { flex: 1 },
   camera: { flex: 1 },
+
+  // Permission states
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
-    gap: 16,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  permissionIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  permissionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   permissionText: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
-    color: '#6B7280',
-    marginBottom: 8,
+    lineHeight: 22,
+    maxWidth: 280,
   },
-  button: {
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
+  grantBtn: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: radius.xl,
+    marginTop: spacing.sm,
   },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  grantBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  // Camera overlay
   overlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    gap: spacing.lg,
   },
-  scanArea: {
+  hintTop: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  scanFrame: {
     width: 280,
     height: 160,
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: 16,
-    backgroundColor: 'transparent',
+    borderRadius: 4,
+    position: 'relative',
   },
-  hint: {
-    color: '#fff',
-    fontSize: 16,
-    marginTop: 16,
+  hintSub: {
+    fontSize: 13,
     fontWeight: '500',
+    textAlign: 'center',
   },
-  rescanButton: {
+
+  // Corner accents
+  cornerTL: {
     position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
-    backgroundColor: '#2563EB',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
+    top: 0,
+    left: 0,
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    borderTopWidth: CORNER_WIDTH,
+    borderLeftWidth: CORNER_WIDTH,
+    borderTopLeftRadius: 8,
   },
-  rescanText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  manualButton: {
+  cornerTR: {
     position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
+    top: 0,
+    right: 0,
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    borderTopWidth: CORNER_WIDTH,
+    borderRightWidth: CORNER_WIDTH,
+    borderTopRightRadius: 8,
+  },
+  cornerBL: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    borderBottomWidth: CORNER_WIDTH,
+    borderLeftWidth: CORNER_WIDTH,
+    borderBottomLeftRadius: 8,
+  },
+  cornerBR: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    borderBottomWidth: CORNER_WIDTH,
+    borderRightWidth: CORNER_WIDTH,
+    borderBottomRightRadius: 8,
+  },
+
+  // Bottom actions
+  actionsWrap: {
+    position: 'absolute',
+    bottom: 120,
+    left: spacing.lg,
+    right: spacing.lg,
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: radius.xl,
+    width: '100%',
   },
-  manualText: { color: '#2563EB', fontWeight: '600', fontSize: 14 },
+  actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  manualBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    width: '100%',
+  },
+  manualBtnText: { fontWeight: '600', fontSize: 14 },
 });

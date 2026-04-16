@@ -1,15 +1,315 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Switch,
+  StyleSheet,
+} from 'react-native';
+import Constants from 'expo-constants';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import {
+  Bell,
+  Lock,
+  Sun,
+  Globe,
+  Info,
+  LogOut,
+  Trash2,
+  ChevronRight,
+  Fingerprint,
+} from 'lucide-react-native';
 
-export function SettingsScreen() {
+import { useAuthStore } from '@/stores/authStore';
+import { useLogout } from '@/features/auth/hooks/useLogout';
+import { useBiometric } from '@/hooks/useBiometric';
+import { tokenStorage } from '@/lib/storage';
+import { useThemeStore } from '@/stores/themeStore';
+import { Avatar } from '@/components/Avatar';
+import { useColors, useIsDark } from '@/hooks/useColors';
+import { spacing, radius } from '@/constants/theme';
+
+interface SettingsRowProps {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}
+
+function SettingsRow({ icon, title, subtitle, onPress }: SettingsRowProps) {
+  const c = useColors();
+  const isDark = useIsDark();
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-    </View>
+    <Pressable
+      style={({ pressed }) => [
+        s.row,
+        pressed && { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] },
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle}
+    >
+      <View style={s.rowLeft}>
+        <View style={[s.iconCircle, { backgroundColor: isDark ? c.neutral[200] + '40' : c.neutral[50] }]}>
+          {icon}
+        </View>
+        <View style={s.rowTextWrap}>
+          <Text style={[s.rowTitle, { color: c.text.primary }]}>{title}</Text>
+          <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>{subtitle}</Text>
+        </View>
+      </View>
+      <ChevronRight size={20} color={c.neutral[400]} />
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center' },
-  title: { fontSize: 20, fontWeight: '600' },
+export function SettingsScreen() {
+  const c = useColors();
+  const isDark = useIsDark();
+  const { t, i18n } = useTranslation();
+  const navigation = useNavigation<any>();
+  const user = useAuthStore((s) => s.user);
+  const logout = useLogout();
+  const { isBiometricAvailable, authenticate } = useBiometric();
+
+  const [biometricEnabled, setBiometricEnabled] = useState(tokenStorage.getBiometricEnabled());
+
+  const toggleBiometric = useCallback(async (val: boolean) => {
+    if (val) {
+      const result = await authenticate();
+      if (!result.success) return;
+    }
+    tokenStorage.setBiometricEnabled(val);
+    setBiometricEnabled(val);
+  }, [authenticate]);
+
+  const appearanceMode = useThemeStore((s) => s.mode);
+
+  const fullName = user
+    ? [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username
+    : '';
+
+  const currentLang = i18n.language?.startsWith('fr')
+    ? 'Français'
+    : i18n.language?.startsWith('nl')
+      ? 'Nederlands'
+      : 'English';
+
+  const cardBorder = isDark ? { borderWidth: 1, borderColor: c.neutral[200] + '60' } : {};
+
+  if (!user) return null;
+
+  return (
+    <SafeAreaView style={[s.safe, { backgroundColor: c.neutral[50] }]} edges={['bottom']}>
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        {/* ── Hero ── */}
+        <View style={s.hero}>
+          <Avatar uri={user.avatar} name={fullName} size={72} borderColor={c.auth.golden} />
+          <View style={s.heroInfo}>
+            <Text style={[s.heroName, { color: c.text.primary }]}>{fullName}</Text>
+            <Text style={[s.heroSubtitle, { color: c.text.secondary }]} numberOfLines={1}>
+              {user.email}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Account ── */}
+        <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
+          {t('settings.account', 'Account')}
+        </Text>
+        <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+          <SettingsRow
+            icon={<Bell size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
+            title={t('settings.notifications', 'Notifications')}
+            subtitle={t('settings.notificationsSubtitle', 'Swap alerts and messages')}
+            onPress={() => navigation.navigate('NotificationPreferences')}
+          />
+        </View>
+
+        {/* ── Security ── */}
+        {isBiometricAvailable && (
+          <>
+            <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
+              {t('settings.security', 'Security')}
+            </Text>
+            <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+              <View style={s.switchRow}>
+                <View style={s.rowLeft}>
+                  <View style={[s.iconCircle, { backgroundColor: isDark ? c.neutral[200] + '40' : c.neutral[50] }]}>
+                    <Fingerprint size={20} color={isDark ? c.auth.golden : c.text.secondary} />
+                  </View>
+                  <View style={s.rowTextWrap}>
+                    <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                      {t('settings.biometric', 'Face ID / Fingerprint')}
+                    </Text>
+                    <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                      {t('settings.biometricSubtitle', 'Quick unlock when returning')}
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={toggleBiometric}
+                  trackColor={{ true: c.auth.bg, false: c.neutral[200] }}
+                  thumbColor={c.text.inverse}
+                />
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* ── General ── */}
+        <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
+          {t('settings.general', 'General')}
+        </Text>
+        <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+          <SettingsRow
+            icon={<Sun size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
+            title={t('settings.appearance', 'Appearance')}
+            subtitle={t(`settings.appearance.${appearanceMode}`, appearanceMode.charAt(0).toUpperCase() + appearanceMode.slice(1))}
+            onPress={() => {/* TODO: Appearance screen */}}
+          />
+          <View style={[s.divider, { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] }]} />
+          <SettingsRow
+            icon={<Globe size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
+            title={t('settings.language', 'Language')}
+            subtitle={currentLang}
+            onPress={() => {/* TODO: Language screen */}}
+          />
+          <View style={[s.divider, { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] }]} />
+          <SettingsRow
+            icon={<Info size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
+            title={t('settings.about', 'About')}
+            subtitle={`v${Constants.expoConfig?.version ?? '1.0.0'}`}
+            onPress={() => {/* TODO: About screen */}}
+          />
+        </View>
+
+        {/* ── Logout ── */}
+        <Pressable
+          style={({ pressed }) => [
+            s.logoutBtn,
+            { backgroundColor: isDark ? c.neutral[200] + '20' : c.neutral[200] + '40' },
+            isDark && { borderWidth: 1, borderColor: c.status.error + '40' },
+            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+          ]}
+          onPress={() => logout.mutate()}
+          accessibilityRole="button"
+          accessibilityLabel={t('settings.logout', 'Log out')}
+        >
+          <LogOut size={20} color={c.status.error} />
+          <Text style={[s.logoutText, { color: c.status.error }]}>
+            {t('settings.logout', 'Log out')}
+          </Text>
+        </Pressable>
+
+        {/* ── Delete Account ── */}
+        <Pressable style={s.deleteLink} accessibilityRole="button">
+          <Trash2 size={13} color={c.text.subtle} />
+          <Text style={[s.deleteLinkText, { color: c.text.subtle }]}>
+            {t('settings.deleteAccount', 'Delete account')}
+          </Text>
+        </Pressable>
+
+        {/* ── Footer ── */}
+        <Text style={[s.footer, { color: c.neutral[400] }]}>BookSwap</Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  safe: { flex: 1 },
+  scroll: { paddingHorizontal: spacing.md + 4, paddingTop: spacing.lg, paddingBottom: 120 },
+
+  // Hero
+  hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.md + 4, paddingVertical: spacing.lg },
+  heroInfo: { flex: 1 },
+  heroName: { fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
+  heroSubtitle: { fontSize: 14, fontWeight: '500', marginTop: 2 },
+
+  // Section heading
+  sectionHeading: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+    paddingLeft: 4,
+  },
+
+  // Card
+  card: {
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 20,
+    elevation: 1,
+  },
+  divider: { height: 1, marginHorizontal: spacing.md },
+
+  // Row
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.md + 2,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.md + 2,
+  },
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowTextWrap: { flex: 1 },
+  rowTitle: { fontSize: 15, fontWeight: '600' },
+  rowSubtitle: { fontSize: 12, marginTop: 2 },
+
+  // Logout
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm + 2,
+    marginTop: spacing.xl + 8,
+    paddingVertical: spacing.md + 2,
+    borderRadius: radius.xl,
+  },
+  logoutText: { fontSize: 16, fontWeight: '700' },
+
+  // Delete account
+  deleteLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  deleteLinkText: { fontSize: 13, textDecorationLine: 'underline' },
+
+  // Footer
+  footer: {
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
 });

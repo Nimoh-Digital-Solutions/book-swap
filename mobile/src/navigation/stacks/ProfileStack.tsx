@@ -9,13 +9,16 @@ import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
 import { WishlistScreen } from '@/features/books/screens/WishlistScreen';
 import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
 import { NotificationPreferencesScreen } from '@/features/notifications/screens/NotificationPreferencesScreen';
+import { useSharedHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export function ProfileStack() {
+  const shared = useSharedHeaderOptions();
+
   return (
     <Stack.Navigator>
-      <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ title: 'Profile' }} />
+      <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ ...shared, headerTitle: 'Profile' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit profile' }} />
       <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ title: 'My books' }} />
       <Stack.Screen name="AddBook" component={AddBookScreen} options={{ title: 'Add book' }} />

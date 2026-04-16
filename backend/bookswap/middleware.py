@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import ClassVar
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
@@ -13,26 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class BookSwapSecurityHeadersMiddleware:
-    """Inject hardened security headers on every response.
+    """Patch security headers after nimoh_base's SecurityHeadersMiddleware.
 
-    nimoh-be-django-base already sets the basics (X-Content-Type-Options,
-    X-Frame-Options, Strict-Transport-Security via get_base_security_settings).
-    This middleware adds a Content-Security-Policy and supplementary headers
-    that require awareness of BookSwap's frontend URL and CDN resources.
+    Must be placed BEFORE nimoh_base middleware in MIDDLEWARE so it executes
+    AFTER it in the response phase (Django processes responses bottom-to-top).
 
-    Admin pages get a relaxed CSP (inline styles/scripts required by Django admin).
+    Responsibilities:
+    - Relax the CSP Report-Only header for Django admin pages (nimoh_base's
+      report-only policy is strict and doesn't include admin-specific
+      adjustments, causing false-positive violations for inline styles).
+    - Append the frontend origin to connect-src in both CSP headers.
     """
-
-    # CSP directives shared across all pages
-    _BASE_CSP_DIRECTIVES: ClassVar[dict[str, str]] = {
-        "default-src": "'self'",
-        "img-src": "'self' data: https:",
-        "font-src": "'self' https://fonts.gstatic.com",
-        "style-src": "'self' https://fonts.googleapis.com 'unsafe-inline'",
-        "frame-ancestors": "'none'",
-        "base-uri": "'self'",
-        "form-action": "'self'",
-    }
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
@@ -40,34 +30,71 @@ class BookSwapSecurityHeadersMiddleware:
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
-        self._set_security_headers(request, response)
+        self._patch_headers(request, response)
         return response
 
-    def _set_security_headers(self, request: HttpRequest, response: HttpResponse) -> None:
+    def _patch_headers(self, request: HttpRequest, response: HttpResponse) -> None:
         is_admin = request.path.startswith("/admin/")
 
-        connect_src = f"'self' {self._frontend_origin}" if self._frontend_origin else "'self'"
-
         if is_admin:
-            script_src = "'self' 'unsafe-inline' 'unsafe-eval'"
-            style_src = "'self' 'unsafe-inline'"
-        else:
-            script_src = "'self'"
-            style_src = self._BASE_CSP_DIRECTIVES["style-src"]
+            self._relax_report_only_for_admin(response)
 
-        csp_parts = [
-            f"default-src {self._BASE_CSP_DIRECTIVES['default-src']}",
-            f"script-src {script_src}",
-            f"style-src {style_src}",
-            f"img-src {self._BASE_CSP_DIRECTIVES['img-src']}",
-            f"font-src {self._BASE_CSP_DIRECTIVES['font-src']}",
-            f"connect-src {connect_src}",
-            f"frame-ancestors {self._BASE_CSP_DIRECTIVES['frame-ancestors']}",
-            f"base-uri {self._BASE_CSP_DIRECTIVES['base-uri']}",
-            f"form-action {self._BASE_CSP_DIRECTIVES['form-action']}",
-        ]
+        if self._frontend_origin:
+            self._append_frontend_origin(response)
 
-        response["Content-Security-Policy"] = "; ".join(csp_parts)
-        response["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self), payment=()"
-        response["Cross-Origin-Opener-Policy"] = "same-origin"
+    def _relax_report_only_for_admin(self, response: HttpResponse) -> None:
+        """Add 'unsafe-inline' to style-src and script-src in the Report-Only
+        CSP for admin pages so Django admin's inline styles and scripts don't
+        flood CSP violation logs."""
+        header = "Content-Security-Policy-Report-Only"
+        csp_ro = response.get(header)
+        if not csp_ro:
+            return
+
+        directives = self._parse_csp(csp_ro)
+
+        style_src = directives.get("style-src", "'self'")
+        if "'unsafe-inline'" not in style_src:
+            directives["style-src"] = f"{style_src} 'unsafe-inline'"
+
+        script_src = directives.get("script-src", "'self'")
+        if "'unsafe-inline'" not in script_src:
+            directives["script-src"] = f"{script_src} 'unsafe-inline'"
+        if "'unsafe-eval'" not in script_src:
+            directives["script-src"] = f"{directives['script-src']} 'unsafe-eval'"
+
+        nonce_entries = [s for s in directives.get("script-src", "").split() if s.startswith("'nonce-")]
+        if nonce_entries:
+            directives["script-src"] = " ".join(
+                s for s in directives["script-src"].split() if not s.startswith("'nonce-")
+            )
+
+        response[header] = "; ".join(f"{k} {v}" for k, v in directives.items())
+
+    def _append_frontend_origin(self, response: HttpResponse) -> None:
+        """Add the frontend origin to connect-src so the SPA can reach the API."""
+        for header_name in ("Content-Security-Policy", "Content-Security-Policy-Report-Only"):
+            csp = response.get(header_name)
+            if not csp:
+                continue
+            if self._frontend_origin in csp:
+                continue
+
+            directives = self._parse_csp(csp)
+            connect = directives.get("connect-src", "'self'")
+            directives["connect-src"] = f"{connect} {self._frontend_origin}"
+            response[header_name] = "; ".join(f"{k} {v}" for k, v in directives.items())
+
+    @staticmethod
+    def _parse_csp(csp_string: str) -> dict[str, str]:
+        """Parse a CSP header string into an ordered dict of directive → values."""
+        directives: dict[str, str] = {}
+        for part in csp_string.split(";"):
+            part = part.strip()
+            if not part:
+                continue
+            tokens = part.split(None, 1)
+            key = tokens[0]
+            value = tokens[1] if len(tokens) > 1 else ""
+            directives[key] = value
+        return directives
