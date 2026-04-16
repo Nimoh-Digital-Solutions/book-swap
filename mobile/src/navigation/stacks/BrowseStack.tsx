@@ -14,8 +14,8 @@ export function BrowseStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={{ ...shared, headerTitle: 'Browse' }} />
-      <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ title: 'Book' }} />
-      <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ title: 'Request swap' }} />
+      <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...shared, headerTitle: '' }} />
+      <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...shared, headerTitle: 'Request Swap' }} />
     </Stack.Navigator>
   );
 }

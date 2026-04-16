@@ -48,29 +48,77 @@ export interface BookPhoto {
 export type ExchangeStatus =
   | 'pending'
   | 'accepted'
-  | 'declined'
-  | 'countered'
-  | 'cancelled'
   | 'conditions_pending'
+  | 'active'
   | 'swap_confirmed'
-  | 'return_requested'
-  | 'return_confirmed'
   | 'completed'
-  | 'expired';
+  | 'declined'
+  | 'cancelled'
+  | 'expired'
+  | 'return_requested'
+  | 'returned';
 
-export interface ExchangeRequest {
+export type DeclineReason = 'not_interested' | 'reserved' | 'counter_proposed' | 'other';
+
+export interface ExchangeParticipant {
   id: string;
-  requester: User;
-  owner: User;
-  requested_book: Book;
-  offered_book: Book | null;
+  username: string;
+  avatar: string | null;
+  avg_rating: number | null;
+  swap_count: number;
+}
+
+export interface ExchangeBook {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string;
+  condition: string;
+  primary_photo: string | null;
+}
+
+export interface ExchangeListItem {
+  id: string;
   status: ExchangeStatus;
   message: string;
-  decline_reason: string | null;
-  counter_to: string | null;
+  requester: ExchangeParticipant;
+  owner: ExchangeParticipant;
+  requested_book: ExchangeBook;
+  offered_book: ExchangeBook;
   created_at: string;
   updated_at: string;
 }
+
+export interface ExchangeDetail extends ExchangeListItem {
+  decline_reason: DeclineReason | null;
+  counter_to: string | null;
+  requester_confirmed_at: string | null;
+  owner_confirmed_at: string | null;
+  return_requested_at: string | null;
+  return_confirmed_requester: string | null;
+  return_confirmed_owner: string | null;
+  expired_at: string | null;
+  conditions_accepted_by_me: boolean;
+  conditions_accepted_count: number;
+  conditions_version: string;
+}
+
+export interface CreateExchangePayload {
+  requested_book_id: string;
+  offered_book_id: string;
+  message?: string;
+}
+
+export interface CounterProposePayload {
+  offered_book_id: string;
+}
+
+export interface DeclinePayload {
+  reason?: DeclineReason;
+}
+
+/** @deprecated Use ExchangeListItem or ExchangeDetail instead */
+export type ExchangeRequest = ExchangeListItem;
 
 export interface Message {
   id: string;

@@ -34,6 +34,7 @@ export type ScanStackParamList = {
 
 export type MessagesStackParamList = {
   ExchangeList: undefined;
+  IncomingRequests: undefined;
   Chat: { exchangeId: string };
   ExchangeDetail: { exchangeId: string };
 };
