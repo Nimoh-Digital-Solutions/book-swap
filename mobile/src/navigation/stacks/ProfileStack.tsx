@@ -9,26 +9,27 @@ import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
 import { WishlistScreen } from '@/features/books/screens/WishlistScreen';
 import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
 import { NotificationPreferencesScreen } from '@/features/notifications/screens/NotificationPreferencesScreen';
-import { useSharedHeaderOptions } from '@/navigation/headerOptions';
+import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export function ProfileStack() {
   const shared = useSharedHeaderOptions();
+  const child = useChildHeaderOptions();
 
   return (
     <Stack.Navigator>
       <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ ...shared, headerTitle: 'Profile' }} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit profile' }} />
-      <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ title: 'My books' }} />
-      <Stack.Screen name="AddBook" component={AddBookScreen} options={{ title: 'Add book' }} />
-      <Stack.Screen name="EditBook" component={EditBookScreen} options={{ title: 'Edit book' }} />
-      <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ title: 'Wishlist' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ ...child, headerTitle: 'Edit profile' }} />
+      <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ ...child, headerTitle: 'My books' }} />
+      <Stack.Screen name="AddBook" component={AddBookScreen} options={{ ...child, headerTitle: 'Add book' }} />
+      <Stack.Screen name="EditBook" component={EditBookScreen} options={{ ...child, headerTitle: 'Edit book' }} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ ...child, headerTitle: 'Wishlist' }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ ...child, headerTitle: 'Settings' }} />
       <Stack.Screen
         name="NotificationPreferences"
         component={NotificationPreferencesScreen}
-        options={{ title: 'Notifications' }}
+        options={{ ...child, headerTitle: 'Notifications' }}
       />
     </Stack.Navigator>
   );

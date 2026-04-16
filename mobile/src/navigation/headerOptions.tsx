@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
-import { Bell } from "lucide-react-native";
+import { Bell, ChevronLeft } from "lucide-react-native";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -65,6 +65,30 @@ export function NotificationBell() {
   );
 }
 
+export function HeaderBackButton() {
+  const navigation = useNavigation();
+  const c = useColors();
+  const isDark = useIsDark();
+
+  return (
+    <Pressable
+      onPress={() => navigation.goBack()}
+      style={[
+        s.backBtn,
+        {
+          backgroundColor: isDark ? c.auth.card : c.surface.white,
+          borderColor: isDark ? c.auth.cardBorder : c.border.default,
+        },
+      ]}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
+    >
+      <ChevronLeft size={20} color={isDark ? c.auth.golden : c.text.primary} />
+    </Pressable>
+  );
+}
+
 export function useSharedHeaderOptions(): NativeStackNavigationOptions {
   const c = useColors();
   const isDark = useIsDark();
@@ -78,6 +102,20 @@ export function useSharedHeaderOptions(): NativeStackNavigationOptions {
   };
 }
 
+export function useChildHeaderOptions(): NativeStackNavigationOptions {
+  const c = useColors();
+  const isDark = useIsDark();
+
+  return {
+    headerLeft: () => <HeaderBackButton />,
+    headerRight: () => <NotificationBell />,
+    headerStyle: { backgroundColor: isDark ? c.auth.bg : c.neutral[50] },
+    headerShadowVisible: false,
+    headerTintColor: c.text.primary,
+    headerBackVisible: false,
+  };
+}
+
 const s = StyleSheet.create({
   headerBtn: {
     justifyContent: "center",
@@ -85,6 +123,14 @@ const s = StyleSheet.create({
     marginHorizontal: 0.9,
   },
   bellCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,

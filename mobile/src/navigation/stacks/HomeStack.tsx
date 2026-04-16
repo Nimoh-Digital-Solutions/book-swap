@@ -5,7 +5,7 @@ import type { HomeStackParamList } from '@/navigation/types';
 import { HomeScreen } from '@/features/books/screens/HomeScreen';
 import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
-import { useSharedHeaderOptions } from '@/navigation/headerOptions';
+import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 import { useAuthStore } from '@/stores/authStore';
 import { useColors } from '@/hooks/useColors';
 
@@ -29,6 +29,7 @@ const s = StyleSheet.create({
 
 export function HomeStack() {
   const shared = useSharedHeaderOptions();
+  const child = useChildHeaderOptions();
 
   return (
     <Stack.Navigator>
@@ -37,8 +38,8 @@ export function HomeStack() {
         component={HomeScreen}
         options={{ ...shared, headerTitle: () => <HomeHeaderTitle /> }}
       />
-      <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...shared, headerTitle: '' }} />
-      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ title: 'Profile' }} />
+      <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
     </Stack.Navigator>
   );
 }

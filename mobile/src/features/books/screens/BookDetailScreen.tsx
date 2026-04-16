@@ -1,17 +1,24 @@
-import {
-  useRoute,
-  type RouteProp,
-} from "@react-navigation/native";
+import { useRoute, type RouteProp } from "@react-navigation/native";
 import {
   ArrowLeftRight,
+  BadgeCheck,
   BookOpen,
   Globe,
+  MapPin,
+  Repeat2,
   Sparkles,
   Tag,
 } from "lucide-react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -65,7 +72,12 @@ export function BookDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Cover Hero ── */}
-        <View style={[s.coverHero, { backgroundColor: book.coverBg }]}>
+        <View
+          style={[
+            s.coverHero,
+            { backgroundColor: book.coverBg, borderColor: cardBorder },
+          ]}
+        >
           <Text style={s.coverTitle} numberOfLines={3}>
             {book.title}
           </Text>
@@ -125,9 +137,7 @@ export function BookDetailScreen() {
         </View>
 
         {/* ── Description ── */}
-        <View
-          style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
-        >
+        <View style={s.descSection}>
           <View style={s.cardHeader}>
             <BookOpen size={16} color={accent} />
             <Text style={[s.cardLabel, { color: c.text.secondary }]}>
@@ -139,7 +149,7 @@ export function BookDetailScreen() {
           </Text>
         </View>
 
-        {/* ── Listed by (inline) ── */}
+        {/* ── Listed by ── */}
         <View style={[s.ownerStrip, { borderTopColor: cardBorder }]}>
           <View
             style={[
@@ -155,16 +165,30 @@ export function BookDetailScreen() {
             <Text style={s.ownerInitial}>{book.owner.initial}</Text>
           </View>
           <View style={s.ownerInfo}>
-            <Text style={[s.ownerLabel, { color: c.text.placeholder }]}>
-              {t("books.listedBy", "Listed by")}
-            </Text>
-            <Text style={[s.ownerName, { color: c.text.primary }]}>
-              {book.owner.name}
-            </Text>
+            {/* Row 1: name + verified */}
+            <View style={s.ownerNameRow}>
+              <Text style={[s.ownerName, { color: c.text.primary }]}>
+                {book.owner.name}
+              </Text>
+              {book.owner.verified && <BadgeCheck size={15} color={accent} />}
+            </View>
+            {/* Row 2: trust stats */}
+            <View style={s.ownerStatsRow}>
+              <MapPin size={12} color={c.text.placeholder} />
+              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
+                ~{book.owner.distanceKm}km
+              </Text>
+              <Text style={[s.ownerDot, { color: c.text.placeholder }]}>·</Text>
+              <Repeat2 size={12} color={c.text.placeholder} />
+              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
+                {book.owner.swapCount} {t("books.swaps", "swaps")}
+              </Text>
+              <Text style={[s.ownerDot, { color: c.text.placeholder }]}>·</Text>
+              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
+                {t("books.joined", "Joined")} {book.owner.joinedYear}
+              </Text>
+            </View>
           </View>
-          <Text style={[s.ownerSince, { color: c.text.placeholder }]}>
-            {t("books.memberSince", "Since 2024")}
-          </Text>
         </View>
 
         <View style={s.bottomSpacer} />
@@ -177,7 +201,10 @@ export function BookDetailScreen() {
             onPress={() => {
               Alert.alert(
                 t("books.requestSwap", "Request Swap"),
-                t("books.browseToBrowse", "Browse real books nearby to request a swap!"),
+                t(
+                  "books.browseToBrowse",
+                  "Browse real books nearby to request a swap!",
+                ),
               );
             }}
             style={({ pressed }) => [
@@ -208,7 +235,12 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.xl,
+    marginHorizontal: spacing.sm,
+    marginTop: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 1,
     position: "relative",
+    overflow: "hidden",
   },
   coverTitle: {
     color: "rgba(255,255,255,0.9)",
@@ -297,6 +329,10 @@ const s = StyleSheet.create({
   },
 
   // Description
+  descSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
   description: { fontSize: 15, lineHeight: 24 },
 
   // Owner strip
@@ -305,21 +341,28 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   ownerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
-  ownerInitial: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  ownerInitial: { color: "#fff", fontSize: 17, fontWeight: "700" },
   ownerInfo: { flex: 1 },
-  ownerLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.5, textTransform: "uppercase" },
-  ownerName: { fontSize: 15, fontWeight: "700", marginTop: 1 },
-  ownerSince: { fontSize: 11 },
+  ownerNameRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  ownerName: { fontSize: 15, fontWeight: "700" },
+  ownerStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 3,
+  },
+  ownerStat: { fontSize: 12, fontWeight: "500" },
+  ownerDot: { fontSize: 12 },
 
   // Bottom CTA
   ctaWrap: {

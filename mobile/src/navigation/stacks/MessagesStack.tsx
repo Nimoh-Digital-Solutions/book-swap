@@ -5,12 +5,13 @@ import { ExchangeListScreen } from '@/features/exchanges/screens/ExchangeListScr
 import { ExchangeDetailScreen } from '@/features/exchanges/screens/ExchangeDetailScreen';
 import { IncomingRequestsScreen } from '@/features/exchanges/screens/IncomingRequestsScreen';
 import { ChatScreen } from '@/features/messaging/screens/ChatScreen';
-import { useSharedHeaderOptions } from '@/navigation/headerOptions';
+import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<MessagesStackParamList>();
 
 export function MessagesStack() {
   const shared = useSharedHeaderOptions();
+  const child = useChildHeaderOptions();
 
   return (
     <Stack.Navigator>
@@ -22,17 +23,17 @@ export function MessagesStack() {
       <Stack.Screen
         name="IncomingRequests"
         component={IncomingRequestsScreen}
-        options={{ ...shared, headerTitle: 'Incoming Requests' }}
+        options={{ ...child, headerTitle: 'Incoming Requests' }}
       />
       <Stack.Screen
         name="ExchangeDetail"
         component={ExchangeDetailScreen}
-        options={{ ...shared, headerTitle: '' }}
+        options={{ ...child, headerTitle: '' }}
       />
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ ...shared, headerTitle: 'Chat' }}
+        options={{ ...child, headerTitle: 'Chat' }}
       />
     </Stack.Navigator>
   );
