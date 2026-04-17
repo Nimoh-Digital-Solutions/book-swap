@@ -90,6 +90,120 @@ class NominatimGeocodingService:
         )
 
 
+# ── Overpass POI discovery ────────────────────────────────────────────────────
+
+OVERPASS_API = "https://overpass-api.de/api/interpreter"
+OVERPASS_TIMEOUT = 25  # seconds — Overpass can be slow
+
+OSM_CATEGORY_MAP: dict[str, str] = {
+    "library": "library",
+    "cafe": "cafe",
+    "park": "park",
+    "station": "station",
+}
+
+OVERPASS_QUERY_TEMPLATE = """
+[out:json][timeout:25];
+(
+  node["amenity"="library"](around:{radius},{lat},{lng});
+  node["amenity"="cafe"](around:{radius},{lat},{lng});
+  node["leisure"="park"](around:{radius},{lat},{lng});
+  way["leisure"="park"](around:{radius},{lat},{lng});
+  node["railway"="station"](around:{radius},{lat},{lng});
+);
+out center 80;
+"""
+
+
+class OverpassPOIService:
+    """Discover nearby points of interest via the OSM Overpass API."""
+
+    @staticmethod
+    def find_nearby(lat: float, lng: float, radius_m: int = 5000) -> list[dict]:
+        """Query Overpass for libraries, cafes, parks, and stations near a point.
+
+        Returns a list of dicts: {name, address, category, city, lat, lng}.
+        """
+        query = OVERPASS_QUERY_TEMPLATE.format(radius=radius_m, lat=lat, lng=lng)
+
+        try:
+            response = httpx.post(
+                OVERPASS_API,
+                data={"data": query},
+                headers={"User-Agent": USER_AGENT},
+                timeout=OVERPASS_TIMEOUT,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("Overpass POI query failed (%.4f, %.4f): %s", lat, lng, exc)
+            return []
+
+        results: list[dict] = []
+        for element in data.get("elements", []):
+            tags = element.get("tags", {})
+            name = tags.get("name")
+            if not name:
+                continue
+
+            elem_lat = element.get("lat") or element.get("center", {}).get("lat")
+            elem_lng = element.get("lon") or element.get("center", {}).get("lon")
+            if not elem_lat or not elem_lng:
+                continue
+
+            category = OverpassPOIService._resolve_category(tags)
+            if not category:
+                continue
+
+            address = OverpassPOIService._build_address(tags)
+            city = (
+                tags.get("addr:city")
+                or tags.get("addr:town")
+                or tags.get("addr:municipality")
+                or ""
+            )
+
+            results.append({
+                "name": name,
+                "address": address,
+                "category": category,
+                "city": city,
+                "lat": float(elem_lat),
+                "lng": float(elem_lng),
+            })
+
+        return results
+
+    @staticmethod
+    def _resolve_category(tags: dict) -> str | None:
+        amenity = tags.get("amenity", "")
+        if amenity in ("library",):
+            return "library"
+        if amenity in ("cafe",):
+            return "cafe"
+
+        leisure = tags.get("leisure", "")
+        if leisure == "park":
+            return "park"
+
+        railway = tags.get("railway", "")
+        if railway == "station":
+            return "station"
+
+        return None
+
+    @staticmethod
+    def _build_address(tags: dict) -> str:
+        parts = [
+            tags.get("addr:street", ""),
+            tags.get("addr:housenumber", ""),
+        ]
+        street = " ".join(p for p in parts if p).strip()
+        postcode = tags.get("addr:postcode", "")
+        city = tags.get("addr:city") or tags.get("addr:town") or ""
+        return ", ".join(p for p in (street, postcode, city) if p) or tags.get("name", "")
+
+
 # ── Trust & Safety helpers ────────────────────────────────────────────────────
 # get_blocked_user_ids has moved to apps.trust_safety.services
 

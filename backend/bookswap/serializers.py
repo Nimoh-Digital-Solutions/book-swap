@@ -201,6 +201,11 @@ class SetLocationSerializer(serializers.Serializer):
         user.location = point
         user.neighborhood = neighborhood
         user.save(update_fields=["location", "neighborhood"])
+
+        from apps.messaging.tasks import populate_meetup_locations
+
+        populate_meetup_locations.delay(point.y, point.x)
+
         return user
 
 

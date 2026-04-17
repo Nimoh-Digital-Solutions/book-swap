@@ -26,26 +26,42 @@ import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius as themeRadius } from "@/constants/theme";
+import { darkGreenMapStyle, lightMapStyle } from "@/constants/mapStyle";
 import { useBrowseBooks, type BrowseBook } from "@/features/books/hooks/useBooks";
 import { GENRE_OPTIONS, DISTANCE_OPTIONS } from "@/features/books/constants";
 import { BookCard } from "@/features/books/components/BookCard";
+import { BookMapMarker } from "@/features/books/components/BookMapMarker";
 import { SkeletonCard } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import type { BrowseStackParamList } from "@/navigation/types";
 
 let MapView: typeof import("react-native-maps").default | null = null;
 let MapMarker: typeof import("react-native-maps").MapMarker | null = null;
+let MapCircle: typeof import("react-native-maps").Circle | null = null;
 let PROVIDER_DEFAULT: any = null;
+let PROVIDER_GOOGLE: any = null;
 let mapsAvailable = false;
+let SuperclusterClass: any = null;
 
 try {
   const maps = require("react-native-maps");
   MapView = maps.default;
   MapMarker = maps.MapMarker;
+  MapCircle = maps.Circle;
   PROVIDER_DEFAULT = maps.PROVIDER_DEFAULT;
+  if (Platform.OS === "android") {
+    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  }
   mapsAvailable = true;
 } catch {
   // react-native-maps not available (Expo Go)
+}
+
+try {
+  const sc = require("supercluster");
+  SuperclusterClass = sc.default ?? sc;
+} catch {
+  // supercluster not available
 }
 
 type Region = {
@@ -56,12 +72,20 @@ type Region = {
 };
 type Nav = NativeStackNavigationProp<BrowseStackParamList, "BrowseMap">;
 
+type BookPoint = GeoJSON.Feature<GeoJSON.Point, { bookId: string }>;
+type ClusterOrPoint = GeoJSON.Feature<
+  GeoJSON.Point,
+  { bookId: string } | { cluster: true; cluster_id: number; point_count: number }
+>;
+
 const DEFAULT_REGION: Region = {
   latitude: 50.85,
   longitude: 4.35,
   latitudeDelta: 0.1,
   longitudeDelta: 0.1,
 };
+
+const hasGoogleMapsKey = !!process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 export function BrowseMapScreen() {
   const { t } = useTranslation();
@@ -82,13 +106,11 @@ export function BrowseMapScreen() {
   const [selectedRadius, setSelectedRadius] = useState(5000);
   const [showGenres, setShowGenres] = useState(false);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchText), 400);
     return () => clearTimeout(timer);
   }, [searchText]);
 
-  // Get user location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -109,7 +131,8 @@ export function BrowseMapScreen() {
     })();
   }, []);
 
-  const genreParam = selectedGenres.length > 0 ? selectedGenres.join(",") : undefined;
+  const genreParam =
+    selectedGenres.length > 0 ? selectedGenres.join(",") : undefined;
 
   const {
     data,
@@ -130,9 +153,66 @@ export function BrowseMapScreen() {
     [data],
   );
 
+  // ── Supercluster ────────────────────────────────────────────────
+  const clusterIndex = useMemo(() => {
+    if (!SuperclusterClass) return null;
+    const index = new SuperclusterClass({
+      radius: 60,
+      maxZoom: 16,
+    });
+
+    const points: BookPoint[] = books
+      .filter((b) => (b as any).location?.coordinates)
+      .map((b) => ({
+        type: "Feature" as const,
+        properties: { bookId: b.id },
+        geometry: {
+          type: "Point" as const,
+          coordinates: [
+            (b as any).location.coordinates[0],
+            (b as any).location.coordinates[1],
+          ],
+        },
+      }));
+
+    index.load(points);
+    return index;
+  }, [books]);
+
+  const clusters = useMemo<ClusterOrPoint[]>(() => {
+    if (!clusterIndex || !region) return [];
+    const bbox: GeoJSON.BBox = [
+      region.longitude - region.longitudeDelta / 2,
+      region.latitude - region.latitudeDelta / 2,
+      region.longitude + region.longitudeDelta / 2,
+      region.latitude + region.latitudeDelta / 2,
+    ];
+    const zoom = Math.round(
+      Math.log2(360 / region.longitudeDelta) + 1,
+    );
+    return clusterIndex.getClusters(bbox, zoom);
+  }, [clusterIndex, region]);
+
+  // ── Handlers ─────────────────────────────────────────────────────
   const handleBookPress = useCallback(
     (bookId: string) => navigation.navigate("BookDetail", { bookId }),
     [navigation],
+  );
+
+  const handleClusterPress = useCallback(
+    (cluster: ClusterOrPoint) => {
+      if (!clusterIndex || !("cluster" in cluster.properties) || !cluster.properties.cluster) return;
+      const expansionZoom = clusterIndex.getClusterExpansionZoom(
+        cluster.properties.cluster_id as number,
+      );
+      const [lng, lat] = cluster.geometry.coordinates;
+      const delta = 360 / Math.pow(2, expansionZoom + 1);
+      mapRef.current?.animateToRegion(
+        { latitude: lat, longitude: lng, latitudeDelta: delta, longitudeDelta: delta },
+        400,
+      );
+    },
+    [clusterIndex],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -141,7 +221,9 @@ export function BrowseMapScreen() {
 
   const toggleGenre = useCallback((genre: string) => {
     setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre],
+      prev.includes(genre)
+        ? prev.filter((g) => g !== genre)
+        : [...prev, genre],
     );
   }, []);
 
@@ -166,21 +248,38 @@ export function BrowseMapScreen() {
     mapRef.current?.animateToRegion(newRegion, 500);
   }, []);
 
-  const hasActiveFilters = selectedGenres.length > 0 || selectedRadius !== 5000;
+  const hasActiveFilters =
+    selectedGenres.length > 0 || selectedRadius !== 5000;
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const accent = c.auth.golden;
   const bg = isDark ? c.auth.bg : c.neutral[50];
 
-  // ── Shared UI pieces ──────────────────────────────────────────────
+  const mapStyle = useMemo(
+    () => (isDark ? darkGreenMapStyle : lightMapStyle),
+    [isDark],
+  );
+  // Google Maps on Android (API key required), Apple Maps on iOS (native, no key needed)
+  const useGoogleProvider =
+    hasGoogleMapsKey && Platform.OS === "android";
+
+  // ── Shared UI pieces ─────────────────────────────────────────────
 
   const renderSearchBar = () => (
-    <View style={[s.searchWrap, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+    <View
+      style={[
+        s.searchWrap,
+        { backgroundColor: cardBg, borderColor: cardBorder },
+      ]}
+    >
       <Search size={18} color={c.text.placeholder} />
       <TextInput
         ref={searchRef}
         style={[s.searchInput, { color: c.text.primary }]}
-        placeholder={t("browse.searchPlaceholder", "Search books, authors...")}
+        placeholder={t(
+          "browse.searchPlaceholder",
+          "Search books, authors...",
+        )}
         placeholderTextColor={c.text.placeholder}
         value={searchText}
         onChangeText={setSearchText}
@@ -197,7 +296,6 @@ export function BrowseMapScreen() {
 
   const renderFilters = () => (
     <View style={s.filtersSection}>
-      {/* Distance chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -217,7 +315,10 @@ export function BrowseMapScreen() {
                 },
               ]}
             >
-              <MapPin size={12} color={active ? "#fff" : c.text.secondary} />
+              <MapPin
+                size={12}
+                color={active ? "#fff" : c.text.secondary}
+              />
               <Text
                 style={[
                   s.chipText,
@@ -230,27 +331,36 @@ export function BrowseMapScreen() {
           );
         })}
 
-        <View style={[s.chipDivider, { backgroundColor: cardBorder }]} />
+        <View
+          style={[s.chipDivider, { backgroundColor: cardBorder }]}
+        />
 
         <Pressable
           onPress={() => setShowGenres((v) => !v)}
           style={[
             s.chip,
             {
-              backgroundColor: selectedGenres.length > 0 ? accent : cardBg,
-              borderColor: selectedGenres.length > 0 ? accent : cardBorder,
+              backgroundColor:
+                selectedGenres.length > 0 ? accent : cardBg,
+              borderColor:
+                selectedGenres.length > 0 ? accent : cardBorder,
             },
           ]}
         >
           <SlidersHorizontal
             size={12}
-            color={selectedGenres.length > 0 ? "#fff" : c.text.secondary}
+            color={
+              selectedGenres.length > 0 ? "#fff" : c.text.secondary
+            }
           />
           <Text
             style={[
               s.chipText,
               {
-                color: selectedGenres.length > 0 ? "#fff" : c.text.primary,
+                color:
+                  selectedGenres.length > 0
+                    ? "#fff"
+                    : c.text.primary,
               },
             ]}
           >
@@ -261,14 +371,18 @@ export function BrowseMapScreen() {
         </Pressable>
 
         {hasActiveFilters && (
-          <Pressable onPress={clearFilters} style={[s.chip, { borderColor: cardBorder }]}>
+          <Pressable
+            onPress={clearFilters}
+            style={[s.chip, { borderColor: cardBorder }]}
+          >
             <X size={12} color={c.text.secondary} />
-            <Text style={[s.chipText, { color: c.text.secondary }]}>Clear</Text>
+            <Text style={[s.chipText, { color: c.text.secondary }]}>
+              Clear
+            </Text>
           </Pressable>
         )}
       </ScrollView>
 
-      {/* Genre expansion */}
       {showGenres && (
         <View style={s.genreWrap}>
           {GENRE_OPTIONS.map((g) => {
@@ -280,7 +394,9 @@ export function BrowseMapScreen() {
                 style={[
                   s.genreChip,
                   {
-                    backgroundColor: active ? accent + "20" : cardBg,
+                    backgroundColor: active
+                      ? accent + "20"
+                      : cardBg,
                     borderColor: active ? accent : cardBorder,
                   },
                 ]}
@@ -337,8 +453,14 @@ export function BrowseMapScreen() {
         title={t("browse.noBooks", "No books found")}
         subtitle={
           hasActiveFilters || debouncedSearch
-            ? t("browse.tryDifferentFilters", "Try adjusting your search or filters.")
-            : t("browse.noBooksNearby", "No books available in this area yet.")
+            ? t(
+                "browse.tryDifferentFilters",
+                "Try adjusting your search or filters.",
+              )
+            : t(
+                "browse.noBooksNearby",
+                "No books available in this area yet.",
+              )
         }
         compact
       />
@@ -347,8 +469,11 @@ export function BrowseMapScreen() {
 
   const resultCount = books.length;
 
-  // ── Full-screen list fallback (Expo Go) ──────────────────────────
-  if (!mapsAvailable || !MapView) {
+  // Android requires a Google Maps API key — fall back to list view without one
+  const mapUsable =
+    mapsAvailable && MapView && (Platform.OS !== "android" || hasGoogleMapsKey);
+
+  if (!mapUsable) {
     return (
       <View style={[s.root, { backgroundColor: bg }]}>
         <View style={s.listHeader}>
@@ -384,35 +509,101 @@ export function BrowseMapScreen() {
       <MapView
         ref={mapRef}
         style={s.map}
-        provider={PROVIDER_DEFAULT}
+        provider={useGoogleProvider ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
         initialRegion={region}
         onRegionChangeComplete={setRegion}
         showsUserLocation
         showsMyLocationButton={false}
+        customMapStyle={useGoogleProvider ? mapStyle : undefined}
       >
-        {books.map((book) => {
-          const coords = (book as any).location?.coordinates;
-          if (!coords) return null;
+        {/* Radius circle indicator */}
+        {MapCircle && (
+          <MapCircle
+            center={{
+              latitude: region.latitude,
+              longitude: region.longitude,
+            }}
+            radius={selectedRadius}
+            strokeColor={accent + "80"}
+            fillColor={accent + "12"}
+            strokeWidth={1.5}
+          />
+        )}
+
+        {/* Clustered book markers */}
+        {clusters.map((feature) => {
+          const [lng, lat] = feature.geometry.coordinates;
+          const isCluster =
+            "cluster" in feature.properties &&
+            feature.properties.cluster;
+          const key = isCluster
+            ? `cluster-${(feature.properties as any).cluster_id}`
+            : `book-${(feature.properties as any).bookId}`;
+          const count = isCluster
+            ? (feature.properties as any).point_count
+            : undefined;
+
           return MapMarker ? (
             <MapMarker
-              key={book.id}
-              coordinate={{ latitude: coords[1], longitude: coords[0] }}
-              title={book.title}
-              description={book.author}
-              onCalloutPress={() => handleBookPress(book.id)}
-            />
+              key={key}
+              coordinate={{ latitude: lat, longitude: lng }}
+              tracksViewChanges={false}
+              onPress={() => {
+                if (isCluster) {
+                  handleClusterPress(feature);
+                } else {
+                  handleBookPress(
+                    (feature.properties as any).bookId,
+                  );
+                }
+              }}
+            >
+              <BookMapMarker count={count} />
+            </MapMarker>
           ) : null;
         })}
       </MapView>
 
-      {/* Recenter FAB */}
-      <Pressable
-        style={[s.recenterBtn, { backgroundColor: cardBg, borderColor: cardBorder }]}
-        onPress={recenterMap}
-        hitSlop={8}
-      >
-        <Navigation size={20} color={accent} />
-      </Pressable>
+      {/* Map controls */}
+      <View style={[s.mapControls, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <Pressable
+          style={s.mapControlBtn}
+          onPress={() => {
+            const newRegion = {
+              ...region,
+              latitudeDelta: region.latitudeDelta / 2,
+              longitudeDelta: region.longitudeDelta / 2,
+            };
+            mapRef.current?.animateToRegion(newRegion, 300);
+          }}
+          hitSlop={4}
+        >
+          <Text style={[s.mapControlIcon, { color: accent }]}>+</Text>
+        </Pressable>
+        <View style={[s.mapControlDivider, { backgroundColor: cardBorder }]} />
+        <Pressable
+          style={s.mapControlBtn}
+          onPress={() => {
+            const newRegion = {
+              ...region,
+              latitudeDelta: Math.min(region.latitudeDelta * 2, 120),
+              longitudeDelta: Math.min(region.longitudeDelta * 2, 120),
+            };
+            mapRef.current?.animateToRegion(newRegion, 300);
+          }}
+          hitSlop={4}
+        >
+          <Text style={[s.mapControlIcon, { color: accent }]}>{"\u2212"}</Text>
+        </Pressable>
+        <View style={[s.mapControlDivider, { backgroundColor: cardBorder }]} />
+        <Pressable
+          style={s.mapControlBtn}
+          onPress={recenterMap}
+          hitSlop={4}
+        >
+          <Navigation size={18} color={accent} />
+        </Pressable>
+      </View>
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -420,7 +611,10 @@ export function BrowseMapScreen() {
         index={1}
         snapPoints={snapPoints}
         backgroundStyle={[s.sheetBg, { backgroundColor: bg }]}
-        handleIndicatorStyle={{ backgroundColor: cardBorder, width: 40 }}
+        handleIndicatorStyle={{
+          backgroundColor: cardBorder,
+          width: 40,
+        }}
         enablePanDownToClose={false}
       >
         <View style={s.sheetContent}>
@@ -428,7 +622,9 @@ export function BrowseMapScreen() {
           {renderFilters()}
 
           {!isLoading && resultCount > 0 && (
-            <Text style={[s.resultCount, { color: c.text.secondary }]}>
+            <Text
+              style={[s.resultCount, { color: c.text.secondary }]}
+            >
               {resultCount} book{resultCount !== 1 ? "s" : ""} nearby
             </Text>
           )}
@@ -454,7 +650,6 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   map: { ...StyleSheet.absoluteFillObject },
 
-  // ── Search bar ──
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
@@ -471,7 +666,6 @@ const s = StyleSheet.create({
     padding: 0,
   },
 
-  // ── Filter chips ──
   filtersSection: {
     marginTop: spacing.sm,
   },
@@ -501,7 +695,6 @@ const s = StyleSheet.create({
     marginHorizontal: 2,
   },
 
-  // ── Genre grid ──
   genreWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -520,7 +713,6 @@ const s = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ── Result count ──
   resultCount: {
     fontSize: 12,
     fontWeight: "600",
@@ -528,7 +720,6 @@ const s = StyleSheet.create({
     paddingTop: spacing.sm,
   },
 
-  // ── Bottom sheet ──
   sheetBg: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -553,17 +744,13 @@ const s = StyleSheet.create({
     gap: spacing.sm,
   },
 
-  // ── Recenter button ──
-  recenterBtn: {
+  mapControls: {
     position: "absolute",
     top: spacing.md,
     right: spacing.md,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    borderRadius: themeRadius.lg,
     borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -574,8 +761,22 @@ const s = StyleSheet.create({
       android: { elevation: 4 },
     }),
   },
+  mapControlBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mapControlIcon: {
+    fontSize: 22,
+    fontWeight: "600",
+    lineHeight: 24,
+  },
+  mapControlDivider: {
+    height: StyleSheet.hairlineWidth,
+    width: "100%" as any,
+  },
 
-  // ── Full-screen list (Expo Go fallback) ──
   listHeader: {
     paddingTop: spacing.md,
     paddingBottom: spacing.xs,
