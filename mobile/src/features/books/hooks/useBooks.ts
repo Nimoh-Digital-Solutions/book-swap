@@ -3,17 +3,29 @@ import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import type { Book, PaginatedResponse } from '@/types';
 
-export function useBrowseBooks(params: {
+export interface BrowseParams {
   lat?: number;
   lng?: number;
   radius?: number;
-}) {
+  search?: string;
+  genre?: string;
+}
+
+export function useBrowseBooks(params: BrowseParams) {
+  const apiParams: Record<string, string | number | undefined> = {
+    lat: params.lat,
+    lng: params.lng,
+    radius: params.radius,
+  };
+  if (params.search) apiParams.search = params.search;
+  if (params.genre) apiParams.genre = params.genre;
+
   return useInfiniteQuery({
-    queryKey: ['browse', params],
+    queryKey: ['browse', apiParams],
     queryFn: async ({ pageParam }) => {
-      const { data } = await http.get<PaginatedResponse<Book>>(
+      const { data } = await http.get<PaginatedResponse<BrowseBook>>(
         API.browse.list,
-        { params: { ...params, page: pageParam } },
+        { params: { ...apiParams, page: pageParam } },
       );
       return data;
     },
@@ -39,24 +51,55 @@ export function useMyBooks() {
   return useQuery({
     queryKey: ['myBooks'],
     queryFn: async () => {
-      const { data } = await http.get<PaginatedResponse<Book>>(API.books.list);
+      const { data } = await http.get<PaginatedResponse<Book>>(API.books.list, {
+        params: { owner: 'me' },
+      });
       return data.results;
     },
   });
 }
 
+export interface CreateBookPayload {
+  isbn?: string;
+  title: string;
+  author: string;
+  description?: string;
+  cover_url?: string;
+  condition: 'new' | 'like_new' | 'good' | 'acceptable';
+  genres?: string[];
+  language: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'other';
+  notes?: string;
+  page_count?: number | null;
+  publish_year?: number | null;
+}
+
 export function useCreateBook() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (formData: FormData) => {
-      const { data } = await http.post<Book>(API.books.create, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+    mutationFn: async (payload: CreateBookPayload) => {
+      const { data } = await http.post<Book>(API.books.create, payload);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['browse'] });
+      queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
+    },
+  });
+}
+
+export function useDeleteBook() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (bookId: string) => {
+      await http.delete(API.books.detail(bookId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['browse'] });
+      queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
   });
 }
@@ -78,6 +121,42 @@ export interface NearbyCount {
   count: number;
   user_count: number;
   radius: number;
+}
+
+export interface BrowseBookOwner {
+  id: string;
+  username: string;
+  avatar: string | null;
+  neighborhood: string;
+  avg_rating: string;
+}
+
+export interface BrowseBook {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string;
+  condition: string;
+  language: string;
+  status: string;
+  primary_photo: string | null;
+  owner: BrowseBookOwner;
+  distance: number | null;
+  created_at: string;
+}
+
+export function useRecentBooks(lat?: number, lng?: number, radiusM = 50000) {
+  return useQuery({
+    queryKey: ['recentBooks', lat, lng, radiusM],
+    queryFn: async () => {
+      const { data } = await http.get<PaginatedResponse<BrowseBook>>(
+        API.browse.list,
+        { params: { lat, lng, radius: radiusM, ordering: '-created_at' } },
+      );
+      return data.results;
+    },
+    enabled: lat != null && lng != null,
+  });
 }
 
 export function useNearbyCount(lat?: number, lng?: number, radius = 10000) {

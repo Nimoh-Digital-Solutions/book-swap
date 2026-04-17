@@ -5,12 +5,9 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BlurView } from 'expo-blur';
 import {
   Settings,
   Pencil,
@@ -19,67 +16,24 @@ import {
   ArrowLeftRight,
   BookOpen,
   Calendar,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
-import { spacing, radius, shadows } from '@/constants/theme';
+import { spacing, radius } from '@/constants/theme';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'MyProfile'>;
 
-const PILL_ICON_SIZE = 20;
-
-function ProfileBottomBar() {
-  const c = useColors();
-  const isDark = useIsDark();
-  const { t } = useTranslation();
-  const navigation = useNavigation<Nav>();
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View style={[s.floatingWrapper, { bottom: Math.max(insets.bottom, 16) + 60 }]}>
-      <BlurView intensity={80} tint={isDark ? 'dark' : 'light'} style={s.pill}>
-        <View style={[s.pillInner, { borderColor: c.border.default + '40' }]}>
-          <Pressable
-            style={({ pressed }) => [s.pillItem, pressed && s.pillItemPressed]}
-            onPress={() => navigation.navigate('Settings')}
-            accessibilityRole="button"
-            accessibilityLabel={t('profile.settings', 'Settings')}
-          >
-            <Settings size={PILL_ICON_SIZE} color={c.auth.bg} />
-            <Text style={[s.pillLabel, { color: c.auth.bg }]} numberOfLines={1}>
-              {t('profile.settings', 'Settings')}
-            </Text>
-          </Pressable>
-
-          <View style={[s.pillDivider, { backgroundColor: c.border.default + '60' }]} />
-
-          <Pressable
-            style={({ pressed }) => [s.pillItem, pressed && s.pillItemPressed]}
-            onPress={() => navigation.navigate('EditProfile')}
-            accessibilityRole="button"
-            accessibilityLabel={t('profile.editProfile', 'Edit Profile')}
-          >
-            <Pencil size={PILL_ICON_SIZE} color={c.auth.bg} />
-            <Text style={[s.pillLabel, { color: c.auth.bg }]} numberOfLines={1}>
-              {t('profile.editProfile', 'Edit Profile')}
-            </Text>
-          </Pressable>
-        </View>
-      </BlurView>
-    </View>
-  );
-}
-
-function StatItem({ icon: Icon, value, label, colors: c }: {
+function StatItem({ icon: Icon, value, label }: {
   icon: typeof Star;
   value: string;
   label: string;
-  colors: ReturnType<typeof useColors>;
 }) {
+  const c = useColors();
   return (
     <View style={s.statItem}>
       <Icon size={18} color={c.auth.golden} />
@@ -89,17 +43,24 @@ function StatItem({ icon: Icon, value, label, colors: c }: {
   );
 }
 
-function InfoCard({ icon: Icon, title, content, colors: c }: {
+function InfoCard({ icon: Icon, title, content }: {
   icon: typeof MapPin;
   title: string;
   content: string;
-  colors: ReturnType<typeof useColors>;
 }) {
+  const c = useColors();
+  const isDark = useIsDark();
   if (!content) return null;
   return (
-    <View style={[s.infoCard, { backgroundColor: c.surface.white, borderColor: c.border.default }]}>
+    <View style={[
+      s.infoCard,
+      {
+        backgroundColor: isDark ? c.auth.card : c.surface.white,
+        borderColor: isDark ? c.auth.cardBorder : c.border.default,
+      },
+    ]}>
       <View style={[s.infoIcon, { backgroundColor: c.auth.golden + '18' }]}>
-        <Icon size={18} color={c.auth.goldenDark} />
+        <Icon size={18} color={c.auth.golden} />
       </View>
       <View style={s.infoTextWrap}>
         <Text style={[s.infoTitle, { color: c.text.secondary }]}>{title}</Text>
@@ -112,21 +73,28 @@ function InfoCard({ icon: Icon, title, content, colors: c }: {
 export function MyProfileScreen() {
   const { t } = useTranslation();
   const c = useColors();
+  const isDark = useIsDark();
+  const navigation = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
 
   if (!user) return null;
 
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+  const cardBg = isDark ? c.auth.card : c.surface.white;
+  const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
+  const accent = c.auth.golden;
+
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username;
-  const memberSince = new Date(user.created_at).toLocaleDateString(undefined, {
-    month: 'long',
-    year: 'numeric',
-  });
+  const joinDate = new Date(user.created_at);
+  const memberSince = isNaN(joinDate.getTime())
+    ? ''
+    : joinDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const genres = user.preferred_genres?.length > 0
     ? user.preferred_genres.join(', ')
     : '';
 
   return (
-    <View style={[s.root, { backgroundColor: c.neutral[50] }]}>
+    <View style={[s.root, { backgroundColor: bg }]}>
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
@@ -147,26 +115,23 @@ export function MyProfileScreen() {
         </View>
 
         {/* ── Stats ── */}
-        <View style={[s.statsCard, { backgroundColor: c.surface.white, borderColor: c.border.default }]}>
+        <View style={[s.statsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <StatItem
             icon={ArrowLeftRight}
             value={String(user.swap_count)}
             label={t('profile.swaps', 'Swaps')}
-            colors={c}
           />
-          <View style={[s.statDivider, { backgroundColor: c.border.default }]} />
+          <View style={[s.statDivider, { backgroundColor: cardBorder }]} />
           <StatItem
             icon={Star}
             value={user.avg_rating > 0 ? user.avg_rating.toFixed(1) : '—'}
             label={t('profile.rating', 'Rating')}
-            colors={c}
           />
-          <View style={[s.statDivider, { backgroundColor: c.border.default }]} />
+          <View style={[s.statDivider, { backgroundColor: cardBorder }]} />
           <StatItem
             icon={BookOpen}
             value={String(user.rating_count)}
             label={t('profile.reviews', 'Reviews')}
-            colors={c}
           />
         </View>
 
@@ -176,44 +141,80 @@ export function MyProfileScreen() {
             icon={BookOpen}
             title={t('profile.bio', 'About')}
             content={user.bio}
-            colors={c}
           />
           <InfoCard
             icon={Star}
             title={t('profile.genres', 'Favourite Genres')}
             content={genres}
-            colors={c}
           />
           <InfoCard
             icon={Calendar}
             title={t('profile.memberSince', 'Member Since')}
             content={memberSince}
-            colors={c}
           />
         </View>
-      </ScrollView>
 
-      <ProfileBottomBar />
+        {/* ── Quick Actions ── */}
+        <View style={[s.actionsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <Pressable
+            onPress={() => navigation.navigate('EditProfile')}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+          >
+            <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
+              <Pencil size={18} color={accent} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.text.primary }]}>
+              {t('profile.editProfile', 'Edit Profile')}
+            </Text>
+            <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+
+          <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
+
+          <Pressable
+            onPress={() => navigation.navigate('MyBooks')}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+          >
+            <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
+              <BookOpen size={18} color={accent} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.text.primary }]}>
+              {t('profile.myBooks', 'My Books')}
+            </Text>
+            <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+
+          <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
+
+          <Pressable
+            onPress={() => navigation.navigate('Settings')}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+          >
+            <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
+              <Settings size={18} color={accent} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.text.primary }]}>
+              {t('profile.settings', 'Settings')}
+            </Text>
+            <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { paddingHorizontal: spacing.md + 4, paddingTop: spacing.lg, paddingBottom: 160 },
+  scroll: { paddingHorizontal: spacing.md + 4, paddingTop: spacing.lg, paddingBottom: 40 },
 
-  // Hero
   hero: { alignItems: 'center', marginBottom: spacing.xl },
-  heroAvatarWrap: {
-    marginBottom: spacing.md,
-    ...shadows.elevated,
-  },
+  heroAvatarWrap: { marginBottom: spacing.md },
   heroName: { fontSize: 24, fontWeight: '800', letterSpacing: -0.4 },
   heroUsername: { fontSize: 14, fontWeight: '500', marginTop: 2 },
   heroLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm },
   heroLocation: { fontSize: 13, fontWeight: '500' },
 
-  // Stats
   statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -221,15 +222,13 @@ const s = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: spacing.md + 4,
     marginBottom: spacing.xl,
-    ...shadows.card,
   },
   statItem: { flex: 1, alignItems: 'center', gap: 4 },
   statValue: { fontSize: 20, fontWeight: '800' },
   statLabel: { fontSize: 11, fontWeight: '600' },
   statDivider: { width: 1, height: 40 },
 
-  // Info
-  infoSection: { gap: spacing.sm },
+  infoSection: { gap: spacing.sm, marginBottom: spacing.xl },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -237,7 +236,6 @@ const s = StyleSheet.create({
     padding: spacing.md + 4,
     borderRadius: radius.xl,
     borderWidth: 1,
-    ...shadows.card,
   },
   infoIcon: {
     width: 40,
@@ -251,38 +249,25 @@ const s = StyleSheet.create({
   infoTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 },
   infoContent: { fontSize: 15, lineHeight: 22 },
 
-  // Floating pill
-  floatingWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    pointerEvents: 'box-none',
-  },
-  pill: {
-    borderRadius: 999,
+  actionsCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
     overflow: 'hidden',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
-      android: { elevation: 8 },
-    }),
   },
-  pillInner: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    gap: spacing.md,
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.md + 2,
   },
-  pillItem: {
-    flexDirection: 'row',
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    justifyContent: 'center',
   },
-  pillItemPressed: { opacity: 0.6 },
-  pillDivider: { width: 1, height: 20, marginHorizontal: 8 },
-  pillLabel: { fontSize: 13, fontWeight: '600' },
+  actionLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
+  actionDivider: { height: 1, marginHorizontal: spacing.md },
 });

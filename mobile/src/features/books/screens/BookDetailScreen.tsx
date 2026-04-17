@@ -1,8 +1,9 @@
-import { useRoute, type RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { Image } from "expo-image";
 import {
   ArrowLeftRight,
-  BadgeCheck,
   BookOpen,
+  FileText,
   Globe,
   MapPin,
   Repeat2,
@@ -11,18 +12,12 @@ import {
 } from "lucide-react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { SkeletonBookDetail } from "@/components/Skeleton";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
-import { getMockBookById } from "../data/mockBooks";
+import { useBookDetail } from "../hooks/useBooks";
 
 type Route = RouteProp<{ BookDetail: { bookId: string } }, "BookDetail">;
 
@@ -30,8 +25,7 @@ const CONDITION_LABELS: Record<string, string> = {
   new: "New",
   like_new: "Like New",
   good: "Good",
-  fair: "Fair",
-  poor: "Poor",
+  acceptable: "Acceptable",
 };
 
 const AVATAR_GRADIENTS = [
@@ -42,20 +36,39 @@ const AVATAR_GRADIENTS = [
   "#10B981",
 ];
 
+const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
+
+interface BookOwner {
+  id: string;
+  username: string;
+  avatar: string | null;
+  neighborhood: string;
+  avg_rating: string;
+}
+
 export function BookDetailScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
+  const navigation = useNavigation<any>();
 
-  const book = getMockBookById(params.bookId);
+  const { data: rawBook, isLoading } = useBookDetail(params.bookId);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const accent = c.auth.golden;
 
-  if (!book) {
+  if (isLoading) {
+    return (
+      <View style={[s.root, { backgroundColor: bg }]}>
+        <SkeletonBookDetail />
+      </View>
+    );
+  }
+
+  if (!rawBook) {
     return (
       <View style={[s.centered, { backgroundColor: bg }]}>
         <Text style={[s.notFound, { color: c.text.secondary }]}>
@@ -65,6 +78,20 @@ export function BookDetailScreen() {
     );
   }
 
+  const book = rawBook as any;
+  const owner: BookOwner | null =
+    typeof book.owner === "object" && book.owner !== null ? book.owner : null;
+  const ownerName = owner?.username ?? "Unknown";
+  const ownerInitial = ownerName.charAt(0).toUpperCase();
+  const coverUri = book.cover_url || book.photos?.[0]?.image || null;
+  const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
+  const isAvailable = book.status === "available";
+  const genres: string[] = Array.isArray(book.genres)
+    ? book.genres
+    : book.genre
+      ? [book.genre]
+      : [];
+
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
       <ScrollView
@@ -72,17 +99,23 @@ export function BookDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Cover Hero ── */}
-        <View
-          style={[
-            s.coverHero,
-            { backgroundColor: book.coverBg, borderColor: cardBorder },
-          ]}
-        >
-          <Text style={s.coverTitle} numberOfLines={3}>
-            {book.title}
-          </Text>
-          <Text style={s.coverAuthor}>{book.author}</Text>
-          {book.available && (
+        <View style={[s.coverHero, { borderColor: cardBorder }]}>
+          {coverUri ? (
+            <Image
+              source={{ uri: coverUri }}
+              style={s.coverImage}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View style={[s.coverPlaceholder, { backgroundColor: coverBg }]}>
+              <Text style={s.coverTitle} numberOfLines={3}>
+                {book.title}
+              </Text>
+              <Text style={s.coverAuthor}>{book.author}</Text>
+            </View>
+          )}
+          {isAvailable && (
             <View style={[s.availBadge, { backgroundColor: accent }]}>
               <Text style={s.availBadgeText}>
                 {t("books.available", "Available")}
@@ -101,17 +134,19 @@ export function BookDetailScreen() {
 
         {/* ── Meta pills ── */}
         <View style={s.metaRow}>
-          <View
-            style={[
-              s.metaPill,
-              { backgroundColor: cardBg, borderColor: cardBorder },
-            ]}
-          >
-            <Tag size={14} color={accent} />
-            <Text style={[s.metaText, { color: c.text.primary }]}>
-              {book.genre}
-            </Text>
-          </View>
+          {genres.length > 0 && (
+            <View
+              style={[
+                s.metaPill,
+                { backgroundColor: cardBg, borderColor: cardBorder },
+              ]}
+            >
+              <Tag size={14} color={accent} />
+              <Text style={[s.metaText, { color: c.text.primary }]}>
+                {genres[0]}
+              </Text>
+            </View>
+          )}
           <View
             style={[
               s.metaPill,
@@ -123,17 +158,19 @@ export function BookDetailScreen() {
               {CONDITION_LABELS[book.condition] ?? book.condition}
             </Text>
           </View>
-          <View
-            style={[
-              s.metaPill,
-              { backgroundColor: cardBg, borderColor: cardBorder },
-            ]}
-          >
-            <Globe size={14} color={accent} />
-            <Text style={[s.metaText, { color: c.text.primary }]}>
-              {book.language}
-            </Text>
-          </View>
+          {book.language && (
+            <View
+              style={[
+                s.metaPill,
+                { backgroundColor: cardBg, borderColor: cardBorder },
+              ]}
+            >
+              <Globe size={14} color={accent} />
+              <Text style={[s.metaText, { color: c.text.primary }]}>
+                {book.language.toUpperCase()}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* ── Description ── */}
@@ -144,69 +181,88 @@ export function BookDetailScreen() {
               {t("books.description", "Description")}
             </Text>
           </View>
-          <Text style={[s.description, { color: c.text.primary }]}>
-            {book.description}
-          </Text>
+          {book.description ? (
+            <Text style={[s.description, { color: c.text.primary }]}>
+              {book.description}
+            </Text>
+          ) : (
+            <View style={s.inlineEmpty}>
+              <FileText size={18} color={c.text.placeholder} />
+              <Text style={[s.inlineEmptyText, { color: c.text.placeholder }]}>
+                {t("books.noDescription", "No description added yet")}
+              </Text>
+            </View>
+          )}
         </View>
 
+        {/* ── Genres (empty state) ── */}
+        {genres.length === 0 && (
+          <View style={[s.descSection, { marginTop: 0 }]}>
+            <View style={s.cardHeader}>
+              <Tag size={16} color={accent} />
+              <Text style={[s.cardLabel, { color: c.text.secondary }]}>
+                {t("books.genres", "Genres")}
+              </Text>
+            </View>
+            <View style={s.inlineEmpty}>
+              <Text style={[s.inlineEmptyText, { color: c.text.placeholder }]}>
+                {t("books.noGenres", "No genres specified")}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* ── Listed by ── */}
-        <View style={[s.ownerStrip, { borderTopColor: cardBorder }]}>
-          <View
-            style={[
-              s.ownerAvatar,
-              {
-                backgroundColor:
-                  AVATAR_GRADIENTS[
-                    book.id.charCodeAt(0) % AVATAR_GRADIENTS.length
-                  ],
-              },
-            ]}
-          >
-            <Text style={s.ownerInitial}>{book.owner.initial}</Text>
-          </View>
-          <View style={s.ownerInfo}>
-            {/* Row 1: name + verified */}
-            <View style={s.ownerNameRow}>
+        {owner && (
+          <View style={[s.ownerStrip, { borderTopColor: cardBorder }]}>
+            <View
+              style={[
+                s.ownerAvatar,
+                {
+                  backgroundColor:
+                    AVATAR_GRADIENTS[
+                      book.id.charCodeAt(0) % AVATAR_GRADIENTS.length
+                    ],
+                },
+              ]}
+            >
+              <Text style={s.ownerInitial}>{ownerInitial}</Text>
+            </View>
+            <View style={s.ownerInfo}>
               <Text style={[s.ownerName, { color: c.text.primary }]}>
-                {book.owner.name}
+                {ownerName}
               </Text>
-              {book.owner.verified && <BadgeCheck size={15} color={accent} />}
-            </View>
-            {/* Row 2: trust stats */}
-            <View style={s.ownerStatsRow}>
-              <MapPin size={12} color={c.text.placeholder} />
-              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
-                ~{book.owner.distanceKm}km
-              </Text>
-              <Text style={[s.ownerDot, { color: c.text.placeholder }]}>·</Text>
-              <Repeat2 size={12} color={c.text.placeholder} />
-              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
-                {book.owner.swapCount} {t("books.swaps", "swaps")}
-              </Text>
-              <Text style={[s.ownerDot, { color: c.text.placeholder }]}>·</Text>
-              <Text style={[s.ownerStat, { color: c.text.secondary }]}>
-                {t("books.joined", "Joined")} {book.owner.joinedYear}
-              </Text>
+              <View style={s.ownerStatsRow}>
+                {owner.neighborhood ? (
+                  <>
+                    <MapPin size={12} color={c.text.placeholder} />
+                    <Text style={[s.ownerStat, { color: c.text.secondary }]}>
+                      {owner.neighborhood}
+                    </Text>
+                    <Text style={[s.ownerDot, { color: c.text.placeholder }]}>
+                      ·
+                    </Text>
+                  </>
+                ) : null}
+                <Repeat2 size={12} color={c.text.placeholder} />
+                <Text style={[s.ownerStat, { color: c.text.secondary }]}>
+                  {t("books.rating", "{{rating}}★", {
+                    rating: owner.avg_rating ?? "0",
+                  })}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         <View style={s.bottomSpacer} />
       </ScrollView>
 
       {/* ── Bottom CTA ── */}
-      {book.available && (
+      {isAvailable && (
         <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
           <Pressable
-            onPress={() => {
-              Alert.alert(
-                t("books.requestSwap", "Request Swap"),
-                t(
-                  "books.browseToBrowse",
-                  "Browse real books nearby to request a swap!",
-                ),
-              );
-            }}
+            onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
             style={({ pressed }) => [
               s.ctaBtn,
               { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
@@ -229,18 +285,22 @@ const s = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   notFound: { fontSize: 16 },
 
-  // Cover hero
   coverHero: {
-    height: 250,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xl,
+    height: 280,
+    objectFit: "cover",
     marginHorizontal: spacing.sm,
     marginTop: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
     position: "relative",
     overflow: "hidden",
+  },
+  coverImage: { width: "100%", height: "100%" },
+  coverPlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.xl,
   },
   coverTitle: {
     color: "rgba(255,255,255,0.9)",
@@ -273,7 +333,6 @@ const s = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // Title section
   titleSection: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
@@ -287,7 +346,6 @@ const s = StyleSheet.create({
   },
   author: { fontSize: 15 },
 
-  // Meta pills
   metaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -306,7 +364,6 @@ const s = StyleSheet.create({
   },
   metaText: { fontSize: 13, fontWeight: "600" },
 
-  // Card
   card: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
@@ -328,14 +385,19 @@ const s = StyleSheet.create({
     textTransform: "uppercase",
   },
 
-  // Description
   descSection: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
   description: { fontSize: 15, lineHeight: 24 },
+  inlineEmpty: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: spacing.sm,
+  },
+  inlineEmptyText: { fontSize: 14, fontStyle: "italic" },
 
-  // Owner strip
   ownerStrip: {
     flexDirection: "row",
     alignItems: "center",
@@ -353,7 +415,6 @@ const s = StyleSheet.create({
   },
   ownerInitial: { color: "#fff", fontSize: 17, fontWeight: "700" },
   ownerInfo: { flex: 1 },
-  ownerNameRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   ownerName: { fontSize: 15, fontWeight: "700" },
   ownerStatsRow: {
     flexDirection: "row",
@@ -364,7 +425,6 @@ const s = StyleSheet.create({
   ownerStat: { fontSize: 12, fontWeight: "500" },
   ownerDot: { fontSize: 12 },
 
-  // Bottom CTA
   ctaWrap: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,

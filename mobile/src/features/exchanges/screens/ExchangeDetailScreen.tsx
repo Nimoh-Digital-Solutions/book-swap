@@ -1,5 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Image } from 'expo-image';
 import {
   AlertCircle,
   ArrowLeftRight,
@@ -13,7 +14,6 @@ import {
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -22,6 +22,7 @@ import {
   View,
 } from 'react-native';
 
+import { SkeletonBookDetail } from '@/components/Skeleton';
 import { radius, shadows, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import type { MessagesStackParamList } from '@/navigation/types';
@@ -44,23 +45,51 @@ import {
 type Route = RouteProp<MessagesStackParamList, 'ExchangeDetail'>;
 type Nav = NativeStackNavigationProp<MessagesStackParamList, 'ExchangeDetail'>;
 
-// ── Book Panel ───────────────────────────────────────────────────────────────
+const COVER_COLORS = ['#2D5F3F', '#3B4F7A', '#6B3A5E', '#7A5C2E', '#2B4E5F'];
+const AVATAR_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  const years = Math.floor(days / 365);
+  return `${years}y ago`;
+}
+
+// ── Book Panel (matches ExchangeCard BookThumb) ──────────────────────────────
 
 function BookPanel({ book, label }: { book: ExchangeBook; label: string }) {
   const c = useColors();
-  const isDark = useIsDark();
+  const coverUri = book.cover_url || book.primary_photo;
+  const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
 
   return (
-    <View style={s.bookPanel}>
-      <Text style={[s.bookPanelLabel, { color: c.text.placeholder }]}>{label}</Text>
-      <View style={[s.bookPanelCover, { backgroundColor: isDark ? c.auth.bgDeep : '#E5E7EB' }]}>
-        <Text style={s.bookPanelCoverText} numberOfLines={2}>{book.title}</Text>
+    <View style={s.thumbWrap}>
+      <View style={[s.thumb, { backgroundColor: coverBg }]}>
+        {coverUri ? (
+          <Image source={{ uri: coverUri }} style={s.thumbImage} contentFit="cover" />
+        ) : (
+          <Text style={s.thumbFallback} numberOfLines={2}>{book.title}</Text>
+        )}
       </View>
-      <Text style={[s.bookPanelTitle, { color: c.text.primary }]} numberOfLines={2}>
+      <Text style={[s.thumbBookTitle, { color: c.text.primary }]} numberOfLines={1}>
         {book.title}
       </Text>
-      <Text style={[s.bookPanelAuthor, { color: c.text.secondary }]} numberOfLines={1}>
-        {book.author}
+      <Text style={[s.thumbLabel, { color: c.text.secondary }]} numberOfLines={1}>
+        {label}
       </Text>
     </View>
   );
@@ -71,7 +100,6 @@ function BookPanel({ book, label }: { book: ExchangeBook; label: string }) {
 function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
   const { t } = useTranslation();
   const c = useColors();
-  const isDark = useIsDark();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const accent = c.auth.golden;
 
@@ -86,7 +114,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
   const requestReturn = useRequestReturn();
   const confirmReturn = useConfirmReturn();
 
-  const confirm = (title: string, msg: string, onConfirm: () => void, destructive = false) => {
+  const doConfirm = (title: string, msg: string, onConfirm: () => void, destructive = false) => {
     Alert.alert(title, msg, [
       { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       { text: t('common.confirm', 'Confirm'), style: destructive ? 'destructive' : 'default', onPress: onConfirm },
@@ -95,14 +123,13 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
 
   const status = exchange.status;
 
-  // ── Pending ──
   if (status === 'pending') {
     if (isOwner) {
       return (
         <View style={s.actionsWrap}>
           <Pressable
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.acceptTitle', 'Accept Request?'),
               t('exchanges.acceptMsg', 'Other pending requests for this book will be automatically declined.'),
               () => acceptMutation.mutate(exchange.id),
@@ -113,7 +140,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
           </Pressable>
           <Pressable
             style={({ pressed }) => [s.outlineBtn, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.declineTitle', 'Decline?'),
               t('exchanges.declineMsg', 'The requester will be notified.'),
               () => declineMutation.mutate({ exchangeId: exchange.id }),
@@ -131,7 +158,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
         <View style={s.actionsWrap}>
           <Pressable
             style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.cancelTitle', 'Cancel Request?'),
               t('exchanges.cancelMsg', 'Your swap request will be cancelled.'),
               () => cancelMutation.mutate(exchange.id),
@@ -149,7 +176,6 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
     }
   }
 
-  // ── Accepted / Conditions Pending ──
   if (status === 'accepted' || status === 'conditions_pending') {
     const accepted = exchange.conditions_accepted_by_me;
     return (
@@ -157,7 +183,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
         {!accepted ? (
           <Pressable
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.conditionsTitle', 'Accept Conditions'),
               t('exchanges.conditionsMsg', 'By accepting, you agree to the exchange conditions.'),
               () => acceptConditions.mutate(exchange.id),
@@ -181,7 +207,6 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
     );
   }
 
-  // ── Active (confirm swap) ──
   if (status === 'active') {
     const myConfirmed = isRequester
       ? exchange.requester_confirmed_at
@@ -195,7 +220,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
         {!myConfirmed ? (
           <Pressable
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.confirmSwapTitle', 'Confirm Swap'),
               t('exchanges.confirmSwapMsg', 'Confirm that you have physically swapped the books.'),
               () => confirmSwap.mutate(exchange.id),
@@ -221,14 +246,13 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
     );
   }
 
-  // ── Swap Confirmed (request return) ──
   if (status === 'swap_confirmed') {
     return (
       <View style={s.actionsWrap}>
         <InfoRow icon={CheckCircle} text={t('exchanges.swapComplete', 'Swap confirmed by both parties!')} color={accent} />
         <Pressable
           style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
-          onPress={() => confirm(
+          onPress={() => doConfirm(
             t('exchanges.returnTitle', 'Request Return?'),
             t('exchanges.returnMsg', 'You can request to return the books.'),
             () => requestReturn.mutate(exchange.id),
@@ -243,7 +267,6 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
     );
   }
 
-  // ── Return Requested ──
   if (status === 'return_requested') {
     const myReturnConfirmed = isRequester
       ? exchange.return_confirmed_requester
@@ -254,7 +277,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
         {!myReturnConfirmed ? (
           <Pressable
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => confirm(
+            onPress={() => doConfirm(
               t('exchanges.confirmReturnTitle', 'Confirm Return'),
               t('exchanges.confirmReturnMsg', 'Confirm that the books have been returned.'),
               () => confirmReturn.mutate(exchange.id),
@@ -270,7 +293,6 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }) {
     );
   }
 
-  // ── Terminal states ──
   if (status === 'declined') {
     return <InfoRow icon={XCircle} text={t('exchanges.wasDeclined', 'This request was declined.')} color="#EF4444" />;
   }
@@ -322,13 +344,16 @@ export function ExchangeDetailScreen() {
 
   if (isLoading || !exchange) {
     return (
-      <View style={[s.centered, { backgroundColor: bg }]}>
-        <ActivityIndicator color={accent} />
+      <View style={[s.root, { backgroundColor: bg }]}>
+        <SkeletonBookDetail />
       </View>
     );
   }
 
   const isChatEligible = CHAT_ELIGIBLE_STATUSES.includes(exchange.status);
+
+  const reqColor = AVATAR_COLORS[exchange.requester.username.charCodeAt(0) % AVATAR_COLORS.length];
+  const ownColor = AVATAR_COLORS[exchange.owner.username.charCodeAt(0) % AVATAR_COLORS.length];
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
@@ -337,43 +362,48 @@ export function ExchangeDetailScreen() {
         <View style={s.statusRow}>
           <ExchangeStatusBadge status={exchange.status} />
           <Text style={[s.date, { color: c.text.secondary }]}>
-            {new Date(exchange.created_at).toLocaleDateString()}
+            {timeAgo(exchange.created_at)}
           </Text>
         </View>
 
         {/* Books row */}
         <View style={s.booksRow}>
           <BookPanel book={exchange.requested_book} label={t('exchanges.requested', 'Requested')} />
-          <View style={s.swapIcon}>
-            <ArrowLeftRight size={18} color={accent} />
+          <View style={s.arrowWrap}>
+            <View style={[s.arrowCircle, { backgroundColor: bg, borderColor: cardBorder }]}>
+              <ArrowLeftRight size={14} color={accent} />
+            </View>
           </View>
           <BookPanel book={exchange.offered_book} label={t('exchanges.offered', 'Offered')} />
         </View>
 
         {/* Participants */}
         <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <Text style={[s.cardLabel, { color: c.text.placeholder }]}>
+            {t('exchanges.participants', 'Participants')}
+          </Text>
           <View style={s.participantRow}>
-            <View style={[s.pAvatar, { backgroundColor: '#6366F120' }]}>
-              <Text style={[s.pAvatarText, { color: '#6366F1' }]}>
+            <View style={[s.pAvatar, { backgroundColor: reqColor + '20' }]}>
+              <Text style={[s.pAvatarText, { color: reqColor }]}>
                 {exchange.requester.username.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={s.pInfo}>
-              <Text style={[s.pName, { color: c.text.primary }]}>{exchange.requester.username}</Text>
+              <Text style={[s.pName, { color: c.text.primary }]}>@{exchange.requester.username}</Text>
               <Text style={[s.pRole, { color: c.text.secondary }]}>
                 {t('exchanges.requester', 'Requester')} · {exchange.requester.swap_count} swaps
               </Text>
             </View>
           </View>
-          <View style={[s.divider, { backgroundColor: cardBorder }]} />
+          <View style={[s.divider, { backgroundColor: cardBorder + '50' }]} />
           <View style={s.participantRow}>
-            <View style={[s.pAvatar, { backgroundColor: '#8B5CF620' }]}>
-              <Text style={[s.pAvatarText, { color: '#8B5CF6' }]}>
+            <View style={[s.pAvatar, { backgroundColor: ownColor + '20' }]}>
+              <Text style={[s.pAvatarText, { color: ownColor }]}>
                 {exchange.owner.username.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={s.pInfo}>
-              <Text style={[s.pName, { color: c.text.primary }]}>{exchange.owner.username}</Text>
+              <Text style={[s.pName, { color: c.text.primary }]}>@{exchange.owner.username}</Text>
               <Text style={[s.pRole, { color: c.text.secondary }]}>
                 {t('exchanges.owner', 'Owner')} · {exchange.owner.swap_count} swaps
               </Text>
@@ -388,7 +418,7 @@ export function ExchangeDetailScreen() {
               {t('exchanges.personalNote', 'Personal note')}
             </Text>
             <Text style={[s.messageBody, { color: c.text.primary }]}>
-              "{exchange.message}"
+              &ldquo;{exchange.message}&rdquo;
             </Text>
           </View>
         )}
@@ -413,10 +443,10 @@ export function ExchangeDetailScreen() {
         {isChatEligible && (
           <Pressable
             onPress={goToChat}
-            style={({ pressed }) => [s.chatBtn, { backgroundColor: accent + '15', borderColor: accent + '30', opacity: pressed ? 0.9 : 1 }]}
+            style={({ pressed }) => [s.chatBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
           >
-            <MessageCircle size={18} color={accent} />
-            <Text style={[s.chatBtnText, { color: accent }]}>
+            <MessageCircle size={18} color="#fff" />
+            <Text style={s.chatBtnText}>
               {t('exchanges.openChat', 'Open Chat')}
             </Text>
           </Pressable>
@@ -431,7 +461,6 @@ export function ExchangeDetailScreen() {
 const s = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: 16 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   statusRow: {
     flexDirection: 'row',
@@ -441,35 +470,67 @@ const s = StyleSheet.create({
     paddingTop: spacing.md,
     marginBottom: spacing.md,
   },
-  date: { fontSize: 12 },
+  date: { fontSize: 11, fontWeight: '500' },
 
   booksRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  swapIcon: { paddingTop: 48, paddingHorizontal: spacing.sm },
-
-  bookPanel: { flex: 1 },
-  bookPanelLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
-  bookPanelCover: {
-    height: 100,
-    borderRadius: radius.md,
+  arrowWrap: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingHorizontal: spacing.xs,
+  },
+  arrowCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
   },
-  bookPanelCoverText: {
-    color: 'rgba(255,255,255,0.85)',
+
+  thumbWrap: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  thumb: {
+    width: '80%',
+    aspectRatio: 0.7,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm + 2,
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbFallback: {
     fontSize: 10,
     fontWeight: '600',
     textAlign: 'center',
-    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.85)',
+    paddingHorizontal: spacing.xs,
   },
-  bookPanelTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  bookPanelAuthor: { fontSize: 12 },
+  thumbBookTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  thumbLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
 
   card: {
     marginHorizontal: spacing.lg,
@@ -481,17 +542,16 @@ const s = StyleSheet.create({
   },
   cardLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm },
 
-  participantRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6 },
-  pAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  pAvatarText: { fontSize: 15, fontWeight: '700' },
+  participantRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8 },
+  pAvatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  pAvatarText: { fontSize: 16, fontWeight: '700' },
   pInfo: { flex: 1 },
   pName: { fontSize: 14, fontWeight: '700' },
-  pRole: { fontSize: 11 },
-  divider: { height: 1, marginVertical: 4 },
+  pRole: { fontSize: 11, marginTop: 1 },
+  divider: { height: 1, marginVertical: 2 },
 
-  messageBody: { fontSize: 14, fontStyle: 'italic', lineHeight: 20 },
+  messageBody: { fontSize: 14, fontStyle: 'italic', lineHeight: 22 },
 
-  // Actions
   actionsWrap: { gap: spacing.sm },
   primaryBtn: {
     flexDirection: 'row',
@@ -524,9 +584,8 @@ const s = StyleSheet.create({
     marginBottom: spacing.md,
     paddingVertical: 14,
     borderRadius: radius.xl,
-    borderWidth: 1,
   },
-  chatBtnText: { fontSize: 15, fontWeight: '700' },
+  chatBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 
   bottomSpacer: { height: 120 },
 });

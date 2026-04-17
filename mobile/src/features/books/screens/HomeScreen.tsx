@@ -4,12 +4,12 @@ import * as Location from "expo-location";
 import { BookMarked, MapPin, ScanBarcode } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import type { HomeStackParamList } from "@/navigation/types";
-import { useNearbyCount } from "../hooks/useBooks";
-import { MOCK_BOOKS } from "../data/mockBooks";
+import { useNearbyCount, useRecentBooks } from "../hooks/useBooks";
 
 import { HomeCommunitySection } from "../components/home/HomeCommunitySection";
 import { HomeNearbyBadge } from "../components/home/HomeNearbyBadge";
@@ -24,7 +24,9 @@ export function HomeScreen() {
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
@@ -46,6 +48,7 @@ export function HomeScreen() {
   }, []);
 
   const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng);
+  const { data: recentBooks, isLoading: booksLoading } = useRecentBooks(coords?.lat, coords?.lng);
 
   const tabNav = navigation.getParent();
   const goToBrowse = useCallback(
@@ -65,6 +68,15 @@ export function HomeScreen() {
     (bookId: string) => navigation.navigate('BookDetail', { bookId }),
     [navigation],
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["nearbyCount"] }),
+      queryClient.invalidateQueries({ queryKey: ["recentBooks"] }),
+    ]);
+    setRefreshing(false);
+  }, [queryClient]);
 
   const handleSearch = useCallback(() => {
     if (!searchQuery.trim()) return;
@@ -92,11 +104,18 @@ export function HomeScreen() {
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={c.auth.golden}
+          />
+        }
       >
         <HomeNearbyBadge
           userCount={nearbyData?.user_count}
+          bookCount={nearbyData?.count}
           city={city}
-          label={t("home.activeSwappers", "Active Swappers")}
         />
 
         <HomeSearchBar
@@ -112,7 +131,8 @@ export function HomeScreen() {
         <HomeQuickActions actions={quickActions} />
 
         <HomeRecentlyAdded
-          books={MOCK_BOOKS}
+          books={recentBooks ?? []}
+          isLoading={booksLoading}
           title={t("home.recentlyAdded", "Recently Added")}
           subtitle={t(
             "home.freshArrivals",
@@ -121,6 +141,7 @@ export function HomeScreen() {
           viewAllLabel={t("home.viewAll", "View all")}
           onViewAll={goToBrowse}
           onBookPress={goToBookDetail}
+          onAddBook={goToScan}
         />
 
         <HomeCommunitySection

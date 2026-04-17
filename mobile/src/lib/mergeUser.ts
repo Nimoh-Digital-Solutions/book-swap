@@ -1,9 +1,15 @@
 import type { User } from '@/types';
 
 /** Fills BookSwap `User` when the API returns a subset (e.g. login). */
-export function mergePartialUser(
-  partial: Partial<User> & Pick<User, 'id' | 'email' | 'username'>,
-): User {
+type ApiUser = Partial<User> &
+  Pick<User, 'id' | 'email' | 'username'> & {
+    member_since?: string;
+  };
+
+export function mergePartialUser(partial: ApiUser): User {
+  const joinDate =
+    partial.created_at ?? partial.member_since ?? new Date().toISOString();
+
   return {
     id: partial.id,
     email: partial.email,
@@ -24,6 +30,6 @@ export function mergePartialUser(
     profile_public: partial.profile_public ?? true,
     onboarding_completed: partial.onboarding_completed ?? false,
     email_verified: partial.email_verified ?? false,
-    created_at: partial.created_at ?? new Date().toISOString(),
+    created_at: joinDate,
   };
 }

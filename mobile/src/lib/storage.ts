@@ -48,7 +48,10 @@ const Keys = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
   BIOMETRIC_ENABLED: 'biometric_enabled',
+  ADD_BOOK_PREFERENCE: 'add_book_preference',
 } as const;
+
+export type AddBookPreference = 'scan' | 'manual';
 
 export const tokenStorage = {
   getAccess: (): string | null => kv.get(Keys.ACCESS_TOKEN),
@@ -64,6 +67,19 @@ export const tokenStorage = {
   getBiometricEnabled: (): boolean => kv.get(Keys.BIOMETRIC_ENABLED) === 'true',
   setBiometricEnabled: (value: boolean) => {
     kv.set(Keys.BIOMETRIC_ENABLED, String(value));
+  },
+};
+
+export const prefsStorage = {
+  getAddBookPref: (): AddBookPreference | null => {
+    const val = kv.get(Keys.ADD_BOOK_PREFERENCE);
+    return val === 'scan' || val === 'manual' ? val : null;
+  },
+  setAddBookPref: (value: AddBookPreference) => {
+    kv.set(Keys.ADD_BOOK_PREFERENCE, value);
+  },
+  clearAddBookPref: () => {
+    kv.remove(Keys.ADD_BOOK_PREFERENCE);
   },
 };
 

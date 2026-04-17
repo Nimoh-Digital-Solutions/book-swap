@@ -1,22 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import type { HomeStackParamList } from '@/navigation/types';
+import { useRoute, type RouteProp } from "@react-navigation/native";
+import { User } from "lucide-react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
-type Route = RouteProp<HomeStackParamList, 'UserProfile'>;
+import { EmptyState } from "@/components/EmptyState";
+import { useColors, useIsDark } from "@/hooks/useColors";
+import type { HomeStackParamList } from "@/navigation/types";
+
+type Route = RouteProp<HomeStackParamList, "UserProfile">;
 
 export function UserProfileScreen() {
   const { params } = useRoute<Route>();
+  const c = useColors();
+  const isDark = useIsDark();
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>User profile</Text>
-      <Text style={styles.meta}>userId: {params.userId}</Text>
+    <View style={[s.root, { backgroundColor: bg }]}>
+      <EmptyState
+        icon={User}
+        title="User Profile"
+        subtitle="User profiles are coming soon."
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center' },
-  title: { fontSize: 20, fontWeight: '600', marginBottom: 8 },
-  meta: { fontSize: 14, color: '#6B7280' },
+const s = StyleSheet.create({
+  root: { flex: 1, justifyContent: "center" },
 });

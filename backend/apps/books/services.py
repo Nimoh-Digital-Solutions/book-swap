@@ -59,6 +59,12 @@ class ISBNLookupService:
         isbn_10 = data.get("isbn_10", [])
         isbn = (isbn_13[0] if isbn_13 else isbn_10[0]) if (isbn_13 or isbn_10) else ""
 
+        languages = data.get("languages", [])
+        language = ""
+        if languages and isinstance(languages[0], dict):
+            lang_key = languages[0].get("key", "")
+            language = lang_key.rsplit("/", 1)[-1] if "/" in lang_key else lang_key
+
         return {
             "isbn": isbn,
             "title": title,
@@ -67,6 +73,7 @@ class ISBNLookupService:
             "cover_url": cover_url,
             "page_count": data.get("number_of_pages"),
             "publish_year": _extract_year(data.get("publish_date", "")),
+            "language": language,
         }
 
     @staticmethod
@@ -93,6 +100,7 @@ class ISBNLookupService:
             "cover_url": cover_url,
             "page_count": info.get("pageCount"),
             "publish_year": _extract_year(info.get("publishedDate", "")),
+            "language": info.get("language", ""),
         }
 
     @classmethod

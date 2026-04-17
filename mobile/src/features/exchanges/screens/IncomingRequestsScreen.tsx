@@ -1,10 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { CheckCircle, Eye, MessageSquare, XCircle } from 'lucide-react-native';
+import { CheckCircle, Eye, Inbox, MessageSquare, XCircle } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
@@ -15,6 +14,8 @@ import {
 
 import { radius, shadows, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { SkeletonCard } from '@/components/Skeleton';
+import { EmptyState } from '@/components/EmptyState';
 import type { MessagesStackParamList } from '@/navigation/types';
 import type { ExchangeListItem } from '@/types';
 import { ExchangeStatusBadge } from '../components/ExchangeStatusBadge';
@@ -173,16 +174,16 @@ export function IncomingRequestsScreen() {
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
       {isLoading ? (
-        <ActivityIndicator style={s.loader} color={accent} />
-      ) : (requests ?? []).length === 0 ? (
-        <View style={s.empty}>
-          <Text style={[s.emptyTitle, { color: c.text.primary }]}>
-            {t('exchanges.noIncoming', 'No incoming requests')}
-          </Text>
-          <Text style={[s.emptySub, { color: c.text.secondary }]}>
-            {t('exchanges.noIncomingSub', 'When someone requests one of your books, it will appear here.')}
-          </Text>
+        <View style={s.list}>
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : (requests ?? []).length === 0 ? (
+        <EmptyState
+          icon={Inbox}
+          title={t('exchanges.noIncoming', 'No incoming requests')}
+          subtitle={t('exchanges.noIncomingSub', 'When someone requests one of your books, it will appear here.')}
+        />
       ) : (
         <FlatList
           data={requests}

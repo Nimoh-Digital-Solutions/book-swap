@@ -31,6 +31,7 @@ export interface Book {
   condition: BookCondition;
   genre: string;
   language: string;
+  status: string;
   photos: BookPhoto[];
   is_available: boolean;
   created_at: string;

@@ -6,14 +6,17 @@ import {
   ScrollView,
   Switch,
   StyleSheet,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Constants from 'expo-constants';
+import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { useMutation } from '@tanstack/react-query';
 import {
   Bell,
-  Lock,
   Sun,
   Globe,
   Info,
@@ -21,6 +24,9 @@ import {
   Trash2,
   ChevronRight,
   Fingerprint,
+  MapPin,
+  Navigation,
+  Radar,
 } from 'lucide-react-native';
 
 import { useAuthStore } from '@/stores/authStore';
@@ -31,6 +37,9 @@ import { useThemeStore } from '@/stores/themeStore';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
+import { http } from '@/services/http';
+import { API } from '@/configs/apiEndpoints';
+import type { User } from '@/types';
 
 interface SettingsRowProps {
   icon: React.ReactNode;
@@ -46,7 +55,7 @@ function SettingsRow({ icon, title, subtitle, onPress }: SettingsRowProps) {
     <Pressable
       style={({ pressed }) => [
         s.row,
-        pressed && { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] },
+        pressed && { backgroundColor: isDark ? c.auth.cardBorder + '20' : c.neutral[50] },
       ]}
       onPress={onPress}
       accessibilityRole="button"
@@ -54,7 +63,7 @@ function SettingsRow({ icon, title, subtitle, onPress }: SettingsRowProps) {
       accessibilityHint={subtitle}
     >
       <View style={s.rowLeft}>
-        <View style={[s.iconCircle, { backgroundColor: isDark ? c.neutral[200] + '40' : c.neutral[50] }]}>
+        <View style={[s.iconCircle, { backgroundColor: isDark ? c.auth.golden + '14' : c.neutral[50] }]}>
           {icon}
         </View>
         <View style={s.rowTextWrap}>
@@ -62,7 +71,7 @@ function SettingsRow({ icon, title, subtitle, onPress }: SettingsRowProps) {
           <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>{subtitle}</Text>
         </View>
       </View>
-      <ChevronRight size={20} color={c.neutral[400]} />
+      <ChevronRight size={20} color={c.text.placeholder} />
     </Pressable>
   );
 }
@@ -87,7 +96,66 @@ export function SettingsScreen() {
     setBiometricEnabled(val);
   }, [authenticate]);
 
+  const setUser = useAuthStore((s) => s.setUser);
   const appearanceMode = useThemeStore((s) => s.mode);
+
+  const RADIUS_OPTIONS = [
+    { value: 1000, label: '1 km' },
+    { value: 2000, label: '2 km' },
+    { value: 5000, label: '5 km' },
+    { value: 10000, label: '10 km' },
+    { value: 25000, label: '25 km' },
+    { value: 50000, label: '50 km' },
+  ];
+
+  const currentRadius = user?.preferred_radius ?? 5000;
+
+  const updateRadius = useMutation({
+    mutationFn: async (newRadius: number) => {
+      const { data } = await http.patch<User>(API.users.me, {
+        preferred_radius: newRadius,
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      setUser(data);
+    },
+    onError: () => {
+      Alert.alert(t('common.error', 'Error'), t('settings.radiusError', 'Failed to update search radius.'));
+    },
+  });
+
+  const [locationUpdating, setLocationUpdating] = useState(false);
+
+  const updateLocation = useCallback(async () => {
+    setLocationUpdating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          t('settings.locationDenied', 'Location access denied'),
+          t('settings.locationDeniedMsg', 'Please enable location access in your device settings.'),
+        );
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const { data } = await http.post<User>(API.users.meLocation, {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      });
+      await setUser(data);
+      Alert.alert(
+        t('settings.locationUpdated', 'Location updated'),
+        data.neighborhood
+          ? t('settings.locationUpdatedMsg', 'Set to {{neighborhood}}', { neighborhood: data.neighborhood })
+          : t('settings.locationUpdatedGeneric', 'Your location has been updated.'),
+      );
+    } catch {
+      Alert.alert(t('common.error', 'Error'), t('settings.locationError', 'Failed to update location.'));
+    } finally {
+      setLocationUpdating(false);
+    }
+  }, [setUser, t]);
 
   const fullName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username
@@ -99,12 +167,17 @@ export function SettingsScreen() {
       ? 'Nederlands'
       : 'English';
 
-  const cardBorder = isDark ? { borderWidth: 1, borderColor: c.neutral[200] + '60' } : {};
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+  const cardBg = isDark ? c.auth.card : c.surface.white;
+  const cardBorderColor = isDark ? c.auth.cardBorder : c.border.default;
+  const cardBorder = { borderWidth: 1, borderColor: cardBorderColor };
+  const iconCircleBg = isDark ? c.auth.golden + '14' : c.neutral[50];
+  const dividerColor = isDark ? c.auth.cardBorder + '50' : c.neutral[100];
 
   if (!user) return null;
 
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: c.neutral[50] }]} edges={['bottom']}>
+    <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         {/* ── Hero ── */}
         <View style={s.hero}>
@@ -121,7 +194,7 @@ export function SettingsScreen() {
         <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
           {t('settings.account', 'Account')}
         </Text>
-        <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+        <View style={[s.card, { backgroundColor: cardBg }, cardBorder]}>
           <SettingsRow
             icon={<Bell size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
             title={t('settings.notifications', 'Notifications')}
@@ -130,16 +203,111 @@ export function SettingsScreen() {
           />
         </View>
 
+        {/* ── Location & Search ── */}
+        <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
+          {t('settings.locationSearch', 'Location & Search')}
+        </Text>
+        <View style={[s.card, { backgroundColor: cardBg }, cardBorder]}>
+          {/* Current location */}
+          <View style={s.locationRow}>
+            <View style={s.rowLeft}>
+              <View style={[s.iconCircle, { backgroundColor: iconCircleBg }]}>
+                <MapPin size={20} color={isDark ? c.auth.golden : c.text.secondary} />
+              </View>
+              <View style={s.rowTextWrap}>
+                <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                  {t('settings.currentLocation', 'Current location')}
+                </Text>
+                <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                  {user.neighborhood || t('settings.noLocation', 'Not set')}
+                </Text>
+              </View>
+            </View>
+            <Pressable
+              onPress={updateLocation}
+              disabled={locationUpdating}
+              style={({ pressed }) => [
+                s.locationBtn,
+                {
+                  backgroundColor: isDark ? c.auth.card : c.neutral[50],
+                  borderColor: isDark ? c.auth.cardBorder : c.border.default,
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              {locationUpdating ? (
+                <ActivityIndicator size="small" color={c.auth.golden} />
+              ) : (
+                <Navigation size={14} color={c.auth.golden} />
+              )}
+              <Text style={[s.locationBtnText, { color: c.text.primary }]}>
+                {t('settings.update', 'Update')}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
+
+          {/* Search radius */}
+          <View style={s.radiusSection}>
+            <View style={s.rowLeft}>
+              <View style={[s.iconCircle, { backgroundColor: iconCircleBg }]}>
+                <Radar size={20} color={isDark ? c.auth.golden : c.text.secondary} />
+              </View>
+              <View style={s.rowTextWrap}>
+                <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                  {t('settings.searchRadius', 'Search radius')}
+                </Text>
+                <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                  {t('settings.searchRadiusSub', 'How far to look for books')}
+                </Text>
+              </View>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={s.radiusScroll}
+              contentContainerStyle={s.radiusChips}
+            >
+              {RADIUS_OPTIONS.map((opt) => {
+                const selected = currentRadius === opt.value;
+                return (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => updateRadius.mutate(opt.value)}
+                    disabled={updateRadius.isPending}
+                    style={[
+                      s.radiusChip,
+                      {
+                        backgroundColor: selected ? c.auth.golden : (isDark ? c.auth.card : c.neutral[50]),
+                        borderColor: selected ? c.auth.golden : (isDark ? c.auth.cardBorder : c.border.default),
+                      },
+                    ]}
+                  >
+                    <Text style={[
+                      s.radiusChipText,
+                      { color: selected ? '#152018' : c.text.secondary },
+                    ]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+
         {/* ── Security ── */}
         {isBiometricAvailable && (
           <>
             <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
               {t('settings.security', 'Security')}
             </Text>
-            <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+            <View style={[s.card, { backgroundColor: cardBg }, cardBorder]}>
               <View style={s.switchRow}>
                 <View style={s.rowLeft}>
-                  <View style={[s.iconCircle, { backgroundColor: isDark ? c.neutral[200] + '40' : c.neutral[50] }]}>
+                  <View style={[s.iconCircle, { backgroundColor: iconCircleBg }]}>
                     <Fingerprint size={20} color={isDark ? c.auth.golden : c.text.secondary} />
                   </View>
                   <View style={s.rowTextWrap}>
@@ -154,8 +322,8 @@ export function SettingsScreen() {
                 <Switch
                   value={biometricEnabled}
                   onValueChange={toggleBiometric}
-                  trackColor={{ true: c.auth.bg, false: c.neutral[200] }}
-                  thumbColor={c.text.inverse}
+                  trackColor={{ true: c.auth.golden, false: isDark ? c.auth.cardBorder : c.neutral[200] }}
+                  thumbColor="#fff"
                 />
               </View>
             </View>
@@ -166,21 +334,21 @@ export function SettingsScreen() {
         <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
           {t('settings.general', 'General')}
         </Text>
-        <View style={[s.card, { backgroundColor: c.surface.white }, cardBorder]}>
+        <View style={[s.card, { backgroundColor: cardBg }, cardBorder]}>
           <SettingsRow
             icon={<Sun size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
             title={t('settings.appearance', 'Appearance')}
             subtitle={t(`settings.appearance.${appearanceMode}`, appearanceMode.charAt(0).toUpperCase() + appearanceMode.slice(1))}
             onPress={() => {/* TODO: Appearance screen */}}
           />
-          <View style={[s.divider, { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] }]} />
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
           <SettingsRow
             icon={<Globe size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
             title={t('settings.language', 'Language')}
             subtitle={currentLang}
             onPress={() => {/* TODO: Language screen */}}
           />
-          <View style={[s.divider, { backgroundColor: isDark ? c.neutral[200] + '30' : c.neutral[50] }]} />
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
           <SettingsRow
             icon={<Info size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
             title={t('settings.about', 'About')}
@@ -193,8 +361,11 @@ export function SettingsScreen() {
         <Pressable
           style={({ pressed }) => [
             s.logoutBtn,
-            { backgroundColor: isDark ? c.neutral[200] + '20' : c.neutral[200] + '40' },
-            isDark && { borderWidth: 1, borderColor: c.status.error + '40' },
+            {
+              backgroundColor: isDark ? c.auth.card : c.neutral[100],
+              borderWidth: 1,
+              borderColor: isDark ? c.status.error + '40' : c.neutral[200],
+            },
             pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
           ]}
           onPress={() => logout.mutate()}
@@ -279,6 +450,42 @@ const s = StyleSheet.create({
   rowTextWrap: { flex: 1 },
   rowTitle: { fontSize: 15, fontWeight: '600' },
   rowSubtitle: { fontSize: 12, marginTop: 2 },
+
+  // Location & radius
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.md + 2,
+  },
+  locationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  locationBtnText: { fontSize: 12, fontWeight: '600' },
+  radiusSection: {
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.md + 2,
+  },
+  radiusScroll: { marginTop: spacing.sm + 2 },
+  radiusChips: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: 2,
+  },
+  radiusChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  radiusChipText: { fontSize: 13, fontWeight: '600' },
 
   // Logout
   logoutBtn: {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Camera, PenLine, RotateCcw, AlertCircle } from 'lucide-react-native';
@@ -19,6 +19,12 @@ export function ScannerScreen() {
   const navigation = useNavigation<Nav>();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setScanned(false);
+    }, []),
+  );
 
   useEffect(() => {
     if (!permission?.granted) {

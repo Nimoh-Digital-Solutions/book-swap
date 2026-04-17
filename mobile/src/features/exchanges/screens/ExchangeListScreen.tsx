@@ -1,10 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Bell, Inbox } from 'lucide-react-native';
+import { ArrowLeftRight, Bell, BookOpen, Inbox } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -14,6 +13,8 @@ import {
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { SkeletonCard } from '@/components/Skeleton';
+import { EmptyState } from '@/components/EmptyState';
 import type { MessagesStackParamList } from '@/navigation/types';
 import type { ExchangeListItem } from '@/types';
 import {
@@ -141,19 +142,21 @@ export function ExchangeListScreen() {
 
       {/* Content */}
       {isLoading ? (
-        <ActivityIndicator style={s.loader} color={accent} />
-      ) : filtered.length === 0 ? (
-        <View style={s.empty}>
-          <Inbox size={40} color={c.text.placeholder} />
-          <Text style={[s.emptyTitle, { color: c.text.primary }]}>
-            {t('exchanges.noExchanges', 'No exchanges yet')}
-          </Text>
-          <Text style={[s.emptySub, { color: c.text.secondary }]}>
-            {activeTab !== 'history'
-              ? t('exchanges.browseToStart', 'Browse books nearby to start swapping!')
-              : t('exchanges.noHistory', 'Your completed exchanges will appear here.')}
-          </Text>
+        <View style={s.list}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </View>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={activeTab === 'history' ? BookOpen : ArrowLeftRight}
+          title={t('exchanges.noExchanges', 'No exchanges yet')}
+          subtitle={
+            activeTab !== 'history'
+              ? t('exchanges.browseToStart', 'Browse books nearby to start swapping!')
+              : t('exchanges.noHistory', 'Your completed exchanges will appear here.')
+          }
+        />
       ) : (
         <FlatList
           data={filtered}

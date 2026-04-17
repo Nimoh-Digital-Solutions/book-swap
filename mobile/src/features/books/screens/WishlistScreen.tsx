@@ -1,15 +1,26 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Heart } from "lucide-react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+
+import { EmptyState } from "@/components/EmptyState";
+import { useColors, useIsDark } from "@/hooks/useColors";
 
 export function WishlistScreen() {
+  const c = useColors();
+  const isDark = useIsDark();
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Wishlist</Text>
+    <View style={[s.root, { backgroundColor: bg }]}>
+      <EmptyState
+        icon={Heart}
+        title="Wishlist"
+        subtitle="Your wishlist is coming soon."
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center' },
-  title: { fontSize: 20, fontWeight: '600' },
+const s = StyleSheet.create({
+  root: { flex: 1, justifyContent: "center" },
 });

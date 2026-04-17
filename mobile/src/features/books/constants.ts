@@ -1,0 +1,32 @@
+export const GENRE_OPTIONS = [
+  "Fiction",
+  "Non-Fiction",
+  "Sci-Fi",
+  "Fantasy",
+  "Mystery/Thriller",
+  "Romance",
+  "Biography",
+  "History",
+  "Science",
+  "Philosophy",
+  "Self-Help",
+  "Business",
+  "Poetry",
+  "Graphic Novel",
+  "Children's",
+  "Young Adult",
+  "Horror",
+  "Travel",
+  "Cooking",
+  "Art",
+  "Other",
+] as const;
+
+export const DISTANCE_OPTIONS = [
+  { label: "1 km", value: 1000 },
+  { label: "3 km", value: 3000 },
+  { label: "5 km", value: 5000 },
+  { label: "10 km", value: 10000 },
+  { label: "25 km", value: 25000 },
+  { label: "50 km", value: 50000 },
+] as const;

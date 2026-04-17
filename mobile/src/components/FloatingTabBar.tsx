@@ -14,6 +14,7 @@ const HIDDEN_CHILD_ROUTES = new Set([
   'UserProfile',
   'AddBook',
   'ScanResult',
+  'RequestSwap',
 ]);
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -23,6 +24,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   const activeRoute = state.routes[state.index];
   if (!activeRoute) return null;
+  if (activeRoute.name === 'ProfileTab') return null;
   const focusedChild = getFocusedRouteNameFromRoute(activeRoute);
   if (focusedChild && HIDDEN_CHILD_ROUTES.has(focusedChild)) return null;
 

@@ -3,7 +3,7 @@
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db.models import Case, Count, F, IntegerField, Q, When
+from django.db.models import Case, Count, F, IntegerField, When
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import mixins, status, viewsets
 from rest_framework import serializers as drf_serializers
@@ -287,7 +287,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return filters.get("radius", default_radius)
 
     def _base_queryset(self, user_location, radius):
-        """Return books within *radius* of *user_location* PLUS any seed books."""
+        """Return books within *radius* of *user_location*."""
         user = self.request.user
         blocked_ids = _get_blocked_user_ids(user) if user.is_authenticated else set()
         qs = (
@@ -296,22 +296,9 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             .filter(
                 status=BookStatus.AVAILABLE,
                 owner__location__isnull=False,
+                owner__location__distance_lte=(user_location, D(m=radius)),
             )
-            .filter(Q(is_seed=True) | Q(owner__location__distance_lte=(user_location, D(m=radius))))
             .annotate(distance=Distance("owner__location", user_location))
-        )
-        if user.is_authenticated:
-            qs = qs.exclude(owner=user).exclude(owner_id__in=blocked_ids)
-        return qs
-
-    def _seed_only_queryset(self):
-        """Seed books only — used when the requesting user has no location."""
-        user = self.request.user
-        blocked_ids = _get_blocked_user_ids(user) if user.is_authenticated else set()
-        qs = (
-            Book.objects.select_related("owner")
-            .prefetch_related("photos")
-            .filter(status=BookStatus.AVAILABLE, is_seed=True, owner__location__isnull=False)
         )
         if user.is_authenticated:
             qs = qs.exclude(owner=user).exclude(owner_id__in=blocked_ids)
@@ -362,16 +349,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         filters = self._get_validated_filters()
 
         if user_location is None:
-            # No location available — fall back to seed-only results (no distance annotation)
-            qs = self._seed_only_queryset()
-            search_term = filters.get("search", "").strip()
-            qs, has_text_rank = self._apply_search(qs, search_term)
-            qs = self._apply_filters(qs, filters)
-            if has_text_rank:
-                qs = qs.order_by("-text_rank")
-            else:
-                qs = qs.order_by("-created_at")
-            return qs
+            return Book.objects.none()
 
         radius = self._get_radius(filters)
         qs = self._base_queryset(user_location, radius)
@@ -391,12 +369,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return qs
 
     def list(self, request, *args, **kwargs):
-        # Seed books are always available; only block the request if there is
-        # no location AND no seed books so the caller gets a clear error.
-        if (
-            self._get_user_location() is None
-            and not Book.objects.filter(is_seed=True, status=BookStatus.AVAILABLE).exists()
-        ):
+        if self._get_user_location() is None:
             return Response(
                 {"detail": "Provide 'lat' and 'lng' query params or set your profile location first."},
                 status=status.HTTP_400_BAD_REQUEST,

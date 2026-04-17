@@ -18,6 +18,7 @@ export type HomeStackParamList = {
   Home: undefined;
   BookDetail: { bookId: string };
   UserProfile: { userId: string };
+  RequestSwap: { bookId: string };
 };
 
 export type BrowseStackParamList = {
@@ -29,7 +30,16 @@ export type BrowseStackParamList = {
 export type ScanStackParamList = {
   Scanner: undefined;
   ScanResult: { isbn: string };
-  AddBook: { isbn?: string; title?: string; author?: string };
+  AddBook: {
+    isbn?: string;
+    title?: string;
+    author?: string;
+    cover_url?: string;
+    description?: string;
+    language?: string;
+    page_count?: number | null;
+    publish_year?: number | null;
+  };
 };
 
 export type MessagesStackParamList = {
@@ -43,6 +53,7 @@ export type ProfileStackParamList = {
   MyProfile: undefined;
   EditProfile: undefined;
   MyBooks: undefined;
+  BookDetail: { bookId: string };
   AddBook: undefined;
   EditBook: { bookId: string };
   Wishlist: undefined;
