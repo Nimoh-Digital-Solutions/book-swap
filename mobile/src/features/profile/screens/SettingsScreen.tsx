@@ -27,6 +27,7 @@ import {
   MapPin,
   Navigation,
   Radar,
+  ShieldOff,
 } from 'lucide-react-native';
 
 import { useAuthStore } from '@/stores/authStore';
@@ -34,6 +35,7 @@ import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useBiometric } from '@/hooks/useBiometric';
 import { tokenStorage } from '@/lib/storage';
 import { useThemeStore } from '@/stores/themeStore';
+import { DeleteAccountSheet } from '../components/DeleteAccountSheet';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
@@ -86,6 +88,7 @@ export function SettingsScreen() {
   const { isBiometricAvailable, authenticate } = useBiometric();
 
   const [biometricEnabled, setBiometricEnabled] = useState(tokenStorage.getBiometricEnabled());
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
 
   const toggleBiometric = useCallback(async (val: boolean) => {
     if (val) {
@@ -200,6 +203,13 @@ export function SettingsScreen() {
             title={t('settings.notifications', 'Notifications')}
             subtitle={t('settings.notificationsSubtitle', 'Swap alerts and messages')}
             onPress={() => navigation.navigate('NotificationPreferences')}
+          />
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
+          <SettingsRow
+            icon={<ShieldOff size={20} color={isDark ? c.auth.golden : c.text.secondary} />}
+            title={t('settings.blockedUsers', 'Blocked Users')}
+            subtitle={t('settings.blockedUsersSubtitle', 'Manage blocked accounts')}
+            onPress={() => navigation.navigate('BlockedUsers')}
           />
         </View>
 
@@ -379,7 +389,11 @@ export function SettingsScreen() {
         </Pressable>
 
         {/* ── Delete Account ── */}
-        <Pressable style={s.deleteLink} accessibilityRole="button">
+        <Pressable
+          style={({ pressed }) => [s.deleteLink, pressed && { opacity: 0.6 }]}
+          onPress={() => setDeleteSheetVisible(true)}
+          accessibilityRole="button"
+        >
           <Trash2 size={13} color={c.text.subtle} />
           <Text style={[s.deleteLinkText, { color: c.text.subtle }]}>
             {t('settings.deleteAccount', 'Delete account')}
@@ -389,6 +403,11 @@ export function SettingsScreen() {
         {/* ── Footer ── */}
         <Text style={[s.footer, { color: c.neutral[400] }]}>BookSwap</Text>
       </ScrollView>
+
+      <DeleteAccountSheet
+        visible={deleteSheetVisible}
+        onClose={() => setDeleteSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 }

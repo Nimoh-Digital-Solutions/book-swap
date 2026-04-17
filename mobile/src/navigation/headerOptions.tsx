@@ -2,11 +2,12 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Bell, ChevronLeft, Home } from "lucide-react-native";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
+import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
 
 function getUserDisplayName(
   user: { first_name?: string; last_name?: string; username?: string } | null,
@@ -49,15 +50,27 @@ export function HeaderAvatar() {
 }
 
 export function NotificationBell() {
+  const navigation = useNavigation<any>();
   const c = useColors();
   const isDark = useIsDark();
+  const unread = useUnreadCount();
+
+  const goToNotifications = () => {
+    const tabNav = navigation.getParent();
+    if (tabNav) {
+      tabNav.navigate("HomeTab", { screen: "Notifications" });
+    } else {
+      navigation.navigate("Notifications");
+    }
+  };
 
   return (
     <Pressable
+      onPress={goToNotifications}
       style={s.headerBtn}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Notifications"
+      accessibilityLabel={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
     >
       <View
         style={[
@@ -70,6 +83,11 @@ export function NotificationBell() {
       >
         <Bell size={18} color={isDark ? c.auth.golden : c.text.primary} />
       </View>
+      {unread > 0 && (
+        <View style={s.badge}>
+          <Text style={s.badgeText}>{unread > 9 ? "9+" : unread}</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -190,5 +208,23 @@ const s = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#E53935",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "800",
+    lineHeight: 14,
   },
 });

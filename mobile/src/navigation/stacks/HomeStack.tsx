@@ -6,6 +6,7 @@ import { HomeScreen } from '@/features/books/screens/HomeScreen';
 import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { RequestSwapScreen } from '@/features/exchanges/screens/RequestSwapScreen';
+import { NotificationListScreen } from '@/features/notifications/screens/NotificationListScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 import { useAuthStore } from '@/stores/authStore';
 import { useColors } from '@/hooks/useColors';
@@ -42,6 +43,7 @@ export function HomeStack() {
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
       <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...child, headerTitle: 'Request Swap' }} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
+      <Stack.Screen name="Notifications" component={NotificationListScreen} options={{ ...child, headerTitle: 'Notifications' }} />
     </Stack.Navigator>
   );
 }

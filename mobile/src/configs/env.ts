@@ -5,4 +5,6 @@ export const env = {
   wsUrl: API_URL.replace(/\/api\/v1\/?$/, '').replace(/^http/, 'ws'),
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
   environment: (process.env.EXPO_PUBLIC_ENV || 'development') as 'development' | 'staging' | 'production',
+  googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
+  googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
 } as const;

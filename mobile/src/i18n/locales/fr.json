@@ -104,5 +104,53 @@
   },
   "biometricGate": {
     "hint": "Déverrouillez avec la biométrie ou déconnectez-vous pour continuer."
+  },
+  "accountDeletion": {
+    "title": "Supprimer le compte",
+    "warning": "Votre compte sera programmé pour une suppression définitive. Vous avez 30 jours pour annuler avant que toutes vos données ne soient définitivement effacées.",
+    "whatHappens": "Ce qui se passe :",
+    "bullet1": "• Votre compte sera désactivé immédiatement",
+    "bullet2": "• Vos livres et échanges seront masqués",
+    "bullet3": "• Après 30 jours, toutes les données sont définitivement supprimées",
+    "bullet4": "• Vous pouvez annuler dans les 30 jours",
+    "confirmPassword": "Confirmez votre mot de passe",
+    "passwordRequired": "Le mot de passe est requis.",
+    "confirmDelete": "Supprimer mon compte",
+    "errorMessage": "Une erreur est survenue. Veuillez réessayer.",
+    "pendingTitle": "Suppression du compte programmée",
+    "pendingTapCancel": "Appuyez ici pour annuler et restaurer votre compte.",
+    "cancelledTitle": "Suppression annulée",
+    "cancelledMessage": "Votre compte a été restauré. Vous pouvez vous reconnecter.",
+    "cancelError": "Impossible d'annuler la suppression. Le lien a peut-être expiré."
+  },
+  "report": {
+    "button": "Signaler",
+    "title": "Signaler un utilisateur",
+    "subtitle": "Sélectionnez un motif pour votre signalement. Notre équipe l'examinera sous 24 heures.",
+    "categories": {
+      "inappropriate": "Contenu inapproprié",
+      "fake_listing": "Annonce frauduleuse",
+      "no_show": "Absence au rendez-vous",
+      "misrepresented": "État du livre trompeur",
+      "harassment": "Harcèlement",
+      "spam": "Spam",
+      "other": "Autre"
+    },
+    "descriptionLabel": "Détails supplémentaires",
+    "descriptionPlaceholder": "Décrivez ce qui s'est passé...",
+    "descriptionRequired": "Une description est requise pour « Autre ».",
+    "submit": "Envoyer le signalement",
+    "successTitle": "Signalement envoyé",
+    "successMessage": "Merci. Notre équipe examinera votre signalement.",
+    "emailNotVerified": "Vous devez vérifier votre e-mail avant de signaler.",
+    "errorMessage": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "socialAuth": {
+    "continueGoogle": "Continuer avec Google",
+    "continueApple": "Continuer avec Apple",
+    "notConfigured": "La connexion sociale n'est pas encore configurée.",
+    "playServicesError": "Google Play Services n'est pas disponible sur cet appareil.",
+    "unknownError": "La connexion a échoué. Veuillez réessayer.",
+    "unavailable": "Cette méthode de connexion n'est pas disponible sur votre appareil."
   }
 }

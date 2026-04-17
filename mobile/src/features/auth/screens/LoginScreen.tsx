@@ -1,18 +1,27 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock } from 'lucide-react-native';
+import { AlertTriangle, Mail, Lock } from 'lucide-react-native';
 
 import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
-import { spacing, typography } from '@/constants/theme';
+import { spacing, typography, radius } from '@/constants/theme';
 import { showErrorToast } from '@/components/Toast';
-import { tokenStorage } from '@/lib/storage';
+import { tokenStorage, deletionStorage } from '@/lib/storage';
+import { useCancelDeletion } from '@/features/profile/hooks/useAccountDeletion';
 
 import { loginSchema, type LoginInput } from '../schemas/auth.schemas';
 import { useLogin } from '../hooks/useLogin';
@@ -20,6 +29,7 @@ import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
 import { AuthLogo } from '../components/AuthLogo';
 import { AuthInput } from '../components/AuthInput';
 import { AuthButton } from '../components/AuthButton';
+import { SocialAuthSection } from '../components/SocialAuthSection';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -29,7 +39,11 @@ export function LoginScreen() {
   const nav = useNavigation<Nav>();
   const passwordRef = useRef<TextInput>(null);
   const login = useLogin();
+  const cancelDeletion = useCancelDeletion();
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [pendingCancelToken, setPendingCancelToken] = useState<string | null>(
+    () => deletionStorage.getCancelToken(),
+  );
 
   const {
     control,
@@ -62,6 +76,30 @@ export function LoginScreen() {
     [login, t],
   );
 
+  const handleCancelDeletion = useCallback(() => {
+    if (!pendingCancelToken) return;
+    cancelDeletion.mutate(
+      { token: pendingCancelToken },
+      {
+        onSuccess: () => {
+          setPendingCancelToken(null);
+          Alert.alert(
+            t('accountDeletion.cancelledTitle', 'Deletion Cancelled'),
+            t('accountDeletion.cancelledMessage', 'Your account has been restored. You can log in again.'),
+          );
+        },
+        onError: () => {
+          deletionStorage.clearCancelToken();
+          setPendingCancelToken(null);
+          Alert.alert(
+            t('common.error', 'Error'),
+            t('accountDeletion.cancelError', 'Could not cancel deletion. The link may have expired.'),
+          );
+        },
+      },
+    );
+  }, [pendingCancelToken, cancelDeletion, t]);
+
   const handleBiometric = useCallback(async () => {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: t('auth.biometricPrompt'),
@@ -76,6 +114,34 @@ export function LoginScreen() {
 
   return (
     <AuthScreenWrapper centered>
+      {pendingCancelToken && (
+        <Pressable
+          onPress={handleCancelDeletion}
+          disabled={cancelDeletion.isPending}
+          style={({ pressed }) => [
+            s.deletionBanner,
+            {
+              backgroundColor: c.auth.golden + '14',
+              borderColor: c.auth.golden + '40',
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <AlertTriangle size={16} color={c.auth.golden} />
+          <View style={s.deletionBannerText}>
+            <Text style={[s.deletionBannerTitle, { color: c.auth.golden }]}>
+              {t('accountDeletion.pendingTitle', 'Account scheduled for deletion')}
+            </Text>
+            <Text style={[s.deletionBannerSub, { color: c.auth.textMuted }]}>
+              {t('accountDeletion.pendingTapCancel', 'Tap here to cancel and restore your account.')}
+            </Text>
+          </View>
+          {cancelDeletion.isPending && (
+            <ActivityIndicator size="small" color={c.auth.golden} />
+          )}
+        </Pressable>
+      )}
+
       <View style={s.hero}>
         <AuthLogo size="lg" showName />
         <Text style={[s.subtitle, { color: c.auth.textMuted }]}>
@@ -147,6 +213,8 @@ export function LoginScreen() {
             variant="outline"
           />
         )}
+
+        <SocialAuthSection />
       </View>
 
       <Pressable onPress={() => nav.navigate('Register')} style={s.footer} hitSlop={12}>
@@ -183,4 +251,17 @@ const s = StyleSheet.create({
   footerText: {
     ...typography.body,
   },
+  deletionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.lg,
+    width: '100%',
+  },
+  deletionBannerText: { flex: 1 },
+  deletionBannerTitle: { fontSize: 13, fontWeight: '700' },
+  deletionBannerSub: { fontSize: 12, marginTop: 2 },
 });

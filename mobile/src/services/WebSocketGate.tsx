@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { tokenStorage } from '@/lib/storage';
 import { wsManager } from '@/services/websocket';
+import { useNotificationWsSync } from '@/features/notifications/hooks/useNotifications';
 
 /**
  * Keeps `/ws/notifications/` connected while authenticated.
@@ -10,6 +11,8 @@ import { wsManager } from '@/services/websocket';
 export function WebSocketGate(): null {
   const prevAuthRef = useRef<boolean | null>(null);
   const prevTokenRef = useRef<string | null>(null);
+
+  useNotificationWsSync();
 
   useEffect(() => {
     const sync = () => {

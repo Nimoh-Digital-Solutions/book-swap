@@ -65,6 +65,8 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
       screens: {
         Login: 'login',
         Register: 'register',
+        EmailVerifyPending: 'auth/email/verify-pending',
+        EmailVerifyConfirm: 'auth/email/verify/:token',
       },
     },
   },

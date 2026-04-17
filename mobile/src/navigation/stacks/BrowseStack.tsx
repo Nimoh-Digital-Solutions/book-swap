@@ -4,6 +4,7 @@ import type { BrowseStackParamList } from '@/navigation/types';
 import { BrowseMapScreen } from '@/features/books/screens/BrowseMapScreen';
 import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
 import { RequestSwapScreen } from '@/features/exchanges/screens/RequestSwapScreen';
+import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
@@ -17,6 +18,7 @@ export function BrowseStack() {
       <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={{ ...shared, headerTitle: 'Browse' }} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
       <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...child, headerTitle: 'Request Swap' }} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
     </Stack.Navigator>
   );
 }

@@ -5,19 +5,21 @@ import {
   BookOpen,
   FileText,
   Globe,
+  Heart,
   MapPin,
   Repeat2,
   Sparkles,
   Tag,
 } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useBookDetail } from "../hooks/useBooks";
+import { AddWishlistSheet } from "../components/AddWishlistSheet";
 
 type Route = RouteProp<{ BookDetail: { bookId: string } }, "BookDetail">;
 
@@ -52,6 +54,7 @@ export function BookDetailScreen() {
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
   const navigation = useNavigation<any>();
+  const [wishlistOpen, setWishlistOpen] = useState(false);
 
   const { data: rawBook, isLoading } = useBookDetail(params.bookId);
 
@@ -259,8 +262,8 @@ export function BookDetailScreen() {
       </ScrollView>
 
       {/* ── Bottom CTA ── */}
-      {isAvailable && (
-        <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
+      <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
+        {isAvailable && (
           <Pressable
             onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
             style={({ pressed }) => [
@@ -273,8 +276,32 @@ export function BookDetailScreen() {
               {t("books.requestSwap", "Request Swap")}
             </Text>
           </Pressable>
-        </View>
-      )}
+        )}
+        <Pressable
+          onPress={() => setWishlistOpen(true)}
+          style={({ pressed }) => [
+            s.ctaBtnSecondary,
+            { borderColor: accent, opacity: pressed ? 0.8 : 1 },
+          ]}
+        >
+          <Heart size={18} color={accent} />
+          <Text style={[s.ctaBtnSecondaryText, { color: accent }]}>
+            {t("books.saveToWishlist", "Save to Wishlist")}
+          </Text>
+        </Pressable>
+      </View>
+
+      <AddWishlistSheet
+        open={wishlistOpen}
+        onClose={() => setWishlistOpen(false)}
+        prefill={{
+          title: book.title,
+          author: book.author,
+          isbn: book.isbn,
+          genre: genres[0],
+          cover_url: coverUri ?? undefined,
+        }}
+      />
     </View>
   );
 }
@@ -430,6 +457,7 @@ const s = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
     borderTopWidth: 1,
+    gap: spacing.sm,
   },
   ctaBtn: {
     flexDirection: "row",
@@ -440,6 +468,16 @@ const s = StyleSheet.create({
     borderRadius: radius.xl,
   },
   ctaBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  ctaBtnSecondary: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: 14,
+    borderRadius: radius.xl,
+    borderWidth: 1.5,
+  },
+  ctaBtnSecondaryText: { fontSize: 15, fontWeight: "700" },
 
   bottomSpacer: { height: 20 },
 });

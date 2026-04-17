@@ -6,6 +6,7 @@ import { ExchangeDetailScreen } from '@/features/exchanges/screens/ExchangeDetai
 import { IncomingRequestsScreen } from '@/features/exchanges/screens/IncomingRequestsScreen';
 import { CounterOfferScreen } from '@/features/exchanges/screens/CounterOfferScreen';
 import { ChatScreen } from '@/features/messaging/screens/ChatScreen';
+import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<MessagesStackParamList>();
@@ -40,6 +41,11 @@ export function MessagesStack() {
         name="Chat"
         component={ChatScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{ ...child, headerTitle: 'Profile' }}
       />
     </Stack.Navigator>
   );

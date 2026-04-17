@@ -49,6 +49,7 @@ const Keys = {
   REFRESH_TOKEN: 'refresh_token',
   BIOMETRIC_ENABLED: 'biometric_enabled',
   ADD_BOOK_PREFERENCE: 'add_book_preference',
+  DELETION_CANCEL_TOKEN: 'deletion_cancel_token',
 } as const;
 
 export type AddBookPreference = 'scan' | 'manual';
@@ -68,6 +69,12 @@ export const tokenStorage = {
   setBiometricEnabled: (value: boolean) => {
     kv.set(Keys.BIOMETRIC_ENABLED, String(value));
   },
+};
+
+export const deletionStorage = {
+  getCancelToken: (): string | null => kv.get(Keys.DELETION_CANCEL_TOKEN),
+  setCancelToken: (token: string) => kv.set(Keys.DELETION_CANCEL_TOKEN, token),
+  clearCancelToken: () => kv.remove(Keys.DELETION_CANCEL_TOKEN),
 };
 
 export const prefsStorage = {

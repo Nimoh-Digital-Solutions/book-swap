@@ -104,5 +104,53 @@
   },
   "biometricGate": {
     "hint": "Unlock with biometrics or log out to continue."
+  },
+  "accountDeletion": {
+    "title": "Delete Account",
+    "warning": "This will schedule your account for permanent deletion. You have 30 days to cancel before all your data is permanently removed.",
+    "whatHappens": "What happens:",
+    "bullet1": "• Your account will be deactivated immediately",
+    "bullet2": "• Your books and exchanges will be hidden",
+    "bullet3": "• After 30 days, all data is permanently erased",
+    "bullet4": "• You can cancel within the 30-day window",
+    "confirmPassword": "Confirm your password",
+    "passwordRequired": "Password is required.",
+    "confirmDelete": "Delete My Account",
+    "errorMessage": "Something went wrong. Please try again.",
+    "pendingTitle": "Account scheduled for deletion",
+    "pendingTapCancel": "Tap here to cancel and restore your account.",
+    "cancelledTitle": "Deletion Cancelled",
+    "cancelledMessage": "Your account has been restored. You can log in again.",
+    "cancelError": "Could not cancel deletion. The link may have expired."
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report User",
+    "subtitle": "Select a reason for your report. Our team will review it within 24 hours.",
+    "categories": {
+      "inappropriate": "Inappropriate Content",
+      "fake_listing": "Fake Listing",
+      "no_show": "No-Show",
+      "misrepresented": "Misrepresented Book Condition",
+      "harassment": "Harassment",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "descriptionLabel": "Additional details",
+    "descriptionPlaceholder": "Describe what happened...",
+    "descriptionRequired": "A description is required for \"Other\".",
+    "submit": "Submit Report",
+    "successTitle": "Report Submitted",
+    "successMessage": "Thank you. Our team will review your report.",
+    "emailNotVerified": "You need to verify your email before reporting.",
+    "errorMessage": "Something went wrong. Please try again."
+  },
+  "socialAuth": {
+    "continueGoogle": "Continue with Google",
+    "continueApple": "Continue with Apple",
+    "notConfigured": "Social sign-in is not configured yet.",
+    "playServicesError": "Google Play Services is not available on this device.",
+    "unknownError": "Sign-in failed. Please try again.",
+    "unavailable": "This sign-in method is not available on your device."
   }
 }

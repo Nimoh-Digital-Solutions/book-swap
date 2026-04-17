@@ -7,6 +7,7 @@ import { AuthStack } from '@/navigation/AuthStack';
 import { MainTabs } from '@/navigation/MainTabs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useColors } from '@/hooks/useColors';
+import { useDeletionCancelDeepLink } from '@/hooks/useDeletionCancelDeepLink';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -17,6 +18,8 @@ export function RootNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isHydrated = useAuthStore((s) => s.isHydrated);
   const hydrate = useAuthStore((s) => s.hydrate);
+
+  useDeletionCancelDeepLink();
 
   useEffect(() => {
     void hydrate();

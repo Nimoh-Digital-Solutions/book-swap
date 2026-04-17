@@ -104,5 +104,53 @@
   },
   "biometricGate": {
     "hint": "Ontgrendel met biometrie of log uit om verder te gaan."
+  },
+  "accountDeletion": {
+    "title": "Account verwijderen",
+    "warning": "Je account wordt ingepland voor permanente verwijdering. Je hebt 30 dagen om te annuleren voordat al je gegevens definitief worden gewist.",
+    "whatHappens": "Wat er gebeurt:",
+    "bullet1": "• Je account wordt direct gedeactiveerd",
+    "bullet2": "• Je boeken en ruilen worden verborgen",
+    "bullet3": "• Na 30 dagen worden alle gegevens permanent gewist",
+    "bullet4": "• Je kunt binnen 30 dagen annuleren",
+    "confirmPassword": "Bevestig je wachtwoord",
+    "passwordRequired": "Wachtwoord is vereist.",
+    "confirmDelete": "Mijn account verwijderen",
+    "errorMessage": "Er is iets misgegaan. Probeer het opnieuw.",
+    "pendingTitle": "Account ingepland voor verwijdering",
+    "pendingTapCancel": "Tik hier om te annuleren en je account te herstellen.",
+    "cancelledTitle": "Verwijdering geannuleerd",
+    "cancelledMessage": "Je account is hersteld. Je kunt weer inloggen.",
+    "cancelError": "Kan verwijdering niet annuleren. De link is mogelijk verlopen."
+  },
+  "report": {
+    "button": "Melden",
+    "title": "Gebruiker melden",
+    "subtitle": "Selecteer een reden voor je melding. Ons team bekijkt dit binnen 24 uur.",
+    "categories": {
+      "inappropriate": "Ongepaste inhoud",
+      "fake_listing": "Valse advertentie",
+      "no_show": "Niet op komen dagen",
+      "misrepresented": "Verkeerde boekstaat",
+      "harassment": "Intimidatie",
+      "spam": "Spam",
+      "other": "Anders"
+    },
+    "descriptionLabel": "Extra details",
+    "descriptionPlaceholder": "Beschrijf wat er is gebeurd...",
+    "descriptionRequired": "Een beschrijving is vereist voor \"Anders\".",
+    "submit": "Melding versturen",
+    "successTitle": "Melding verstuurd",
+    "successMessage": "Bedankt. Ons team zal je melding bekijken.",
+    "emailNotVerified": "Je moet je e-mail verifiëren voordat je kunt melden.",
+    "errorMessage": "Er is iets misgegaan. Probeer het opnieuw."
+  },
+  "socialAuth": {
+    "continueGoogle": "Doorgaan met Google",
+    "continueApple": "Doorgaan met Apple",
+    "notConfigured": "Sociale aanmelding is nog niet geconfigureerd.",
+    "playServicesError": "Google Play Services is niet beschikbaar op dit apparaat.",
+    "unknownError": "Aanmelding mislukt. Probeer het opnieuw.",
+    "unavailable": "Deze aanmeldmethode is niet beschikbaar op uw apparaat."
   }
 }

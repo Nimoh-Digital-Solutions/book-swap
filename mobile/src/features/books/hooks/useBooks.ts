@@ -102,6 +102,33 @@ export function useCreateBook() {
   });
 }
 
+export interface UpdateBookPayload {
+  title?: string;
+  author?: string;
+  description?: string;
+  condition?: CreateBookPayload['condition'];
+  genres?: string[];
+  language?: CreateBookPayload['language'];
+  notes?: string;
+  status?: string;
+}
+
+export function useUpdateBook(bookId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: UpdateBookPayload) => {
+      const { data } = await http.patch<Book>(API.books.detail(bookId), payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
+      queryClient.invalidateQueries({ queryKey: ['myBooks'] });
+      queryClient.invalidateQueries({ queryKey: ['browse'] });
+      queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
+    },
+  });
+}
+
 export function useDeleteBook() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -115,6 +142,68 @@ export function useDeleteBook() {
       queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
   });
+}
+
+export function useUploadBookPhoto(bookId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<BookPhoto, Error, string>({
+    mutationFn: async (imageUri: string) => {
+      const formData = new FormData();
+      const filename = imageUri.split('/').pop() ?? 'photo.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match ? match[1] : 'jpg';
+      const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+      formData.append('image', {
+        uri: imageUri,
+        name: filename,
+        type: mime,
+      } as unknown as Blob);
+      const { data } = await http.post<BookPhoto>(
+        API.books.photos(bookId),
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
+    },
+  });
+}
+
+export function useDeleteBookPhoto(bookId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: async (photoId: string) => {
+      await http.delete(API.books.photoDetail(bookId, photoId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
+    },
+  });
+}
+
+export function useReorderBookPhotos(bookId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<BookPhoto[], Error, string[]>({
+    mutationFn: async (photoIds: string[]) => {
+      const { data } = await http.patch<BookPhoto[]>(
+        API.books.photosReorder(bookId),
+        { photo_ids: photoIds },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
+    },
+  });
+}
+
+interface BookPhoto {
+  id: string;
+  image: string;
+  position: number;
+  created_at: string;
 }
 
 export function useIsbnLookup(isbn: string) {

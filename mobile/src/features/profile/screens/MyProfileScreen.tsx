@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +18,8 @@ import {
   BookOpen,
   Calendar,
   ChevronRight,
+  Heart,
+  MessageSquareQuote,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -24,6 +27,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
+import { useUserRatings } from '@/features/ratings/hooks/useRatings';
+import { RatingCard } from '@/features/ratings/components/RatingCard';
+import { EmptyState } from '@/components/EmptyState';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'MyProfile'>;
@@ -66,6 +72,74 @@ function InfoCard({ icon: Icon, title, content }: {
         <Text style={[s.infoTitle, { color: c.text.secondary }]}>{title}</Text>
         <Text style={[s.infoContent, { color: c.text.primary }]}>{content}</Text>
       </View>
+    </View>
+  );
+}
+
+function RecentReviews({ userId }: { userId: string }) {
+  const { t } = useTranslation();
+  const c = useColors();
+  const isDark = useIsDark();
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useUserRatings(userId);
+  const accent = c.auth.golden;
+
+  const ratings = useMemo(
+    () => data?.pages.flatMap((p) => p.results) ?? [],
+    [data],
+  );
+
+  if (isLoading) {
+    return (
+      <View style={s.reviewsSection}>
+        <Text style={[s.reviewsTitle, { color: c.text.primary }]}>
+          {t('profile.recentReviews', 'Recent Reviews')}
+        </Text>
+        <ActivityIndicator size="small" color={accent} style={{ marginTop: spacing.md }} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={s.reviewsSection}>
+      <Text style={[s.reviewsTitle, { color: c.text.primary }]}>
+        {t('profile.recentReviews', 'Recent Reviews')}
+      </Text>
+      {ratings.length === 0 ? (
+        <EmptyState
+          icon={MessageSquareQuote}
+          title={t('profile.noReviews', 'No reviews yet')}
+          subtitle={t('profile.noReviewsHint', 'Complete swaps to receive ratings from other users.')}
+          compact
+        />
+      ) : (
+        <View style={s.reviewsList}>
+          {ratings.map((r) => (
+            <RatingCard key={r.id} rating={r} />
+          ))}
+          {hasNextPage && (
+            <Pressable
+              onPress={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              style={({ pressed }) => [
+                s.loadMoreBtn,
+                {
+                  borderColor: isDark ? c.auth.cardBorder : c.border.default,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              {isFetchingNextPage ? (
+                <ActivityIndicator size="small" color={accent} />
+              ) : (
+                <Text style={[s.loadMoreText, { color: accent }]}>
+                  {t('profile.loadMore', 'Load more')}
+                </Text>
+              )}
+            </Pressable>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -135,6 +209,9 @@ export function MyProfileScreen() {
           />
         </View>
 
+        {/* ── Recent Reviews ── */}
+        <RecentReviews userId={user.id} />
+
         {/* ── Info Cards ── */}
         <View style={s.infoSection}>
           <InfoCard
@@ -180,6 +257,21 @@ export function MyProfileScreen() {
             </View>
             <Text style={[s.actionLabel, { color: c.text.primary }]}>
               {t('profile.myBooks', 'My Books')}
+            </Text>
+            <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+
+          <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
+
+          <Pressable
+            onPress={() => navigation.navigate('Wishlist')}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+          >
+            <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
+              <Heart size={18} color={accent} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.text.primary }]}>
+              {t('profile.wishlist', 'Wishlist')}
             </Text>
             <ChevronRight size={18} color={c.text.placeholder} />
           </Pressable>
@@ -270,4 +362,16 @@ const s = StyleSheet.create({
   },
   actionLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
   actionDivider: { height: 1, marginHorizontal: spacing.md },
+
+  reviewsSection: { marginBottom: spacing.xl },
+  reviewsTitle: { fontSize: 17, fontWeight: '700', marginBottom: spacing.md },
+  reviewsList: { gap: spacing.sm },
+  loadMoreBtn: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginTop: spacing.sm,
+  },
+  loadMoreText: { fontSize: 14, fontWeight: '600' },
 });

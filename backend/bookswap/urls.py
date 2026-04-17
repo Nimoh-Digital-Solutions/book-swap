@@ -16,6 +16,9 @@ urlpatterns = [
     path("users/me/data-export/", views.DataExportView.as_view(), name="user-data-export"),
     path("users/check-username/", views.CheckUsernameView.as_view(), name="user-check-username"),
     path("users/<uuid:pk>/", views.UserDetailView.as_view(), name="user-detail"),
+    # ── Social auth (mobile native) ──────────────────────────────────
+    path("auth/social/google-mobile/", views.GoogleMobileAuthView.as_view(), name="google-mobile-auth"),
+    path("auth/social/apple-mobile/", views.AppleMobileAuthView.as_view(), name="apple-mobile-auth"),
     # ── Mobile devices (push tokens) ──────────────────────────────────
     path("users/me/devices/", views.MobileDeviceProxyView.as_view(), name="user-devices"),
     # ── Notifications ─────────────────────────────────────────────────

@@ -22,6 +22,8 @@ export const API = {
     passwordChange: `${AUTH}/password/change/`,
     exchangeToken: `${AUTH}/exchange-token/`,
     socialLoginStart: (backend: string) => `${AUTH}/social/login/${backend}/`,
+    socialGoogleMobile: `${AUTH}/social/google-mobile/`,
+    socialAppleMobile: `${AUTH}/social/apple-mobile/`,
   },
   users: {
     me: `${USERS}/me/`,

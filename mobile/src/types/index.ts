@@ -134,32 +134,114 @@ export interface Message {
   created_at: string;
 }
 
+export type NotificationType =
+  | 'new_request'
+  | 'request_accepted'
+  | 'request_declined'
+  | 'request_expired'
+  | 'exchange_completed'
+  | 'new_message'
+  | 'rating_received';
+
 export interface Notification {
   id: string;
-  type: string;
+  notification_type: NotificationType;
   title: string;
-  message: string;
+  body: string;
+  link: string;
+  is_read: boolean;
   read_at: string | null;
-  data: Record<string, unknown>;
   created_at: string;
 }
 
 export interface NotificationPreferences {
-  exchange_requests: boolean;
-  messages: boolean;
-  swap_updates: boolean;
-  marketing: boolean;
-  email_notifications: boolean;
+  email_new_request: boolean;
+  email_request_accepted: boolean;
+  email_request_declined: boolean;
+  email_new_message: boolean;
+  email_exchange_completed: boolean;
+  email_rating_received: boolean;
+}
+
+export type PatchNotificationPreferences = Partial<NotificationPreferences>;
+
+export interface RatingUser {
+  id: string;
+  username: string;
+  avatar: string | null;
 }
 
 export interface Rating {
   id: string;
   exchange: string;
-  rater: User;
-  rated: User;
+  rater: RatingUser;
+  rated: RatingUser;
   score: number;
   comment: string;
   created_at: string;
+}
+
+export interface ExchangeRatingStatus {
+  exchange_id: string;
+  my_rating: Rating | null;
+  partner_rating: Rating | null;
+  can_rate: boolean;
+  rating_deadline: string;
+}
+
+export interface SubmitRatingPayload {
+  score: number;
+  comment?: string;
+}
+
+export interface PaginatedRatings {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Rating[];
+}
+
+export interface BlockedUser {
+  id: string;
+  username: string;
+  first_name: string;
+  avatar: string | null;
+}
+
+export interface Block {
+  id: string;
+  blocked_user: BlockedUser;
+  created_at: string;
+}
+
+export type ReportCategory =
+  | 'inappropriate'
+  | 'fake_listing'
+  | 'no_show'
+  | 'misrepresented'
+  | 'harassment'
+  | 'spam'
+  | 'other';
+
+export interface CreateReportPayload {
+  reported_user_id: string;
+  reported_book_id?: string;
+  reported_exchange_id?: string;
+  category: ReportCategory;
+  description?: string;
+}
+
+export interface AccountDeletionPayload {
+  password: string;
+}
+
+export interface AccountDeletionResponse {
+  detail: string;
+  cancel_token: string;
+}
+
+export interface AccountDeletionCancelPayload {
+  token: string;
 }
 
 export interface WishlistItem {
@@ -167,7 +249,17 @@ export interface WishlistItem {
   title: string;
   author: string;
   isbn: string;
+  genre: string;
+  cover_url: string;
   created_at: string;
+}
+
+export interface CreateWishlistPayload {
+  title?: string;
+  author?: string;
+  isbn?: string;
+  genre?: string;
+  cover_url?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -197,6 +289,29 @@ export interface LocationPayload {
   latitude: number;
   longitude: number;
   neighborhood?: string;
+}
+
+export interface UserPublicProfile {
+  id: string;
+  username: string;
+  first_name: string;
+  bio: string;
+  avatar: string | null;
+  neighborhood: string;
+  preferred_genres: string[];
+  preferred_language: string;
+  avg_rating: number;
+  swap_count: number;
+  rating_count: number;
+  member_since: string;
+}
+
+export interface SocialAuthResponse extends LoginResponse {}
+
+export interface AppleSignInUser {
+  email?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface MeetupLocation {

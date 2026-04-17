@@ -18,6 +18,7 @@ import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
 import { AuthLogo } from '../components/AuthLogo';
 import { AuthInput } from '../components/AuthInput';
 import { AuthButton } from '../components/AuthButton';
+import { SocialAuthSection } from '../components/SocialAuthSection';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -55,7 +56,7 @@ export function RegisterScreen() {
       register.mutate(data, {
         onSuccess: () => {
           showSuccessToast(t('auth.registerSuccess'));
-          nav.navigate('Login');
+          nav.navigate('EmailVerifyPending', { email: data.email });
         },
         onError: (err) => {
           const ax = err as { response?: { data?: Record<string, unknown> } };
@@ -262,6 +263,8 @@ export function RegisterScreen() {
         onPress={handleSubmit(onSubmit)}
         loading={register.isPending}
       />
+
+      <SocialAuthSection />
 
       <Pressable onPress={() => nav.navigate('Login')} style={s.footer} hitSlop={12}>
         <Text style={[s.footerText, { color: c.auth.textMuted }]}>

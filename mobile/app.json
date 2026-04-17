@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gnimoh.bookswap",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "BookSwap needs camera access to scan book barcodes.",
         "NSLocationWhenInUseUsageDescription": "BookSwap uses your location to find books nearby.",
@@ -59,7 +60,14 @@
       "expo-camera",
       "expo-location",
       "@sentry/react-native",
-      "expo-updates"
+      "expo-updates",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.GOOGLE_IOS_CLIENT_ID"
+        }
+      ],
+      "expo-apple-authentication"
     ],
     "extra": {
       "eas": {

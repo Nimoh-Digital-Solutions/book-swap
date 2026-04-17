@@ -4,6 +4,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  EmailVerifyPending: { email?: string };
+  EmailVerifyConfirm: { token: string };
 };
 
 export type MainTabParamList = {
@@ -19,12 +21,14 @@ export type HomeStackParamList = {
   BookDetail: { bookId: string };
   UserProfile: { userId: string };
   RequestSwap: { bookId: string };
+  Notifications: undefined;
 };
 
 export type BrowseStackParamList = {
   BrowseMap: undefined;
   BookDetail: { bookId: string };
   RequestSwap: { bookId: string };
+  UserProfile: { userId: string };
 };
 
 export type ScanStackParamList = {
@@ -53,6 +57,7 @@ export type MessagesStackParamList = {
   };
   ExchangeDetail: { exchangeId: string };
   CounterOffer: { exchangeId: string; requesterId: string; requesterName: string };
+  UserProfile: { userId: string };
 };
 
 export type ProfileStackParamList = {
@@ -65,6 +70,7 @@ export type ProfileStackParamList = {
   Wishlist: undefined;
   Settings: undefined;
   NotificationPreferences: undefined;
+  BlockedUsers: undefined;
 };
 
 export type RootStackParamList = {

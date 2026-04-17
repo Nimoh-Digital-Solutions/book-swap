@@ -1,8 +1,9 @@
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback } from 'react';
+import { Flag } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SkeletonBookDetail } from '@/components/Skeleton';
 import { radius, shadows, spacing } from '@/constants/theme';
@@ -16,6 +17,8 @@ import { DetailBooksRow } from '../components/detail/DetailBooksRow';
 import { DetailChatCTA } from '../components/detail/DetailChatCTA';
 import { DetailOriginalBooksRow } from '../components/detail/DetailOriginalBooksRow';
 import { DetailParticipants } from '../components/detail/DetailParticipants';
+import { DetailRating } from '../components/detail/DetailRating';
+import { ReportSheet } from '@/features/trust-safety/components/ReportSheet';
 import { CHAT_ELIGIBLE_STATUSES } from '../constants';
 import { useExchangeDetail } from '../hooks/useExchanges';
 import { useExchangeWsRefresh } from '../hooks/useExchangeWsRefresh';
@@ -64,6 +67,8 @@ export function ExchangeDetailScreen() {
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
+
+  const [reportVisible, setReportVisible] = useState(false);
 
   const currentUserId = useAuthStore((st) => st.user?.id);
   const isOwner = exchange ? currentUserId === exchange.owner.id : false;
@@ -165,6 +170,10 @@ export function ExchangeDetailScreen() {
           <DetailActions exchange={exchange} />
         </View>
 
+        {(exchange.status === 'completed' || exchange.status === 'returned') && (
+          <DetailRating exchangeId={exchange.id} />
+        )}
+
         {isChatEligible && (
           <DetailChatCTA
             label={t('exchanges.openChat', 'Open Chat')}
@@ -172,8 +181,32 @@ export function ExchangeDetailScreen() {
           />
         )}
 
+        {/* Report partner */}
+        {exchange && (
+          <View style={s.reportRow}>
+            <Pressable
+              onPress={() => setReportVisible(true)}
+              style={({ pressed }) => [s.reportBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Flag size={14} color={c.text.placeholder} />
+              <Text style={[s.reportText, { color: c.text.placeholder }]}>
+                {t('report.button', 'Report')}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         <View style={s.bottomSpacer} />
       </ScrollView>
+
+      {exchange && (
+        <ReportSheet
+          visible={reportVisible}
+          onClose={() => setReportVisible(false)}
+          reportedUserId={isOwner ? exchange.requester.id : exchange.owner.id}
+          reportedExchangeId={exchange.id}
+        />
+      )}
     </View>
   );
 }
@@ -222,6 +255,23 @@ const s = StyleSheet.create({
   actionsSection: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
+  },
+
+  reportRow: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  reportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  reportText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
 
   bottomSpacer: { height: 120 },

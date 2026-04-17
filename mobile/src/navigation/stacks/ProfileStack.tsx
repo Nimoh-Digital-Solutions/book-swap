@@ -10,6 +10,7 @@ import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
 import { WishlistScreen } from '@/features/books/screens/WishlistScreen';
 import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
 import { NotificationPreferencesScreen } from '@/features/notifications/screens/NotificationPreferencesScreen';
+import { BlockedUsersScreen } from '@/features/trust-safety/screens/BlockedUsersScreen';
 import { useProfileHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -32,6 +33,11 @@ export function ProfileStack() {
         name="NotificationPreferences"
         component={NotificationPreferencesScreen}
         options={{ ...child, headerTitle: 'Notifications' }}
+      />
+      <Stack.Screen
+        name="BlockedUsers"
+        component={BlockedUsersScreen}
+        options={{ ...child, headerTitle: 'Blocked Users' }}
       />
     </Stack.Navigator>
   );

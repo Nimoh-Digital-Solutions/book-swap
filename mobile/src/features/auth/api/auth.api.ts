@@ -53,6 +53,19 @@ export const authApi = {
     return data;
   },
 
+  async verifyEmail(token: string) {
+    const { data } = await plain.post<{ detail: string }>(
+      API.auth.emailVerify,
+      { token },
+    );
+    return data;
+  },
+
+  async resendVerificationEmail() {
+    const { data } = await http.post<{ detail: string }>(API.auth.emailResend);
+    return data;
+  },
+
   async logout(refreshToken: string) {
     try {
       await http.post(API.auth.logout, { refresh: refreshToken });
