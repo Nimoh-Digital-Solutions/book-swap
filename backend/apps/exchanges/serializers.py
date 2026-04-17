@@ -72,6 +72,8 @@ class ExchangeRequestListSerializer(serializers.ModelSerializer):
 class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
     """Full exchange detail with conditions and confirmation info."""
 
+    original_offered_book = ExchangeBookSerializer(read_only=True)
+    last_counter_by = serializers.PrimaryKeyRelatedField(read_only=True)
     conditions_accepted_by_me = serializers.SerializerMethodField()
     conditions_accepted_count = serializers.SerializerMethodField()
     conditions_version = serializers.SerializerMethodField()
@@ -81,6 +83,9 @@ class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
             *ExchangeRequestListSerializer.Meta.fields,
             "decline_reason",
             "counter_to",
+            "original_offered_book",
+            "last_counter_by",
+            "counter_approved_at",
             "requester_confirmed_at",
             "owner_confirmed_at",
             "return_requested_at",
@@ -161,22 +166,31 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
 
 
 class CounterProposeSerializer(serializers.Serializer):
-    """Validate counter-proposal: owner picks a different book from requester's shelf."""
+    """Validate counter-proposal: pick a book from the other party's shelf."""
 
     offered_book_id = serializers.UUIDField()
 
     def validate_offered_book_id(self, value):
         exchange = self.context["exchange"]
+        user = self.context["request"].user
+
+        is_owner = user.pk == exchange.owner_id
+        is_requester = user.pk == exchange.requester_id
+        if not is_owner and not is_requester:
+            raise serializers.ValidationError("You are not a participant of this exchange.")
+
+        other_user_id = exchange.requester_id if is_owner else exchange.owner_id
+
         try:
             book = Book.objects.get(pk=value)
         except Book.DoesNotExist:
             raise serializers.ValidationError("Book not found.") from None
-        if book.owner_id != exchange.requester_id:
-            raise serializers.ValidationError("You must pick a book from the requester's shelf.")
+        if book.owner_id != other_user_id:
+            raise serializers.ValidationError("You must pick a book from the other party's shelf.")
         if book.status != BookStatus.AVAILABLE:
             raise serializers.ValidationError("This book is not available for exchange.")
         if book.pk == exchange.offered_book_id:
-            raise serializers.ValidationError("Pick a different book from the original offer.")
+            raise serializers.ValidationError("Pick a different book from the current offer.")
         self._offered_book = book
         return value
 

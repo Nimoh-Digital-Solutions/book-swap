@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeftRight, Bell, BookOpen, Inbox } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -25,6 +25,7 @@ import {
   HISTORY_STATUSES,
   PENDING_STATUSES,
 } from '../constants';
+import { useExchangeWsRefresh } from '../hooks/useExchangeWsRefresh';
 import {
   useExchanges,
   useIncomingCount,
@@ -50,9 +51,16 @@ export function ExchangeListScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
 
-  const { data: exchanges, isLoading } = useExchanges();
+  useExchangeWsRefresh();
+  const { data: exchanges, isLoading, refetch } = useExchanges();
   const { data: incomingCount } = useIncomingCount();
   const [activeTab, setActiveTab] = useState<Tab>('active');
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;

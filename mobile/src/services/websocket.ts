@@ -13,6 +13,7 @@ class WebSocketManager {
   private ws: WebSocket | null = null;
   private handlers = new Map<string, Set<MessageHandler>>();
   private reconnectAttempts = 0;
+  private maxReconnectAttempts = 10;
   private maxBackoffMs = 30_000;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private currentPath = '';
@@ -36,12 +37,19 @@ class WebSocketManager {
   }
 
   private scheduleReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      addBreadcrumb('websocket', 'Max reconnect attempts reached — giving up', {
+        path: this.currentPath,
+        attempts: this.reconnectAttempts,
+      });
+      return;
+    }
     this.clearReconnectTimer();
     const delay = Math.min(1000 * 2 ** this.reconnectAttempts, this.maxBackoffMs);
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
       if (this.currentPath) {
-        this.connect(this.currentPath);
+        this.doConnect(this.currentPath);
       }
     }, delay);
   }
@@ -50,6 +58,10 @@ class WebSocketManager {
     this.reconnectAttempts = 0;
     this.clearReconnectTimer();
     this.currentPath = path;
+    this.doConnect(path);
+  }
+
+  private doConnect(path: string) {
     const token = tokenStorage.getAccess();
     const wsRoot = getWsBaseUrl();
     const url = `${wsRoot}${path.startsWith('/') ? path : `/${path}`}${token ? `?token=${encodeURIComponent(token)}` : ''}`;

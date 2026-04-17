@@ -1,4 +1,4 @@
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,14 +8,17 @@ import { SkeletonBookDetail } from '@/components/Skeleton';
 import { radius, shadows, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import type { MessagesStackParamList } from '@/navigation/types';
+import { useAuthStore } from '@/stores/authStore';
 import { ExchangeStatusBadge } from '../components/ExchangeStatusBadge';
 import { ExchangeTimeline } from '../components/ExchangeTimeline';
 import { DetailActions } from '../components/detail/DetailActions';
 import { DetailBooksRow } from '../components/detail/DetailBooksRow';
 import { DetailChatCTA } from '../components/detail/DetailChatCTA';
+import { DetailOriginalBooksRow } from '../components/detail/DetailOriginalBooksRow';
 import { DetailParticipants } from '../components/detail/DetailParticipants';
 import { CHAT_ELIGIBLE_STATUSES } from '../constants';
 import { useExchangeDetail } from '../hooks/useExchanges';
+import { useExchangeWsRefresh } from '../hooks/useExchangeWsRefresh';
 
 type Route = RouteProp<MessagesStackParamList, 'ExchangeDetail'>;
 type Nav = NativeStackNavigationProp<MessagesStackParamList, 'ExchangeDetail'>;
@@ -48,7 +51,15 @@ export function ExchangeDetailScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<Route>();
 
-  const { data: exchange, isLoading } = useExchangeDetail(params.exchangeId);
+  useExchangeWsRefresh();
+
+  const { data: exchange, isLoading, refetch } = useExchangeDetail(params.exchangeId);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -68,23 +79,50 @@ export function ExchangeDetailScreen() {
   }
 
   const isChatEligible = CHAT_ELIGIBLE_STATUSES.includes(exchange.status);
+  const currentUserId = useAuthStore((st) => st.user?.id);
+  const isOwner = currentUserId === exchange.owner.id;
+
+  const leftBook = isOwner ? exchange.requested_book : exchange.offered_book;
+  const rightBook = isOwner ? exchange.offered_book : exchange.requested_book;
+  const leftLabel = isOwner
+    ? t('exchanges.yourBook', 'Your book')
+    : t('exchanges.yourOffer', 'Your offer');
+  const rightLabel = isOwner
+    ? t('exchanges.theirOffer', 'Their offer')
+    : t('exchanges.theirBook', 'Their book');
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        {/* Status + date */}
+        {/* Status + role + date */}
         <View style={s.statusRow}>
-          <ExchangeStatusBadge status={exchange.status} />
+          <View style={s.statusLeft}>
+            <ExchangeStatusBadge status={exchange.status} />
+            <View style={[s.rolePill, { backgroundColor: c.auth.golden + '18' }]}>
+              <Text style={[s.roleText, { color: c.auth.golden }]}>
+                {isOwner
+                  ? t('exchanges.roleOwner', 'Owner')
+                  : t('exchanges.roleRequester', 'Requester')}
+              </Text>
+            </View>
+          </View>
           <Text style={[s.date, { color: c.text.secondary }]}>
             {timeAgo(exchange.created_at)}
           </Text>
         </View>
 
+        {exchange.original_offered_book && (
+          <DetailOriginalBooksRow
+            requestedBook={isOwner ? exchange.requested_book : exchange.original_offered_book}
+            originalOfferedBook={isOwner ? exchange.original_offered_book : exchange.requested_book}
+          />
+        )}
+
         <DetailBooksRow
-          requestedBook={exchange.requested_book}
-          offeredBook={exchange.offered_book}
-          requestedLabel={t('exchanges.requested', 'Requested')}
-          offeredLabel={t('exchanges.offered', 'Offered')}
+          requestedBook={leftBook}
+          offeredBook={rightBook}
+          requestedLabel={leftLabel}
+          offeredLabel={rightLabel}
         />
 
         <DetailParticipants
@@ -116,10 +154,7 @@ export function ExchangeDetailScreen() {
         </View>
 
         {/* Actions */}
-        <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[s.cardLabel, { color: c.text.placeholder }]}>
-            {t('exchanges.actions', 'Actions')}
-          </Text>
+        <View style={s.actionsSection}>
           <DetailActions exchange={exchange} />
         </View>
 
@@ -148,6 +183,22 @@ const s = StyleSheet.create({
     paddingTop: spacing.md,
     marginBottom: spacing.md,
   },
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  rolePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  roleText: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
   date: { fontSize: 11, fontWeight: '500' },
 
   card: {
@@ -160,6 +211,11 @@ const s = StyleSheet.create({
   },
   cardLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm },
   messageBody: { fontSize: 14, fontStyle: 'italic', lineHeight: 22 },
+
+  actionsSection: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
 
   bottomSpacer: { height: 120 },
 });

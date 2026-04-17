@@ -150,9 +150,26 @@ export function useCounterExchange() {
       );
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { exchangeId }) => {
+      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
       qc.invalidateQueries({ queryKey: keys.lists() });
       qc.invalidateQueries({ queryKey: keys.incoming() });
+    },
+  });
+}
+
+export function useApproveCounter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (exchangeId: string) => {
+      const { data } = await http.post<ExchangeDetail>(
+        API.exchanges.approveCounter(exchangeId),
+      );
+      return data;
+    },
+    onSuccess: (_data, exchangeId) => {
+      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+      qc.invalidateQueries({ queryKey: keys.lists() });
     },
   });
 }

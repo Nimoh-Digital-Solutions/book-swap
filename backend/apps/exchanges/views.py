@@ -88,8 +88,10 @@ class ExchangeRequestViewSet(
         return ExchangeRequestDetailSerializer
 
     def get_permissions(self):
-        if self.action in ("accept", "decline", "counter"):
+        if self.action in ("accept", "decline"):
             return [IsAuthenticated(), IsExchangeOwner()]
+        if self.action in ("counter", "approve_counter"):
+            return [IsAuthenticated(), IsExchangeParticipant()]
         if self.action == "cancel":
             return [IsAuthenticated(), IsExchangeRequester()]
         if self.action in (
@@ -138,6 +140,11 @@ class ExchangeRequestViewSet(
                 {"detail": "Only pending requests can be accepted."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if exchange.last_counter_by_id and not exchange.counter_approved_at:
+            return Response(
+                {"detail": "The counter offer must be approved before accepting."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         exchange.transition_to(ExchangeStatus.ACCEPTED)
         exchange.save(update_fields=["status", "updated_at"])
 
@@ -182,11 +189,16 @@ class ExchangeRequestViewSet(
 
     @action(detail=True, methods=["post"])
     def counter(self, request, pk=None):
-        """Owner counter-proposes a different book from requester's shelf."""
+        """Either party counter-proposes a different book — updates in place."""
         exchange = self.get_object()
         if exchange.status != ExchangeStatus.PENDING:
             return Response(
                 {"detail": "Only pending requests can be countered."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exchange.last_counter_by_id == request.user.pk:
+            return Response(
+                {"detail": "Wait for the other party to respond before countering again."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         ser = CounterProposeSerializer(
@@ -195,26 +207,61 @@ class ExchangeRequestViewSet(
         )
         ser.is_valid(raise_exception=True)
 
-        # Decline original with counter_proposed reason
-        exchange.transition_to(ExchangeStatus.DECLINED)
-        exchange.decline_reason = DeclineReason.COUNTER_PROPOSED
-        exchange.save(update_fields=["status", "decline_reason", "updated_at"])
+        if not exchange.original_offered_book_id:
+            exchange.original_offered_book = exchange.offered_book
 
-        # Create new exchange with the counter-proposed book
-        new_exchange = ExchangeRequest.objects.create(
-            requester=exchange.requester,
-            owner=exchange.owner,
-            requested_book=exchange.requested_book,
-            offered_book=ser._offered_book,
-            counter_to=exchange,
-            message=f"Counter-proposal: {ser._offered_book.title}",
-        )
+        exchange.offered_book = ser._offered_book
+        exchange.last_counter_by = request.user
+        exchange.counter_approved_at = None
+        exchange.save(update_fields=[
+            "offered_book",
+            "original_offered_book",
+            "last_counter_by",
+            "counter_approved_at",
+            "updated_at",
+        ])
 
         detail = ExchangeRequestDetailSerializer(
-            new_exchange,
+            exchange,
             context={"request": request},
         )
-        return Response(detail.data, status=status.HTTP_201_CREATED)
+        return Response(detail.data)
+
+    @action(detail=True, methods=["post"], url_path="approve-counter")
+    def approve_counter(self, request, pk=None):
+        """The party who received the counter approves the new book selection."""
+        exchange = self.get_object()
+        if exchange.status != ExchangeStatus.PENDING:
+            return Response(
+                {"detail": "Only pending requests can have counters approved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not exchange.last_counter_by_id:
+            return Response(
+                {"detail": "There is no counter to approve."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exchange.last_counter_by_id == request.user.pk:
+            return Response(
+                {"detail": "You cannot approve your own counter offer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exchange.counter_approved_at:
+            return Response(
+                {"detail": "Counter has already been approved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from django.utils import timezone
+
+        exchange.counter_approved_at = timezone.now()
+        exchange.save(update_fields=["counter_approved_at", "updated_at"])
+
+        serializer = ExchangeRequestDetailSerializer(
+            exchange,
+            context={"request": request},
+        )
+        return Response(serializer.data)
 
     # ── Requester actions ─────────────────────────────────────────────
 

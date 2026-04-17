@@ -98,6 +98,27 @@ class ExchangeRequest(TimeStampedModel):
         related_name="outgoing_requests",
         help_text="The requester's book offered in exchange.",
     )
+    original_offered_book = models.ForeignKey(
+        "books.Book",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="Snapshot of the first offered book before any counter-proposals.",
+    )
+    last_counter_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="The user who made the most recent counter-proposal.",
+    )
+    counter_approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the other party approved the latest counter-proposal.",
+    )
 
     status = models.CharField(
         max_length=30,

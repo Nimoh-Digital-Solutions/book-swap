@@ -1,9 +1,9 @@
-import { MessageCircle } from 'lucide-react-native';
-import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { MessageCircle } from "lucide-react-native";
+import React from "react";
+import { Pressable, StyleSheet, Text } from "react-native";
 
-import { radius, spacing } from '@/constants/theme';
-import { useColors } from '@/hooks/useColors';
+import { radius, spacing } from "@/constants/theme";
+import { useColors } from "@/hooks/useColors";
 
 interface Props {
   label: string;
@@ -17,7 +17,10 @@ export function DetailChatCTA({ label, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [s.btn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+      style={({ pressed }) => [
+        s.btn,
+        { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+      ]}
     >
       <MessageCircle size={18} color="#fff" />
       <Text style={s.text}>{label}</Text>
@@ -27,14 +30,14 @@ export function DetailChatCTA({ label, onPress }: Props) {
 
 const s = StyleSheet.create({
   btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    paddingVertical: 14,
-    borderRadius: radius.xl,
+    paddingVertical: 16,
+    borderRadius: radius.lg,
   },
-  text: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  text: { color: "#fff", fontSize: 15, fontWeight: "700" },
 });

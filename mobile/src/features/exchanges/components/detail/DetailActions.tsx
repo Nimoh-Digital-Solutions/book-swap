@@ -1,29 +1,35 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   AlertCircle,
   ArrowLeftRight,
   CheckCircle,
   Clock,
+  RefreshCw,
   RotateCcw,
   ShieldCheck,
   XCircle,
 } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors } from '@/hooks/useColors';
+import type { MessagesStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/stores/authStore';
 import type { ExchangeDetail } from '@/types';
 import {
   useAcceptConditions,
   useAcceptExchange,
+  useApproveCounter,
   useCancelExchange,
   useConfirmReturn,
   useConfirmSwap,
   useDeclineExchange,
   useRequestReturn,
 } from '../../hooks/useExchanges';
+import { ConditionsReviewModal } from './ConditionsReviewModal';
 
 function InfoRow({ icon: Icon, text, color }: { icon: any; text: string; color: string }) {
   return (
@@ -41,15 +47,19 @@ interface Props {
 export function DetailActions({ exchange }: Props) {
   const { t } = useTranslation();
   const c = useColors();
+  const navigation = useNavigation<NativeStackNavigationProp<MessagesStackParamList>>();
   const currentUserId = useAuthStore((st) => st.user?.id);
   const accent = c.auth.golden;
 
   const isOwner = currentUserId === exchange.owner.id;
   const isRequester = currentUserId === exchange.requester.id;
 
+  const [conditionsVisible, setConditionsVisible] = useState(false);
+
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
   const cancelMutation = useCancelExchange();
+  const approveCounter = useApproveCounter();
   const acceptConditions = useAcceptConditions();
   const confirmSwap = useConfirmSwap();
   const requestReturn = useRequestReturn();
@@ -65,38 +75,160 @@ export function DetailActions({ exchange }: Props) {
   const status = exchange.status;
 
   if (status === 'pending') {
+    const hasBeenCountered = !!exchange.last_counter_by;
+    const counterApproved = !!exchange.counter_approved_at;
+    const iMadeLastCounter = exchange.last_counter_by === currentUserId;
+    const pendingApproval = hasBeenCountered && !counterApproved;
+
+    const canOwnerCounter = !hasBeenCountered || (!iMadeLastCounter);
+    const canRequesterCounter = hasBeenCountered && !iMadeLastCounter;
+    const canAccept = !pendingApproval;
+
+    const otherUser = isOwner ? exchange.requester : exchange.owner;
+
     if (isOwner) {
       return (
         <View style={s.wrap}>
-          <Pressable
-            style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => doConfirm(
-              t('exchanges.acceptTitle', 'Accept Request?'),
-              t('exchanges.acceptMsg', 'Other pending requests for this book will be automatically declined.'),
-              () => acceptMutation.mutate(exchange.id),
-            )}
-          >
-            <CheckCircle size={16} color="#fff" />
-            <Text style={s.primaryBtnText}>{t('exchanges.accept', 'Accept')}</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [s.outlineBtn, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => doConfirm(
-              t('exchanges.declineTitle', 'Decline?'),
-              t('exchanges.declineMsg', 'The requester will be notified.'),
-              () => declineMutation.mutate({ exchangeId: exchange.id }),
-              true,
-            )}
-          >
-            <XCircle size={16} color="#EF4444" />
-            <Text style={[s.outlineBtnText, { color: '#EF4444' }]}>{t('exchanges.decline', 'Decline')}</Text>
-          </Pressable>
+          {/* Approve counter (when requester countered and owner hasn't approved) */}
+          {pendingApproval && !iMadeLastCounter && (
+            <Pressable
+              style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() => doConfirm(
+                t('exchanges.approveCounterTitle', 'Approve Counter?'),
+                t('exchanges.approveCounterMsg', 'Agree to the new book selection before accepting the exchange.'),
+                () => approveCounter.mutate(exchange.id),
+              )}
+            >
+              <CheckCircle size={16} color="#fff" />
+              <Text style={s.primaryBtnText}>{t('exchanges.approveCounter', 'Approve Counter')}</Text>
+            </Pressable>
+          )}
+
+          {/* Waiting for other party to approve my counter */}
+          {pendingApproval && iMadeLastCounter && (
+            <InfoRow
+              icon={Clock}
+              text={t('exchanges.waitingCounterApproval', {
+                defaultValue: 'Waiting for @{{name}} to approve your counter offer...',
+                name: otherUser.username,
+              })}
+              color={c.text.secondary}
+            />
+          )}
+
+          {/* Accept / Decline row */}
+          {canAccept && (
+            <View style={s.ownerRow}>
+              <Pressable
+                style={({ pressed }) => [s.rowBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+                onPress={() => doConfirm(
+                  t('exchanges.acceptTitle', 'Accept Request?'),
+                  t('exchanges.acceptMsg', 'Other pending requests for this book will be automatically declined.'),
+                  () => acceptMutation.mutate(exchange.id),
+                )}
+              >
+                <CheckCircle size={16} color="#fff" />
+                <Text style={s.rowBtnText}>{t('exchanges.accept', 'Accept')}</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [s.rowBtn, s.rowBtnOutline, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
+                onPress={() => doConfirm(
+                  t('exchanges.declineTitle', 'Decline?'),
+                  t('exchanges.declineMsg', 'The requester will be notified.'),
+                  () => declineMutation.mutate({ exchangeId: exchange.id }),
+                  true,
+                )}
+              >
+                <XCircle size={16} color="#EF4444" />
+                <Text style={[s.rowBtnText, { color: '#EF4444' }]}>{t('exchanges.decline', 'Decline')}</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Decline only (when waiting for approval, owner can still decline) */}
+          {!canAccept && (
+            <Pressable
+              style={({ pressed }) => [s.outlineBtn, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
+              onPress={() => doConfirm(
+                t('exchanges.declineTitle', 'Decline?'),
+                t('exchanges.declineMsg', 'The requester will be notified.'),
+                () => declineMutation.mutate({ exchangeId: exchange.id }),
+                true,
+              )}
+            >
+              <XCircle size={16} color="#EF4444" />
+              <Text style={[s.outlineBtnText, { color: '#EF4444' }]}>{t('exchanges.decline', 'Decline')}</Text>
+            </Pressable>
+          )}
+
+          {canOwnerCounter && !pendingApproval && (
+            <Pressable
+              style={({ pressed }) => [s.outlineBtn, { borderColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() =>
+                navigation.navigate('CounterOffer', {
+                  exchangeId: exchange.id,
+                  requesterId: otherUser.id,
+                  requesterName: otherUser.username,
+                })
+              }
+            >
+              <RefreshCw size={16} color={accent} />
+              <Text style={[s.outlineBtnText, { color: accent }]}>
+                {t('exchanges.counterOffer', 'Counter Offer')}
+              </Text>
+            </Pressable>
+          )}
         </View>
       );
     }
     if (isRequester) {
       return (
         <View style={s.wrap}>
+          {/* Approve counter (when owner countered and requester hasn't approved) */}
+          {pendingApproval && !iMadeLastCounter && (
+            <Pressable
+              style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() => doConfirm(
+                t('exchanges.approveCounterTitle', 'Approve Counter?'),
+                t('exchanges.approveCounterMsg', 'Agree to the new book selection before the exchange can proceed.'),
+                () => approveCounter.mutate(exchange.id),
+              )}
+            >
+              <CheckCircle size={16} color="#fff" />
+              <Text style={s.primaryBtnText}>{t('exchanges.approveCounter', 'Approve Counter')}</Text>
+            </Pressable>
+          )}
+
+          {/* Waiting for other party to approve my counter */}
+          {pendingApproval && iMadeLastCounter && (
+            <InfoRow
+              icon={Clock}
+              text={t('exchanges.waitingCounterApproval', {
+                defaultValue: 'Waiting for @{{name}} to approve your counter offer...',
+                name: otherUser.username,
+              })}
+              color={c.text.secondary}
+            />
+          )}
+
+          {canRequesterCounter && !pendingApproval && (
+            <Pressable
+              style={({ pressed }) => [s.outlineBtn, { borderColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() =>
+                navigation.navigate('CounterOffer', {
+                  exchangeId: exchange.id,
+                  requesterId: otherUser.id,
+                  requesterName: otherUser.username,
+                })
+              }
+            >
+              <RefreshCw size={16} color={accent} />
+              <Text style={[s.outlineBtnText, { color: accent }]}>
+                {t('exchanges.counterOffer', 'Counter Offer')}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => doConfirm(
@@ -111,7 +243,9 @@ export function DetailActions({ exchange }: Props) {
               {t('exchanges.cancelRequest', 'Cancel Request')}
             </Text>
           </Pressable>
-          <InfoRow icon={Clock} text={t('exchanges.waitingOwner', 'Waiting for the owner to respond...')} color={c.text.secondary} />
+          {!hasBeenCountered && (
+            <InfoRow icon={Clock} text={t('exchanges.waitingOwner', 'Waiting for the owner to respond...')} color={c.text.secondary} />
+          )}
         </View>
       );
     }
@@ -122,17 +256,27 @@ export function DetailActions({ exchange }: Props) {
     return (
       <View style={s.wrap}>
         {!accepted ? (
-          <Pressable
-            style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
-            onPress={() => doConfirm(
-              t('exchanges.conditionsTitle', 'Accept Conditions'),
-              t('exchanges.conditionsMsg', 'By accepting, you agree to the exchange conditions.'),
-              () => acceptConditions.mutate(exchange.id),
-            )}
-          >
-            <ShieldCheck size={16} color="#fff" />
-            <Text style={s.primaryBtnText}>{t('exchanges.acceptConditions', 'Accept Exchange Conditions')}</Text>
-          </Pressable>
+          <>
+            <Pressable
+              style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() => setConditionsVisible(true)}
+            >
+              <ShieldCheck size={16} color="#fff" />
+              <Text style={s.primaryBtnText}>
+                {t('exchanges.reviewConditions', 'Review Exchange Conditions')}
+              </Text>
+            </Pressable>
+            <ConditionsReviewModal
+              visible={conditionsVisible}
+              loading={acceptConditions.isPending}
+              onClose={() => setConditionsVisible(false)}
+              onAccept={() =>
+                acceptConditions.mutate(exchange.id, {
+                  onSuccess: () => setConditionsVisible(false),
+                })
+              }
+            />
+          </>
         ) : (
           <InfoRow
             icon={CheckCircle}
@@ -234,6 +378,26 @@ export function DetailActions({ exchange }: Props) {
 
 const s = StyleSheet.create({
   wrap: { gap: spacing.sm },
+
+  ownerRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  rowBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: radius.xl,
+  },
+  rowBtnOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+  },
+  rowBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',

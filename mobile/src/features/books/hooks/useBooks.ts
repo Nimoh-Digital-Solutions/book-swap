@@ -59,6 +59,19 @@ export function useMyBooks() {
   });
 }
 
+export function useUserBooks(userId: string) {
+  return useQuery({
+    queryKey: ['userBooks', userId],
+    queryFn: async () => {
+      const { data } = await http.get<PaginatedResponse<Book>>(API.books.list, {
+        params: { owner: userId },
+      });
+      return data.results;
+    },
+    enabled: !!userId,
+  });
+}
+
 export interface CreateBookPayload {
   isbn?: string;
   title: string;

@@ -47,6 +47,7 @@ export type MessagesStackParamList = {
   IncomingRequests: undefined;
   Chat: { exchangeId: string };
   ExchangeDetail: { exchangeId: string };
+  CounterOffer: { exchangeId: string; requesterId: string; requesterName: string };
 };
 
 export type ProfileStackParamList = {

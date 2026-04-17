@@ -37,7 +37,7 @@ export function DetailParticipants({
     AVATAR_COLORS[owner.username.charCodeAt(0) % AVATAR_COLORS.length];
 
   return (
-    <View style={s.wrap}>
+    <View style={[s.wrap, { borderColor: cardBorder + '40' }]}>
       <Text style={[s.label, { color: c.text.placeholder }]}>{label}</Text>
 
       <View style={s.row}>
@@ -87,6 +87,9 @@ const s = StyleSheet.create({
   wrap: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
+    paddingVertical: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   label: {
     fontSize: 9,

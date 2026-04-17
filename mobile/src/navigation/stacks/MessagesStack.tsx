@@ -4,6 +4,7 @@ import type { MessagesStackParamList } from '@/navigation/types';
 import { ExchangeListScreen } from '@/features/exchanges/screens/ExchangeListScreen';
 import { ExchangeDetailScreen } from '@/features/exchanges/screens/ExchangeDetailScreen';
 import { IncomingRequestsScreen } from '@/features/exchanges/screens/IncomingRequestsScreen';
+import { CounterOfferScreen } from '@/features/exchanges/screens/CounterOfferScreen';
 import { ChatScreen } from '@/features/messaging/screens/ChatScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
@@ -29,6 +30,11 @@ export function MessagesStack() {
         name="ExchangeDetail"
         component={ExchangeDetailScreen}
         options={{ ...child, headerTitle: '' }}
+      />
+      <Stack.Screen
+        name="CounterOffer"
+        component={CounterOfferScreen}
+        options={{ ...child, headerTitle: 'Counter Offer' }}
       />
       <Stack.Screen
         name="Chat"

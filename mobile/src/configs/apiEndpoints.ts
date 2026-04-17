@@ -61,6 +61,7 @@ export const API = {
     accept: (id: string) => `${EXCHANGES}/${id}/accept/`,
     decline: (id: string) => `${EXCHANGES}/${id}/decline/`,
     counter: (id: string) => `${EXCHANGES}/${id}/counter/`,
+    approveCounter: (id: string) => `${EXCHANGES}/${id}/approve-counter/`,
     cancel: (id: string) => `${EXCHANGES}/${id}/cancel/`,
     acceptConditions: (id: string) => `${EXCHANGES}/${id}/accept-conditions/`,
     conditions: (id: string) => `${EXCHANGES}/${id}/conditions/`,

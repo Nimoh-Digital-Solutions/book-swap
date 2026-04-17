@@ -1,5 +1,6 @@
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { useAuthStore } from "@/stores/authStore";
 import type { ExchangeBook, ExchangeListItem } from "@/types";
 import { Image } from "expo-image";
 import { ArrowLeftRight } from "lucide-react-native";
@@ -75,11 +76,14 @@ export function ExchangeCard({ exchange, onPress }: Props) {
   const c = useColors();
   const isDark = useIsDark();
   const accent = c.auth.golden;
+  const currentUserId = useAuthStore((st) => st.user?.id);
+  const isOwner = currentUserId === exchange.owner.id;
 
-  const partner =
-    exchange.requester.username !== exchange.owner.username
-      ? `@${exchange.requester.username} ↔ @${exchange.owner.username}`
-      : `@${exchange.requester.username}`;
+  const leftBook = isOwner ? exchange.requested_book : exchange.offered_book;
+  const rightBook = isOwner ? exchange.offered_book : exchange.requested_book;
+
+  const otherUser = isOwner ? exchange.requester : exchange.owner;
+  const roleLabel = isOwner ? "Owner" : "Requester";
 
   return (
     <Pressable
@@ -95,15 +99,20 @@ export function ExchangeCard({ exchange, onPress }: Props) {
     >
       {/* Status + date row */}
       <View style={s.topRow}>
-        <ExchangeStatusBadge status={exchange.status} />
+        <View style={s.topLeft}>
+          <ExchangeStatusBadge status={exchange.status} />
+          <View style={[s.rolePill, { backgroundColor: accent + '18' }]}>
+            <Text style={[s.roleText, { color: accent }]}>{roleLabel}</Text>
+          </View>
+        </View>
         <Text style={[s.date, { color: c.text.secondary }]}>
           {timeAgo(exchange.created_at)}
         </Text>
       </View>
 
-      {/* Book thumbnails */}
+      {/* Book thumbnails — current user's book always on the left */}
       <View style={s.booksRow}>
-        <BookThumb book={exchange.requested_book} label="Requested" />
+        <BookThumb book={leftBook} label="Yours" />
         <View style={s.arrowWrap}>
           <View
             style={[
@@ -117,7 +126,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
             <ArrowLeftRight size={14} color={accent} />
           </View>
         </View>
-        <BookThumb book={exchange.offered_book} label="Offered" />
+        <BookThumb book={rightBook} label="Theirs" />
       </View>
 
       {/* Partner */}
@@ -135,7 +144,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
           style={[s.partner, { color: c.text.secondary }]}
           numberOfLines={1}
         >
-          {partner}
+          with @{otherUser.username}
         </Text>
       </View>
     </Pressable>
@@ -156,6 +165,22 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  topLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  rolePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  roleText: {
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   date: { fontSize: 11, fontWeight: "500" },
 
