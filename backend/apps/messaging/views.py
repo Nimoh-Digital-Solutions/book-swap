@@ -107,10 +107,52 @@ class MessageViewSet(GenericViewSet):
             sender=request.user,
             **serializer.validated_data,
         )
+
+        self._broadcast_to_ws_group(message)
+
         return Response(
             MessageSerializer(message).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @staticmethod
+    def _broadcast_to_ws_group(message):
+        """Push the new message to the chat WebSocket group for real-time delivery."""
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        group_name = f"chat_{message.exchange_id}"
+        sender = message.sender
+        import logging
+
+        try:
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    "type": "chat_message",
+                    "id": str(message.id),
+                    "exchange": str(message.exchange_id),
+                    "sender": {
+                        "id": str(sender.id),
+                        "username": sender.username,
+                        "avatar": sender.avatar.url if sender.avatar else None,
+                    },
+                    "content": message.content,
+                    "image": message.image.url if message.image else None,
+                    "read_at": None,
+                    "created_at": message.created_at.isoformat(),
+                },
+            )
+        except Exception:
+            logging.getLogger("messaging").warning(
+                "Failed to broadcast message %s to WS group %s",
+                message.id,
+                group_name,
+            )
 
     @action(detail=False, methods=["post"], url_path="mark-read")
     def mark_read(self, request, *args, **kwargs):
@@ -127,7 +169,38 @@ class MessageViewSet(GenericViewSet):
             .exclude(sender=request.user)
             .update(read_at=now)
         )
+
+        if updated:
+            self._broadcast_read_receipt(self.exchange.pk, now)
+
         return Response({"marked_read": updated})
+
+    @staticmethod
+    def _broadcast_read_receipt(exchange_id, read_at):
+        """Notify the sender that their messages have been read."""
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        import logging
+
+        group_name = f"chat_{exchange_id}"
+        try:
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    "type": "chat_read_all",
+                    "read_at": read_at.isoformat(),
+                },
+            )
+        except Exception:
+            logging.getLogger("messaging").warning(
+                "Failed to broadcast read receipt to WS group %s",
+                group_name,
+            )
 
 
 class MeetupSuggestionViewSet(GenericViewSet):

@@ -39,7 +39,7 @@ export function MessagesStack() {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ ...child, headerTitle: 'Chat' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

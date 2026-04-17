@@ -1,221 +1,260 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
+  ActivityIndicator,
   FlatList,
-  TouchableOpacity,
-  StyleSheet,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
-import { http } from '@/services/http';
-import { API } from '@/configs/apiEndpoints';
-import { wsManager } from '@/services/websocket';
-import { useAuthStore } from '@/stores/authStore';
+import { MessageCircle } from 'lucide-react-native';
+
+import { spacing } from '@/constants/theme';
+import { useColors, useIsDark } from '@/hooks/useColors';
 import type { MessagesStackParamList } from '@/navigation/types';
 import type { Message } from '@/types';
 
+import { ChatHeader } from '../components/ChatHeader';
+import { MessageBubble } from '../components/MessageBubble';
+import { MessageInput } from '../components/MessageInput';
+import { MeetupSuggestionPanel } from '../components/MeetupSuggestionPanel';
+import { ReadOnlyBanner } from '../components/ReadOnlyBanner';
+import { TypingIndicator } from '../components/TypingIndicator';
+
+import { useChatWebSocket } from '../hooks/useChatWebSocket';
+import { useMarkMessagesRead, useMessages, useSendMessage } from '../hooks/useMessages';
+import { useMeetupSuggestions } from '../hooks/useMeetupSuggestions';
+import { useAuthStore } from '@/stores/authStore';
+import { useExchangeDetail } from '@/features/exchanges/hooks/useExchanges';
+
 type Route = RouteProp<MessagesStackParamList, 'Chat'>;
+
+const CHAT_WRITABLE = new Set(['active', 'swap_confirmed']);
 
 export function ChatScreen() {
   const { t } = useTranslation();
   const { params } = useRoute<Route>();
-  const queryClient = useQueryClient();
+  const c = useColors();
+  const isDark = useIsDark();
   const currentUser = useAuthStore((s) => s.user);
-  const [text, setText] = useState('');
-  const flatListRef = useRef<FlatList<Message>>(null);
 
-  const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['messages', params.exchangeId],
-    queryFn: async () => {
-      const { data } = await http.get<{ results: Message[] }>(
-        API.messaging.messages(params.exchangeId),
-      );
-      return data.results;
-    },
+  const { data: exchangeDetail } = useExchangeDetail(params.exchangeId);
+  const isOwner = exchangeDetail ? currentUser?.id === exchangeDetail.owner.id : false;
+  const other = exchangeDetail
+    ? (isOwner ? exchangeDetail.requester : exchangeDetail.owner)
+    : null;
+
+  const partnerName = params.partnerName ?? other?.username ?? '...';
+  const partnerAvatar = params.partnerAvatar ?? other?.avatar ?? null;
+  const exchangeStatus = params.exchangeStatus ?? exchangeDetail?.status ?? 'active';
+
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+  const isReadOnly = !CHAT_WRITABLE.has(exchangeStatus);
+
+  const listRef = useRef<FlatList<Message>>(null);
+  const isNearBottom = useRef(true);
+  const [showMeetup, setShowMeetup] = useState(false);
+  const [androidKbHeight, setAndroidKbHeight] = useState(0);
+
+  const { data: messages = [], isLoading } = useMessages(params.exchangeId);
+  const sendMutation = useSendMessage();
+  const markRead = useMarkMessagesRead();
+  const { data: meetupLocations = [], isLoading: meetupsLoading } =
+    useMeetupSuggestions(params.exchangeId);
+
+  const {
+    isConnected,
+    isLocked,
+    typingUser,
+    sendTyping,
+  } = useChatWebSocket({
+    exchangeId: params.exchangeId,
+    enabled: !isReadOnly,
   });
 
-  useEffect(() => {
-    wsManager.connect(`/ws/chat/${params.exchangeId}/`);
+  const chatDisabled = isReadOnly || isLocked;
 
-    const unsubscribe = wsManager.on('chat_message', (data: unknown) => {
-      const payload = data as { message?: Message };
-      if (!payload.message) return;
-      queryClient.setQueryData<Message[]>(
-        ['messages', params.exchangeId],
-        (prev = []) => [...prev, payload.message!],
-      );
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const show = Keyboard.addListener('keyboardDidShow', (e) => {
+      setAndroidKbHeight(e.endCoordinates.height + 10);
     });
-
-    return () => {
-      unsubscribe();
-      wsManager.disconnect();
-      if (useAuthStore.getState().isAuthenticated) {
-        wsManager.connect('/ws/notifications/');
-      }
-    };
-  }, [params.exchangeId, queryClient]);
-
-  const sendMutation = useMutation({
-    mutationFn: async (content: string) => {
-      const { data } = await http.post<Message>(
-        API.messaging.messages(params.exchangeId),
-        { content },
-      );
-      return data;
-    },
-    onSuccess: (newMessage) => {
-      queryClient.setQueryData<Message[]>(
-        ['messages', params.exchangeId],
-        (prev = []) => [...prev, newMessage],
-      );
-      setText('');
-    },
-  });
-
-  const handleSend = useCallback(() => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    sendMutation.mutate(trimmed);
-  }, [text, sendMutation]);
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      setAndroidKbHeight(0);
+    });
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   useEffect(() => {
-    http.post(API.messaging.markRead(params.exchangeId)).catch(() => {});
-  }, [params.exchangeId]);
+    if (messages.length > 0) {
+      markRead.mutate(params.exchangeId);
+    }
+  }, [params.exchangeId, messages.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSend = useCallback(
+    (content: string) => {
+      sendMutation.mutate(
+        { exchangeId: params.exchangeId, content },
+        {
+          onSuccess: () => {
+            isNearBottom.current = true;
+            setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+          },
+        },
+      );
+    },
+    [params.exchangeId, sendMutation],
+  );
+
+  const handleMeetupSelect = useCallback(
+    (loc: { name: string }) => {
+      setShowMeetup(false);
+      handleSend(t('messaging.meetupSuggestion', {
+        defaultValue: "Let's meet at {{name}}!",
+        name: loc.name,
+      }));
+    },
+    [handleSend, t],
+  );
 
   const renderMessage = useCallback(
-    ({ item }: { item: Message }) => {
-      const isOwn = item.sender.id === currentUser?.id;
-      return (
-        <View
-          style={[
-            styles.messageBubble,
-            isOwn ? styles.ownMessage : styles.otherMessage,
-          ]}
-        >
-          {!isOwn && (
-            <Text style={styles.senderName}>
-              {item.sender.first_name}
-            </Text>
-          )}
-          <Text style={[styles.messageText, isOwn && styles.ownMessageText]}>
-            {item.content}
-          </Text>
-          <Text style={[styles.timestamp, isOwn && styles.ownTimestamp]}>
-            {new Date(item.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
-        </View>
-      );
-    },
+    ({ item }: { item: Message }) => (
+      <MessageBubble
+        message={item}
+        isOwn={item.sender.id === currentUser?.id}
+      />
+    ),
     [currentUser?.id],
   );
 
+  if (isLoading) {
+    return (
+      <View style={[s.root, { backgroundColor: bg }]}>
+        <ChatHeader
+          partnerName={partnerName}
+          partnerAvatar={partnerAvatar}
+          isConnected={isConnected}
+          onSuggestMeetup={() => {}}
+          showMeetupButton={false}
+        />
+        <View style={s.loadingCenter}>
+          <ActivityIndicator size="large" color={c.auth.golden} />
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={90}
-    >
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMessage}
-        contentContainerStyle={styles.messagesList}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }
-        ListEmptyComponent={
-          isLoading ? null : (
-            <Text style={styles.emptyText}>Send the first message!</Text>
-          )
-        }
+    <View style={[s.root, { backgroundColor: bg }]}>
+      <ChatHeader
+        partnerName={partnerName}
+        partnerAvatar={partnerAvatar}
+        isConnected={isConnected}
+        onSuggestMeetup={() => setShowMeetup(true)}
+        showMeetupButton={!chatDisabled}
       />
 
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          value={text}
-          onChangeText={setText}
-          placeholder="Type a message..."
-          multiline
-          maxLength={1000}
-        />
-        <TouchableOpacity
-          style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]}
-          onPress={handleSend}
-          disabled={!text.trim() || sendMutation.isPending}
-        >
-          <Ionicons
-            name="send"
-            size={20}
-            color={text.trim() ? '#fff' : '#9CA3AF'}
+      <KeyboardAvoidingView
+        style={[
+          s.flex,
+          Platform.OS === 'android' && androidKbHeight > 0 && { paddingBottom: androidKbHeight },
+        ]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        enabled={Platform.OS === 'ios'}
+      >
+        {chatDisabled && <ReadOnlyBanner />}
+
+        {messages.length === 0 ? (
+          <View style={s.emptyContainer}>
+            <MessageCircle size={48} color={c.text.placeholder} style={{ opacity: 0.3 }} />
+            <Text style={[s.emptyTitle, { color: c.text.primary }]}>
+              {t('messaging.noMessages', 'No messages yet')}
+            </Text>
+            <Text style={[s.emptyHint, { color: c.text.secondary }]}>
+              {t('messaging.noMessagesHint', 'Send the first message!')}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessage}
+            contentContainerStyle={s.list}
+            onContentSizeChange={() => {
+              if (isNearBottom.current) {
+                listRef.current?.scrollToEnd({ animated: true });
+              }
+            }}
+            onScroll={(e) => {
+              const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+              isNearBottom.current =
+                contentOffset.y + layoutMeasurement.height >= contentSize.height - 80;
+            }}
+            scrollEventThrottle={100}
           />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+        )}
+
+        {typingUser && <TypingIndicator username={typingUser} />}
+
+        {!chatDisabled && (
+          <MessageInput
+            onSend={handleSend}
+            onTyping={sendTyping}
+            disabled={sendMutation.isPending}
+          />
+        )}
+
+        {chatDisabled && !isReadOnly && isLocked && (
+          <ReadOnlyBanner />
+        )}
+      </KeyboardAvoidingView>
+
+      <MeetupSuggestionPanel
+        visible={showMeetup}
+        locations={meetupLocations}
+        isLoading={meetupsLoading}
+        onSelect={handleMeetupSelect}
+        onClose={() => setShowMeetup(false)}
+      />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
-  messagesList: { padding: 16, gap: 8 },
-  messageBubble: {
-    maxWidth: '80%',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-  },
-  ownMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#2563EB',
-    borderBottomRightRadius: 4,
-  },
-  otherMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
-    borderBottomLeftRadius: 4,
-  },
-  senderName: { fontSize: 12, fontWeight: '600', color: '#6B7280', marginBottom: 2 },
-  messageText: { fontSize: 15, color: '#1F2937', lineHeight: 20 },
-  ownMessageText: { color: '#fff' },
-  timestamp: { fontSize: 11, color: '#9CA3AF', marginTop: 4, alignSelf: 'flex-end' },
-  ownTimestamp: { color: 'rgba(255,255,255,0.7)' },
-  emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    gap: 8,
-  },
-  input: {
+const s = StyleSheet.create({
+  root: {
     flex: 1,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
   },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2563EB',
+  flex: {
+    flex: 1,
+  },
+  loadingCenter: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sendButtonDisabled: { backgroundColor: '#E5E7EB' },
+  list: {
+    padding: spacing.md,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: spacing.sm,
+  },
+  emptyHint: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
 });

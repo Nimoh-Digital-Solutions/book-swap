@@ -8,7 +8,7 @@ import { useColors, useIsDark } from '@/hooks/useColors';
 const ICON_SIZE = 20;
 
 const HIDDEN_CHILD_ROUTES = new Set([
-  'ChatScreen',
+  'Chat',
   'BookDetail',
   'ExchangeDetail',
   'UserProfile',

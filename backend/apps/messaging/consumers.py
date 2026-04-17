@@ -233,6 +233,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    async def chat_read_all(self, event):
+        """Bulk read receipt — all messages up to read_at are marked as read."""
+        await self.send_json(
+            {
+                "type": "chat.read_all",
+                "read_at": event["read_at"],
+            }
+        )
+
     # ── Database helpers ──────────────────────────────────────────────
 
     @database_sync_to_async

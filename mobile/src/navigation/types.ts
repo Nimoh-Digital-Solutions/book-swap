@@ -45,7 +45,12 @@ export type ScanStackParamList = {
 export type MessagesStackParamList = {
   ExchangeList: undefined;
   IncomingRequests: undefined;
-  Chat: { exchangeId: string };
+  Chat: {
+    exchangeId: string;
+    partnerName?: string;
+    partnerAvatar?: string | null;
+    exchangeStatus?: string;
+  };
   ExchangeDetail: { exchangeId: string };
   CounterOffer: { exchangeId: string; requesterId: string; requesterName: string };
 };

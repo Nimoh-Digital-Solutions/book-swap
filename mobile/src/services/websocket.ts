@@ -67,43 +67,43 @@ class WebSocketManager {
     const url = `${wsRoot}${path.startsWith('/') ? path : `/${path}`}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     addBreadcrumb('websocket', 'connect', { path });
 
-    try {
-      this.ws?.close();
-    } catch {
-      /* noop */
+    const oldWs = this.ws;
+    if (oldWs) {
+      oldWs.onopen = null;
+      oldWs.onmessage = null;
+      oldWs.onclose = null;
+      oldWs.onerror = null;
+      try { oldWs.close(); } catch { /* noop */ }
     }
 
-    this.ws = new WebSocket(url);
+    const ws = new WebSocket(url);
+    this.ws = ws;
 
-    this.ws.onopen = () => {
+    ws.onopen = () => {
+      if (this.ws !== ws) return;
       this.reconnectAttempts = 0;
-      const access = tokenStorage.getAccess();
-      if (access) {
-        try {
-          this.ws?.send(JSON.stringify({ type: 'auth', token: access }));
-        } catch {
-          /* closed */
-        }
-      }
+      this.handlers.get('__connected__')?.forEach((h) => h({}));
     };
 
-    this.ws.onmessage = (event) => {
+    ws.onmessage = (event) => {
+      if (this.ws !== ws) return;
       try {
         const data = JSON.parse(event.data) as { type?: string };
         const type = data.type as string;
         this.handlers.get(type)?.forEach((h) => h(data));
         this.handlers.get('*')?.forEach((h) => h(data));
-      } catch {
-        /* ignore parse errors */
-      }
+      } catch { /* ignore parse errors */ }
     };
 
-    this.ws.onclose = () => {
+    ws.onclose = () => {
+      if (this.ws !== ws) return;
+      this.handlers.get('__disconnected__')?.forEach((h) => h({}));
       if (this.currentPath) this.scheduleReconnect();
     };
 
-    this.ws.onerror = () => {
-      this.ws?.close();
+    ws.onerror = () => {
+      if (this.ws !== ws) return;
+      ws.close();
     };
   }
 

@@ -65,10 +65,19 @@ export function ExchangeDetailScreen() {
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
 
-  const goToChat = useCallback(
-    () => navigation.navigate('Chat', { exchangeId: params.exchangeId }),
-    [navigation, params.exchangeId],
-  );
+  const currentUserId = useAuthStore((st) => st.user?.id);
+  const isOwner = exchange ? currentUserId === exchange.owner.id : false;
+
+  const goToChat = useCallback(() => {
+    if (!exchange) return;
+    const other = isOwner ? exchange.requester : exchange.owner;
+    navigation.navigate('Chat', {
+      exchangeId: params.exchangeId,
+      partnerName: other.username,
+      partnerAvatar: other.avatar,
+      exchangeStatus: exchange.status,
+    });
+  }, [navigation, params.exchangeId, exchange, isOwner]);
 
   if (isLoading || !exchange) {
     return (
@@ -79,8 +88,6 @@ export function ExchangeDetailScreen() {
   }
 
   const isChatEligible = CHAT_ELIGIBLE_STATUSES.includes(exchange.status);
-  const currentUserId = useAuthStore((st) => st.user?.id);
-  const isOwner = currentUserId === exchange.owner.id;
 
   const leftBook = isOwner ? exchange.requested_book : exchange.offered_book;
   const rightBook = isOwner ? exchange.offered_book : exchange.requested_book;
