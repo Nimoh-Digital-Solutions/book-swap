@@ -15,7 +15,8 @@
     "or": "ou",
     "permissionDenied": "Permission refusée",
     "remove": "Retirer",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "ok": "OK"
   },
   "navigation": {
     "openProfile": "Ouvrir le profil",
@@ -381,7 +382,11 @@
       "swapExclaim": "viennent d'échanger des livres !",
       "connectorAnd": " et ",
       "verbRated": "a noté"
-    }
+    },
+    "locationDeniedBannerTitle": "La localisation est désactivée",
+    "locationDeniedBannerBody": "Activez la localisation dans les Réglages pour voir les livres, les compteurs et l'activité à proximité.",
+    "openSettings": "Ouvrir les réglages",
+    "queryError": "Impossible de charger certaines données. Appuyez pour réessayer."
   },
   "messaging": {
     "connected": "Connecté",
@@ -679,5 +684,14 @@
     "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d'utilisation",
     "madeWith": "Fait avec amour pour les amateurs de livres"
+  },
+  "languages": {
+    "en": "Anglais",
+    "nl": "Néerlandais",
+    "fr": "Français",
+    "de": "Allemand",
+    "es": "Espagnol",
+    "both": "EN / NL",
+    "other": "Autre"
   }
 }

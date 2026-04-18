@@ -12,10 +12,12 @@ const HIDDEN_CHILD_ROUTES = new Set([
   'BookDetail',
   'ExchangeDetail',
   'UserProfile',
+  'UserReviews',
   'AddBook',
   'ScanResult',
   'RequestSwap',
   'CounterOffer',
+  'Notifications',
 ]);
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {

@@ -18,9 +18,9 @@ import { EmptyState } from '@/components/EmptyState';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import type { Rating } from '@/types';
-import type { HomeStackParamList } from '@/navigation/types';
 
-type Route = RouteProp<HomeStackParamList, 'UserReviews'>;
+type UserReviewsParams = { UserReviews: { userId: string; username?: string } };
+type Route = RouteProp<UserReviewsParams, 'UserReviews'>;
 
 export function UserReviewsScreen() {
   const { t } = useTranslation();

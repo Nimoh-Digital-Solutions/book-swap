@@ -89,14 +89,8 @@ function InfoCard({
   );
 }
 
-function formatLanguage(lang: string): string {
-  const map: Record<string, string> = {
-    en: 'English',
-    nl: 'Nederlands',
-    fr: 'Français',
-    both: 'EN / NL',
-  };
-  return map[lang] ?? lang.toUpperCase();
+function formatLanguage(lang: string, t: (key: string, fallback: string) => string): string {
+  return t(`languages.${lang}`, lang.toUpperCase());
 }
 
 type Nav = NativeStackNavigationProp<HomeStackParamList, 'UserProfile'>;
@@ -312,7 +306,7 @@ export function UserProfileScreen() {
                 {t('profile.language', 'Language')}
               </Text>
               <Text style={[s.actionHint, { color: c.text.secondary }]}>
-                {formatLanguage(profile.preferred_language)}
+                {formatLanguage(profile.preferred_language, t)}
               </Text>
             </View>
           </View>

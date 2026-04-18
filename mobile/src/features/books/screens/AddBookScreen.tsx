@@ -120,7 +120,7 @@ export function AddBookScreen() {
           t("books.addBook.successTitle", "Book listed!"),
           t("books.addBook.successMsg", "Your book is now available for swapping."),
           [{
-            text: "OK",
+            text: t("common.ok", "OK"),
             onPress: () => {
               navigation.popToTop();
               const tabNav = navigation.getParent();

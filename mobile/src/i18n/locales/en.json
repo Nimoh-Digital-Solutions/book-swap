@@ -16,7 +16,8 @@
     "permissionDenied": "Permission denied",
     "remove": "Remove",
     "saving": "Saving...",
-    "close": "Close"
+    "close": "Close",
+    "ok": "OK"
   },
   "errors": {
     "websocketExhausted": "Could not reconnect. Pull to refresh or reopen the app to restore live updates."
@@ -394,7 +395,8 @@
     "openSettings": "Open Settings",
     "locationUnavailable": "—",
     "locationDeniedRecentTitle": "Turn on location to see nearby books",
-    "locationDeniedRecentBody": "We use your approximate area to show fresh listings and community activity."
+    "locationDeniedRecentBody": "We use your approximate area to show fresh listings and community activity.",
+    "queryError": "Could not load some data. Tap to retry."
   },
   "messaging": {
     "connected": "Connected",
@@ -700,5 +702,14 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "madeWith": "Made with love for book lovers"
+  },
+  "languages": {
+    "en": "English",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "de": "Deutsch",
+    "es": "Español",
+    "both": "EN / NL",
+    "other": "Other"
   }
 }

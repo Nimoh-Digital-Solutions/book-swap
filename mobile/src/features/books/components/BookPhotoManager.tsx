@@ -182,6 +182,8 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
   const handleDragEnd = useCallback(
     ({ data }: { data: Photo[] }) => {
       const ids = data.map((p) => p.id);
+      const currentIds = sorted.map((p) => p.id);
+      if (ids.every((id, i) => id === currentIds[i])) return;
       reorder.mutate(ids, {
         onError: () =>
           showErrorToast(
@@ -189,7 +191,7 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
           ),
       });
     },
-    [reorder],
+    [reorder, sorted],
   );
 
   const renderItem = useCallback(

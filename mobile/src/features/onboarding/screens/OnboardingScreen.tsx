@@ -119,6 +119,7 @@ export function OnboardingScreen() {
       setError(
         t('onboarding.completeError', 'Something went wrong. Please try again.'),
       );
+    } finally {
       setSubmitLoading(false);
     }
   };
@@ -132,6 +133,7 @@ export function OnboardingScreen() {
       setError(
         t('onboarding.skipError', 'Something went wrong. Please try again.'),
       );
+    } finally {
       setSkipLoading(false);
     }
   };

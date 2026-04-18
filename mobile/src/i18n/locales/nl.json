@@ -15,7 +15,8 @@
     "or": "of",
     "permissionDenied": "Toestemming geweigerd",
     "remove": "Verwijderen",
-    "saving": "Opslaan..."
+    "saving": "Opslaan...",
+    "ok": "OK"
   },
   "navigation": {
     "openProfile": "Profiel openen",
@@ -381,7 +382,11 @@
       "swapExclaim": "hebben net boeken geruild!",
       "connectorAnd": " en ",
       "verbRated": "beoordeelde"
-    }
+    },
+    "locationDeniedBannerTitle": "Locatie is uitgeschakeld",
+    "locationDeniedBannerBody": "Schakel locatie in via Instellingen om boeken, aantallen en activiteit in de buurt te zien.",
+    "openSettings": "Instellingen openen",
+    "queryError": "Sommige gegevens konden niet geladen worden. Tik om opnieuw te proberen."
   },
   "messaging": {
     "connected": "Verbonden",
@@ -679,5 +684,14 @@
     "privacyPolicy": "Privacybeleid",
     "termsOfService": "Gebruiksvoorwaarden",
     "madeWith": "Met liefde gemaakt voor boekliefhebbers"
+  },
+  "languages": {
+    "en": "Engels",
+    "nl": "Nederlands",
+    "fr": "Frans",
+    "de": "Duits",
+    "es": "Spaans",
+    "both": "EN / NL",
+    "other": "Anders"
   }
 }

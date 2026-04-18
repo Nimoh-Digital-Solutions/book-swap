@@ -30,8 +30,15 @@ export function useBrowseBooks(params: BrowseParams) {
       return data;
     },
     initialPageParam: '1',
-    getNextPageParam: (lastPage) =>
-      lastPage.next ? new URL(lastPage.next).searchParams.get('page') ?? undefined : undefined,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.next) return undefined;
+      try {
+        return new URL(lastPage.next).searchParams.get('page') ?? undefined;
+      } catch {
+        const match = lastPage.next.match(/[?&]page=(\d+)/);
+        return match?.[1] ?? undefined;
+      }
+    },
     enabled: !!params.lat && !!params.lng,
   });
 }

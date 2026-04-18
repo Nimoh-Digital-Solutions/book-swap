@@ -65,9 +65,10 @@ export function HomeScreen() {
     Linking.openSettings();
   }, []);
 
-  const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng, preferredRadius);
-  const { data: recentBooks, isLoading: booksLoading } = useRecentBooks(coords?.lat, coords?.lng, preferredRadius);
-  const { data: communityData } = useCommunityStats(coords?.lat, coords?.lng, preferredRadius);
+  const { data: nearbyData, isError: nearbyError } = useNearbyCount(coords?.lat, coords?.lng, preferredRadius);
+  const { data: recentBooks, isLoading: booksLoading, isError: booksError } = useRecentBooks(coords?.lat, coords?.lng, preferredRadius);
+  const { data: communityData, isError: communityError } = useCommunityStats(coords?.lat, coords?.lng, preferredRadius);
+  const hasQueryError = nearbyError || booksError || communityError;
 
   const tabNav = navigation.getParent();
   const goToBrowse = useCallback(
@@ -90,6 +91,18 @@ export function HomeScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === "granted") {
+        const loc = await Location.getCurrentPositionAsync({});
+        setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        setLocationDenied(false);
+        try {
+          const [geo] = await Location.reverseGeocodeAsync(loc.coords);
+          if (geo?.city) setCity(geo.city);
+        } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ }
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nearbyCount"] }),
       queryClient.invalidateQueries({ queryKey: ["recentBooks"] }),
@@ -189,6 +202,14 @@ export function HomeScreen() {
           )}
         />
 
+        {hasQueryError && !locationDenied && (
+          <Pressable onPress={handleRefresh} style={[s.errorHint, { backgroundColor: c.status.error + '14' }]}>
+            <Text style={[s.errorHintText, { color: c.status.error }]}>
+              {t('home.queryError', 'Could not load some data. Tap to retry.')}
+            </Text>
+          </Pressable>
+        )}
+
         <HomeQuickActions actions={quickActions} />
 
         <HomeRecentlyAdded
@@ -257,4 +278,12 @@ const s = StyleSheet.create({
     borderRadius: 999,
   },
   locBannerBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  errorHint: {
+    marginHorizontal: 16,
+    marginBottom: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  errorHintText: { fontSize: 13, fontWeight: "600", textAlign: "center" },
 });
