@@ -122,7 +122,7 @@ Google requires these before you can publish any release:
 
 **Web client** (used by the backend):
 - Application type: Web application
-- Authorized redirect URIs: `https://api.bookswap.app/api/v1/auth/google/callback/`
+- Authorized redirect URIs: `https://api.book-swaps.com/api/v1/auth/google/callback/`
 
 **iOS client:**
 - Application type: iOS
@@ -164,7 +164,7 @@ eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID --valu
 A privacy policy URL is required by both stores. The privacy policy for
 BookSwap is available at:
 
-**URL:** `https://bookswap.app/privacy`
+**URL:** `https://book-swaps.com/privacy`
 
 If you haven't deployed it yet, you can use:
 - A page on your website

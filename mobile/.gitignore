@@ -42,3 +42,6 @@ yarn-error.*
 
 # EAS build artifacts
 *.tar.gz
+
+# Service account keys (NEVER commit)
+google-service-account.json
