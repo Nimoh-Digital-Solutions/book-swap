@@ -53,7 +53,7 @@ ENV BACKEND_URL="http://backend:8000"
 # Both CSP_CONNECT_SRC and BACKEND_URL are replaced; other ${...} tokens are left untouched.
 ENV NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
 ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
-ENV NGINX_ENVSUBST_FILTER="CSP_CONNECT_SRC BACKEND_URL"
+ENV NGINX_ENVSUBST_FILTER="CSP_CONNECT_SRC|BACKEND_URL"
 
 # Healthcheck endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
