@@ -39,8 +39,9 @@ FROM nginxinc/nginx-unprivileged:alpine@sha256:07ac04b4a727a38e7360f3bd8bbe49a74
 # Copy custom nginx configuration (as a template — envsubst replaces ${CSP_CONNECT_SRC})
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Copy shared security headers include (as a template for CSP domain injection)
-COPY nginx/security_headers.conf /etc/nginx/templates/security_headers.conf.template
+# Copy shared security headers include (as a template for CSP domain injection).
+# Output to /etc/nginx/snippets/ so the main *.conf glob does NOT pick it up.
+COPY nginx/security_headers.conf /etc/nginx/templates/snippets/security_headers.conf.template
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
