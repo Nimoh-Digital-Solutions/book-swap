@@ -55,7 +55,7 @@ export function MyBooksScreen() {
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
-  const { data: books, isLoading, refetch } = useMyBooks();
+  const { data: books, isLoading, isRefetching, refetch } = useMyBooks();
   const deleteBook = useDeleteBook();
 
   const [search, setSearch] = useState("");
@@ -362,7 +362,7 @@ export function MyBooksScreen() {
         ]}
         showsVerticalScrollIndicator={false}
         onRefresh={refetch}
-        refreshing={false}
+        refreshing={isRefetching}
         ListEmptyComponent={
           search.trim() || statusFilter !== "all" ? (
             <EmptyState

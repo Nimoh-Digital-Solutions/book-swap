@@ -27,7 +27,7 @@ export type HomeStackParamList = {
 };
 
 export type BrowseStackParamList = {
-  BrowseMap: undefined;
+  BrowseMap: { initialSearch?: string } | undefined;
   BookDetail: { bookId: string };
   RequestSwap: { bookId: string };
   UserProfile: { userId: string };

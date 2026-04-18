@@ -71,8 +71,10 @@ export const authApi = {
     return data;
   },
 
-  async resendVerificationEmail() {
-    const { data } = await http.post<{ detail: string }>(API.auth.emailResend);
+  async resendVerificationEmail(email?: string) {
+    const { data } = await plain.post<{ detail: string }>(API.auth.emailResend, {
+      ...(email ? { email } : {}),
+    });
     return data;
   },
 

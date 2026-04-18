@@ -92,7 +92,7 @@ export function useCheckUsername(username: string, currentUsername?: string) {
     queryFn: async () => {
       const { data } = await http.get<CheckUsernameResponse>(
         API.users.checkUsername,
-        { params: { username: trimmed } },
+        { params: { q: trimmed } },
       );
       return data;
     },

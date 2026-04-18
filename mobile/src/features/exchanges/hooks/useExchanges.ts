@@ -8,7 +8,7 @@ import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { enqueueMutation } from '@/lib/offlineMutationQueue';
-import { showInfoToast } from '@/components/Toast';
+import { showInfoToast, showErrorToast } from '@/components/Toast';
 import type {
   ExchangeListItem,
   ExchangeDetail,
@@ -187,6 +187,7 @@ export function useDeclineExchange() {
 
 export function useCounterExchange() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async ({
       exchangeId,
@@ -206,11 +207,13 @@ export function useCounterExchange() {
       qc.invalidateQueries({ queryKey: keys.lists() });
       qc.invalidateQueries({ queryKey: keys.incoming() });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }
 
 export function useApproveCounter() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
       const { data } = await http.post<ExchangeDetail>(
@@ -222,6 +225,7 @@ export function useApproveCounter() {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
       qc.invalidateQueries({ queryKey: keys.lists() });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }
 
@@ -258,6 +262,7 @@ export function useCancelExchange() {
 
 export function useAcceptConditions() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
       const { data } = await http.post<ExchangeDetail>(
@@ -268,11 +273,13 @@ export function useAcceptConditions() {
     onSuccess: (_data, exchangeId) => {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }
 
 export function useConfirmSwap() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
       const { data } = await http.post<ExchangeDetail>(
@@ -285,11 +292,13 @@ export function useConfirmSwap() {
       qc.invalidateQueries({ queryKey: keys.lists() });
       qc.invalidateQueries({ queryKey: ['myBooks'] });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }
 
 export function useRequestReturn() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
       const { data } = await http.post<ExchangeDetail>(
@@ -300,11 +309,13 @@ export function useRequestReturn() {
     onSuccess: (_data, exchangeId) => {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }
 
 export function useConfirmReturn() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
       const { data } = await http.post<ExchangeDetail>(
@@ -317,5 +328,6 @@ export function useConfirmReturn() {
       qc.invalidateQueries({ queryKey: keys.lists() });
       qc.invalidateQueries({ queryKey: ['myBooks'] });
     },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
 }

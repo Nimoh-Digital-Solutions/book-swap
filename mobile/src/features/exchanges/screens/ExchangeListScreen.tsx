@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeftRight, Bell, BookOpen, Inbox } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeftRight, Bell, BookOpen, Inbox } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,7 +52,7 @@ export function ExchangeListScreen() {
   const navigation = useNavigation<Nav>();
 
   useExchangeWsRefresh();
-  const { data: exchanges, isLoading, refetch } = useExchanges();
+  const { data: exchanges, isLoading, isError, refetch } = useExchanges();
   const { data: incomingCount } = useIncomingCount();
   const [activeTab, setActiveTab] = useState<Tab>('active');
 
@@ -155,6 +155,14 @@ export function ExchangeListScreen() {
           <SkeletonCard />
           <SkeletonCard />
         </View>
+      ) : isError ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.error', 'Something went wrong')}
+          subtitle={t('common.retryHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={activeTab === 'history' ? BookOpen : ArrowLeftRight}

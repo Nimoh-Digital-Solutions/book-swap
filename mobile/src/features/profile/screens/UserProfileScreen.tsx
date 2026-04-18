@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   ScrollView,
@@ -29,7 +30,9 @@ import { EmptyState } from '@/components/EmptyState';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import { usePublicProfile } from '@/features/profile/hooks/usePublicProfile';
+import { useBlockUser, useIsBlocked } from '@/features/trust-safety/hooks/useBlocks';
 import { ReportSheet } from '@/features/trust-safety/components/ReportSheet';
+import { showSuccessToast, showErrorToast } from '@/components/Toast';
 import type { HomeStackParamList } from '@/navigation/types';
 
 type Route = RouteProp<HomeStackParamList, 'UserProfile'>;
@@ -107,7 +110,37 @@ export function UserProfileScreen() {
   const { userId } = params;
 
   const { data: profile, isLoading, isError } = usePublicProfile(userId);
+  const blockUser = useBlockUser();
+  const isBlocked = useIsBlocked(userId);
   const [reportVisible, setReportVisible] = useState(false);
+
+  const handleBlock = useCallback(() => {
+    Alert.alert(
+      t('profile.public.blockTitle', 'Block {{name}}?', {
+        name: profile?.first_name || profile?.username || '',
+      }),
+      t(
+        'profile.public.blockMessage',
+        'They won\'t be able to see your books or send you swap requests.',
+      ),
+      [
+        { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+        {
+          text: t('profile.public.blockConfirm', 'Block'),
+          style: 'destructive',
+          onPress: () =>
+            blockUser.mutate(userId, {
+              onSuccess: () => {
+                showSuccessToast(t('profile.public.blocked', 'User blocked'));
+                navigation.goBack();
+              },
+              onError: () =>
+                showErrorToast(t('profile.public.blockError', 'Failed to block user')),
+            }),
+        },
+      ],
+    );
+  }, [blockUser, userId, profile, t, navigation]);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -288,10 +321,11 @@ export function UserProfileScreen() {
 
           {/* Block */}
           <Pressable
-            disabled
+            onPress={handleBlock}
+            disabled={blockUser.isPending || isBlocked}
             style={({ pressed }) => [
               s.actionRow,
-              { opacity: pressed ? 0.7 : 0.45 },
+              { opacity: isBlocked ? 0.45 : pressed ? 0.7 : 1 },
             ]}
           >
             <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
@@ -299,10 +333,9 @@ export function UserProfileScreen() {
             </View>
             <View style={s.actionTextWrap}>
               <Text style={[s.actionLabel, { color: c.text.primary }]}>
-                {t('profile.public.blockUser', 'Block User')}
-              </Text>
-              <Text style={[s.actionHint, { color: c.text.placeholder }]}>
-                {t('profile.public.comingSoon', 'Coming soon')}
+                {isBlocked
+                  ? t('profile.public.userBlocked', 'User Blocked')
+                  : t('profile.public.blockUser', 'Block User')}
               </Text>
             </View>
           </Pressable>

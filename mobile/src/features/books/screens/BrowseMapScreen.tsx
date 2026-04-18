@@ -11,7 +11,7 @@ import {
   Keyboard,
 } from "react-native";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import {
@@ -87,9 +87,12 @@ const DEFAULT_REGION: Region = {
 
 const hasGoogleMapsKey = !!process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+type BrowseRoute = RouteProp<import('@/navigation/types').BrowseStackParamList, 'BrowseMap'>;
+
 export function BrowseMapScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
+  const route = useRoute<BrowseRoute>();
   const c = useColors();
   const isDark = useIsDark();
 
@@ -100,8 +103,9 @@ export function BrowseMapScreen() {
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [locationReady, setLocationReady] = useState(false);
 
-  const [searchText, setSearchText] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const initialSearch = route.params?.initialSearch ?? "";
+  const [searchText, setSearchText] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedRadius, setSelectedRadius] = useState(5000);
   const [showGenres, setShowGenres] = useState(false);

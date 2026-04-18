@@ -94,14 +94,17 @@ class OnboardingCompleteView(APIView):
 class CheckUsernameView(APIView):
     """GET /users/check-username/?q=<name> — check username availability."""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def get(self, request):
         serializer = CheckUsernameSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data["q"]
 
-        is_taken = User.objects.filter(username=username).exclude(pk=request.user.pk).exists()
+        qs = User.objects.filter(username=username)
+        if request.user.is_authenticated:
+            qs = qs.exclude(pk=request.user.pk)
+        is_taken = qs.exists()
 
         result = {"available": not is_taken}
         if is_taken:

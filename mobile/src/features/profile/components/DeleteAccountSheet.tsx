@@ -13,6 +13,7 @@ import {
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { useAuthStore } from '@/stores/authStore';
 import { useDeleteAccount } from '../hooks/useAccountDeletion';
 
 interface DeleteAccountSheetProps {
@@ -25,6 +26,8 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
   const c = useColors();
   const isDark = useIsDark();
   const deleteAccount = useDeleteAccount();
+  const authProvider = useAuthStore((s) => s.user?.auth_provider);
+  const isSocialOnly = !!authProvider && authProvider !== 'email';
 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -43,14 +46,14 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
   }, [onClose, deleteAccount]);
 
   const handleConfirm = useCallback(() => {
-    if (!password.trim()) {
+    if (!isSocialOnly && !password.trim()) {
       setError(t('accountDeletion.passwordRequired', 'Password is required.'));
       return;
     }
     setError('');
 
     deleteAccount.mutate(
-      { password },
+      isSocialOnly ? {} : { password },
       {
         onError: (err) => {
           const ax = err as { response?: { data?: { password?: string[]; detail?: string } } };
@@ -62,7 +65,7 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
         },
       },
     );
-  }, [password, deleteAccount, t]);
+  }, [password, deleteAccount, t, isSocialOnly]);
 
   return (
     <Modal
@@ -118,32 +121,36 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
             </Text>
           </View>
 
-          {/* Password input */}
-          <Text style={[s.inputLabel, { color: c.text.secondary }]}>
-            {t('accountDeletion.confirmPassword', 'Confirm your password')}
-          </Text>
-          <TextInput
-            style={[
-              s.input,
-              {
-                backgroundColor: cardBg,
-                borderColor: error ? dangerColor : cardBorder,
-                color: c.text.primary,
-              },
-            ]}
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (error) setError('');
-            }}
-            secureTextEntry
-            placeholder={t('auth.password', 'Password')}
-            placeholderTextColor={c.text.placeholder}
-            textContentType="password"
-            autoComplete="password"
-            returnKeyType="done"
-            onSubmitEditing={handleConfirm}
-          />
+          {/* Password input (skip for social-only users) */}
+          {!isSocialOnly && (
+            <>
+              <Text style={[s.inputLabel, { color: c.text.secondary }]}>
+                {t('accountDeletion.confirmPassword', 'Confirm your password')}
+              </Text>
+              <TextInput
+                style={[
+                  s.input,
+                  {
+                    backgroundColor: cardBg,
+                    borderColor: error ? dangerColor : cardBorder,
+                    color: c.text.primary,
+                  },
+                ]}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (error) setError('');
+                }}
+                secureTextEntry
+                placeholder={t('auth.password', 'Password')}
+                placeholderTextColor={c.text.placeholder}
+                textContentType="password"
+                autoComplete="password"
+                returnKeyType="done"
+                onSubmitEditing={handleConfirm}
+              />
+            </>
+          )}
           {!!error && (
             <Text style={[s.errorText, { color: dangerColor }]}>{error}</Text>
           )}
@@ -164,12 +171,12 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
 
             <Pressable
               onPress={handleConfirm}
-              disabled={!password.trim() || deleteAccount.isPending}
+              disabled={(!isSocialOnly && !password.trim()) || deleteAccount.isPending}
               style={({ pressed }) => [
                 s.deleteBtn,
                 {
                   backgroundColor: dangerColor,
-                  opacity: !password.trim() || pressed || deleteAccount.isPending ? 0.6 : 1,
+                  opacity: (!isSocialOnly && !password.trim()) || pressed || deleteAccount.isPending ? 0.6 : 1,
                 },
               ]}
             >

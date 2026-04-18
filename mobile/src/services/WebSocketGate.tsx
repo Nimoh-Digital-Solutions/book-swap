@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { tokenStorage } from '@/lib/storage';
 import { wsManager } from '@/services/websocket';
 import { useNotificationWsSync } from '@/features/notifications/hooks/useNotifications';
+import { usePushRegistration } from '@/hooks/usePushRegistration';
 
 /**
  * Keeps `/ws/notifications/` connected while authenticated.
@@ -13,6 +14,7 @@ export function WebSocketGate(): null {
   const prevTokenRef = useRef<string | null>(null);
 
   useNotificationWsSync();
+  usePushRegistration();
 
   useEffect(() => {
     const sync = () => {

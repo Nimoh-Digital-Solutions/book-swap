@@ -15,7 +15,7 @@ import { Image } from "expo-image";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
-import { Check, Save, Trash2 } from "lucide-react-native";
+import { AlertTriangle, Check, Save, Trash2 } from "lucide-react-native";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius } from "@/constants/theme";
@@ -27,6 +27,7 @@ import {
   type CreateBookPayload,
 } from "@/features/books/hooks/useBooks";
 import { BookPhotoManager } from "@/features/books/components/BookPhotoManager";
+import { EmptyState } from "@/components/EmptyState";
 import { GENRE_OPTIONS } from "@/features/books/constants";
 import type { ProfileStackParamList } from "@/navigation/types";
 
@@ -57,7 +58,7 @@ export function EditBookScreen() {
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
-  const { data: book, isLoading: bookLoading } = useBookDetail(params.bookId);
+  const { data: book, isLoading: bookLoading, isError: bookError, refetch } = useBookDetail(params.bookId);
   const updateBook = useUpdateBook(params.bookId);
   const deleteBook = useDeleteBook();
 
@@ -180,6 +181,20 @@ export function EditBookScreen() {
       ],
     );
   };
+
+  if (bookError) {
+    return (
+      <View style={[s.center, { backgroundColor: bg }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t("books.editBook.loadError", "Couldn't load book")}
+          subtitle={t("books.editBook.loadErrorHint", "Check your connection and try again.")}
+          actionLabel={t("common.retry", "Retry")}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   if (bookLoading || !hydrated) {
     return (

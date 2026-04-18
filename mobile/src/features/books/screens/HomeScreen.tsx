@@ -84,8 +84,12 @@ export function HomeScreen() {
 
   const handleSearch = useCallback(() => {
     if (!searchQuery.trim()) return;
-    goToBrowse();
-  }, [searchQuery, goToBrowse]);
+    const tabNav = navigation.getParent();
+    (tabNav as any)?.navigate("BrowseTab", {
+      screen: "BrowseMap",
+      params: { initialSearch: searchQuery.trim() },
+    });
+  }, [searchQuery, navigation]);
 
   const quickActions = [
     { icon: ScanBarcode, label: t("home.scan", "Scan"), onPress: goToScan },

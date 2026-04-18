@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import {
+  AlertTriangle,
   ArrowLeftRight,
   Bell,
   CheckCheck,
@@ -69,7 +70,7 @@ export function NotificationListScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<any>();
 
-  const { data, isLoading, refetch } = useNotifications();
+  const { data, isLoading, isRefetching, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllRead();
   useNotificationWsSync();
@@ -193,17 +194,27 @@ export function NotificationListScreen() {
         contentContainerStyle={s.list}
         showsVerticalScrollIndicator={false}
         onRefresh={refetch}
-        refreshing={false}
+        refreshing={isRefetching}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
-          <EmptyState
-            icon={Bell}
-            title={t("notifications.emptyTitle", "No notifications")}
-            subtitle={t(
-              "notifications.emptySubtitle",
-              "You'll be notified about swap requests, messages, and ratings here.",
-            )}
-          />
+          isError ? (
+            <EmptyState
+              icon={AlertTriangle}
+              title={t("common.error", "Something went wrong")}
+              subtitle={t("common.retryHint", "Check your connection and try again.")}
+              actionLabel={t("common.retry", "Retry")}
+              onAction={() => refetch()}
+            />
+          ) : (
+            <EmptyState
+              icon={Bell}
+              title={t("notifications.emptyTitle", "No notifications")}
+              subtitle={t(
+                "notifications.emptySubtitle",
+                "You'll be notified about swap requests, messages, and ratings here.",
+              )}
+            />
+          )
         }
       />
     </SafeAreaView>

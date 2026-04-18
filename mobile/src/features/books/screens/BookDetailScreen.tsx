@@ -5,6 +5,7 @@ import {
   BookOpen,
   ChevronRight,
   FileText,
+  Flag,
   Globe,
   Heart,
   MapPin,
@@ -12,7 +13,7 @@ import {
   Sparkles,
   Tag,
 } from "lucide-react-native";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -21,6 +22,7 @@ import { Avatar } from "@/components/Avatar";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
+import { ReportSheet } from "@/features/trust-safety/components/ReportSheet";
 import { useBookDetail } from "../hooks/useBooks";
 import { useBookWishlistStatus, useAddWishlistItem, useRemoveWishlistItem } from "../hooks/useWishlist";
 
@@ -56,6 +58,7 @@ export function BookDetailScreen() {
   const { data: wishlistEntry, isLoading: wishlistLoading } = useBookWishlistStatus(params.bookId);
   const addWishlist = useAddWishlistItem();
   const removeWishlist = useRemoveWishlistItem();
+  const [reportVisible, setReportVisible] = useState(false);
 
   const isWishlisted = !!wishlistEntry;
   const wishlistBusy = addWishlist.isPending || removeWishlist.isPending;
@@ -284,8 +287,32 @@ export function BookDetailScreen() {
           </Pressable>
         )}
 
+        {/* Report book */}
+        {!isOwnBook && owner && (
+          <View style={s.reportRow}>
+            <Pressable
+              onPress={() => setReportVisible(true)}
+              style={({ pressed }) => [s.reportBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Flag size={14} color={c.text.placeholder} />
+              <Text style={[s.reportText, { color: c.text.placeholder }]}>
+                {t('report.button', 'Report')}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         <View style={s.bottomSpacer} />
       </ScrollView>
+
+      {!isOwnBook && owner && (
+        <ReportSheet
+          visible={reportVisible}
+          onClose={() => setReportVisible(false)}
+          reportedUserId={owner.id}
+          reportedBookId={book.id}
+        />
+      )}
 
       {!isOwnBook && (
         <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
@@ -494,6 +521,22 @@ const s = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.xl,
     borderWidth: 1.5,
+  },
+
+  reportRow: {
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  reportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  reportText: {
+    fontSize: 13,
+    fontWeight: "500",
   },
 
   bottomSpacer: { height: 20 },

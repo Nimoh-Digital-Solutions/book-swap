@@ -1,10 +1,11 @@
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Flag } from 'lucide-react-native';
+import { AlertTriangle, Flag } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { EmptyState } from '@/components/EmptyState';
 import { SkeletonBookDetail } from '@/components/Skeleton';
 import { radius, shadows, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
@@ -56,7 +57,7 @@ export function ExchangeDetailScreen() {
 
   useExchangeWsRefresh();
 
-  const { data: exchange, isLoading, refetch } = useExchangeDetail(params.exchangeId);
+  const { data: exchange, isLoading, isError, refetch } = useExchangeDetail(params.exchangeId);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +84,20 @@ export function ExchangeDetailScreen() {
       exchangeStatus: exchange.status,
     });
   }, [navigation, params.exchangeId, exchange, isOwner]);
+
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: 'center' }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('exchanges.loadError', "Couldn't load exchange")}
+          subtitle={t('exchanges.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   if (isLoading || !exchange) {
     return (

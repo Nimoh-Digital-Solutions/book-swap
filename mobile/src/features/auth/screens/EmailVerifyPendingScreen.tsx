@@ -30,12 +30,12 @@ export function EmailVerifyPendingScreen() {
   const handleResend = useCallback(async () => {
     setResendState('sending');
     try {
-      await authApi.resendVerificationEmail();
+      await authApi.resendVerificationEmail(email);
       setResendState('sent');
     } catch {
       setResendState('error');
     }
-  }, []);
+  }, [email]);
 
   return (
     <AuthScreenWrapper centered>

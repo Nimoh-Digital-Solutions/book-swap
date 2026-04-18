@@ -271,20 +271,23 @@ class CheckUsernameSerializer(serializers.Serializer):
 
 
 class AccountDeletionRequestSerializer(serializers.Serializer):
-    """Request account deletion — requires password confirmation."""
+    """Request account deletion — requires password confirmation for password-based users."""
 
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     def validate_password(self, value):
         user = self.context["request"].user
-        if not check_password(value, user.password):
-            raise serializers.ValidationError("Incorrect password.")
+        if user.has_usable_password() and value:
+            if not check_password(value, user.password):
+                raise serializers.ValidationError("Incorrect password.")
         return value
 
     def validate(self, attrs):
         user = self.context["request"].user
         if user.deletion_requested_at is not None:
             raise serializers.ValidationError("Account deletion has already been requested.")
+        if user.has_usable_password() and not attrs.get("password"):
+            raise serializers.ValidationError({"password": ["Password is required."]})
         return attrs
 
     def save(self):

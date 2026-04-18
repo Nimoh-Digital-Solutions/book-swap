@@ -426,8 +426,10 @@
   },
   "blocks": {
     "emptyTitle": "No blocked users",
+    "emptySubtitle": "Users you block won't be able to see your books or contact you.",
     "unblock": "Unblock",
-    "unblockTitle": "Unblock User"
+    "unblockTitle": "Unblock {{name}}?",
+    "unblockMessage": "They will be able to see your books and send you swap requests again."
   },
   "report": {
     "button": "Report",

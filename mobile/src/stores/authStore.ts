@@ -3,6 +3,7 @@ import type { User } from '@/types';
 import { tokenStorage, asyncQueryStorage } from '@/lib/storage';
 import { queryClient } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
+import { authApi } from '@/features/auth/api/auth.api';
 
 const USER_JSON_KEY = 'bookswap_user_json';
 
@@ -64,6 +65,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
       }
       const authed = !!(access && refresh);
+
+      if (authed && !user) {
+        try {
+          user = await authApi.getMe();
+          if (user) {
+            await asyncQueryStorage.setItem(USER_JSON_KEY, JSON.stringify(user));
+          }
+        } catch {
+          tokenStorage.clearAll();
+          await asyncQueryStorage.removeItem(USER_JSON_KEY);
+          setSentryUser(null);
+          set({ user: null, isAuthenticated: false, isHydrated: true });
+          return;
+        }
+      }
+
       if (user) setSentryUser(user.id);
       else if (!authed) setSentryUser(null);
 

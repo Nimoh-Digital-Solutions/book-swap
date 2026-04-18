@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ShieldOff } from "lucide-react-native";
+import { AlertTriangle, ShieldOff } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -23,7 +23,7 @@ export function BlockedUsersScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const { data: blocks, isLoading, refetch } = useBlocks();
+  const { data: blocks, isLoading, isRefetching, isError, refetch } = useBlocks();
   const unblock = useUnblockUser();
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
@@ -118,16 +118,26 @@ export function BlockedUsersScreen() {
         contentContainerStyle={s.list}
         showsVerticalScrollIndicator={false}
         onRefresh={refetch}
-        refreshing={false}
+        refreshing={isRefetching}
         ListEmptyComponent={
-          <EmptyState
-            icon={ShieldOff}
-            title={t("blocks.emptyTitle", "No blocked users")}
-            subtitle={t(
-              "blocks.emptySubtitle",
-              "Users you block won't be able to see your books or contact you.",
-            )}
-          />
+          isError ? (
+            <EmptyState
+              icon={AlertTriangle}
+              title={t("common.error", "Something went wrong")}
+              subtitle={t("common.retryHint", "Check your connection and try again.")}
+              actionLabel={t("common.retry", "Retry")}
+              onAction={() => refetch()}
+            />
+          ) : (
+            <EmptyState
+              icon={ShieldOff}
+              title={t("blocks.emptyTitle", "No blocked users")}
+              subtitle={t(
+                "blocks.emptySubtitle",
+                "Users you block won't be able to see your books or contact you.",
+              )}
+            />
+          )
         }
       />
     </SafeAreaView>
