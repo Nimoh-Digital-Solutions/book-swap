@@ -25,6 +25,17 @@ RUN --mount=type=cache,target=/root/.yarn/berry/cache \
 # Copy project files
 COPY . .
 
+# Build-time args — Vite inlines these into the bundle via import.meta.env.
+# Override with --build-arg VITE_API_URL=... or docker-compose build.args.
+ARG VITE_API_URL
+ARG VITE_APP_TITLE=BookSwap
+ARG VITE_SENTRY_ENVIRONMENT=staging
+ARG VITE_SENTRY_DSN=
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_APP_TITLE=$VITE_APP_TITLE \
+    VITE_SENTRY_ENVIRONMENT=$VITE_SENTRY_ENVIRONMENT \
+    VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+
 # Build the Vite app (outputs to /app/dist)
 RUN yarn build
 
