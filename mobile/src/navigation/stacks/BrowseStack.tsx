@@ -6,7 +6,7 @@ import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
 import { RequestSwapScreen } from '@/features/exchanges/screens/RequestSwapScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { UserReviewsScreen } from '@/features/ratings/screens/UserReviewsScreen';
-import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
+import { useSharedHeaderOptions, useChildHeaderOptions, HeaderHomeButton, NotificationBell } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
 
@@ -14,9 +14,16 @@ export function BrowseStack() {
   const shared = useSharedHeaderOptions();
   const child = useChildHeaderOptions();
 
+  const browseOptions = {
+    ...shared,
+    headerTitle: 'Browse',
+    headerLeft: () => <HeaderHomeButton />,
+    headerRight: () => <NotificationBell />,
+  };
+
   return (
     <Stack.Navigator>
-      <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={{ ...shared, headerTitle: 'Browse' }} />
+      <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={browseOptions} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
       <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...child, headerTitle: 'Request Swap' }} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />

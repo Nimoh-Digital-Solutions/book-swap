@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, MapPin, ScanBarcode, MessageCircle, User } from 'lucide-react-native';
+import { Home, MapPin, ScanBarcode, ArrowLeftRight, User } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import type { MainTabParamList } from '@/navigation/types';
 import { HomeStack } from '@/navigation/stacks/HomeStack';
@@ -47,8 +47,8 @@ export function MainTabs() {
         name="MessagesTab"
         component={MessagesStack}
         options={{
-          title: t('tabs.messages'),
-          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+          title: t('tabs.exchanges'),
+          tabBarIcon: ({ color, size }) => <ArrowLeftRight size={size} color={color} />,
         }}
       />
       <Tab.Screen

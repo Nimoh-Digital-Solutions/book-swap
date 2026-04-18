@@ -25,6 +25,8 @@ class NotificationType(models.TextChoices):
     REQUEST_ACCEPTED = "request_accepted", "Request Accepted"
     REQUEST_DECLINED = "request_declined", "Request Declined"
     REQUEST_EXPIRED = "request_expired", "Request Expired"
+    COUNTER_PROPOSED = "counter_proposed", "Counter Proposed"
+    COUNTER_APPROVED = "counter_approved", "Counter Approved"
     EXCHANGE_COMPLETED = "exchange_completed", "Exchange Completed"
     NEW_MESSAGE = "new_message", "New Message"
     RATING_RECEIVED = "rating_received", "Rating Received"

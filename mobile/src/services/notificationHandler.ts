@@ -15,6 +15,11 @@ function navigateFromPayload(data: Record<string, unknown>) {
 
   if (
     (type === 'new_request' ||
+      type === 'request_accepted' ||
+      type === 'request_declined' ||
+      type === 'counter_proposed' ||
+      type === 'counter_approved' ||
+      type === 'exchange_completed' ||
       type === 'exchange_updated' ||
       type === 'exchange' ||
       type === 'swap_request') &&

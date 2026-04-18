@@ -33,6 +33,43 @@ def _frontend_url() -> str:
     return getattr(settings, "FRONTEND_URL", "https://bookswap.app").rstrip("/")
 
 
+def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> None:
+    """Send Expo push notifications to all of a user's registered devices."""
+    try:
+        from exponent_server_sdk import (
+            DeviceNotRegisteredError,
+            PushClient,
+            PushMessage,
+        )
+
+        from .models import MobileDevice
+
+        tokens = list(
+            MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", flat=True)
+        )
+        if not tokens:
+            return
+
+        client = PushClient()
+        messages = [
+            PushMessage(to=token, title=title, body=body, data=data or {}, sound="default")
+            for token in tokens
+        ]
+        responses = client.publish_multiple(messages)
+        for token, response in zip(tokens, responses, strict=False):
+            try:
+                response.validate_response()
+            except DeviceNotRegisteredError:
+                MobileDevice.objects.filter(push_token=token).update(is_active=False)
+                logger.info("Deactivated stale push token: %s", token[:20])
+            except Exception as exc:
+                logger.warning("Push error for token %s: %s", token[:20], exc)
+    except ImportError:
+        logger.debug("exponent_server_sdk not installed — skipping device push.")
+    except Exception as exc:
+        logger.warning("Device push failed for user %s: %s", user.pk, exc)
+
+
 def _push_to_ws(user_id: str, payload: dict) -> None:
     """Fire-and-forget push to the user's notification WS group."""
     try:
@@ -137,6 +174,7 @@ def send_new_request_notification(exchange_id: str) -> None:
         link=link,
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "new_request", "exchange_id": exchange_id})
     _maybe_send_email(
         user=recipient,
         subject=f"BookSwap: {requester_name} wants to swap with you",
@@ -180,6 +218,7 @@ def send_request_accepted_notification(exchange_id: str) -> None:
         link=link,
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "request_accepted", "exchange_id": exchange_id})
     _maybe_send_email(
         user=recipient,
         subject=f"BookSwap: Your request was accepted by {owner_name}",
@@ -223,6 +262,7 @@ def send_request_declined_notification(exchange_id: str) -> None:
         link=link,
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "request_declined", "exchange_id": exchange_id})
     _maybe_send_email(
         user=recipient,
         subject="BookSwap: Your request was declined",
@@ -265,6 +305,7 @@ def send_exchange_completed_notification(exchange_id: str) -> None:
             link=link,
         )
         _push_to_ws(str(recipient.pk), _notification_payload(notif))
+        _push_to_devices(recipient, notif.title, notif.body, {"type": "exchange_completed", "exchange_id": exchange_id})
         _maybe_send_email(
             user=recipient,
             subject="BookSwap: Exchange completed — leave a rating!",
@@ -277,6 +318,105 @@ def send_exchange_completed_notification(exchange_id: str) -> None:
             prefs_field="email_exchange_completed",
         )
     logger.info("exchange_completed notifications sent (exchange %s).", exchange_id)
+
+
+@shared_task(name="notifications.send_counter_proposed")
+def send_counter_proposed_notification(exchange_id: str, counter_by_user_id: str) -> None:
+    """Notify the other party when a counter-offer is proposed."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+            "offered_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_counter_proposed: exchange %s not found.", exchange_id)
+        return
+
+    if str(exchange.requester_id) == counter_by_user_id:
+        recipient = exchange.owner
+        proposer = exchange.requester
+    else:
+        recipient = exchange.requester
+        proposer = exchange.owner
+
+    book_title = exchange.offered_book.title if exchange.offered_book else "a different book"
+    link = f"/exchanges/{exchange_id}/"
+
+    notif = _create_notification(
+        user=recipient,
+        notification_type=NotificationType.COUNTER_PROPOSED,
+        title="Counter-offer received",
+        body=f'{proposer.username} proposed swapping "{book_title}" instead.',
+        link=link,
+    )
+    _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "counter_proposed", "exchange_id": exchange_id})
+    _maybe_send_email(
+        user=recipient,
+        subject=f"BookSwap: {proposer.username} sent a counter-offer",
+        body_text=(
+            f"Hi {recipient.username},\n\n"
+            f'{proposer.username} has proposed a different book for your exchange: "{book_title}".\n\n'
+            f"Review the counter-offer: {_frontend_url()}{link}"
+        ),
+        prefs_field="email_new_request",
+    )
+    logger.info("counter_proposed notification → user %s (exchange %s).", recipient.pk, exchange_id)
+
+
+@shared_task(name="notifications.send_counter_approved")
+def send_counter_approved_notification(exchange_id: str, approved_by_user_id: str) -> None:
+    """Notify the counter-proposer that their counter-offer was approved."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_counter_approved: exchange %s not found.", exchange_id)
+        return
+
+    if str(exchange.requester_id) == approved_by_user_id:
+        recipient = exchange.owner
+    else:
+        recipient = exchange.requester
+
+    is_requester = str(exchange.requester_id) == approved_by_user_id
+    approver_name = exchange.requester.username if is_requester else exchange.owner.username
+    book_title = exchange.requested_book.title
+    link = f"/exchanges/{exchange_id}/"
+
+    notif = _create_notification(
+        user=recipient,
+        notification_type=NotificationType.COUNTER_APPROVED,
+        title="Counter-offer approved!",
+        body=f'{approver_name} approved your counter-offer for "{book_title}".',
+        link=link,
+    )
+    _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "counter_approved", "exchange_id": exchange_id})
+    _maybe_send_email(
+        user=recipient,
+        subject="BookSwap: Your counter-offer was approved",
+        body_text=(
+            f"Hi {recipient.username},\n\n"
+            f'{approver_name} has approved your counter-offer for the exchange of "{book_title}".\n\n'
+            f"View the exchange: {_frontend_url()}{link}"
+        ),
+        prefs_field="email_request_accepted",
+    )
+    logger.info("counter_approved notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
 
 # ---------------------------------------------------------------------------
@@ -336,6 +476,7 @@ def send_new_message_notification(exchange_id: str, recipient_user_id: str) -> N
         link=link,
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "new_message", "exchange_id": exchange_id})
 
     # Email: only once per 15-minute window to avoid spam.
     cache_key = f"notif_msg_email_{exchange_id}_{recipient_user_id}"
@@ -388,6 +529,7 @@ def send_rating_received_notification(rating_id: str) -> None:
         link=link,
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "rating_received"})
     _maybe_send_email(
         user=recipient,
         subject=f"BookSwap: {rater_name} left you a {score}★ rating",

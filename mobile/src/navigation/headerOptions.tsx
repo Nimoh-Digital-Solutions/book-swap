@@ -5,9 +5,9 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
+import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
-import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
 
 function getUserDisplayName(
   user: { first_name?: string; last_name?: string; username?: string } | null,
@@ -189,9 +189,11 @@ export function useChildHeaderOptions(): NativeStackNavigationOptions {
 
 const s = StyleSheet.create({
   headerBtn: {
+    // width: 44,
+    // height: 44,
+    marginHorizontal: 0.5,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 0.9,
   },
   bellCircle: {
     width: 36,
@@ -211,20 +213,20 @@ const s = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    top: -2,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 0,
+    right: 0,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: "#E53935",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   badgeText: {
     color: "#fff",
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "800",
-    lineHeight: 14,
+    lineHeight: 11,
   },
 });

@@ -221,6 +221,10 @@ class ExchangeRequestViewSet(
             "updated_at",
         ])
 
+        from apps.notifications.tasks import send_counter_proposed_notification
+
+        send_counter_proposed_notification.delay(str(exchange.pk), str(request.user.pk))
+
         detail = ExchangeRequestDetailSerializer(
             exchange,
             context={"request": request},
@@ -256,6 +260,10 @@ class ExchangeRequestViewSet(
 
         exchange.counter_approved_at = timezone.now()
         exchange.save(update_fields=["counter_approved_at", "updated_at"])
+
+        from apps.notifications.tasks import send_counter_approved_notification
+
+        send_counter_approved_notification.delay(str(exchange.pk), str(request.user.pk))
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,
