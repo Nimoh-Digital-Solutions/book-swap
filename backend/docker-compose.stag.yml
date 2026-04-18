@@ -1,86 +1,120 @@
-# bookswap — staging Docker Compose
-# Usage: docker compose -f docker-compose.stag.yml up -d
+# BookSwap — Pi 5 Staging (Backend)
+# Usage: docker compose -p bs_staging -f docker-compose.stag.yml up -d
 #
-# All secrets must be provided via environment variables (see .env.example).
-# Do NOT set literal secret values here.
-#
-# Staging mirrors the production stack but uses the staging settings module
-# and exposes host-facing ports for internal testing.
-services:
-  redis:
-    image: redis:7-alpine
-    container_name: bookswap-be-redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    restart: unless-stopped
+# Prerequisites (run once on the Pi):
+#   sudo -u postgres createuser bs_staging && sudo -u postgres createdb -O bs_staging bs_staging
+#   sudo -u postgres psql -d bs_staging -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+#   docker network create shared
 
+services:
   web:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-web
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: bs_web_staging
+    restart: unless-stopped
+    command: /app/start.sh
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.staging
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.staging
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      FRONTEND_URL: ${FRONTEND_URL}
-      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
-      APP_VERSION: ${APP_VERSION:-}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_ENVIRONMENT: staging
+      REDIS_URL: redis://redis_shared:6379/11
+      CELERY_BROKER_URL: redis://redis_shared:6379/12
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+      PORT: "8110"
+    volumes:
+      - /mnt/media/bookswap-staging:/app/mediafiles
     ports:
-      - "8070:8000"
+      - "8110:8110"
+    networks:
+      - bs_network_staging
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import http.client; c=http.client.HTTPConnection('127.0.0.1',8110); c.request('GET','/api/v1/health/'); r=c.getresponse(); exit(0 if r.status in [200,301,302] else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
-    depends_on:
-      redis:
-        condition: service_healthy
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bs_celery_staging
     restart: unless-stopped
-
-
-
-  celery:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info -Q default,email,maintenance
+    command: >
+      celery -A config.celery worker -l info --concurrency=2
+      -Q default,celery,email,maintenance
+      --max-tasks-per-child=500 --time-limit=3600 --soft-time-limit=3300
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.staging
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.staging
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-    depends_on:
-      - redis
-    restart: unless-stopped
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_ENVIRONMENT: staging
+      REDIS_URL: redis://redis_shared:6379/11
+      CELERY_BROKER_URL: redis://redis_shared:6379/12
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+    volumes:
+      - /mnt/media/bookswap-staging:/app/mediafiles
+    networks:
+      - bs_network_staging
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+    healthcheck:
+      test: ["CMD", "celery", "-A", "config.celery", "inspect", "ping", "--timeout", "10"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
 
-  celery-beat:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery-beat
-    command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bs_beat_staging
+    restart: unless-stopped
+    command: >
+      celery -A config.celery beat -l info
+      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      --pidfile=/tmp/celerybeat.pid
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.staging
     environment:
-      DJANGO_SETTINGS_MODULE: config.settings.staging
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-    depends_on:
-      - redis
-    restart: unless-stopped
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_ENVIRONMENT: staging
+      REDIS_URL: redis://redis_shared:6379/11
+      CELERY_BROKER_URL: redis://redis_shared:6379/12
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+    networks:
+      - bs_network_staging
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, signal; pid=int(open('/tmp/celerybeat.pid').read()); os.kill(pid, 0)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
-
-# ── Shared network ────────────────────────────────────────────────────────────
-# Uncomment to link this BE with a FE container stack on the same host.
-# Run `make network-create` first, then reference the same network in the FE
-# docker-compose so nginx can proxy to `web:8000`.
-# networks:
-#   default:
-#     name: bookswap-network
-#     external: true
+networks:
+  bs_network_staging:
+    driver: bridge
+  shared:
+    external: true

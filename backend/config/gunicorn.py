@@ -13,7 +13,8 @@ import multiprocessing
 import os
 
 # ── Binding ──────────────────────────────────────────────────────────────────
-bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
+_port = os.environ.get("PORT", "8000")
+bind = os.environ.get("GUNICORN_BIND", f"0.0.0.0:{_port}")
 
 # ── Workers ──────────────────────────────────────────────────────────────────
 # (2 * CPU) + 1 is the standard heuristic.  Cap at 4 on the Pi5 (4 cores)
