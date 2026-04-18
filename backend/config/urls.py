@@ -40,4 +40,20 @@ if settings.DEBUG:
     urlpatterns += [
         path("", RedirectView.as_view(url="/api/v1/schema/docs/", permanent=False)),
     ]
+
+# Serve media files via Django in all environments.
+# WhiteNoise handles static files; media files must be served separately
+# since there is no separate nginx in front of Django.
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    from django.views.static import serve as _serve_static
+
+    urlpatterns += [
+        path(
+            "media/<path:path>",
+            lambda request, path: _serve_static(
+                request, path, document_root=settings.MEDIA_ROOT
+            ),
+        ),
+    ]

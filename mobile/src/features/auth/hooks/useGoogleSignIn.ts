@@ -73,9 +73,11 @@ export function useGoogleSignIn() {
 
       return { success: true };
     } catch (error: unknown) {
+      console.error('[GoogleSignIn] Error:', error);
       const { isErrorWithCode, statusCodes } = getModule();
 
       if (isErrorWithCode(error)) {
+        console.error('[GoogleSignIn] Code:', error.code, 'Message:', error.message);
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
           return { success: false, error: 'cancelled' };
         }

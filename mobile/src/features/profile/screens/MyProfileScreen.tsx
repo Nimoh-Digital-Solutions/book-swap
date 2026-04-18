@@ -18,11 +18,13 @@ import {
   Calendar,
   ChevronRight,
   Heart,
+  LogOut,
   MessageSquareQuote,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAuthStore } from '@/stores/authStore';
+import { useLogout } from '@/features/auth/hooks/useLogout';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
@@ -76,6 +78,7 @@ export function MyProfileScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
   const user = useAuthStore((s) => s.user);
+  const logout = useLogout();
 
   if (!user) return null;
 
@@ -227,6 +230,22 @@ export function MyProfileScreen() {
               {t('profile.settings', 'Settings')}
             </Text>
             <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+
+          <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
+
+          <Pressable
+            onPress={() => logout.mutate()}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.logout', 'Log Out')}
+          >
+            <View style={[s.actionIcon, { backgroundColor: c.status.error + '18' }]}>
+              <LogOut size={18} color={c.status.error} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.status.error }]}>
+              {t('auth.logout', 'Log Out')}
+            </Text>
           </Pressable>
         </View>
       </ScrollView>

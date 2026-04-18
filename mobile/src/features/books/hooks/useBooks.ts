@@ -290,7 +290,7 @@ export interface BrowseBook {
   created_at: string;
 }
 
-export function useRecentBooks(lat?: number, lng?: number, radiusM = 50000) {
+export function useRecentBooks(lat?: number, lng?: number, radiusM = 5000) {
   return useQuery({
     queryKey: ['recentBooks', lat, lng, radiusM],
     queryFn: async () => {
@@ -304,7 +304,7 @@ export function useRecentBooks(lat?: number, lng?: number, radiusM = 50000) {
   });
 }
 
-export function useNearbyCount(lat?: number, lng?: number, radius = 10000) {
+export function useNearbyCount(lat?: number, lng?: number, radius = 5000) {
   return useQuery({
     queryKey: ['nearbyCount', lat, lng, radius],
     queryFn: async () => {
@@ -334,7 +334,7 @@ export interface CommunityStats {
   activity_feed: ActivityFeedItem[];
 }
 
-export function useCommunityStats(lat?: number, lng?: number, radius = 10000) {
+export function useCommunityStats(lat?: number, lng?: number, radius = 5000) {
   return useQuery<CommunityStats>({
     queryKey: ['communityStats', lat, lng, radius],
     queryFn: async () => {

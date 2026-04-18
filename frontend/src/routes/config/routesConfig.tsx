@@ -149,6 +149,18 @@ const ProtectedPage = ({ component: Component }: { component: React.LazyExoticCo
 // ---------------------------------------------------------------------------
 
 export const routes: RouteObject[] = [
+  // ── Root-level social auth redirects ─────────────────────────────────────
+  // The backend redirects to /auth/verified without a language prefix.
+  // These must sit above :lng so "auth" isn't mistaken for a language code.
+  {
+    path: 'auth/verified',
+    element: <LanguageRedirect />,
+  },
+  {
+    path: 'auth/verify-error',
+    element: <LanguageRedirect />,
+  },
+
   // ── Language-prefixed routes ──────────────────────────────────────────────
   {
     path: ':lng',

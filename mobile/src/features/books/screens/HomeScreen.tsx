@@ -8,6 +8,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { useAuthStore } from "@/stores/authStore";
 import type { HomeStackParamList } from "@/navigation/types";
 import { useCommunityStats, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
 
@@ -25,6 +26,7 @@ export function HomeScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
   const queryClient = useQueryClient();
+  const preferredRadius = useAuthStore((s) => s.user?.preferred_radius ?? 5000);
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
@@ -47,9 +49,9 @@ export function HomeScreen() {
     })();
   }, []);
 
-  const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng);
-  const { data: recentBooks, isLoading: booksLoading } = useRecentBooks(coords?.lat, coords?.lng);
-  const { data: communityData } = useCommunityStats(coords?.lat, coords?.lng);
+  const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng, preferredRadius);
+  const { data: recentBooks, isLoading: booksLoading } = useRecentBooks(coords?.lat, coords?.lng, preferredRadius);
+  const { data: communityData } = useCommunityStats(coords?.lat, coords?.lng, preferredRadius);
 
   const tabNav = navigation.getParent();
   const goToBrowse = useCallback(

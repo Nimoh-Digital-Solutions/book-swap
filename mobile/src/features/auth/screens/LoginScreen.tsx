@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as LocalAuthentication from 'expo-local-authentication';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +19,7 @@ import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
 import { spacing, typography, radius } from '@/constants/theme';
 import { showErrorToast } from '@/components/Toast';
-import { tokenStorage, deletionStorage } from '@/lib/storage';
+import { deletionStorage } from '@/lib/storage';
 import { useCancelDeletion } from '@/features/profile/hooks/useAccountDeletion';
 
 import { loginSchema, type LoginInput } from '../schemas/auth.schemas';
@@ -40,7 +39,6 @@ export function LoginScreen() {
   const passwordRef = useRef<TextInput>(null);
   const login = useLogin();
   const cancelDeletion = useCancelDeletion();
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [pendingCancelToken, setPendingCancelToken] = useState<string | null>(
     () => deletionStorage.getCancelToken(),
   );
@@ -53,12 +51,6 @@ export function LoginScreen() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email_or_username: '', password: '' },
   });
-
-  useEffect(() => {
-    void LocalAuthentication.hasHardwareAsync().then((has) => {
-      if (has) void LocalAuthentication.isEnrolledAsync().then(setBiometricAvailable);
-    });
-  }, []);
 
   const onSubmit = useCallback(
     (data: LoginInput) => {
@@ -99,18 +91,6 @@ export function LoginScreen() {
       },
     );
   }, [pendingCancelToken, cancelDeletion, t]);
-
-  const handleBiometric = useCallback(async () => {
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: t('auth.biometricPrompt'),
-    });
-    if (result.success) {
-      const hasTokens = tokenStorage.getAccess() && tokenStorage.getRefresh();
-      if (!hasTokens) {
-        showErrorToast(t('auth.fillRequired'));
-      }
-    }
-  }, [t]);
 
   return (
     <AuthScreenWrapper centered>
@@ -205,14 +185,6 @@ export function LoginScreen() {
           onPress={handleSubmit(onSubmit)}
           loading={login.isPending}
         />
-
-        {biometricAvailable && (
-          <AuthButton
-            label={t('auth.biometricUnlock')}
-            onPress={handleBiometric}
-            variant="outline"
-          />
-        )}
 
         <SocialAuthSection />
       </View>
