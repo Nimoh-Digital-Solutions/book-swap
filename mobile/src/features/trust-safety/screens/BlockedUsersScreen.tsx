@@ -69,7 +69,15 @@ export function BlockedUsersScreen() {
             name={user.first_name || user.username}
             size={40}
           />
-          <View style={s.info}>
+          <View
+            style={s.info}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={t("blocks.blockedUserRowA11y", "Blocked user {{name}}, @{{username}}", {
+              name: user.first_name || user.username,
+              username: user.username,
+            })}
+          >
             <Text style={[s.name, { color: c.text.primary }]} numberOfLines={1}>
               {user.first_name || user.username}
             </Text>
@@ -81,6 +89,11 @@ export function BlockedUsersScreen() {
             </Text>
           </View>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("blocks.unblockUserA11y", "Unblock @{{username}}", {
+              username: user.username,
+            })}
+            accessibilityState={{ disabled: unblock.isPending }}
             onPress={() => confirmUnblock(item)}
             disabled={unblock.isPending}
             style={({ pressed }) => [

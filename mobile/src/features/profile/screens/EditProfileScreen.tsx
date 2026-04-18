@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,41 +31,42 @@ import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { GenrePickerSheet } from '@/features/profile/components/GenrePickerSheet';
+import { GENRE_VALUE_TO_I18N_KEY, type GenreValue } from '@/features/books/constants';
 
 // ── Schema ───────────────────────────────────────────────────────────
 
-const profileEditSchema = z.object({
-  first_name: z.string().min(1, 'First name is required').max(50),
-  last_name: z.string().min(1, 'Last name is required').max(50),
-  bio: z.string().max(300, 'Bio must be 300 characters or fewer'),
-  preferred_genres: z.array(z.string()).max(5, 'You can select up to 5 genres'),
-  preferred_language: z.enum(['en', 'nl', 'both']),
-  preferred_radius: z.number().min(500).max(50_000),
-});
+function createProfileEditSchema(t: TFunction) {
+  return z.object({
+    first_name: z
+      .string()
+      .min(1, t('profile.edit.validation.firstNameRequired', 'First name is required'))
+      .max(50),
+    last_name: z
+      .string()
+      .min(1, t('profile.edit.validation.lastNameRequired', 'Last name is required'))
+      .max(50),
+    bio: z.string().max(300, t('profile.edit.validation.bioMax', 'Bio must be 300 characters or fewer')),
+    preferred_genres: z
+      .array(z.string())
+      .max(5, t('profile.edit.validation.genresMax', 'You can select up to 5 genres')),
+    preferred_language: z.enum(['en', 'nl', 'both']),
+    preferred_radius: z.number().min(500).max(50_000),
+  });
+}
 
-type FormValues = z.infer<typeof profileEditSchema>;
+type FormValues = z.infer<ReturnType<typeof createProfileEditSchema>>;
 
 // ── Constants ────────────────────────────────────────────────────────
 
-const LANGUAGE_OPTIONS: { key: 'en' | 'nl' | 'both'; label: string }[] = [
-  { key: 'en', label: 'English' },
-  { key: 'nl', label: 'Nederlands' },
-  { key: 'both', label: 'Both / Beide' },
-];
+const LANGUAGE_OPTION_KEYS = ['en', 'nl', 'both'] as const satisfies readonly FormValues['preferred_language'][];
 
-const RADIUS_OPTIONS = [
-  { value: 1000, label: '1 km' },
-  { value: 2000, label: '2 km' },
-  { value: 5000, label: '5 km' },
-  { value: 10000, label: '10 km' },
-  { value: 25000, label: '25 km' },
-  { value: 50000, label: '50 km' },
-];
+const RADIUS_VALUES = [1000, 2000, 5000, 10000, 25000, 50000] as const;
 
 // ── Component ────────────────────────────────────────────────────────
 
 export function EditProfileScreen() {
   const { t } = useTranslation();
+  const profileEditSchema = useMemo(() => createProfileEditSchema(t), [t]);
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation();
@@ -420,7 +422,14 @@ export function EditProfileScreen() {
                   numberOfLines={1}
                 >
                   {value && value.length > 0
-                    ? value.join(', ')
+                    ? value
+                        .map((g) => {
+                          const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
+                          return slug
+                            ? t(`books.genres.${slug}`, g)
+                            : g;
+                        })
+                        .join(', ')
                     : t('profile.edit.selectGenres', 'Select genres…')}
                 </Text>
                 <ChevronRight size={18} color={c.text.placeholder} />
@@ -434,7 +443,11 @@ export function EditProfileScreen() {
                       key={g}
                       style={[s.genreChip, { backgroundColor: accent + '18', borderColor: accent }]}
                     >
-                      <Text style={[s.genreChipText, { color: isDark ? accent : '#152018' }]}>{g}</Text>
+                      <Text style={[s.genreChipText, { color: isDark ? accent : '#152018' }]}>
+                        {GENRE_VALUE_TO_I18N_KEY[g as GenreValue]
+                          ? t(`books.genres.${GENRE_VALUE_TO_I18N_KEY[g as GenreValue]}`, g)
+                          : g}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -465,12 +478,18 @@ export function EditProfileScreen() {
               style={s.chipScroll}
             >
               <View style={s.chipRow}>
-                {LANGUAGE_OPTIONS.map((opt) => {
-                  const selected = value === opt.key;
+                {LANGUAGE_OPTION_KEYS.map((key) => {
+                  const selected = value === key;
+                  const label =
+                    key === 'en'
+                      ? t('profile.edit.languagePrefEn', 'English')
+                      : key === 'nl'
+                        ? t('profile.edit.languagePrefNl', 'Dutch')
+                        : t('profile.edit.languagePrefBoth', 'Both / Beide');
                   return (
                     <Pressable
-                      key={opt.key}
-                      onPress={() => onChange(opt.key)}
+                      key={key}
+                      onPress={() => onChange(key)}
                       style={[
                         s.chip,
                         {
@@ -485,7 +504,7 @@ export function EditProfileScreen() {
                           { color: selected ? '#152018' : c.text.secondary },
                         ]}
                       >
-                        {opt.label}
+                        {label}
                       </Text>
                     </Pressable>
                   );
@@ -510,12 +529,14 @@ export function EditProfileScreen() {
               style={s.chipScroll}
             >
               <View style={s.chipRow}>
-                {RADIUS_OPTIONS.map((opt) => {
-                  const selected = value === opt.value;
+                {RADIUS_VALUES.map((radiusValue) => {
+                  const selected = value === radiusValue;
+                  const km = radiusValue / 1000;
+                  const label = t('browse.distanceKm', '{{count}} km', { count: km });
                   return (
                     <Pressable
-                      key={opt.value}
-                      onPress={() => onChange(opt.value)}
+                      key={radiusValue}
+                      onPress={() => onChange(radiusValue)}
                       style={[
                         s.chip,
                         {
@@ -530,7 +551,7 @@ export function EditProfileScreen() {
                           { color: selected ? '#152018' : c.text.secondary },
                         ]}
                       >
-                        {opt.label}
+                        {label}
                       </Text>
                     </Pressable>
                   );

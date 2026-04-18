@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Pressable,
@@ -66,6 +67,7 @@ function OptionCard({
 }
 
 export function AddBookModal({ visible, onClose, onSelect }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const [remember, setRemember] = useState(false);
@@ -99,7 +101,7 @@ export function AddBookModal({ visible, onClose, onSelect }: Props) {
           {/* Header */}
           <View style={s.header}>
             <Text style={[s.title, { color: c.text.primary }]}>
-              Add a book
+              {t("books.addBookModal.title", "Add a book")}
             </Text>
             <Pressable onPress={onClose} hitSlop={12} style={s.closeBtn}>
               <X size={20} color={c.text.secondary} />
@@ -107,15 +109,18 @@ export function AddBookModal({ visible, onClose, onSelect }: Props) {
           </View>
 
           <Text style={[s.subtitle, { color: c.text.secondary }]}>
-            How would you like to add your book?
+            {t("books.addBookModal.subtitle", "How would you like to add your book?")}
           </Text>
 
           {/* Options */}
           <View style={s.options}>
             <OptionCard
               icon={Camera}
-              label="Scan barcode"
-              subtitle="Point your camera at the book's barcode"
+              label={t("books.addBookModal.scanLabel", "Scan barcode")}
+              subtitle={t(
+                "books.addBookModal.scanSubtitle",
+                "Point your camera at the book's barcode",
+              )}
               onPress={() => handleSelect("scan")}
               cardBg={cardBg}
               cardBorder={cardBorder}
@@ -125,8 +130,11 @@ export function AddBookModal({ visible, onClose, onSelect }: Props) {
             />
             <OptionCard
               icon={PenLine}
-              label="Enter ISBN manually"
-              subtitle="Type the book details yourself"
+              label={t("books.addBookModal.manualLabel", "Enter ISBN manually")}
+              subtitle={t(
+                "books.addBookModal.manualSubtitle",
+                "Type the book details yourself",
+              )}
               onPress={() => handleSelect("manual")}
               cardBg={cardBg}
               cardBorder={cardBorder}
@@ -153,7 +161,7 @@ export function AddBookModal({ visible, onClose, onSelect }: Props) {
               {remember && <Check size={13} color="#152018" strokeWidth={3} />}
             </View>
             <Text style={[s.rememberText, { color: c.text.secondary }]}>
-              Remember my choice
+              {t("books.addBookModal.rememberChoice", "Remember my choice")}
             </Text>
           </Pressable>
         </Pressable>

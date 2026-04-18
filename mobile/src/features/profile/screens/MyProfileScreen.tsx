@@ -160,6 +160,8 @@ export function MyProfileScreen() {
         {/* ── Quick Actions ── */}
         <View style={[s.actionsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.editProfile', 'Edit Profile')}
             onPress={() => navigation.navigate('EditProfile')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >
@@ -175,6 +177,8 @@ export function MyProfileScreen() {
           <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.myBooks', 'My Books')}
             onPress={() => navigation.navigate('MyBooks')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >
@@ -190,6 +194,8 @@ export function MyProfileScreen() {
           <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.wishlist', 'Wishlist')}
             onPress={() => navigation.navigate('Wishlist')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >
@@ -205,6 +211,8 @@ export function MyProfileScreen() {
           <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.reviews', 'Reviews')}
             onPress={() => navigation.navigate('MyReviews')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >
@@ -220,6 +228,8 @@ export function MyProfileScreen() {
           <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.settings', 'Settings')}
             onPress={() => navigation.navigate('Settings')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >

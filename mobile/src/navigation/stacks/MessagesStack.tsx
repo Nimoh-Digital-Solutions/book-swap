@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { MessagesStackParamList } from '@/navigation/types';
 import { ExchangeListScreen } from '@/features/exchanges/screens/ExchangeListScreen';
@@ -13,6 +14,7 @@ import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/head
 const Stack = createNativeStackNavigator<MessagesStackParamList>();
 
 export function MessagesStack() {
+  const { t } = useTranslation();
   const shared = useSharedHeaderOptions();
   const child = useChildHeaderOptions();
 
@@ -21,12 +23,12 @@ export function MessagesStack() {
       <Stack.Screen
         name="ExchangeList"
         component={ExchangeListScreen}
-        options={{ ...shared, headerTitle: 'Exchanges' }}
+        options={{ ...shared, headerTitle: t('navigation.exchanges', 'Exchanges') }}
       />
       <Stack.Screen
         name="IncomingRequests"
         component={IncomingRequestsScreen}
-        options={{ ...child, headerTitle: 'Incoming Requests' }}
+        options={{ ...child, headerTitle: t('navigation.incomingRequests', 'Incoming Requests') }}
       />
       <Stack.Screen
         name="ExchangeDetail"

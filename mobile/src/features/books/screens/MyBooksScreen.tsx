@@ -43,13 +43,6 @@ const STATUS_COLOR: Record<string, string> = {
   returned: "#6B7280",
 };
 
-const CONDITION_LABELS: Record<string, string> = {
-  new: "New",
-  like_new: "Like New",
-  good: "Good",
-  acceptable: "Acceptable",
-};
-
 export function MyBooksScreen() {
   const { t } = useTranslation();
   const c = useColors();
@@ -168,6 +161,11 @@ export function MyBooksScreen() {
 
       return (
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("books.myBooks.bookCardA11y", "{{title}} by {{author}}", {
+            title: item.title,
+            author: item.author,
+          })}
           style={({ pressed }) => [
             s.card,
             {
@@ -230,12 +228,16 @@ export function MyBooksScreen() {
                   <View style={[s.conditionTag, { backgroundColor: cardBorder + "40" }]}>
                     <Sparkles size={10} color={c.text.secondary} />
                     <Text style={[s.conditionText, { color: c.text.secondary }]}>
-                      {CONDITION_LABELS[condition] ?? condition}
+                      {t(`books.conditions.${condition}`, { defaultValue: condition })}
                     </Text>
                   </View>
                 )}
               </View>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("books.myBooks.deleteBookA11y", "Delete {{title}}", {
+                  title: item.title,
+                })}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleDelete(item);
@@ -273,9 +275,15 @@ export function MyBooksScreen() {
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
+          accessibilityLabel={t("books.myBooks.search", "Search your books...")}
         />
         {search.length > 0 && (
-          <Pressable onPress={() => setSearch("")} hitSlop={8}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("books.myBooks.clearSearchA11y", "Clear search")}
+            onPress={() => setSearch("")}
+            hitSlop={8}
+          >
             <X size={16} color={c.text.placeholder} />
           </Pressable>
         )}
@@ -293,6 +301,12 @@ export function MyBooksScreen() {
           return (
             <Pressable
               key={key}
+              accessibilityRole="button"
+              accessibilityLabel={t("books.myBooks.filterChipA11y", "{{label}}, {{count}} books", {
+                label,
+                count,
+              })}
+              accessibilityState={{ selected: active }}
               onPress={() => setStatusFilter(key)}
               style={[
                 s.filterChip,
@@ -391,6 +405,8 @@ export function MyBooksScreen() {
 
       {/* FAB */}
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("books.myBooks.addBookFabA11y", "Add book")}
         style={({ pressed }) => [
           s.fab,
           { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },

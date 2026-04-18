@@ -42,6 +42,8 @@ export function EmptyState({
       {actionLabel && onAction ? (
         <Pressable
           onPress={onAction}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
           style={({ pressed }) => [
             s.actionBtn,
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },

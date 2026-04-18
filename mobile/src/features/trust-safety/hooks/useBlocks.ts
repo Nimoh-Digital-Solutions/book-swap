@@ -3,7 +3,9 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { http } from "@/services/http";
+import { showErrorToast } from "@/components/Toast";
 import { API } from "@/configs/apiEndpoints";
 import type { Block, PaginatedResponse } from "@/types";
 
@@ -45,6 +47,7 @@ export function useBlockUser() {
 
 export function useUnblockUser() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   return useMutation<void, Error, string>({
     mutationFn: async (userId) => {
       await http.delete(API.blocks.delete(userId));
@@ -53,6 +56,11 @@ export function useUnblockUser() {
       qc.invalidateQueries({ queryKey: blockKeys.list() });
       qc.invalidateQueries({ queryKey: ["exchanges"] });
       qc.invalidateQueries({ queryKey: ["browse"] });
+    },
+    onError: () => {
+      showErrorToast(
+        t("blocks.unblockFailed", "Could not unblock user. Try again."),
+      );
     },
   });
 }

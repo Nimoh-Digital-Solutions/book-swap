@@ -5,6 +5,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -30,6 +31,7 @@ import { useMarkMessagesRead, useMessages, useSendMessage } from '../hooks/useMe
 import { useMeetupSuggestions } from '../hooks/useMeetupSuggestions';
 import { useAuthStore } from '@/stores/authStore';
 import { useExchangeDetail } from '@/features/exchanges/hooks/useExchanges';
+import { showErrorToast } from '@/components/Toast';
 
 type Route = RouteProp<MessagesStackParamList, 'Chat'>;
 
@@ -60,7 +62,13 @@ export function ChatScreen() {
   const [showMeetup, setShowMeetup] = useState(false);
   const [androidKbHeight, setAndroidKbHeight] = useState(0);
 
-  const { data: messages = [], isLoading } = useMessages(params.exchangeId);
+  const {
+    data: messages = [],
+    isLoading,
+    isError,
+    refetch: refetchMessages,
+    isFetching,
+  } = useMessages(params.exchangeId);
   const sendMutation = useSendMessage();
   const markRead = useMarkMessagesRead();
   const { data: meetupLocations = [], isLoading: meetupsLoading } =
@@ -104,10 +112,15 @@ export function ChatScreen() {
             isNearBottom.current = true;
             setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
           },
+          onError: () => {
+            showErrorToast(
+              t('messaging.sendFailed', 'Message could not be sent. Try again.'),
+            );
+          },
         },
       );
     },
-    [params.exchangeId, sendMutation],
+    [params.exchangeId, sendMutation, t],
   );
 
   const handleMeetupSelect = useCallback(
@@ -131,7 +144,7 @@ export function ChatScreen() {
     [currentUser?.id],
   );
 
-  if (isLoading) {
+  if (isLoading && !isError) {
     return (
       <View style={[s.root, { backgroundColor: bg }]}>
         <ChatHeader
@@ -143,6 +156,45 @@ export function ChatScreen() {
         />
         <View style={s.loadingCenter}>
           <ActivityIndicator size="large" color={c.auth.golden} />
+        </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg }]}>
+        <ChatHeader
+          partnerName={partnerName}
+          partnerAvatar={partnerAvatar}
+          isConnected={isConnected}
+          onSuggestMeetup={() => {}}
+          showMeetupButton={false}
+        />
+        <View style={s.errorWrap}>
+          <Text style={[s.errorTitle, { color: c.text.primary }]}>
+            {t('messaging.loadFailedTitle', 'Could not load messages')}
+          </Text>
+          <Text style={[s.errorBody, { color: c.text.secondary }]}>
+            {t('messaging.loadFailedBody', 'Check your connection and try again.')}
+          </Text>
+          <Pressable
+            onPress={() => refetchMessages()}
+            disabled={isFetching}
+            style={({ pressed }) => [
+              s.retryBtn,
+              {
+                backgroundColor: c.auth.golden,
+                opacity: isFetching || pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            {isFetching ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={s.retryBtnText}>{t('common.retry', 'Retry')}</Text>
+            )}
+          </Pressable>
         </View>
       </View>
     );
@@ -257,4 +309,21 @@ const s = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
+  errorWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  errorTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  errorBody: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: spacing.sm },
+  retryBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 999,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  retryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

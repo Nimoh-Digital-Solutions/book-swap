@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/services/http';
+import { showErrorToast } from '@/components/Toast';
 import { API } from '@/configs/apiEndpoints';
 import { wsManager } from '@/services/websocket';
 import type { Notification } from '@/types';
@@ -32,6 +34,7 @@ export function useUnreadCount(): number {
 
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async (id: string) => {
       await http.post(API.notifications.markRead(id));
@@ -39,17 +42,28 @@ export function useMarkNotificationRead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
+    onError: () => {
+      showErrorToast(
+        t('notifications.markReadError', 'Could not update notification.'),
+      );
+    },
   });
 }
 
 export function useMarkAllRead() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: async () => {
       await http.post(API.notifications.markAllRead);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: () => {
+      showErrorToast(
+        t('notifications.markAllReadError', 'Could not mark all as read.'),
+      );
     },
   });
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '@/navigation/types';
 import { HomeScreen } from '@/features/books/screens/HomeScreen';
@@ -31,6 +32,7 @@ const s = StyleSheet.create({
 });
 
 export function HomeStack() {
+  const { t } = useTranslation();
   const shared = useSharedHeaderOptions();
   const child = useChildHeaderOptions();
 
@@ -42,10 +44,18 @@ export function HomeStack() {
         options={{ ...shared, headerTitle: () => <HomeHeaderTitle /> }}
       />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
-      <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...child, headerTitle: 'Request Swap' }} />
+      <Stack.Screen
+        name="RequestSwap"
+        component={RequestSwapScreen}
+        options={{ ...child, headerTitle: t('navigation.requestSwap', 'Request Swap') }}
+      />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
       <Stack.Screen name="UserReviews" component={UserReviewsScreen} options={{ ...child, headerTitle: 'Reviews' }} />
-      <Stack.Screen name="Notifications" component={NotificationListScreen} options={{ ...child, headerTitle: 'Notifications' }} />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationListScreen}
+        options={{ ...child, headerTitle: t('navigation.notifications', 'Notifications') }}
+      />
     </Stack.Navigator>
   );
 }

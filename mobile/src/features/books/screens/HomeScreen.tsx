@@ -4,7 +4,15 @@ import * as Location from "expo-location";
 import { BookMarked, MapPin, ScanBarcode } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Linking,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -33,11 +41,15 @@ export function HomeScreen() {
     null,
   );
   const [city, setCity] = useState("");
+  const [locationDenied, setLocationDenied] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
+      if (status !== "granted") {
+        setLocationDenied(true);
+        return;
+      }
       const loc = await Location.getCurrentPositionAsync({});
       setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
       try {
@@ -47,6 +59,10 @@ export function HomeScreen() {
         /* ignore */
       }
     })();
+  }, []);
+
+  const openLocationSettings = useCallback(() => {
+    Linking.openSettings();
   }, []);
 
   const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng, preferredRadius);
@@ -91,6 +107,9 @@ export function HomeScreen() {
     });
   }, [searchQuery, navigation]);
 
+  const cardBg = isDark ? c.auth.card : c.surface.white;
+  const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
+
   const quickActions = [
     { icon: ScanBarcode, label: t("home.scan", "Scan"), onPress: goToScan },
     {
@@ -120,10 +139,44 @@ export function HomeScreen() {
           />
         }
       >
+        {locationDenied && (
+          <View
+            style={[
+              s.locBanner,
+              { backgroundColor: cardBg, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[s.locBannerTitle, { color: c.text.primary }]}>
+              {t(
+                "home.locationDeniedBannerTitle",
+                "Location is off",
+              )}
+            </Text>
+            <Text style={[s.locBannerBody, { color: c.text.secondary }]}>
+              {t(
+                "home.locationDeniedBannerBody",
+                "Enable location in Settings to see nearby books, counts, and community activity.",
+              )}
+            </Text>
+            <Pressable
+              onPress={openLocationSettings}
+              style={({ pressed }) => [
+                s.locBannerBtn,
+                { backgroundColor: c.auth.golden, opacity: pressed ? 0.9 : 1 },
+              ]}
+            >
+              <Text style={s.locBannerBtnText}>
+                {t("home.openSettings", "Open Settings")}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         <HomeNearbyBadge
           userCount={nearbyData?.user_count}
           bookCount={nearbyData?.count}
           city={city}
+          locationDenied={locationDenied}
         />
 
         <HomeSearchBar
@@ -141,6 +194,8 @@ export function HomeScreen() {
         <HomeRecentlyAdded
           books={recentBooks ?? []}
           isLoading={booksLoading}
+          locationDenied={locationDenied}
+          onOpenSettings={openLocationSettings}
           title={t("home.recentlyAdded", "Recently Added")}
           subtitle={t(
             "home.freshArrivals",
@@ -183,4 +238,23 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: 16 },
   bottomSpacer: { height: 20 },
+  locBanner: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  locBannerTitle: { fontSize: 16, fontWeight: "700" },
+  locBannerBody: { fontSize: 14, lineHeight: 20 },
+  locBannerBtn: {
+    alignSelf: "flex-start",
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
+  locBannerBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 });

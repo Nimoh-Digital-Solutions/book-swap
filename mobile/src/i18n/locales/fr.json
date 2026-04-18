@@ -17,6 +17,31 @@
     "remove": "Retirer",
     "saving": "Enregistrement..."
   },
+  "navigation": {
+    "openProfile": "Ouvrir le profil",
+    "goBack": "Retour",
+    "goHome": "Accueil",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {{count}} non lues",
+    "requestSwap": "Demander un échange",
+    "exchanges": "Échanges",
+    "incomingRequests": "Demandes reçues",
+    "settings": "Paramètres",
+    "blockedUsers": "Utilisateurs bloqués"
+  },
+  "validation": {
+    "required": "Obligatoire",
+    "usernameMin": "Au moins 3 caractères",
+    "usernameMax": "Au plus 30 caractères",
+    "usernamePattern": "Lettres, chiffres et underscores uniquement",
+    "invalidEmail": "E-mail invalide",
+    "passwordMin": "Au moins 8 caractères",
+    "passwordsMismatch": "Les mots de passe ne correspondent pas",
+    "mustAcceptTerms": "Vous devez accepter les conditions pour vous inscrire",
+    "passwordUppercase": "Doit contenir une majuscule",
+    "passwordLowercase": "Doit contenir une minuscule",
+    "passwordDigit": "Doit contenir un chiffre"
+  },
   "auth": {
     "login": "Se connecter",
     "register": "S'inscrire",
@@ -84,7 +109,47 @@
   "books": {
     "available": "Disponible",
     "description": "Description",
-    "genres": "Genres",
+    "genresHeading": "Genres",
+    "genres": {
+      "fiction": "Fiction",
+      "non_fiction": "Non-fiction",
+      "sci_fi": "Science-fiction",
+      "fantasy": "Fantasy",
+      "mystery_thriller": "Policier / Thriller",
+      "romance": "Romance",
+      "biography": "Biographie",
+      "history": "Histoire",
+      "science": "Sciences",
+      "philosophy": "Philosophie",
+      "self_help": "Développement personnel",
+      "business": "Affaires",
+      "poetry": "Poésie",
+      "graphic_novel": "Roman graphique",
+      "childrens": "Jeunesse",
+      "young_adult": "Young adult",
+      "horror": "Horreur",
+      "travel": "Voyage",
+      "cooking": "Cuisine",
+      "art": "Art",
+      "other": "Autre"
+    },
+    "conditions": {
+      "new": "Neuf",
+      "like_new": "Comme neuf",
+      "good": "Bon",
+      "acceptable": "Acceptable",
+      "fair": "Passable",
+      "poor": "Mauvais"
+    },
+    "addBookModal": {
+      "title": "Ajouter un livre",
+      "subtitle": "Comment souhaitez-vous ajouter votre livre ?",
+      "scanLabel": "Scanner le code-barres",
+      "scanSubtitle": "Pointez la caméra vers le code-barres du livre",
+      "manualLabel": "Saisir l'ISBN manuellement",
+      "manualSubtitle": "Saisir vous-même les informations du livre",
+      "rememberChoice": "Mémoriser mon choix"
+    },
     "noDescription": "Aucune description fournie",
     "noGenres": "Aucun genre",
     "notFound": "Livre introuvable",
@@ -176,7 +241,16 @@
     }
   },
   "browse": {
-    "noBooks": "Aucun livre trouvé dans cette zone"
+    "noBooks": "Aucun livre trouvé dans cette zone",
+    "tryDifferentFilters": "Modifiez votre recherche ou vos filtres.",
+    "noBooksNearby": "Aucun livre disponible dans cette zone pour le moment.",
+    "searchPlaceholder": "Rechercher des livres, des auteurs...",
+    "genreFilter": "Genres",
+    "genreFilterSelected": "Genres ({{count}})",
+    "clearFilters": "Effacer",
+    "booksNearbyOne": "{{count}} livre à proximité",
+    "booksNearbyOther": "{{count}} livres à proximité",
+    "distanceKm": "{{count}} km"
   },
   "exchanges": {
     "accept": "Accepter",
@@ -261,7 +335,22 @@
     "wasExpired": "Cet échange a expiré",
     "youConfirmed": "Vous avez confirmé",
     "yourBook": "Votre livre",
-    "yourOffer": "Votre offre"
+    "yourOffer": "Votre offre",
+    "yours": "Le vôtre",
+    "theirs": "Le leur",
+    "status": {
+      "pending": "En attente",
+      "accepted": "Accepté",
+      "conditions_pending": "Conditions en attente",
+      "active": "Actif",
+      "swap_confirmed": "Échange confirmé",
+      "completed": "Terminé",
+      "declined": "Refusé",
+      "cancelled": "Annulé",
+      "expired": "Expiré",
+      "return_requested": "Retour demandé",
+      "returned": "Rendu"
+    }
   },
   "home": {
     "greeting": "Salut, {{name}} !",
@@ -279,7 +368,20 @@
     "booksAvailable": "Livres disponibles",
     "swapsThisWeek": "Échanges cette semaine",
     "viewFullMap": "Voir la carte",
-    "emptyState": "Pas encore de livres à proximité — soyez le premier !"
+    "emptyState": "Pas encore de livres à proximité — soyez le premier !",
+    "recentlyAddedEmptyTitle": "Aucun livre pour le moment",
+    "recentlyAddedEmptySubtitle": "Soyez le premier à ajouter un livre et à échanger avec vos voisins.",
+    "recentlyAddedAction": "Ajouter un livre",
+    "nearbySwappers": "Échangeurs",
+    "nearbyBooks": "Livres",
+    "activity": {
+      "verbListed": "a publié",
+      "aBook": "un livre",
+      "inNeighbourhood": " à {{place}}",
+      "swapExclaim": "viennent d'échanger des livres !",
+      "connectorAnd": " et ",
+      "verbRated": "a noté"
+    }
   },
   "messaging": {
     "connected": "Connecté",
@@ -301,7 +403,21 @@
     "markAllRead": "Tout marquer comme lu",
     "emptyTitle": "Pas encore de notifications",
     "pref": {
-      "title": "Préférences de notification"
+      "title": "Préférences de notification",
+      "description": "Choisissez les e-mails que vous souhaitez recevoir. Vous pouvez modifier ces réglages à tout moment.",
+      "newRequest": "Nouvelles demandes d'échange",
+      "newRequestDesc": "Quand quelqu'un demande un échange avec vous",
+      "requestAccepted": "Demande acceptée",
+      "requestAcceptedDesc": "Quand votre demande d'échange est acceptée",
+      "requestDeclined": "Demande refusée",
+      "requestDeclinedDesc": "Quand votre demande d'échange est refusée",
+      "newMessage": "Nouveaux messages",
+      "newMessageDesc": "Quand vous recevez un nouveau message dans le chat",
+      "exchangeCompleted": "Échange terminé",
+      "exchangeCompletedDesc": "Quand un échange se termine avec succès",
+      "ratingReceived": "Note reçue",
+      "ratingReceivedDesc": "Quand quelqu'un vous note après un échange",
+      "footerHint": "Vous pouvez aussi vous désabonner via le lien en bas de chaque e-mail de notification."
     }
   },
   "onboarding": {
@@ -359,7 +475,16 @@
       "usernameLabel": "Nom d'utilisateur",
       "usernameHint": "Choisissez un nom d'utilisateur unique",
       "usernameSuggestions": "Suggestions :",
-      "usernameTaken": "Ce nom d'utilisateur est déjà pris"
+      "usernameTaken": "Ce nom d'utilisateur est déjà pris",
+      "languagePrefEn": "Anglais",
+      "languagePrefNl": "Néerlandais",
+      "languagePrefBoth": "Les deux / Beide",
+      "validation": {
+        "firstNameRequired": "Le prénom est obligatoire",
+        "lastNameRequired": "Le nom est obligatoire",
+        "bioMax": "La bio ne doit pas dépasser 300 caractères",
+        "genresMax": "Vous pouvez sélectionner jusqu'à 5 genres"
+      }
     },
     "public": {
       "blockUser": "Bloquer l'utilisateur",
@@ -426,8 +551,10 @@
   },
   "blocks": {
     "emptyTitle": "Aucun utilisateur bloqué",
+    "emptySubtitle": "Les utilisateurs que vous bloquez ne verront pas vos livres et ne pourront pas vous contacter.",
     "unblock": "Débloquer",
-    "unblockTitle": "Débloquer l'utilisateur"
+    "unblockTitle": "Débloquer l'utilisateur",
+    "unblockMessage": "Il pourra à nouveau voir vos livres et vous envoyer des demandes d'échange."
   },
   "report": {
     "button": "Signaler",
@@ -489,7 +616,13 @@
     "confirmPassword": "Confirmer le nouveau mot de passe",
     "submit": "Changer le mot de passe",
     "success": "Mot de passe changé avec succès !",
-    "error": "Échec du changement de mot de passe. Vérifiez votre mot de passe actuel et réessayez."
+    "error": "Échec du changement de mot de passe. Vérifiez votre mot de passe actuel et réessayez.",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "oldPasswordRequired": "Le mot de passe actuel est obligatoire",
+    "newPasswordMin": "Le nouveau mot de passe doit contenir au moins 8 caractères",
+    "confirmNewRequired": "Veuillez confirmer votre nouveau mot de passe",
+    "passwordsMismatch": "Les mots de passe ne correspondent pas"
   },
   "dataExport": {
     "button": "Télécharger mes données",

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import { showErrorToast } from '@/components/Toast';
 import { deletionStorage } from '@/lib/storage';
 import { useCancelDeletion } from '@/features/profile/hooks/useAccountDeletion';
 
-import { loginSchema, type LoginInput } from '../schemas/auth.schemas';
+import { createLoginSchema, type LoginInput } from '../schemas/auth.schemas';
 import { useLogin } from '../hooks/useLogin';
 import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
 import { AuthLogo } from '../components/AuthLogo';
@@ -43,12 +43,14 @@ export function LoginScreen() {
     () => deletionStorage.getCancelToken(),
   );
 
+  const schema = useMemo(() => createLoginSchema(t), [t]);
+
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email_or_username: '', password: '' },
   });
 
@@ -96,6 +98,9 @@ export function LoginScreen() {
     <AuthScreenWrapper centered>
       {pendingCancelToken && (
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('accountDeletion.pendingTapCancel', 'Tap here to cancel and restore your account.')}
+          accessibilityState={{ disabled: cancelDeletion.isPending }}
           onPress={handleCancelDeletion}
           disabled={cancelDeletion.isPending}
           style={({ pressed }) => [
@@ -189,7 +194,13 @@ export function LoginScreen() {
         <SocialAuthSection />
       </View>
 
-      <Pressable onPress={() => nav.navigate('Register')} style={s.footer} hitSlop={12}>
+      <Pressable
+        onPress={() => nav.navigate('Register')}
+        style={s.footer}
+        hitSlop={12}
+        accessibilityRole="link"
+        accessibilityLabel={`${t('auth.noAccountPrompt')} ${t('auth.register')}`}
+      >
         <Text style={[s.footerText, { color: c.auth.textMuted }]}>
           {t('auth.noAccountPrompt')}{' '}
           <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>

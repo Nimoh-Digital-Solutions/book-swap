@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/types';
 import { MyProfileScreen } from '@/features/profile/screens/MyProfileScreen';
@@ -21,6 +22,7 @@ import { useProfileHeaderOptions, useChildHeaderOptions } from '@/navigation/hea
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export function ProfileStack() {
+  const { t } = useTranslation();
   const profile = useProfileHeaderOptions();
   const child = useChildHeaderOptions();
 
@@ -33,16 +35,20 @@ export function ProfileStack() {
       <Stack.Screen name="AddBook" component={AddBookScreen} options={{ ...child, headerTitle: 'Add book' }} />
       <Stack.Screen name="EditBook" component={EditBookScreen} options={{ ...child, headerTitle: 'Edit book' }} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ ...child, headerTitle: 'Wishlist' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ ...child, headerTitle: 'Settings' }} />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ ...child, headerTitle: t('navigation.settings', 'Settings') }}
+      />
       <Stack.Screen
         name="NotificationPreferences"
         component={NotificationPreferencesScreen}
-        options={{ ...child, headerTitle: 'Notifications' }}
+        options={{ ...child, headerTitle: t('navigation.notifications', 'Notifications') }}
       />
       <Stack.Screen
         name="BlockedUsers"
         component={BlockedUsersScreen}
-        options={{ ...child, headerTitle: 'Blocked Users' }}
+        options={{ ...child, headerTitle: t('navigation.blockedUsers', 'Blocked Users') }}
       />
       <Stack.Screen
         name="ChangePassword"

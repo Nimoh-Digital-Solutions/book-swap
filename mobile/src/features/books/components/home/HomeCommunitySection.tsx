@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeftRight, BookOpen, ChevronRight, Star } from 'lucide-react-native';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
@@ -25,15 +26,18 @@ const FEED_ICONS: Record<ActivityFeedItem['type'], typeof BookOpen> = {
 };
 
 function FeedItemText({ item, accent, textColor }: { item: ActivityFeedItem; accent: string; textColor: string }) {
+  const { t } = useTranslation();
   const nameStyle = { color: accent, fontWeight: '700' as const };
 
   if (item.type === 'new_listing') {
-    const location = item.neighbourhood ? ` in ${item.neighbourhood}` : '';
+    const location = item.neighbourhood
+      ? t('home.activity.inNeighbourhood', ' in {{place}}', { place: item.neighbourhood })
+      : '';
     return (
       <Text style={[s.activityText, { color: textColor }]}>
         <Text style={nameStyle}>{item.user_name}</Text>
-        {' listed '}
-        {item.book_title ? <Text style={{ fontStyle: 'italic' }}>{item.book_title}</Text> : 'a book'}
+        {` ${t('home.activity.verbListed', 'listed')} `}
+        {item.book_title ? <Text style={{ fontStyle: 'italic' }}>{item.book_title}</Text> : t('home.activity.aBook', 'a book')}
         {location}.
       </Text>
     );
@@ -43,9 +47,9 @@ function FeedItemText({ item, accent, textColor }: { item: ActivityFeedItem; acc
     return (
       <Text style={[s.activityText, { color: textColor }]}>
         <Text style={nameStyle}>{item.user_name}</Text>
-        {' & '}
+        {t('home.activity.connectorAnd', ' & ')}
         <Text style={nameStyle}>{item.partner_name}</Text>
-        {' just swapped books!'}
+        {` ${t('home.activity.swapExclaim', 'just swapped books!')}`}
       </Text>
     );
   }
@@ -54,7 +58,7 @@ function FeedItemText({ item, accent, textColor }: { item: ActivityFeedItem; acc
   return (
     <Text style={[s.activityText, { color: textColor }]}>
       <Text style={nameStyle}>{item.user_name}</Text>
-      {' rated '}
+      {` ${t('home.activity.verbRated', 'rated')} `}
       <Text style={nameStyle}>{item.partner_name}</Text>
       {stars}
     </Text>

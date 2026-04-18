@@ -9,6 +9,7 @@ import {
   FlatList,
   Platform,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
@@ -28,7 +29,12 @@ import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius as themeRadius } from "@/constants/theme";
 import { darkGreenMapStyle, lightMapStyle } from "@/constants/mapStyle";
 import { useBrowseBooks, useRadiusCounts, type BrowseBook } from "@/features/books/hooks/useBooks";
-import { GENRE_OPTIONS, DISTANCE_OPTIONS } from "@/features/books/constants";
+import {
+  GENRE_VALUES,
+  GENRE_VALUE_TO_I18N_KEY,
+  type GenreValue,
+  DISTANCE_OPTIONS,
+} from "@/features/books/constants";
 import { BookCard } from "@/features/books/components/BookCard";
 import { BookMapMarker } from "@/features/books/components/BookMapMarker";
 import { SkeletonCard } from "@/components/Skeleton";
@@ -141,6 +147,9 @@ export function BrowseMapScreen() {
   const {
     data,
     isLoading,
+    isError: browseQueryError,
+    refetch: refetchBrowse,
+    isRefetching: browseRefetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -152,7 +161,12 @@ export function BrowseMapScreen() {
     genre: genreParam,
   });
 
-  const { data: radiusData } = useRadiusCounts(region.latitude, region.longitude);
+  const {
+    data: radiusData,
+    isError: radiusQueryError,
+    refetch: refetchRadius,
+    isFetching: radiusRefetching,
+  } = useRadiusCounts(region.latitude, region.longitude);
   const radiusCounts = radiusData?.counts;
 
   const books: BrowseBook[] = useMemo(
@@ -262,6 +276,52 @@ export function BrowseMapScreen() {
   const accent = c.auth.golden;
   const bg = isDark ? c.auth.bg : c.neutral[50];
 
+  const mapDataError = browseQueryError || radiusQueryError;
+  const retryMapDataBusy = browseRefetching || radiusRefetching;
+
+  const handleRetryMapData = useCallback(() => {
+    void refetchBrowse();
+    void refetchRadius();
+  }, [refetchBrowse, refetchRadius]);
+
+  const renderLoadErrorBanner = () => {
+    if (!mapDataError) return null;
+    return (
+      <View
+        style={[
+          s.loadErrorBanner,
+          { backgroundColor: cardBg, borderColor: c.status.error },
+        ]}
+      >
+        <Text style={[s.loadErrorTitle, { color: c.text.primary }]}>
+          {t("browse.loadErrorTitle", "Could not load map data")}
+        </Text>
+        <Text style={[s.loadErrorBody, { color: c.text.secondary }]}>
+          {t("browse.loadErrorBody", "Check your connection and try again.")}
+        </Text>
+        <Pressable
+          onPress={handleRetryMapData}
+          disabled={retryMapDataBusy}
+          style={({ pressed }) => [
+            s.loadErrorRetry,
+            {
+              backgroundColor: accent,
+              opacity: retryMapDataBusy || pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          {retryMapDataBusy ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={s.loadErrorRetryText}>
+              {t("common.retry", "Retry")}
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  };
+
   const mapStyle = useMemo(
     () => (isDark ? darkGreenMapStyle : lightMapStyle),
     [isDark],
@@ -292,9 +352,18 @@ export function BrowseMapScreen() {
         onChangeText={setSearchText}
         returnKeyType="search"
         onSubmitEditing={() => Keyboard.dismiss()}
+        accessibilityLabel={t(
+          "browse.searchPlaceholder",
+          "Search books, authors...",
+        )}
       />
       {searchText.length > 0 && (
-        <Pressable onPress={() => setSearchText("")} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("browse.clearSearchA11y", "Clear search")}
+          onPress={() => setSearchText("")}
+          hitSlop={8}
+        >
           <X size={16} color={c.text.placeholder} />
         </Pressable>
       )}
@@ -311,9 +380,17 @@ export function BrowseMapScreen() {
         {DISTANCE_OPTIONS.map((opt) => {
           const active = selectedRadius === opt.value;
           const count = radiusCounts?.[String(opt.value)];
+          const radiusLabel = t("browse.distanceKm", "{{count}} km", { count: opt.km });
           return (
             <Pressable
               key={opt.value}
+              accessibilityRole="button"
+              accessibilityLabel={
+                count != null
+                  ? `${radiusLabel} search radius, ${count} books nearby`
+                  : `${radiusLabel} search radius`
+              }
+              accessibilityState={{ selected: active }}
               onPress={() => setSelectedRadius(opt.value)}
               style={[
                 s.chip,
@@ -333,7 +410,7 @@ export function BrowseMapScreen() {
                   { color: active ? "#fff" : c.text.primary },
                 ]}
               >
-                {opt.label}
+                {radiusLabel}
                 {count != null && (
                   <Text
                     style={{
@@ -355,6 +432,13 @@ export function BrowseMapScreen() {
         />
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            showGenres
+              ? t("browse.genresFilterCloseA11y", "Hide genre filters")
+              : t("browse.genresFilterOpenA11y", "Show genre filters")
+          }
+          accessibilityState={{ expanded: showGenres }}
           onPress={() => setShowGenres((v) => !v)}
           style={[
             s.chip,
@@ -384,19 +468,23 @@ export function BrowseMapScreen() {
             ]}
           >
             {selectedGenres.length > 0
-              ? `Genres (${selectedGenres.length})`
-              : "Genres"}
+              ? t("browse.genreFilterSelected", "Genres ({{count}})", {
+                  count: selectedGenres.length,
+                })
+              : t("browse.genreFilter", "Genres")}
           </Text>
         </Pressable>
 
         {hasActiveFilters && (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("browse.clearFiltersA11y", "Clear filters")}
             onPress={clearFilters}
             style={[s.chip, { borderColor: cardBorder }]}
           >
             <X size={12} color={c.text.secondary} />
             <Text style={[s.chipText, { color: c.text.secondary }]}>
-              Clear
+              {t("browse.clearFilters", "Clear")}
             </Text>
           </Pressable>
         )}
@@ -404,11 +492,16 @@ export function BrowseMapScreen() {
 
       {showGenres && (
         <View style={s.genreWrap}>
-          {GENRE_OPTIONS.map((g) => {
+          {GENRE_VALUES.map((g) => {
             const active = selectedGenres.includes(g);
+            const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
+            const genreLabel = t(`books.genres.${slug}`, g);
             return (
               <Pressable
                 key={g}
+                accessibilityRole="button"
+                accessibilityLabel={t("browse.genreToggleA11y", "Genre {{genre}}", { genre: genreLabel })}
+                accessibilityState={{ selected: active }}
                 onPress={() => toggleGenre(g)}
                 style={[
                   s.genreChip,
@@ -426,7 +519,7 @@ export function BrowseMapScreen() {
                     { color: active ? accent : c.text.primary },
                   ]}
                 >
-                  {g}
+                  {genreLabel}
                 </Text>
               </Pressable>
             );
@@ -457,6 +550,9 @@ export function BrowseMapScreen() {
   };
 
   const renderEmpty = () => {
+    if (browseQueryError) {
+      return <View style={s.emptyAfterError} />;
+    }
     if (isLoading) {
       return (
         <View style={s.skeletonWrap}>
@@ -487,6 +583,10 @@ export function BrowseMapScreen() {
   };
 
   const resultCount = books.length;
+  const booksNearbyLabel =
+    resultCount === 1
+      ? t("browse.booksNearbyOne", "{{count}} book nearby", { count: resultCount })
+      : t("browse.booksNearbyOther", "{{count}} books nearby", { count: resultCount });
 
   // Android requires a Google Maps API key — fall back to list view without one
   const mapUsable =
@@ -496,11 +596,12 @@ export function BrowseMapScreen() {
     return (
       <View style={[s.root, { backgroundColor: bg }]}>
         <View style={s.listHeader}>
+          {renderLoadErrorBanner()}
           {renderSearchBar()}
           {renderFilters()}
           {!isLoading && resultCount > 0 && (
             <Text style={[s.resultCount, { color: c.text.secondary }]}>
-              {resultCount} book{resultCount !== 1 ? "s" : ""} nearby
+              {booksNearbyLabel}
             </Text>
           )}
         </View>
@@ -586,6 +687,8 @@ export function BrowseMapScreen() {
       {/* Map controls */}
       <View style={[s.mapControls, { backgroundColor: cardBg, borderColor: cardBorder }]}>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("browse.mapZoomInA11y", "Zoom in map")}
           style={s.mapControlBtn}
           onPress={() => {
             const newRegion = {
@@ -601,6 +704,8 @@ export function BrowseMapScreen() {
         </Pressable>
         <View style={[s.mapControlDivider, { backgroundColor: cardBorder }]} />
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("browse.mapZoomOutA11y", "Zoom out map")}
           style={s.mapControlBtn}
           onPress={() => {
             const newRegion = {
@@ -616,6 +721,8 @@ export function BrowseMapScreen() {
         </Pressable>
         <View style={[s.mapControlDivider, { backgroundColor: cardBorder }]} />
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("browse.mapRecenterA11y", "Center map on my location")}
           style={s.mapControlBtn}
           onPress={recenterMap}
           hitSlop={4}
@@ -637,6 +744,7 @@ export function BrowseMapScreen() {
         enablePanDownToClose={false}
       >
         <View style={s.sheetContent}>
+          {renderLoadErrorBanner()}
           {renderSearchBar()}
           {renderFilters()}
 
@@ -644,7 +752,7 @@ export function BrowseMapScreen() {
             <Text
               style={[s.resultCount, { color: c.text.secondary }]}
             >
-              {resultCount} book{resultCount !== 1 ? "s" : ""} nearby
+              {booksNearbyLabel}
             </Text>
           )}
         </View>
@@ -818,4 +926,26 @@ const s = StyleSheet.create({
   footerLoader: {
     paddingTop: spacing.sm,
   },
+  loadErrorBanner: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    borderRadius: themeRadius.lg,
+    borderWidth: 1,
+    gap: spacing.xs,
+  },
+  loadErrorTitle: { fontSize: 15, fontWeight: "700" },
+  loadErrorBody: { fontSize: 13, lineHeight: 18 },
+  loadErrorRetry: {
+    alignSelf: "flex-start",
+    marginTop: spacing.xs,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: themeRadius.pill,
+    minWidth: 88,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadErrorRetryText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  emptyAfterError: { minHeight: 48 },
 });

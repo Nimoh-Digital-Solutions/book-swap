@@ -200,6 +200,8 @@ export function ExchangeDetailScreen() {
         {exchange && (
           <View style={s.reportRow}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('report.button', 'Report')}
               onPress={() => setReportVisible(true)}
               style={({ pressed }) => [s.reportBtn, pressed && { opacity: 0.6 }]}
             >

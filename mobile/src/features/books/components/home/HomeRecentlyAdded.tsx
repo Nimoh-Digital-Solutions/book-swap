@@ -1,5 +1,6 @@
-import { BookOpen, ChevronRight } from "lucide-react-native";
+import { BookOpen, ChevronRight, MapPin } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { spacing, typography } from "@/constants/theme";
@@ -14,6 +15,9 @@ const MAX_VISIBLE = 3;
 interface Props {
   books: BrowseBook[];
   isLoading?: boolean;
+  /** Nearby lists need location; when denied, show explanation instead of generic empty. */
+  locationDenied?: boolean;
+  onOpenSettings?: () => void;
   title: string;
   subtitle: string;
   viewAllLabel: string;
@@ -25,6 +29,8 @@ interface Props {
 export function HomeRecentlyAdded({
   books,
   isLoading,
+  locationDenied,
+  onOpenSettings,
   title,
   subtitle,
   viewAllLabel,
@@ -32,6 +38,7 @@ export function HomeRecentlyAdded({
   onBookPress,
   onAddBook,
 }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const visible = books.slice(0, MAX_VISIBLE);
 
@@ -62,12 +69,30 @@ export function HomeRecentlyAdded({
           <SkeletonCard />
           <SkeletonCard />
         </View>
+      ) : locationDenied ? (
+        <EmptyState
+          icon={MapPin}
+          title={t(
+            'home.locationDeniedRecentTitle',
+            'Turn on location to see nearby books',
+          )}
+          subtitle={t(
+            'home.locationDeniedRecentBody',
+            'We use your approximate area to show fresh listings and community activity.',
+          )}
+          actionLabel={t('home.openSettings', 'Open Settings')}
+          onAction={onOpenSettings}
+          compact
+        />
       ) : visible.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="No books yet"
-          subtitle="Be the first to add a book and start swapping with your neighbors."
-          actionLabel="Add a book"
+          title={t("home.recentlyAddedEmptyTitle", "No books yet")}
+          subtitle={t(
+            "home.recentlyAddedEmptySubtitle",
+            "Be the first to add a book and start swapping with your neighbors.",
+          )}
+          actionLabel={t("home.recentlyAddedAction", "Add a book")}
           onAction={onAddBook}
           compact
         />

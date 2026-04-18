@@ -28,7 +28,7 @@ import {
 } from "@/features/books/hooks/useBooks";
 import { BookPhotoManager } from "@/features/books/components/BookPhotoManager";
 import { EmptyState } from "@/components/EmptyState";
-import { GENRE_OPTIONS } from "@/features/books/constants";
+import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "@/features/books/constants";
 import type { ProfileStackParamList } from "@/navigation/types";
 
 type Route = RouteProp<ProfileStackParamList, "EditBook">;
@@ -339,9 +339,10 @@ export function EditBookScreen() {
           c={c}
         />
         <View style={s.genreGrid}>
-          {GENRE_OPTIONS.map((g) => {
+          {GENRE_VALUES.map((g) => {
             const selected = genres.includes(g);
             const disabled = !selected && genres.length >= MAX_GENRES;
+            const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
             return (
               <Pressable
                 key={g}
@@ -359,7 +360,7 @@ export function EditBookScreen() {
                 <Text
                   style={[s.genreChipText, { color: selected ? "#152018" : c.text.secondary }]}
                 >
-                  {g}
+                  {t(`books.genres.${slug}`, g)}
                 </Text>
               </Pressable>
             );

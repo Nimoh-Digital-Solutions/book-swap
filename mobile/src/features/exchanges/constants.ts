@@ -16,6 +16,8 @@ export const TIMELINE_STATUSES: ExchangeStatus[] = [
   'active',
   'swap_confirmed',
   'completed',
+  'return_requested',
+  'returned',
 ];
 
 export const CHAT_ELIGIBLE_STATUSES: ExchangeStatus[] = [
@@ -31,17 +33,3 @@ export const CHAT_READ_ONLY_STATUSES: ExchangeStatus[] = [
   'return_requested',
   'returned',
 ];
-
-export const STATUS_LABELS: Record<ExchangeStatus, string> = {
-  pending: 'Pending',
-  accepted: 'Accepted',
-  conditions_pending: 'Conditions Pending',
-  active: 'Active',
-  swap_confirmed: 'Swap Confirmed',
-  completed: 'Completed',
-  declined: 'Declined',
-  cancelled: 'Cancelled',
-  expired: 'Expired',
-  return_requested: 'Return Requested',
-  returned: 'Returned',
-};

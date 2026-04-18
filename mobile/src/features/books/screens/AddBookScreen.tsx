@@ -20,7 +20,7 @@ import { BookOpen, Check } from "lucide-react-native";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius } from "@/constants/theme";
 import { useCreateBook, type CreateBookPayload } from "@/features/books/hooks/useBooks";
-import { GENRE_OPTIONS } from "@/features/books/constants";
+import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "@/features/books/constants";
 import type { ScanStackParamList } from "@/navigation/types";
 
 type Route = RouteProp<ScanStackParamList, "AddBook">;
@@ -281,9 +281,10 @@ export function AddBookScreen() {
           c={c}
         />
         <View style={s.genreGrid}>
-          {GENRE_OPTIONS.map((g) => {
+          {GENRE_VALUES.map((g) => {
             const selected = genres.includes(g);
             const disabled = !selected && genres.length >= MAX_GENRES;
+            const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
             return (
               <Pressable
                 key={g}
@@ -304,7 +305,7 @@ export function AddBookScreen() {
                     { color: selected ? "#152018" : c.text.secondary },
                   ]}
                 >
-                  {g}
+                  {t(`books.genres.${slug}`, g)}
                 </Text>
               </Pressable>
             );

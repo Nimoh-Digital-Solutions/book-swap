@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { BrowseStackParamList } from '@/navigation/types';
 import { BrowseMapScreen } from '@/features/books/screens/BrowseMapScreen';
@@ -11,6 +12,7 @@ import { useSharedHeaderOptions, useChildHeaderOptions, HeaderHomeButton, Notifi
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
 
 export function BrowseStack() {
+  const { t } = useTranslation();
   const shared = useSharedHeaderOptions();
   const child = useChildHeaderOptions();
 
@@ -25,7 +27,11 @@ export function BrowseStack() {
     <Stack.Navigator>
       <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={browseOptions} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
-      <Stack.Screen name="RequestSwap" component={RequestSwapScreen} options={{ ...child, headerTitle: 'Request Swap' }} />
+      <Stack.Screen
+        name="RequestSwap"
+        component={RequestSwapScreen}
+        options={{ ...child, headerTitle: t('navigation.requestSwap', 'Request Swap') }}
+      />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
       <Stack.Screen name="UserReviews" component={UserReviewsScreen} options={{ ...child, headerTitle: 'Reviews' }} />
     </Stack.Navigator>

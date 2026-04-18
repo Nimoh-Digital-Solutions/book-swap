@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,20 +23,11 @@ import { useColors, useIsDark } from "@/hooks/useColors";
 import { useChangePassword } from "../hooks/useChangePassword";
 import { useLogout } from "../hooks/useLogout";
 
-const schema = z
-  .object({
-    old_password: z.string().min(1, "Current password is required"),
-    new_password1: z
-      .string()
-      .min(8, "New password must be at least 8 characters"),
-    new_password2: z.string().min(1, "Please confirm your new password"),
-  })
-  .refine((d) => d.new_password1 === d.new_password2, {
-    message: "Passwords do not match",
-    path: ["new_password2"],
-  });
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = {
+  old_password: string;
+  new_password1: string;
+  new_password2: string;
+};
 
 export function ChangePasswordScreen() {
   const c = useColors();
@@ -52,6 +43,27 @@ export function ChangePasswordScreen() {
 
   const newPasswordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          old_password: z
+            .string()
+            .min(1, t("changePassword.oldPasswordRequired", "Current password is required")),
+          new_password1: z
+            .string()
+            .min(8, t("changePassword.newPasswordMin", "New password must be at least 8 characters")),
+          new_password2: z
+            .string()
+            .min(1, t("changePassword.confirmNewRequired", "Please confirm your new password")),
+        })
+        .refine((d) => d.new_password1 === d.new_password2, {
+          message: t("changePassword.passwordsMismatch", "Passwords do not match"),
+          path: ["new_password2"],
+        }),
+    [t],
+  );
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -173,7 +185,9 @@ export function ChangePasswordScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      showCurrent ? "Hide password" : "Show password"
+                      showCurrent
+                        ? t("changePassword.hidePassword", "Hide password")
+                        : t("changePassword.showPassword", "Show password")
                     }
                   >
                     {showCurrent ? (
@@ -240,7 +254,9 @@ export function ChangePasswordScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      showNew ? "Hide password" : "Show password"
+                      showNew
+                        ? t("changePassword.hidePassword", "Hide password")
+                        : t("changePassword.showPassword", "Show password")
                     }
                   >
                     {showNew ? (
@@ -307,7 +323,9 @@ export function ChangePasswordScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      showConfirm ? "Hide password" : "Show password"
+                      showConfirm
+                        ? t("changePassword.hidePassword", "Hide password")
+                        : t("changePassword.showPassword", "Show password")
                     }
                   >
                     {showConfirm ? (

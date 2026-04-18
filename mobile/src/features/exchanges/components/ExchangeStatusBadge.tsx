@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useColors, useIsDark } from '@/hooks/useColors';
+import { useTranslation } from 'react-i18next';
+import { useIsDark } from '@/hooks/useColors';
 import { radius } from '@/constants/theme';
 import type { ExchangeStatus } from '@/types';
-import { STATUS_LABELS } from '../constants';
 
 interface Props {
   status: ExchangeStatus;
@@ -34,13 +34,14 @@ function badgeColors(status: ExchangeStatus, isDark: boolean) {
 }
 
 export function ExchangeStatusBadge({ status }: Props) {
+  const { t } = useTranslation();
   const isDark = useIsDark();
   const colors = badgeColors(status, isDark);
 
   return (
     <View style={[s.badge, { backgroundColor: colors.bg }]}>
       <Text style={[s.label, { color: colors.text }]}>
-        {STATUS_LABELS[status] ?? status}
+        {t(`exchanges.status.${status}`, { defaultValue: status })}
       </Text>
     </View>
   );

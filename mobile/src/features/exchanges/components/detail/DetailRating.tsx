@@ -31,7 +31,13 @@ export function DetailRating({ exchangeId }: Props) {
   const c = useColors();
   const isDark = useIsDark();
 
-  const { data: status, isLoading } = useExchangeRatingStatus(exchangeId);
+  const {
+    data: status,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useExchangeRatingStatus(exchangeId);
   const submitMutation = useSubmitRating(exchangeId);
 
   const [score, setScore] = useState(0);
@@ -62,7 +68,41 @@ export function DetailRating({ exchangeId }: Props) {
     );
   }, [score, comment, submitMutation, t]);
 
-  if (isLoading || !status) return null;
+  if (isLoading && !status) {
+    return (
+      <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <ActivityIndicator size="small" color={accent} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <Text style={[s.errorText, { color: c.text.secondary }]}>
+          {t("ratings.loadFailed", "Could not load rating status.")}
+        </Text>
+        <Pressable
+          onPress={() => refetch()}
+          disabled={isFetching}
+          style={({ pressed }) => [
+            s.retryBtn,
+            { borderColor: accent, opacity: pressed || isFetching ? 0.7 : 1 },
+          ]}
+        >
+          {isFetching ? (
+            <ActivityIndicator size="small" color={accent} />
+          ) : (
+            <Text style={[s.retryBtnText, { color: accent }]}>
+              {t("ratings.retry", "Retry")}
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!status) return null;
 
   // Already rated — show existing ratings
   if (status.my_rating) {
@@ -276,5 +316,25 @@ const s = StyleSheet.create({
   partnerScore: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: spacing.sm,
+    textAlign: "center",
+  },
+  retryBtn: {
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  retryBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

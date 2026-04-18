@@ -107,6 +107,8 @@ export function ExchangeListScreen() {
       {/* Incoming requests banner */}
       {(incomingCount ?? 0) > 0 && (
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('exchanges.incomingRequests', '{{count}} incoming request(s)', { count: incomingCount })}
           onPress={goToIncoming}
           style={[s.incomingBanner, { backgroundColor: accent + '15', borderColor: accent + '30' }]}
         >
@@ -124,6 +126,9 @@ export function ExchangeListScreen() {
           return (
             <Pressable
               key={key}
+              accessibilityRole="button"
+              accessibilityLabel={label}
+              accessibilityState={{ selected: isActive }}
               onPress={() => setActiveTab(key)}
               style={[
                 s.tab,

@@ -1,5 +1,6 @@
 import { BookOpen, MapPin, Users } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
 import { radius, spacing } from "@/constants/theme";
@@ -9,9 +10,12 @@ interface Props {
   userCount?: number;
   bookCount?: number;
   city: string;
+  /** When set, skip loading skeletons and show placeholders (no location-based data). */
+  locationDenied?: boolean;
 }
 
-export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
+export function HomeNearbyBadge({ userCount, bookCount, city, locationDenied }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
 
@@ -21,7 +25,9 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
   const textColor = isDark ? c.auth.golden : c.text.primary;
 
   const labelColor = isDark ? c.text.secondary : c.auth.goldenDark;
-  const loading = userCount == null && !city && bookCount == null;
+  const loading =
+    !locationDenied && userCount == null && !city && bookCount == null;
+  const offLabel = t('home.locationUnavailable', '—');
 
   return (
     <View style={s.row}>
@@ -33,11 +39,15 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
         ]}
       >
         <Users size={14} color={accent} />
-        {userCount != null ? (
+        {locationDenied ? (
+          <Text style={[s.pillText, { color: labelColor }]} numberOfLines={1}>
+            {offLabel}
+          </Text>
+        ) : userCount != null ? (
           <Text style={[s.pillText, { color: textColor }]}>
             {userCount}{" "}
             <Text style={[s.pillLabel, { color: labelColor }]}>
-              Swappers
+              {t("home.nearbySwappers", "Swappers")}
             </Text>
           </Text>
         ) : (
@@ -53,7 +63,11 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
         ]}
       >
         <MapPin size={14} color={accent} />
-        {city ? (
+        {locationDenied ? (
+          <Text style={[s.pillText, { color: labelColor }]} numberOfLines={1}>
+            {offLabel}
+          </Text>
+        ) : city ? (
           <Text style={[s.pillText, { color: labelColor }]} numberOfLines={1}>
             {city}
           </Text>
@@ -70,11 +84,15 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
         ]}
       >
         <BookOpen size={14} color={accent} />
-        {bookCount != null ? (
+        {locationDenied ? (
+          <Text style={[s.pillText, { color: labelColor }]} numberOfLines={1}>
+            {offLabel}
+          </Text>
+        ) : bookCount != null ? (
           <Text style={[s.pillText, { color: textColor }]}>
             {bookCount}{" "}
             <Text style={[s.pillLabel, { color: labelColor }]}>
-              Books
+              {t("home.nearbyBooks", "Books")}
             </Text>
           </Text>
         ) : (

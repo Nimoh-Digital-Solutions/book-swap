@@ -5,6 +5,7 @@ import type { ExchangeBook, ExchangeListItem } from "@/types";
 import { Image } from "expo-image";
 import { ArrowLeftRight } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ExchangeStatusBadge } from "./ExchangeStatusBadge";
 
@@ -73,6 +74,7 @@ function BookThumb({ book, label }: { book: ExchangeBook; label: string }) {
 }
 
 export function ExchangeCard({ exchange, onPress }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const accent = c.auth.golden;
@@ -83,10 +85,16 @@ export function ExchangeCard({ exchange, onPress }: Props) {
   const rightBook = isOwner ? exchange.offered_book : exchange.requested_book;
 
   const otherUser = isOwner ? exchange.requester : exchange.owner;
-  const roleLabel = isOwner ? "Owner" : "Requester";
+  const roleLabel = isOwner
+    ? t("exchanges.roleOwner", "Owner")
+    : t("exchanges.roleRequester", "Requester");
+
+  const a11yLabel = `Exchange with @${otherUser.username}. ${leftBook.title} and ${rightBook.title}. ${exchange.status}.`;
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
       onPress={onPress}
       style={({ pressed }) => [
         s.card,
@@ -112,7 +120,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
 
       {/* Book thumbnails — current user's book always on the left */}
       <View style={s.booksRow}>
-        <BookThumb book={leftBook} label="Yours" />
+        <BookThumb book={leftBook} label={t("exchanges.yours", "Yours")} />
         <View style={s.arrowWrap}>
           <View
             style={[
@@ -126,7 +134,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
             <ArrowLeftRight size={14} color={accent} />
           </View>
         </View>
-        <BookThumb book={rightBook} label="Theirs" />
+        <BookThumb book={rightBook} label={t("exchanges.theirs", "Theirs")} />
       </View>
 
       {/* Partner */}

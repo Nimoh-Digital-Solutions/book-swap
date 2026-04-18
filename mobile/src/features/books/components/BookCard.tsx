@@ -23,6 +23,8 @@ export function BookCard({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${book.title} by ${book.author}`}
       onPress={onPress}
       style={({ pressed }) => [
         s.bookCard,

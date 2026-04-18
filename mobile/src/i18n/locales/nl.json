@@ -17,6 +17,31 @@
     "remove": "Verwijderen",
     "saving": "Opslaan..."
   },
+  "navigation": {
+    "openProfile": "Profiel openen",
+    "goBack": "Terug",
+    "goHome": "Start",
+    "notifications": "Meldingen",
+    "notificationsUnread": "Meldingen, {{count}} ongelezen",
+    "requestSwap": "Ruil aanvragen",
+    "exchanges": "Ruilen",
+    "incomingRequests": "Ontvangen verzoeken",
+    "settings": "Instellingen",
+    "blockedUsers": "Geblokkeerde gebruikers"
+  },
+  "validation": {
+    "required": "Verplicht",
+    "usernameMin": "Minimaal 3 tekens",
+    "usernameMax": "Maximaal 30 tekens",
+    "usernamePattern": "Alleen letters, cijfers en underscores",
+    "invalidEmail": "Ongeldig e-mailadres",
+    "passwordMin": "Minimaal 8 tekens",
+    "passwordsMismatch": "Wachtwoorden komen niet overeen",
+    "mustAcceptTerms": "Je moet de voorwaarden accepteren om te registreren",
+    "passwordUppercase": "Moet een hoofdletter bevatten",
+    "passwordLowercase": "Moet een kleine letter bevatten",
+    "passwordDigit": "Moet een cijfer bevatten"
+  },
   "auth": {
     "login": "Inloggen",
     "register": "Registreren",
@@ -84,7 +109,47 @@
   "books": {
     "available": "Beschikbaar",
     "description": "Beschrijving",
-    "genres": "Genres",
+    "genresHeading": "Genres",
+    "genres": {
+      "fiction": "Fictie",
+      "non_fiction": "Non-fictie",
+      "sci_fi": "Sciencefiction",
+      "fantasy": "Fantasy",
+      "mystery_thriller": "Mysterie / thriller",
+      "romance": "Romantiek",
+      "biography": "Biografie",
+      "history": "Geschiedenis",
+      "science": "Wetenschap",
+      "philosophy": "Filosofie",
+      "self_help": "Zelfhulp",
+      "business": "Zakelijk",
+      "poetry": "Poëzie",
+      "graphic_novel": "Graphic novel",
+      "childrens": "Kinderboeken",
+      "young_adult": "Young adult",
+      "horror": "Horror",
+      "travel": "Reizen",
+      "cooking": "Koken",
+      "art": "Kunst",
+      "other": "Overig"
+    },
+    "conditions": {
+      "new": "Nieuw",
+      "like_new": "Als nieuw",
+      "good": "Goed",
+      "acceptable": "Redelijk",
+      "fair": "Matig",
+      "poor": "Slecht"
+    },
+    "addBookModal": {
+      "title": "Boek toevoegen",
+      "subtitle": "Hoe wil je je boek toevoegen?",
+      "scanLabel": "Barcode scannen",
+      "scanSubtitle": "Richt je camera op de barcode van het boek",
+      "manualLabel": "ISBN handmatig invoeren",
+      "manualSubtitle": "Zelf de boekgegevens invoeren",
+      "rememberChoice": "Mijn keuze onthouden"
+    },
     "noDescription": "Geen beschrijving opgegeven",
     "noGenres": "Geen genres",
     "notFound": "Boek niet gevonden",
@@ -176,7 +241,16 @@
     }
   },
   "browse": {
-    "noBooks": "Geen boeken gevonden in dit gebied"
+    "noBooks": "Geen boeken gevonden in dit gebied",
+    "tryDifferentFilters": "Pas je zoekopdracht of filters aan.",
+    "noBooksNearby": "Nog geen boeken beschikbaar in dit gebied.",
+    "searchPlaceholder": "Zoek boeken, auteurs...",
+    "genreFilter": "Genres",
+    "genreFilterSelected": "Genres ({{count}})",
+    "clearFilters": "Wissen",
+    "booksNearbyOne": "{{count}} boek in de buurt",
+    "booksNearbyOther": "{{count}} boeken in de buurt",
+    "distanceKm": "{{count}} km"
   },
   "exchanges": {
     "accept": "Accepteren",
@@ -261,7 +335,22 @@
     "wasExpired": "Deze ruil is verlopen",
     "youConfirmed": "Je hebt bevestigd",
     "yourBook": "Jouw boek",
-    "yourOffer": "Jouw aanbod"
+    "yourOffer": "Jouw aanbod",
+    "yours": "Van jou",
+    "theirs": "Van hen",
+    "status": {
+      "pending": "In afwachting",
+      "accepted": "Geaccepteerd",
+      "conditions_pending": "Voorwaarden in afwachting",
+      "active": "Actief",
+      "swap_confirmed": "Ruil bevestigd",
+      "completed": "Voltooid",
+      "declined": "Afgewezen",
+      "cancelled": "Geannuleerd",
+      "expired": "Verlopen",
+      "return_requested": "Retour aangevraagd",
+      "returned": "Teruggebracht"
+    }
   },
   "home": {
     "greeting": "Hey, {{name}}!",
@@ -279,7 +368,20 @@
     "booksAvailable": "Boeken beschikbaar",
     "swapsThisWeek": "Ruilen deze week",
     "viewFullMap": "Bekijk de kaart",
-    "emptyState": "Nog geen boeken in de buurt — wees de eerste!"
+    "emptyState": "Nog geen boeken in de buurt — wees de eerste!",
+    "recentlyAddedEmptyTitle": "Nog geen boeken",
+    "recentlyAddedEmptySubtitle": "Wees de eerste om een boek toe te voegen en te ruilen met je buren.",
+    "recentlyAddedAction": "Boek toevoegen",
+    "nearbySwappers": "Ruilers",
+    "nearbyBooks": "Boeken",
+    "activity": {
+      "verbListed": "heeft toegevoegd",
+      "aBook": "een boek",
+      "inNeighbourhood": " in {{place}}",
+      "swapExclaim": "hebben net boeken geruild!",
+      "connectorAnd": " en ",
+      "verbRated": "beoordeelde"
+    }
   },
   "messaging": {
     "connected": "Verbonden",
@@ -301,7 +403,21 @@
     "markAllRead": "Alles als gelezen markeren",
     "emptyTitle": "Nog geen meldingen",
     "pref": {
-      "title": "Meldingsvoorkeuren"
+      "title": "Meldingsvoorkeuren",
+      "description": "Kies welke e-mailmeldingen je wilt ontvangen. Je kunt dit altijd aanpassen.",
+      "newRequest": "Nieuwe ruilverzoeken",
+      "newRequestDesc": "Wanneer iemand een ruil met je wil",
+      "requestAccepted": "Verzoek geaccepteerd",
+      "requestAcceptedDesc": "Wanneer je ruilverzoek wordt geaccepteerd",
+      "requestDeclined": "Verzoek afgewezen",
+      "requestDeclinedDesc": "Wanneer je ruilverzoek wordt afgewezen",
+      "newMessage": "Nieuwe berichten",
+      "newMessageDesc": "Wanneer je een nieuw chatbericht ontvangt",
+      "exchangeCompleted": "Ruil voltooid",
+      "exchangeCompletedDesc": "Wanneer een ruil succesvol is afgerond",
+      "ratingReceived": "Beoordeling ontvangen",
+      "ratingReceivedDesc": "Wanneer iemand je na een ruil beoordeelt",
+      "footerHint": "Je kunt je ook uitschrijven via de link onderaan elke meldingsmail."
     }
   },
   "onboarding": {
@@ -359,7 +475,16 @@
       "usernameLabel": "Gebruikersnaam",
       "usernameHint": "Kies een unieke gebruikersnaam",
       "usernameSuggestions": "Suggesties:",
-      "usernameTaken": "Deze gebruikersnaam is al in gebruik"
+      "usernameTaken": "Deze gebruikersnaam is al in gebruik",
+      "languagePrefEn": "Engels",
+      "languagePrefNl": "Nederlands",
+      "languagePrefBoth": "Beide / Beide",
+      "validation": {
+        "firstNameRequired": "Voornaam is verplicht",
+        "lastNameRequired": "Achternaam is verplicht",
+        "bioMax": "Bio mag maximaal 300 tekens bevatten",
+        "genresMax": "Je kunt maximaal 5 genres selecteren"
+      }
     },
     "public": {
       "blockUser": "Gebruiker blokkeren",
@@ -426,8 +551,10 @@
   },
   "blocks": {
     "emptyTitle": "Geen geblokkeerde gebruikers",
+    "emptySubtitle": "Geblokkeerde gebruikers kunnen je boeken niet zien en geen contact met je opnemen.",
     "unblock": "Deblokkeren",
-    "unblockTitle": "Gebruiker deblokkeren"
+    "unblockTitle": "Gebruiker deblokkeren",
+    "unblockMessage": "Ze kunnen je boeken weer zien en je ruilverzoeken sturen."
   },
   "report": {
     "button": "Melden",
@@ -489,7 +616,13 @@
     "confirmPassword": "Bevestig nieuw wachtwoord",
     "submit": "Wachtwoord wijzigen",
     "success": "Wachtwoord succesvol gewijzigd!",
-    "error": "Wachtwoord wijzigen mislukt. Controleer je huidige wachtwoord en probeer het opnieuw."
+    "error": "Wachtwoord wijzigen mislukt. Controleer je huidige wachtwoord en probeer het opnieuw.",
+    "showPassword": "Wachtwoord tonen",
+    "hidePassword": "Wachtwoord verbergen",
+    "oldPasswordRequired": "Huidig wachtwoord is verplicht",
+    "newPasswordMin": "Nieuw wachtwoord moet minimaal 8 tekens bevatten",
+    "confirmNewRequired": "Bevestig je nieuwe wachtwoord",
+    "passwordsMismatch": "Wachtwoorden komen niet overeen"
   },
   "dataExport": {
     "button": "Mijn gegevens downloaden",

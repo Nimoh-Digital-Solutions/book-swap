@@ -25,15 +25,6 @@ import { useCounterExchange } from '../hooks/useExchanges';
 type Route = RouteProp<MessagesStackParamList, 'CounterOffer'>;
 
 const COVER_COLORS = ['#2D5F3F', '#3B4F7A', '#6B3A5E', '#7A5C2E', '#2B4E5F'];
-const CONDITION_LABELS: Record<string, string> = {
-  new: 'New',
-  like_new: 'Like New',
-  good: 'Good',
-  acceptable: 'Acceptable',
-  fair: 'Fair',
-  poor: 'Poor',
-};
-
 export function CounterOfferScreen() {
   const { t } = useTranslation();
   const c = useColors();
@@ -127,7 +118,7 @@ export function CounterOfferScreen() {
           </Text>
           <View style={[s.conditionPill, { backgroundColor: accent + '14' }]}>
             <Text style={[s.conditionText, { color: accent }]}>
-              {CONDITION_LABELS[item.condition] ?? item.condition}
+              {t(`books.conditions.${item.condition}`, { defaultValue: item.condition })}
             </Text>
           </View>
         </View>

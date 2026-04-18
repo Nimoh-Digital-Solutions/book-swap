@@ -116,7 +116,12 @@ export function ReportSheet({
       onRequestClose={resetAndClose}
     >
       <View style={s.backdrop}>
-        <Pressable style={s.backdropTap} onPress={resetAndClose} />
+        <Pressable
+          style={s.backdropTap}
+          accessibilityRole="button"
+          accessibilityLabel={t('report.dismissA11y', 'Dismiss report dialog')}
+          onPress={resetAndClose}
+        />
         <View style={[s.sheet, { backgroundColor: sheetBg }]}>
           <View style={[s.handle, { backgroundColor: handleBg }]} />
 
@@ -128,7 +133,13 @@ export function ReportSheet({
                 {t('report.title', 'Report User')}
               </Text>
             </View>
-            <Pressable onPress={resetAndClose} hitSlop={12} style={s.closeBtn}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
+              onPress={resetAndClose}
+              hitSlop={12}
+              style={s.closeBtn}
+            >
               <X size={20} color={c.text.secondary} />
             </Pressable>
           </View>
@@ -151,6 +162,9 @@ export function ReportSheet({
               return (
                 <Pressable
                   key={cat}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={t(`report.categories.${cat}`, cat)}
                   onPress={() => setCategory(cat)}
                   style={[
                     s.categoryRow,
@@ -233,6 +247,9 @@ export function ReportSheet({
 
           {/* Submit */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('report.submit', 'Submit Report')}
+            accessibilityState={{ disabled: !canSubmit || report.isPending }}
             style={({ pressed }) => [
               s.submitBtn,
               {

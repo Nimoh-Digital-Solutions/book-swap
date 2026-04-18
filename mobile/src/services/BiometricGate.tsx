@@ -89,8 +89,11 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
             {t('biometricGate.hint')}
           </Text>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.retry')}
             onPress={() => void tryUnlock()}
             disabled={busy}
+            accessibilityState={{ disabled: busy }}
             style={({ pressed }) => [
               styles.primaryBtn,
               { backgroundColor: c.brand.primary, opacity: pressed || busy ? 0.85 : 1 },
@@ -104,7 +107,12 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
               </Text>
             )}
           </Pressable>
-          <Pressable onPress={handleLogout} style={styles.secondaryBtn}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.logout')}
+            onPress={handleLogout}
+            style={styles.secondaryBtn}
+          >
             <Text style={[styles.secondaryLabel, { color: c.brand.primary }]}>{t('auth.logout')}</Text>
           </Pressable>
         </View>

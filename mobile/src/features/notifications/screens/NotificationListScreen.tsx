@@ -119,6 +119,8 @@ export function NotificationListScreen() {
 
       return (
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${item.title}. ${item.body}. ${unread ? t("notifications.unreadA11y", "Unread") + ". " : ""}${timeAgo(item.created_at)}`}
           onPress={() => handleTap(item)}
           style={({ pressed }) => [
             s.row,
@@ -155,13 +157,16 @@ export function NotificationListScreen() {
         </Pressable>
       );
     },
-    [handleTap, cardBg, cardBorder, accent, c],
+    [handleTap, cardBg, cardBorder, accent, c, t],
   );
 
   const ListHeader = useCallback(() => {
     if (unreadCount === 0) return null;
     return (
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("notifications.markAllRead", "Mark all as read")}
+        accessibilityState={{ disabled: markAll.isPending }}
         onPress={() => markAll.mutate()}
         disabled={markAll.isPending}
         style={({ pressed }) => [

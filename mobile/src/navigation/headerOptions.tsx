@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Bell, ChevronLeft, Home } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
@@ -18,6 +19,7 @@ function getUserDisplayName(
 }
 
 export function HeaderAvatar() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const user = useAuthStore((s) => s.user);
   const c = useColors();
@@ -37,7 +39,7 @@ export function HeaderAvatar() {
       style={s.headerBtn}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Open profile"
+      accessibilityLabel={t("navigation.openProfile", "Open profile")}
     >
       <Avatar
         uri={user?.avatar}
@@ -50,6 +52,7 @@ export function HeaderAvatar() {
 }
 
 export function NotificationBell() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const c = useColors();
   const isDark = useIsDark();
@@ -70,7 +73,13 @@ export function NotificationBell() {
       style={s.headerBtn}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
+      accessibilityLabel={
+        unread > 0
+          ? t("navigation.notificationsUnread", "Notifications, {{count}} unread", {
+              count: unread,
+            })
+          : t("navigation.notifications", "Notifications")
+      }
     >
       <View
         style={[
@@ -93,6 +102,7 @@ export function NotificationBell() {
 }
 
 export function HeaderBackButton() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const c = useColors();
   const isDark = useIsDark();
@@ -109,7 +119,7 @@ export function HeaderBackButton() {
       ]}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Go back"
+      accessibilityLabel={t("navigation.goBack", "Go back")}
     >
       <ChevronLeft size={20} color={isDark ? c.auth.golden : c.text.primary} />
     </Pressable>
@@ -117,6 +127,7 @@ export function HeaderBackButton() {
 }
 
 export function HeaderHomeButton() {
+  const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const c = useColors();
   const isDark = useIsDark();
@@ -140,7 +151,7 @@ export function HeaderHomeButton() {
       ]}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Go home"
+      accessibilityLabel={t("navigation.goHome", "Go home")}
     >
       <Home size={18} color={isDark ? c.auth.golden : c.text.primary} />
     </Pressable>

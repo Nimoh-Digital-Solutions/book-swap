@@ -42,6 +42,7 @@ class WebSocketManager {
         path: this.currentPath,
         attempts: this.reconnectAttempts,
       });
+      this.handlers.get('__ws_exhausted__')?.forEach((h) => h({}));
       return;
     }
     this.clearReconnectTimer();

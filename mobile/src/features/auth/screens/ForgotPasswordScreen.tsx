@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,7 +13,7 @@ import { spacing, typography } from '@/constants/theme';
 import { showErrorToast } from '@/components/Toast';
 
 import {
-  forgotPasswordSchema,
+  createForgotPasswordSchema,
   type ForgotPasswordInput,
 } from '../schemas/auth.schemas';
 import { useForgotPassword } from '../hooks/useForgotPassword';
@@ -30,13 +30,15 @@ export function ForgotPasswordScreen() {
   const forgotPassword = useForgotPassword();
   const [sent, setSent] = useState(false);
 
+  const schema = useMemo(() => createForgotPasswordSchema(t), [t]);
+
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm<ForgotPasswordInput>({
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: '' },
   });
 

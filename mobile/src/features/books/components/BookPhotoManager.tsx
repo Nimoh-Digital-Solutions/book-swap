@@ -105,7 +105,12 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
           return;
         }
 
-        upload.mutate(asset.uri);
+        upload.mutate(asset.uri, {
+          onError: () =>
+            showErrorToast(
+              t('books.photo.uploadFailed', 'Could not upload photo. Try again.'),
+            ),
+        });
       } finally {
         isPickingRef.current = false;
       }
@@ -160,7 +165,13 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
           {
             text: t('common.delete', 'Delete'),
             style: 'destructive',
-            onPress: () => remove.mutate(photoId),
+            onPress: () =>
+              remove.mutate(photoId, {
+                onError: () =>
+                  showErrorToast(
+                    t('books.photo.deleteFailed', 'Could not delete photo. Try again.'),
+                  ),
+              }),
           },
         ],
       );
@@ -171,7 +182,12 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
   const handleDragEnd = useCallback(
     ({ data }: { data: Photo[] }) => {
       const ids = data.map((p) => p.id);
-      reorder.mutate(ids);
+      reorder.mutate(ids, {
+        onError: () =>
+          showErrorToast(
+            t('books.photo.reorderFailed', 'Could not save photo order. Try again.'),
+          ),
+      });
     },
     [reorder],
   );

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,7 +13,7 @@ import { spacing, typography, radius } from '@/constants/theme';
 import { showErrorToast, showSuccessToast } from '@/components/Toast';
 import { useCheckUsername } from '@/features/profile/hooks/useProfile';
 
-import { registerSchema, type RegisterInput } from '../schemas/auth.schemas';
+import { createRegisterSchema, type RegisterInput } from '../schemas/auth.schemas';
 import { useRegister } from '../hooks/useRegister';
 import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
 import { AuthLogo } from '../components/AuthLogo';
@@ -35,13 +35,15 @@ export function RegisterScreen() {
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
 
+  const schema = useMemo(() => createRegisterSchema(t), [t]);
+
   const {
     control,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       first_name: '',
       last_name: '',
@@ -282,7 +284,13 @@ export function RegisterScreen() {
 
       <SocialAuthSection />
 
-      <Pressable onPress={() => nav.navigate('Login')} style={s.footer} hitSlop={12}>
+      <Pressable
+        onPress={() => nav.navigate('Login')}
+        style={s.footer}
+        hitSlop={12}
+        accessibilityRole="link"
+        accessibilityLabel={`${t('auth.hasAccountPrompt')} ${t('auth.login')}`}
+      >
         <Text style={[s.footerText, { color: c.auth.textMuted }]}>
           {t('auth.hasAccountPrompt')}{' '}
           <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>

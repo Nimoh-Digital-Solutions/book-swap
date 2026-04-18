@@ -101,6 +101,8 @@ export function DetailActions({ exchange }: Props) {
           {/* Approve counter (when requester countered and owner hasn't approved) */}
           {pendingApproval && !iMadeLastCounter && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.approveCounter', 'Approve Counter')}
               style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
               onPress={() => doConfirm(
                 t('exchanges.approveCounterTitle', 'Approve Counter?'),
@@ -129,6 +131,8 @@ export function DetailActions({ exchange }: Props) {
           {canAccept && (
             <View style={s.ownerRow}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('exchanges.accept', 'Accept')}
                 style={({ pressed }) => [s.rowBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
                 onPress={() => doConfirm(
                   t('exchanges.acceptTitle', 'Accept Request?'),
@@ -141,6 +145,8 @@ export function DetailActions({ exchange }: Props) {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('exchanges.decline', 'Decline')}
                 style={({ pressed }) => [s.rowBtn, s.rowBtnOutline, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
                 onPress={() => setDeclineSheetVisible(true)}
               >
@@ -153,6 +159,8 @@ export function DetailActions({ exchange }: Props) {
           {/* Decline only (when waiting for approval, owner can still decline) */}
           {!canAccept && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.decline', 'Decline')}
               style={({ pressed }) => [s.outlineBtn, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
               onPress={() => setDeclineSheetVisible(true)}
             >
@@ -163,6 +171,8 @@ export function DetailActions({ exchange }: Props) {
 
           {canOwnerCounter && !pendingApproval && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.counterOffer', 'Counter Offer')}
               style={({ pressed }) => [s.outlineBtn, { borderColor: accent, opacity: pressed ? 0.9 : 1 }]}
               onPress={() =>
                 navigation.navigate('CounterOffer', {
@@ -194,6 +204,8 @@ export function DetailActions({ exchange }: Props) {
           {/* Approve counter (when owner countered and requester hasn't approved) */}
           {pendingApproval && !iMadeLastCounter && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.approveCounter', 'Approve Counter')}
               style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
               onPress={() => doConfirm(
                 t('exchanges.approveCounterTitle', 'Approve Counter?'),
@@ -220,6 +232,8 @@ export function DetailActions({ exchange }: Props) {
 
           {canRequesterCounter && !pendingApproval && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.counterOffer', 'Counter Offer')}
               style={({ pressed }) => [s.outlineBtn, { borderColor: accent, opacity: pressed ? 0.9 : 1 }]}
               onPress={() =>
                 navigation.navigate('CounterOffer', {
@@ -236,6 +250,8 @@ export function DetailActions({ exchange }: Props) {
             </Pressable>
           )}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.cancelRequest', 'Cancel Request')}
             style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => doConfirm(
               t('exchanges.cancelTitle', 'Cancel Request?'),
@@ -264,6 +280,8 @@ export function DetailActions({ exchange }: Props) {
         {!accepted ? (
           <>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.reviewConditions', 'Review Exchange Conditions')}
               style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
               onPress={() => setConditionsVisible(true)}
             >
@@ -306,6 +324,8 @@ export function DetailActions({ exchange }: Props) {
       <View style={s.wrap}>
         {!myConfirmed ? (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.confirmSwap', 'Confirm Swap')}
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => doConfirm(
               t('exchanges.confirmSwapTitle', 'Confirm Swap'),
@@ -334,6 +354,8 @@ export function DetailActions({ exchange }: Props) {
       <View style={s.wrap}>
         <InfoRow icon={CheckCircle} text={t('exchanges.swapComplete', 'Swap confirmed by both parties!')} color={accent} />
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('exchanges.requestReturn', 'Request Return')}
           style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
           onPress={() => doConfirm(
             t('exchanges.returnTitle', 'Request Return?'),
@@ -356,6 +378,8 @@ export function DetailActions({ exchange }: Props) {
       <View style={s.wrap}>
         {!myReturnConfirmed ? (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.confirmReturn', 'Confirm Return')}
             style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => doConfirm(
               t('exchanges.confirmReturnTitle', 'Confirm Return'),

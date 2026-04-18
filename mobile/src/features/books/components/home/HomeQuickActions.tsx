@@ -24,6 +24,8 @@ export function HomeQuickActions({ actions }: Props) {
       {actions.map((action) => (
         <Pressable
           key={action.label}
+          accessibilityRole="button"
+          accessibilityLabel={action.label}
           style={({ pressed }) => [
             s.action,
             {

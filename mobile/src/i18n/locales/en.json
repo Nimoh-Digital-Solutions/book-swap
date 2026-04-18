@@ -15,7 +15,36 @@
     "or": "or",
     "permissionDenied": "Permission denied",
     "remove": "Remove",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "close": "Close"
+  },
+  "errors": {
+    "websocketExhausted": "Could not reconnect. Pull to refresh or reopen the app to restore live updates."
+  },
+  "navigation": {
+    "openProfile": "Open profile",
+    "goBack": "Go back",
+    "goHome": "Go home",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {{count}} unread",
+    "requestSwap": "Request Swap",
+    "exchanges": "Exchanges",
+    "incomingRequests": "Incoming Requests",
+    "settings": "Settings",
+    "blockedUsers": "Blocked Users"
+  },
+  "validation": {
+    "required": "Required",
+    "usernameMin": "At least 3 characters",
+    "usernameMax": "At most 30 characters",
+    "usernamePattern": "Only letters, numbers, and underscores",
+    "invalidEmail": "Invalid email",
+    "passwordMin": "At least 8 characters",
+    "passwordsMismatch": "Passwords do not match",
+    "mustAcceptTerms": "You must accept the terms to register",
+    "passwordUppercase": "Must contain an uppercase letter",
+    "passwordLowercase": "Must contain a lowercase letter",
+    "passwordDigit": "Must contain a digit"
   },
   "auth": {
     "login": "Log In",
@@ -84,7 +113,47 @@
   "books": {
     "available": "Available",
     "description": "Description",
-    "genres": "Genres",
+    "genresHeading": "Genres",
+    "genres": {
+      "fiction": "Fiction",
+      "non_fiction": "Non-Fiction",
+      "sci_fi": "Sci-Fi",
+      "fantasy": "Fantasy",
+      "mystery_thriller": "Mystery/Thriller",
+      "romance": "Romance",
+      "biography": "Biography",
+      "history": "History",
+      "science": "Science",
+      "philosophy": "Philosophy",
+      "self_help": "Self-Help",
+      "business": "Business",
+      "poetry": "Poetry",
+      "graphic_novel": "Graphic Novel",
+      "childrens": "Children's",
+      "young_adult": "Young Adult",
+      "horror": "Horror",
+      "travel": "Travel",
+      "cooking": "Cooking",
+      "art": "Art",
+      "other": "Other"
+    },
+    "conditions": {
+      "new": "New",
+      "like_new": "Like New",
+      "good": "Good",
+      "acceptable": "Acceptable",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "addBookModal": {
+      "title": "Add a book",
+      "subtitle": "How would you like to add your book?",
+      "scanLabel": "Scan barcode",
+      "scanSubtitle": "Point your camera at the book's barcode",
+      "manualLabel": "Enter ISBN manually",
+      "manualSubtitle": "Type the book details yourself",
+      "rememberChoice": "Remember my choice"
+    },
     "noDescription": "No description provided",
     "noGenres": "No genres",
     "notFound": "Book not found",
@@ -170,13 +239,25 @@
       "isbnLabel": "ISBN",
       "isbnPlaceholder": "Enter ISBN (optional)",
       "removeTitle": "Remove from Wishlist",
+      "removeError": "Could not remove from wishlist. Try again.",
       "removeMsg": "Remove this book from your wishlist?",
       "titleLabel": "Title",
       "titlePlaceholder": "Enter book title"
     }
   },
   "browse": {
-    "noBooks": "No books found in this area"
+    "noBooks": "No books found in this area",
+    "loadErrorTitle": "Could not load map data",
+    "loadErrorBody": "Check your connection and try again.",
+    "tryDifferentFilters": "Try adjusting your search or filters.",
+    "noBooksNearby": "No books available in this area yet.",
+    "searchPlaceholder": "Search books, authors...",
+    "genreFilter": "Genres",
+    "genreFilterSelected": "Genres ({{count}})",
+    "clearFilters": "Clear",
+    "booksNearbyOne": "{{count}} book nearby",
+    "booksNearbyOther": "{{count}} books nearby",
+    "distanceKm": "{{count}} km"
   },
   "exchanges": {
     "accept": "Accept",
@@ -261,7 +342,22 @@
     "wasExpired": "This exchange has expired",
     "youConfirmed": "You confirmed",
     "yourBook": "Your Book",
-    "yourOffer": "Your Offer"
+    "yourOffer": "Your Offer",
+    "yours": "Yours",
+    "theirs": "Theirs",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "conditions_pending": "Conditions Pending",
+      "active": "Active",
+      "swap_confirmed": "Swap Confirmed",
+      "completed": "Completed",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "return_requested": "Return Requested",
+      "returned": "Returned"
+    }
   },
   "home": {
     "greeting": "Hey, {{name}}!",
@@ -279,7 +375,26 @@
     "booksAvailable": "Books Available",
     "swapsThisWeek": "Swaps This Week",
     "viewFullMap": "Browse Full Map",
-    "emptyState": "No books nearby yet — be the first to list one!"
+    "emptyState": "No books nearby yet — be the first to list one!",
+    "recentlyAddedEmptyTitle": "No books yet",
+    "recentlyAddedEmptySubtitle": "Be the first to add a book and start swapping with your neighbors.",
+    "recentlyAddedAction": "Add a book",
+    "nearbySwappers": "Swappers",
+    "nearbyBooks": "Books",
+    "activity": {
+      "verbListed": "listed",
+      "aBook": "a book",
+      "inNeighbourhood": " in {{place}}",
+      "swapExclaim": "just swapped books!",
+      "connectorAnd": " & ",
+      "verbRated": "rated"
+    },
+    "locationDeniedBannerTitle": "Location is off",
+    "locationDeniedBannerBody": "Enable location in Settings to see nearby books, counts, and community activity.",
+    "openSettings": "Open Settings",
+    "locationUnavailable": "—",
+    "locationDeniedRecentTitle": "Turn on location to see nearby books",
+    "locationDeniedRecentBody": "We use your approximate area to show fresh listings and community activity."
   },
   "messaging": {
     "connected": "Connected",
@@ -294,14 +409,33 @@
     "selectMeetup": "Select a meetup point",
     "send": "Send",
     "suggestMeetup": "Suggest Meetup",
-    "typing": "typing..."
+    "typing": "typing...",
+    "loadFailedTitle": "Could not load messages",
+    "loadFailedBody": "Check your connection and try again.",
+    "sendFailed": "Message could not be sent. Try again."
   },
   "notifications": {
     "title": "Notifications",
+    "markReadError": "Could not update notification.",
+    "markAllReadError": "Could not mark all as read.",
     "markAllRead": "Mark all as read",
     "emptyTitle": "No notifications yet",
     "pref": {
-      "title": "Notification Preferences"
+      "title": "Notification Preferences",
+      "description": "Choose which email notifications you'd like to receive. You can change these at any time.",
+      "newRequest": "New swap requests",
+      "newRequestDesc": "When someone requests to swap with you",
+      "requestAccepted": "Request accepted",
+      "requestAcceptedDesc": "When your swap request is accepted",
+      "requestDeclined": "Request declined",
+      "requestDeclinedDesc": "When your swap request is declined",
+      "newMessage": "New messages",
+      "newMessageDesc": "When you receive a new chat message",
+      "exchangeCompleted": "Exchange completed",
+      "exchangeCompletedDesc": "When a swap is successfully completed",
+      "ratingReceived": "Rating received",
+      "ratingReceivedDesc": "When someone rates you after a swap",
+      "footerHint": "You can also unsubscribe from emails using the link at the bottom of any notification email."
     }
   },
   "onboarding": {
@@ -359,7 +493,16 @@
       "usernameLabel": "Username",
       "usernameHint": "Choose a unique username",
       "usernameSuggestions": "Suggestions:",
-      "usernameTaken": "Username is already taken"
+      "usernameTaken": "Username is already taken",
+      "languagePrefEn": "English",
+      "languagePrefNl": "Dutch",
+      "languagePrefBoth": "Both / Beide",
+      "validation": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "bioMax": "Bio must be 300 characters or fewer",
+        "genresMax": "You can select up to 5 genres"
+      }
     },
     "public": {
       "blockUser": "Block User",
@@ -369,6 +512,8 @@
     }
   },
   "ratings": {
+    "loadFailed": "Could not load rating status.",
+    "retry": "Retry",
     "error": "Failed to submit rating",
     "myRating": "My Rating",
     "partnerRating": "Partner's Rating",
@@ -427,6 +572,7 @@
   "blocks": {
     "emptyTitle": "No blocked users",
     "emptySubtitle": "Users you block won't be able to see your books or contact you.",
+    "unblockFailed": "Could not unblock user. Try again.",
     "unblock": "Unblock",
     "unblockTitle": "Unblock {{name}}?",
     "unblockMessage": "They will be able to see your books and send you swap requests again."
@@ -491,7 +637,13 @@
     "confirmPassword": "Confirm new password",
     "submit": "Change Password",
     "success": "Password changed successfully!",
-    "error": "Failed to change password. Check your current password and try again."
+    "error": "Failed to change password. Check your current password and try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "oldPasswordRequired": "Current password is required",
+    "newPasswordMin": "New password must be at least 8 characters",
+    "confirmNewRequired": "Please confirm your new password",
+    "passwordsMismatch": "Passwords do not match"
   },
   "dataExport": {
     "button": "Download My Data",

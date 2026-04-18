@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
+import { showErrorToast } from "@/components/Toast";
 import { Avatar } from "@/components/Avatar";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -25,16 +26,9 @@ import { useAuthStore } from "@/stores/authStore";
 import { ReportSheet } from "@/features/trust-safety/components/ReportSheet";
 import { useBookDetail } from "../hooks/useBooks";
 import { useBookWishlistStatus, useAddWishlistItem, useRemoveWishlistItem } from "../hooks/useWishlist";
+import { GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "../constants";
 
 type Route = RouteProp<{ BookDetail: { bookId: string } }, "BookDetail">;
-
-const CONDITION_LABELS: Record<string, string> = {
-  new: "New",
-  like_new: "Like New",
-  good: "Good",
-  acceptable: "Acceptable",
-};
-
 
 const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
 
@@ -75,12 +69,32 @@ export function BookDetailScreen() {
           {
             text: t("common.remove", "Remove"),
             style: "destructive",
-            onPress: () => removeWishlist.mutate({ id: wishlistEntry.id, bookId: params.bookId }),
+            onPress: () =>
+              removeWishlist.mutate(
+                { id: wishlistEntry.id, bookId: params.bookId },
+                {
+                  onError: () =>
+                    showErrorToast(
+                      t(
+                        "books.wishlist.removeError",
+                        "Could not remove from wishlist. Try again.",
+                      ),
+                    ),
+                },
+              ),
           },
         ],
       );
     } else {
-      addWishlist.mutate({ book: params.bookId });
+      addWishlist.mutate(
+        { book: params.bookId },
+        {
+          onError: () =>
+            showErrorToast(
+              t("books.wishlist.addError", "Failed to add to wishlist"),
+            ),
+        },
+      );
     }
   }, [wishlistBusy, isWishlisted, wishlistEntry, addWishlist, removeWishlist, params.bookId, t]);
 
@@ -135,6 +149,10 @@ export function BookDetailScreen() {
               style={s.coverImage}
               contentFit="cover"
               transition={200}
+              accessibilityRole="image"
+              accessibilityLabel={t("books.coverImageA11y", "{{title}} cover image", {
+                title: book.title,
+              })}
             />
           ) : (
             <View style={[s.coverPlaceholder, { backgroundColor: coverBg }]}>
@@ -172,7 +190,11 @@ export function BookDetailScreen() {
             >
               <Tag size={14} color={accent} />
               <Text style={[s.metaText, { color: c.text.primary }]}>
-                {genres[0]}
+                {GENRE_VALUE_TO_I18N_KEY[genres[0] as GenreValue]
+                  ? t(`books.genres.${GENRE_VALUE_TO_I18N_KEY[genres[0] as GenreValue]}`, {
+                      defaultValue: genres[0],
+                    })
+                  : genres[0]}
               </Text>
             </View>
           )}
@@ -184,7 +206,7 @@ export function BookDetailScreen() {
           >
             <Sparkles size={14} color={accent} />
             <Text style={[s.metaText, { color: c.text.primary }]}>
-              {CONDITION_LABELS[book.condition] ?? book.condition}
+              {t(`books.conditions.${book.condition}`, { defaultValue: book.condition })}
             </Text>
           </View>
           {book.language && (
@@ -230,7 +252,7 @@ export function BookDetailScreen() {
             <View style={s.cardHeader}>
               <Tag size={16} color={accent} />
               <Text style={[s.cardLabel, { color: c.text.secondary }]}>
-                {t("books.genres", "Genres")}
+                {t("books.genresHeading", "Genres")}
               </Text>
             </View>
             <View style={s.inlineEmpty}>
@@ -244,6 +266,13 @@ export function BookDetailScreen() {
         {/* ── Listed by ── */}
         {owner && (
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              isOwnBook
+                ? t("books.listedByYouA11y", "Listed by you")
+                : t("books.viewOwnerProfileA11y", "View {{name}}'s profile", { name: ownerName })
+            }
+            accessibilityState={{ disabled: isOwnBook }}
             onPress={() => {
               if (!isOwnBook) navigation.navigate('UserProfile', { userId: owner.id });
             }}
@@ -291,6 +320,8 @@ export function BookDetailScreen() {
         {!isOwnBook && owner && (
           <View style={s.reportRow}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("report.button", "Report")}
               onPress={() => setReportVisible(true)}
               style={({ pressed }) => [s.reportBtn, pressed && { opacity: 0.6 }]}
             >
@@ -318,6 +349,8 @@ export function BookDetailScreen() {
         <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
           {isAvailable && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("books.requestSwap", "Request Swap")}
               onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
               style={({ pressed }) => [
                 s.ctaBtn,
@@ -331,6 +364,13 @@ export function BookDetailScreen() {
             </Pressable>
           )}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              isWishlisted
+                ? t("books.wishlist.removeFromA11y", "Remove from wishlist")
+                : t("books.wishlist.addToA11y", "Add to wishlist")
+            }
+            accessibilityState={{ disabled: wishlistBusy || wishlistLoading }}
             onPress={handleWishlistPress}
             disabled={wishlistBusy || wishlistLoading}
             style={({ pressed }) => [

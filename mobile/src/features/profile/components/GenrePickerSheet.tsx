@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
-import { GENRE_OPTIONS } from '@/features/books/constants';
+import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from '@/features/books/constants';
 
 const MAX_GENRES = 5;
 
@@ -79,9 +79,10 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
             showsVerticalScrollIndicator={false}
             style={s.list}
           >
-            {GENRE_OPTIONS.map((genre) => {
+            {GENRE_VALUES.map((genre) => {
               const selected = value.includes(genre);
               const disabled = !selected && value.length >= MAX_GENRES;
+              const slug = GENRE_VALUE_TO_I18N_KEY[genre as GenreValue];
               return (
                 <Pressable
                   key={genre}
@@ -101,7 +102,7 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
                       { color: selected ? (isDark ? accent : '#152018') : c.text.primary },
                     ]}
                   >
-                    {genre}
+                    {t(`books.genres.${slug}`, genre)}
                   </Text>
                   {selected && (
                     <View style={[s.checkCircle, { backgroundColor: accent }]}>

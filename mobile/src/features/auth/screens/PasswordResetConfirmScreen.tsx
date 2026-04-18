@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,7 +12,7 @@ import { useColors } from '@/hooks/useColors';
 import { spacing, typography } from '@/constants/theme';
 
 import {
-  passwordResetConfirmSchema,
+  createPasswordResetConfirmSchema,
   type PasswordResetConfirmInput,
 } from '../schemas/auth.schemas';
 import { usePasswordResetConfirm } from '../hooks/usePasswordResetConfirm';
@@ -23,7 +23,7 @@ import { AuthButton } from '../components/AuthButton';
 type Route = RouteProp<AuthStackParamList, 'PasswordResetConfirm'>;
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'PasswordResetConfirm'>;
 
-type PageState = 'form' | 'success' | 'error';
+type PageState = 'form' | 'success' | 'invalid_link';
 
 export function PasswordResetConfirmScreen() {
   const { t } = useTranslation();
@@ -34,16 +34,18 @@ export function PasswordResetConfirmScreen() {
 
   const resetConfirm = usePasswordResetConfirm();
   const [pageState, setPageState] = useState<PageState>(
-    uid && token ? 'form' : 'error',
+    uid && token ? 'form' : 'invalid_link',
   );
   const [serverError, setServerError] = useState('');
+
+  const schema = useMemo(() => createPasswordResetConfirmSchema(t), [t]);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<PasswordResetConfirmInput>({
-    resolver: zodResolver(passwordResetConfirmSchema),
+    resolver: zodResolver(schema),
     defaultValues: { password: '', password_confirm: '' },
   });
 
@@ -61,7 +63,6 @@ export function PasswordResetConfirmScreen() {
               ?? ax.response?.data?.new_password?.[0]
               ?? t('auth.resetConfirm.genericError', 'This reset link is invalid or has expired.');
             setServerError(String(detail));
-            setPageState('error');
           },
         },
       );
@@ -94,7 +95,7 @@ export function PasswordResetConfirmScreen() {
     );
   }
 
-  if (pageState === 'error') {
+  if (pageState === 'invalid_link') {
     return (
       <AuthScreenWrapper centered>
         <View style={s.stateContainer}>
@@ -105,11 +106,10 @@ export function PasswordResetConfirmScreen() {
             {t('auth.resetConfirm.errorTitle', 'Reset Failed')}
           </Text>
           <Text style={[s.stateBody, { color: c.auth.textMuted }]}>
-            {serverError ||
-              t(
-                'auth.resetConfirm.noLink',
-                'This password reset link is missing or malformed. Please request a new one.',
-              )}
+            {t(
+              'auth.resetConfirm.noLink',
+              'This password reset link is missing or malformed. Please request a new one.',
+            )}
           </Text>
           <AuthButton
             label={t('auth.resetConfirm.signIn', 'Sign In')}
@@ -141,6 +141,15 @@ export function PasswordResetConfirmScreen() {
           )}
         </Text>
       </View>
+
+      {!!serverError && (
+        <Text
+          style={[s.inlineError, { color: c.status.error }]}
+          accessibilityRole="alert"
+        >
+          {serverError}
+        </Text>
+      )}
 
       <Controller
         control={control}
@@ -242,6 +251,13 @@ const s = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
     maxWidth: 300,
+  },
+  inlineError: {
+    ...typography.body,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    maxWidth: 320,
+    alignSelf: 'center',
   },
 
   footer: {
