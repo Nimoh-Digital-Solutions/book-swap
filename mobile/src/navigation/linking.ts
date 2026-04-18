@@ -65,6 +65,13 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
       screens: {
         Login: 'login',
         Register: 'register',
+        PasswordResetConfirm: {
+          path: 'auth/password/reset/confirm',
+          parse: {
+            uid: (value: string) => value,
+            token: (value: string) => value,
+          },
+        },
         EmailVerifyPending: 'auth/email/verify-pending',
         EmailVerifyConfirm: 'auth/email/verify/:token',
       },

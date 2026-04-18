@@ -11,7 +11,7 @@ export type ExchangeStatus =
   | 'return_requested'
   | 'returned';
 
-export type DeclineReason = 'not_interested' | 'reserved' | 'other';
+export type DeclineReason = 'not_interested' | 'reserved' | 'counter_proposed' | 'other';
 
 export interface ExchangeParticipant {
   id: string;

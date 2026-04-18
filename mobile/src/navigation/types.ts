@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  PasswordResetConfirm: { uid: string; token: string };
   EmailVerifyPending: { email?: string };
   EmailVerifyConfirm: { token: string };
 };
@@ -20,6 +21,7 @@ export type HomeStackParamList = {
   Home: undefined;
   BookDetail: { bookId: string };
   UserProfile: { userId: string };
+  UserReviews: { userId: string; username?: string };
   RequestSwap: { bookId: string };
   Notifications: undefined;
 };
@@ -29,11 +31,22 @@ export type BrowseStackParamList = {
   BookDetail: { bookId: string };
   RequestSwap: { bookId: string };
   UserProfile: { userId: string };
+  UserReviews: { userId: string; username?: string };
 };
 
 export type ScanStackParamList = {
   Scanner: undefined;
-  ScanResult: { isbn: string };
+  BookSearch: undefined;
+  ScanResult: {
+    isbn: string;
+    title?: string;
+    author?: string;
+    cover_url?: string;
+    description?: string;
+    language?: string;
+    page_count?: number | null;
+    publish_year?: number | null;
+  };
   AddBook: {
     isbn?: string;
     title?: string;
@@ -58,6 +71,7 @@ export type MessagesStackParamList = {
   ExchangeDetail: { exchangeId: string };
   CounterOffer: { exchangeId: string; requesterId: string; requesterName: string };
   UserProfile: { userId: string };
+  UserReviews: { userId: string; username?: string };
 };
 
 export type ProfileStackParamList = {
@@ -71,10 +85,16 @@ export type ProfileStackParamList = {
   Settings: undefined;
   NotificationPreferences: undefined;
   BlockedUsers: undefined;
+  ChangePassword: undefined;
+  MyReviews: undefined;
+  Appearance: undefined;
+  Language: undefined;
+  About: undefined;
 };
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  Onboarding: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
 };
 

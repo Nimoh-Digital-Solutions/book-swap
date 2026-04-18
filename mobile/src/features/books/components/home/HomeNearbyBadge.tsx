@@ -15,11 +15,12 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
   const c = useColors();
   const isDark = useIsDark();
 
-  const pillBg = isDark ? c.auth.card : c.surface.white;
-  const pillBorder = isDark ? c.auth.cardBorder : c.border.default;
+  const pillBg = isDark ? c.auth.bgDeep : c.auth.golden + '14';
+  const pillBorder = isDark ? c.auth.cardBorder : c.auth.golden + '30';
   const accent = c.auth.golden;
-  const textColor = c.text.primary;
+  const textColor = isDark ? c.auth.golden : c.text.primary;
 
+  const labelColor = isDark ? c.text.secondary : c.auth.goldenDark;
   const loading = userCount == null && !city && bookCount == null;
 
   return (
@@ -28,14 +29,14 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
       <View
         style={[
           s.pill,
-          { backgroundColor: c.auth.bgDeep, borderColor: pillBorder },
+          { backgroundColor: pillBg, borderColor: pillBorder },
         ]}
       >
         <Users size={14} color={accent} />
         {userCount != null ? (
           <Text style={[s.pillText, { color: textColor }]}>
             {userCount}{" "}
-            <Text style={[s.pillLabel, { color: c.text.secondary }]}>
+            <Text style={[s.pillLabel, { color: labelColor }]}>
               Swappers
             </Text>
           </Text>
@@ -48,12 +49,12 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
       <View
         style={[
           s.pill,
-          { backgroundColor: c.auth.bgDeep, borderColor: pillBorder },
+          { backgroundColor: pillBg, borderColor: pillBorder },
         ]}
       >
         <MapPin size={14} color={accent} />
         {city ? (
-          <Text style={[s.pillText, { color: textColor }]} numberOfLines={1}>
+          <Text style={[s.pillText, { color: labelColor }]} numberOfLines={1}>
             {city}
           </Text>
         ) : (
@@ -65,14 +66,14 @@ export function HomeNearbyBadge({ userCount, bookCount, city }: Props) {
       <View
         style={[
           s.pill,
-          { backgroundColor: c.auth.bgDeep, borderColor: pillBorder },
+          { backgroundColor: pillBg, borderColor: pillBorder },
         ]}
       >
         <BookOpen size={14} color={accent} />
         {bookCount != null ? (
           <Text style={[s.pillText, { color: textColor }]}>
             {bookCount}{" "}
-            <Text style={[s.pillLabel, { color: c.text.secondary }]}>
+            <Text style={[s.pillLabel, { color: labelColor }]}>
               Books
             </Text>
           </Text>

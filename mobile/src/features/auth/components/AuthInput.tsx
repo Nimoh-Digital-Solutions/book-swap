@@ -15,6 +15,7 @@ type AuthInputProps = TextInputProps & {
   label?: string;
   icon?: LucideIcon;
   error?: string;
+  rightIcon?: React.ReactNode;
   rightAction?: {
     label: string;
     onPress: () => void;
@@ -22,7 +23,7 @@ type AuthInputProps = TextInputProps & {
 };
 
 export const AuthInput = forwardRef<TextInput, AuthInputProps>(
-  ({ label, icon: Icon, error, rightAction, style, onFocus, onBlur, ...rest }, ref) => {
+  ({ label, icon: Icon, error, rightIcon, rightAction, style, onFocus, onBlur, ...rest }, ref) => {
     const c = useColors();
     const [focused, setFocused] = useState(false);
 
@@ -52,7 +53,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(
               s.input,
               { color: c.auth.textOnDark },
               Icon && s.inputWithIcon,
-              rightAction && s.inputWithRight,
+              (rightAction || rightIcon != null) && s.inputWithRight,
               style,
             ]}
             placeholderTextColor={c.auth.textMuted}
@@ -67,7 +68,8 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(
             }}
             {...rest}
           />
-          {rightAction && (
+          {rightIcon && <View style={s.rightIconWrap}>{rightIcon}</View>}
+          {rightAction && !rightIcon && (
             <Pressable
               onPress={rightAction.onPress}
               style={s.rightAction}
@@ -121,6 +123,11 @@ const s = StyleSheet.create({
   },
   inputWithRight: {
     paddingRight: 60,
+  },
+  rightIconWrap: {
+    paddingRight: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   rightAction: {
     position: 'absolute',

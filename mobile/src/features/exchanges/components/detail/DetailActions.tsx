@@ -18,7 +18,7 @@ import { radius, spacing } from '@/constants/theme';
 import { useColors } from '@/hooks/useColors';
 import type { MessagesStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/stores/authStore';
-import type { ExchangeDetail } from '@/types';
+import type { DeclineReason, ExchangeDetail } from '@/types';
 import {
   useAcceptConditions,
   useAcceptExchange,
@@ -30,6 +30,7 @@ import {
   useRequestReturn,
 } from '../../hooks/useExchanges';
 import { ConditionsReviewModal } from './ConditionsReviewModal';
+import { DeclineReasonSheet } from './DeclineReasonSheet';
 
 function InfoRow({ icon: Icon, text, color }: { icon: any; text: string; color: string }) {
   return (
@@ -55,6 +56,7 @@ export function DetailActions({ exchange }: Props) {
   const isRequester = currentUserId === exchange.requester.id;
 
   const [conditionsVisible, setConditionsVisible] = useState(false);
+  const [declineSheetVisible, setDeclineSheetVisible] = useState(false);
 
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
@@ -70,6 +72,13 @@ export function DetailActions({ exchange }: Props) {
       { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       { text: t('common.confirm', 'Confirm'), style: destructive ? 'destructive' : 'default', onPress: onConfirm },
     ]);
+  };
+
+  const handleDecline = (reason?: DeclineReason) => {
+    declineMutation.mutate(
+      { exchangeId: exchange.id, payload: reason ? { reason } : undefined },
+      { onSuccess: () => setDeclineSheetVisible(false) },
+    );
   };
 
   const status = exchange.status;
@@ -133,12 +142,7 @@ export function DetailActions({ exchange }: Props) {
 
               <Pressable
                 style={({ pressed }) => [s.rowBtn, s.rowBtnOutline, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
-                onPress={() => doConfirm(
-                  t('exchanges.declineTitle', 'Decline?'),
-                  t('exchanges.declineMsg', 'The requester will be notified.'),
-                  () => declineMutation.mutate({ exchangeId: exchange.id }),
-                  true,
-                )}
+                onPress={() => setDeclineSheetVisible(true)}
               >
                 <XCircle size={16} color="#EF4444" />
                 <Text style={[s.rowBtnText, { color: '#EF4444' }]}>{t('exchanges.decline', 'Decline')}</Text>
@@ -150,12 +154,7 @@ export function DetailActions({ exchange }: Props) {
           {!canAccept && (
             <Pressable
               style={({ pressed }) => [s.outlineBtn, { borderColor: '#EF4444', opacity: pressed ? 0.9 : 1 }]}
-              onPress={() => doConfirm(
-                t('exchanges.declineTitle', 'Decline?'),
-                t('exchanges.declineMsg', 'The requester will be notified.'),
-                () => declineMutation.mutate({ exchangeId: exchange.id }),
-                true,
-              )}
+              onPress={() => setDeclineSheetVisible(true)}
             >
               <XCircle size={16} color="#EF4444" />
               <Text style={[s.outlineBtnText, { color: '#EF4444' }]}>{t('exchanges.decline', 'Decline')}</Text>
@@ -179,6 +178,13 @@ export function DetailActions({ exchange }: Props) {
               </Text>
             </Pressable>
           )}
+
+          <DeclineReasonSheet
+            visible={declineSheetVisible}
+            loading={declineMutation.isPending}
+            onClose={() => setDeclineSheetVisible(false)}
+            onDecline={handleDecline}
+          />
         </View>
       );
     }
@@ -367,7 +373,23 @@ export function DetailActions({ exchange }: Props) {
     );
   }
 
-  if (status === 'declined') return <InfoRow icon={XCircle} text={t('exchanges.wasDeclined', 'This request was declined.')} color="#EF4444" />;
+  if (status === 'declined') {
+    const reasonKey = exchange.decline_reason
+      ? t(`exchanges.declineReasons.${exchange.decline_reason}`, exchange.decline_reason)
+      : null;
+    return (
+      <View style={s.wrap}>
+        <InfoRow icon={XCircle} text={t('exchanges.wasDeclined', 'This request was declined.')} color="#EF4444" />
+        {reasonKey && (
+          <InfoRow
+            icon={XCircle}
+            text={t('exchanges.declineReasonLabel', { defaultValue: 'Reason: {{reason}}', reason: reasonKey })}
+            color={c.text.secondary}
+          />
+        )}
+      </View>
+    );
+  }
   if (status === 'cancelled') return <InfoRow icon={XCircle} text={t('exchanges.wasCancelled', 'This request was cancelled.')} color={c.text.placeholder} />;
   if (status === 'expired') return <InfoRow icon={AlertCircle} text={t('exchanges.wasExpired', 'This request expired.')} color={c.text.placeholder} />;
   if (status === 'returned') return <InfoRow icon={CheckCircle} text={t('exchanges.booksReturned', 'Books have been returned.')} color={accent} />;

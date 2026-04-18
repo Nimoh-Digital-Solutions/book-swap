@@ -57,6 +57,23 @@ export interface NearbyCount {
   radius: number;
 }
 
+/** A single item in the community activity feed. */
+export interface ActivityFeedItem {
+  type: 'new_listing' | 'completed_swap' | 'new_rating';
+  user_name: string;
+  partner_name?: string;
+  book_title?: string | null;
+  score?: number;
+  neighbourhood: string;
+  timestamp: string;
+}
+
+/** Community stats response (public). */
+export interface CommunityStats {
+  swaps_this_week: number;
+  activity_feed: ActivityFeedItem[];
+}
+
 // ---------------------------------------------------------------------------
 // Filter / query params
 // ---------------------------------------------------------------------------

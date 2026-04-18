@@ -25,10 +25,10 @@ export function useOfflineMutationDrain() {
 
       drainMutationQueue().then(({ succeeded, failed }) => {
         if (succeeded > 0) {
-          showSuccessToast(t('common.done'));
+          showSuccessToast(t('offline.syncComplete'));
         }
         if (failed > 0) {
-          showErrorToast(t('common.error'));
+          showErrorToast(t('offline.syncFailed'));
         }
       });
     }

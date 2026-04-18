@@ -12,7 +12,7 @@ import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { BookOpen, PenLine, AlertTriangle, User, BookText } from "lucide-react-native";
+import { BookOpen, PenLine, AlertTriangle, User, BookText, Search } from "lucide-react-native";
 
 import { http } from "@/services/http";
 import { API } from "@/configs/apiEndpoints";
@@ -46,6 +46,8 @@ export function ScanResultScreen() {
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const accent = c.auth.golden;
 
+  const hasPrefilledMetadata = !!params.title;
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["isbn-lookup", params.isbn],
     queryFn: async () => {
@@ -54,9 +56,22 @@ export function ScanResultScreen() {
       });
       return result as ISBNResult;
     },
+    enabled: !hasPrefilledMetadata,
   });
 
-  if (isLoading) {
+  const displayData: ISBNResult | undefined = hasPrefilledMetadata
+    ? {
+        title: params.title!,
+        author: params.author ?? "",
+        isbn: params.isbn,
+        cover_url: params.cover_url,
+        description: params.description,
+        page_count: params.page_count,
+        publish_year: params.publish_year,
+      }
+    : data;
+
+  if (isLoading && !hasPrefilledMetadata) {
     return (
       <View style={[s.centered, { backgroundColor: bg }]}>
         <ActivityIndicator size="large" color={accent} />
@@ -70,7 +85,7 @@ export function ScanResultScreen() {
     );
   }
 
-  if (error || !data) {
+  if (!displayData) {
     return (
       <View style={[s.centered, { backgroundColor: bg }]}>
         <View
@@ -96,10 +111,21 @@ export function ScanResultScreen() {
             s.primaryBtn,
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
           ]}
+          onPress={() => navigation.navigate("BookSearch")}
+        >
+          <Search size={18} color="#fff" />
+          <Text style={s.primaryBtnText}>
+            {t("scanner.searchByTitle", "Search by title")}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            s.secondaryBtn,
+            { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
+          ]}
           onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
         >
-          <PenLine size={18} color="#fff" />
-          <Text style={s.primaryBtnText}>
+          <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
             {t("scanner.addManually", "Add manually")}
           </Text>
         </Pressable>
@@ -120,9 +146,9 @@ export function ScanResultScreen() {
           { backgroundColor: cardBg, borderColor: cardBorder },
         ]}
       >
-        {data.cover_url ? (
+        {displayData.cover_url ? (
           <Image
-            source={{ uri: data.cover_url }}
+            source={{ uri: displayData.cover_url }}
             style={s.cover}
             contentFit="cover"
             transition={200}
@@ -135,52 +161,47 @@ export function ScanResultScreen() {
       </View>
 
       {/* Book info */}
-      <Text style={[s.title, { color: c.text.primary }]}>{data.title}</Text>
+      <Text style={[s.title, { color: c.text.primary }]}>{displayData.title}</Text>
       <View style={s.authorRow}>
         <User size={14} color={c.text.secondary} />
         <Text style={[s.author, { color: c.text.secondary }]}>
-          {data.author || t("scanner.unknownAuthor", "Unknown author")}
+          {displayData.author || t("scanner.unknownAuthor", "Unknown author")}
         </Text>
       </View>
 
       {/* Meta pills */}
       <View style={s.metaRow}>
-        <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[s.pillText, { color: c.text.secondary }]}>
-            ISBN {data.isbn}
-          </Text>
-        </View>
-        {data.publish_year ? (
+        {displayData.isbn ? (
           <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <Text style={[s.pillText, { color: c.text.secondary }]}>
-              {data.publish_year}
+              ISBN {displayData.isbn}
             </Text>
           </View>
         ) : null}
-        {data.page_count ? (
+        {displayData.publish_year ? (
+          <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[s.pillText, { color: c.text.secondary }]}>
+              {displayData.publish_year}
+            </Text>
+          </View>
+        ) : null}
+        {displayData.page_count ? (
           <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <BookText size={11} color={c.text.secondary} />
             <Text style={[s.pillText, { color: c.text.secondary }]}>
-              {data.page_count} {t("scanner.pages", "pages")}
-            </Text>
-          </View>
-        ) : null}
-        {data.language ? (
-          <View style={[s.pill, { backgroundColor: accent + "18", borderColor: accent + "40" }]}>
-            <Text style={[s.pillText, { color: accent }]}>
-              {data.language.toUpperCase()}
+              {displayData.page_count} {t("scanner.pages", "pages")}
             </Text>
           </View>
         ) : null}
       </View>
 
       {/* Description */}
-      {data.description ? (
+      {displayData.description ? (
         <Text
           style={[s.description, { color: c.text.secondary }]}
           numberOfLines={5}
         >
-          {data.description}
+          {displayData.description}
         </Text>
       ) : null}
 
@@ -192,14 +213,14 @@ export function ScanResultScreen() {
         ]}
         onPress={() =>
           navigation.navigate("AddBook", {
-            isbn: data.isbn,
-            title: data.title,
-            author: data.author,
-            cover_url: data.cover_url,
-            description: data.description,
-            language: data.language,
-            page_count: data.page_count,
-            publish_year: data.publish_year,
+            isbn: displayData.isbn,
+            title: displayData.title,
+            author: displayData.author,
+            cover_url: displayData.cover_url,
+            description: displayData.description,
+            language: displayData.language,
+            page_count: displayData.page_count,
+            publish_year: displayData.publish_year,
           })
         }
       >
@@ -213,7 +234,7 @@ export function ScanResultScreen() {
           s.secondaryBtn,
           { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
         ]}
-        onPress={() => navigation.navigate("AddBook", { isbn: data.isbn })}
+        onPress={() => navigation.navigate("AddBook", { isbn: displayData.isbn })}
       >
         <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
           {t("scanner.editDetails", "Edit details before adding")}
@@ -229,7 +250,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: 120,
+    paddingBottom: 20,
   },
 
   centered: {

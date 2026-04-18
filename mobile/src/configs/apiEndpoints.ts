@@ -31,6 +31,7 @@ export const API = {
     meOnboardingComplete: `${USERS}/me/onboarding/complete/`,
     meDelete: `${USERS}/me/delete/`,
     meDeleteCancel: `${USERS}/me/delete/cancel/`,
+    meDataExport: `${USERS}/me/data-export/`,
     checkUsername: `${USERS}/check-username/`,
     detail: (id: string) => `${USERS}/${id}/`,
   },
@@ -50,11 +51,13 @@ export const API = {
     list: `${WISHLIST}/`,
     create: `${WISHLIST}/`,
     detail: (id: string) => `${WISHLIST}/${id}/`,
+    byBook: (bookId: string) => `${WISHLIST}/?book=${bookId}`,
   },
   browse: {
     list: `${BOOKS}/browse/`,
     radiusCounts: `${BOOKS}/browse/radius-counts/`,
     nearbyCount: `${BOOKS}/nearby-count/`,
+    communityStats: `${BOOKS}/community-stats/`,
   },
   exchanges: {
     list: `${EXCHANGES}/`,

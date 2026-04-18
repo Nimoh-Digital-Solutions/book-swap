@@ -100,6 +100,7 @@ export const API = {
     list: `${BOOKS}/browse/`,
     radiusCounts: `${BOOKS}/browse/radius-counts/`,
     nearbyCount: `${BOOKS}/nearby-count/`,
+    communityStats: `${BOOKS}/community-stats/`,
   },
 
   exchanges: {

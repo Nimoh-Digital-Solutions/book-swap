@@ -3,8 +3,12 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { enqueueMutation } from '@/lib/offlineMutationQueue';
+import { showInfoToast } from '@/components/Toast';
 import type {
   ExchangeListItem,
   ExchangeDetail,
@@ -78,40 +82,74 @@ export function useIncomingCount() {
 
 export function useCreateExchange() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
+  const { t } = useTranslation();
+
   return useMutation({
     mutationFn: async (payload: CreateExchangePayload) => {
+      if (isOffline) {
+        enqueueMutation({
+          endpoint: API.exchanges.create,
+          method: 'post',
+          data: payload,
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: `offline-${Date.now()}` } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.create,
         payload,
       );
       return data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: keys.lists() });
-      qc.invalidateQueries({ queryKey: keys.incoming() });
+    onSuccess: (_data, _vars, _ctx) => {
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.lists() });
+        qc.invalidateQueries({ queryKey: keys.incoming() });
+      }
     },
   });
 }
 
 export function useAcceptExchange() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
+  const { t } = useTranslation();
+
   return useMutation({
     mutationFn: async (exchangeId: string) => {
+      if (isOffline) {
+        enqueueMutation({
+          endpoint: API.exchanges.accept(exchangeId),
+          method: 'post',
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.accept(exchangeId),
       );
       return data;
     },
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.incoming() });
-      qc.invalidateQueries({ queryKey: keys.lists() });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.incoming() });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+      }
     },
   });
 }
 
 export function useDeclineExchange() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
+  const { t } = useTranslation();
+
   return useMutation({
     mutationFn: async ({
       exchangeId,
@@ -120,6 +158,17 @@ export function useDeclineExchange() {
       exchangeId: string;
       payload?: DeclinePayload;
     }) => {
+      if (isOffline) {
+        enqueueMutation({
+          endpoint: API.exchanges.decline(exchangeId),
+          method: 'post',
+          data: payload,
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.decline(exchangeId),
         payload,
@@ -127,9 +176,11 @@ export function useDeclineExchange() {
       return data;
     },
     onSuccess: (_data, { exchangeId }) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.incoming() });
-      qc.invalidateQueries({ queryKey: keys.lists() });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.incoming() });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+      }
     },
   });
 }
@@ -176,16 +227,31 @@ export function useApproveCounter() {
 
 export function useCancelExchange() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
+  const { t } = useTranslation();
+
   return useMutation({
     mutationFn: async (exchangeId: string) => {
+      if (isOffline) {
+        enqueueMutation({
+          endpoint: API.exchanges.cancel(exchangeId),
+          method: 'post',
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.cancel(exchangeId),
       );
       return data;
     },
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.lists() });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+      }
     },
   });
 }

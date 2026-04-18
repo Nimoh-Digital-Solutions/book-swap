@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { ScanStackParamList } from "@/navigation/types";
 import { ScannerScreen } from "@/features/scanner/screens/ScannerScreen";
 import { ScanResultScreen } from "@/features/scanner/screens/ScanResultScreen";
+import { BookSearchScreen } from "@/features/books/screens/BookSearchScreen";
 import { AddBookScreen } from "@/features/books/screens/AddBookScreen";
 import {
   useSharedHeaderOptions,
@@ -21,6 +22,11 @@ export function ScanStack() {
         name="Scanner"
         component={ScannerScreen}
         options={{ ...shared, headerTitle: "Scan" }}
+      />
+      <Stack.Screen
+        name="BookSearch"
+        component={BookSearchScreen}
+        options={{ ...child, headerTitle: "Search books" }}
       />
       <Stack.Screen
         name="ScanResult"

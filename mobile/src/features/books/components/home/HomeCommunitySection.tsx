@@ -4,9 +4,12 @@ import { ArrowLeftRight, BookOpen, ChevronRight, Star } from 'lucide-react-nativ
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius, shadows } from '@/constants/theme';
+import type { ActivityFeedItem } from '../../hooks/useBooks';
 
 interface Props {
   bookCount?: number;
+  swapsThisWeek?: number;
+  activityFeed?: ActivityFeedItem[];
   communityLabel: string;
   communityTitle: string;
   booksAvailableLabel: string;
@@ -15,8 +18,53 @@ interface Props {
   onBrowseMap: () => void;
 }
 
+const FEED_ICONS: Record<ActivityFeedItem['type'], typeof BookOpen> = {
+  new_listing: BookOpen,
+  completed_swap: ArrowLeftRight,
+  new_rating: Star,
+};
+
+function FeedItemText({ item, accent, textColor }: { item: ActivityFeedItem; accent: string; textColor: string }) {
+  const nameStyle = { color: accent, fontWeight: '700' as const };
+
+  if (item.type === 'new_listing') {
+    const location = item.neighbourhood ? ` in ${item.neighbourhood}` : '';
+    return (
+      <Text style={[s.activityText, { color: textColor }]}>
+        <Text style={nameStyle}>{item.user_name}</Text>
+        {' listed '}
+        {item.book_title ? <Text style={{ fontStyle: 'italic' }}>{item.book_title}</Text> : 'a book'}
+        {location}.
+      </Text>
+    );
+  }
+
+  if (item.type === 'completed_swap') {
+    return (
+      <Text style={[s.activityText, { color: textColor }]}>
+        <Text style={nameStyle}>{item.user_name}</Text>
+        {' & '}
+        <Text style={nameStyle}>{item.partner_name}</Text>
+        {' just swapped books!'}
+      </Text>
+    );
+  }
+
+  const stars = item.score ? ` ${'★'.repeat(item.score)}` : '';
+  return (
+    <Text style={[s.activityText, { color: textColor }]}>
+      <Text style={nameStyle}>{item.user_name}</Text>
+      {' rated '}
+      <Text style={nameStyle}>{item.partner_name}</Text>
+      {stars}
+    </Text>
+  );
+}
+
 export function HomeCommunitySection({
   bookCount,
+  swapsThisWeek,
+  activityFeed,
   communityLabel,
   communityTitle,
   booksAvailableLabel,
@@ -27,77 +75,56 @@ export function HomeCommunitySection({
   const c = useColors();
   const isDark = useIsDark();
 
+  const statBg = isDark ? c.auth.bg : c.auth.golden + '14';
+  const statBorder = isDark ? c.auth.cardBorder : c.auth.golden + '30';
+  const statLabel = isDark ? c.auth.textMuted : c.text.secondary;
+  const iconBg = isDark ? c.auth.bg : c.auth.golden + '14';
+  const ctaBg = isDark ? c.auth.bg : c.auth.golden + '14';
+  const accent = isDark ? c.auth.golden : c.auth.goldenDark;
+
   return (
     <View style={s.section}>
-      {/* Header */}
       <View style={s.header}>
         <Text style={[s.label, { color: c.auth.golden }]}>{communityLabel}</Text>
         <Text style={[s.title, { color: c.text.primary }]}>{communityTitle}</Text>
       </View>
 
-      {/* Stats */}
       <View style={s.statsRow}>
-        <View style={[s.statCard, { backgroundColor: c.auth.bg, borderColor: c.auth.cardBorder }]}>
+        <View style={[s.statCard, { backgroundColor: statBg, borderColor: statBorder }]}>
           <Text style={[s.statValue, { color: c.auth.golden }]}>
             {bookCount?.toLocaleString() ?? '—'}
           </Text>
-          <Text style={[s.statLabel, { color: c.auth.textMuted }]}>{booksAvailableLabel}</Text>
+          <Text style={[s.statLabelText, { color: statLabel }]}>{booksAvailableLabel}</Text>
         </View>
-        <View style={[s.statCard, { backgroundColor: c.auth.bg, borderColor: c.auth.cardBorder }]}>
-          <Text style={[s.statValue, { color: c.auth.golden }]}>852</Text>
-          <Text style={[s.statLabel, { color: c.auth.textMuted }]}>{swapsThisWeekLabel}</Text>
+        <View style={[s.statCard, { backgroundColor: statBg, borderColor: statBorder }]}>
+          <Text style={[s.statValue, { color: c.auth.golden }]}>
+            {swapsThisWeek?.toLocaleString() ?? '—'}
+          </Text>
+          <Text style={[s.statLabelText, { color: statLabel }]}>{swapsThisWeekLabel}</Text>
         </View>
       </View>
 
-      {/* Activity Feed */}
-      <View style={[s.activityCard, { backgroundColor: isDark ? c.auth.card : c.surface.white, borderColor: isDark ? c.auth.cardBorder : c.border.default }]}>
-        {[
-          {
-            icon: BookOpen,
-            text: (
-              <Text style={[s.activityText, { color: c.text.secondary }]}>
-                <Text style={{ color: isDark ? c.auth.golden : c.auth.bg, fontWeight: '700' }}>Emma</Text>
-                {' listed '}
-                <Text style={{ fontStyle: 'italic' }}>Dune</Text>
-                {' in De Pijp.'}
-              </Text>
-            ),
-          },
-          {
-            icon: ArrowLeftRight,
-            text: (
-              <Text style={[s.activityText, { color: c.text.secondary }]}>
-                <Text style={{ color: isDark ? c.auth.golden : c.auth.bg, fontWeight: '700' }}>Liam</Text>
-                {' & '}
-                <Text style={{ color: isDark ? c.auth.golden : c.auth.bg, fontWeight: '700' }}>Noah</Text>
-                {' just swapped books!'}
-              </Text>
-            ),
-          },
-          {
-            icon: Star,
-            text: (
-              <Text style={[s.activityText, { color: c.text.secondary }]}>
-                New BookDrop location added in Jordaan.
-              </Text>
-            ),
-          },
-        ].map((item, i) => (
-          <View
-            key={i}
-            style={[s.activityRow, i > 0 && { borderTopWidth: 1, borderTopColor: isDark ? c.auth.cardBorder : c.border.default }]}
-          >
-            <View style={[s.activityIcon, { backgroundColor: c.auth.bg }]}>
-              <item.icon size={16} color={c.auth.golden} />
-            </View>
-            {item.text}
-          </View>
-        ))}
-      </View>
+      {activityFeed && activityFeed.length > 0 && (
+        <View style={[s.activityCard, { backgroundColor: isDark ? c.auth.card : c.surface.white, borderColor: isDark ? c.auth.cardBorder : c.border.default }]}>
+          {activityFeed.map((item, i) => {
+            const Icon = FEED_ICONS[item.type];
+            return (
+              <View
+                key={`${item.type}-${item.timestamp}-${i}`}
+                style={[s.activityRow, i > 0 && { borderTopWidth: 1, borderTopColor: isDark ? c.auth.cardBorder : c.border.default }]}
+              >
+                <View style={[s.activityIcon, { backgroundColor: iconBg }]}>
+                  <Icon size={16} color={c.auth.golden} />
+                </View>
+                <FeedItemText item={item} accent={accent} textColor={c.text.secondary} />
+              </View>
+            );
+          })}
+        </View>
+      )}
 
-      {/* Browse Map CTA */}
       <Pressable
-        style={({ pressed }) => [s.mapCta, { backgroundColor: c.auth.bg, opacity: pressed ? 0.9 : 1 }]}
+        style={({ pressed }) => [s.mapCta, { backgroundColor: ctaBg, borderWidth: isDark ? 0 : 1, borderColor: statBorder, opacity: pressed ? 0.9 : 1 }]}
         onPress={onBrowseMap}
       >
         <Text style={[s.mapCtaText, { color: c.auth.golden }]}>{browseMapLabel}</Text>
@@ -122,7 +149,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: { fontSize: 28, fontWeight: '800', marginBottom: 4 },
-  statLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5 },
+  statLabelText: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5 },
 
   activityCard: {
     marginHorizontal: spacing.lg,

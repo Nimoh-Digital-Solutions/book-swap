@@ -9,6 +9,7 @@ import { http } from '@services';
 
 import type {
   BrowseFilters,
+  CommunityStats,
   NearbyCount,
   PaginatedBrowseBooks,
   RadiusCounts,
@@ -65,6 +66,23 @@ export const discoveryService = {
     });
     const { data } = await http.get<NearbyCount>(
       `${API.browse.nearbyCount}?${params}`,
+    );
+    return data;
+  },
+
+  /** Fetch community stats and activity feed (public / AllowAny). */
+  async communityStats(
+    lat: number,
+    lng: number,
+    radius = 10000,
+  ): Promise<CommunityStats> {
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radius: String(radius),
+    });
+    const { data } = await http.get<CommunityStats>(
+      `${API.browse.communityStats}?${params}`,
     );
     return data;
   },

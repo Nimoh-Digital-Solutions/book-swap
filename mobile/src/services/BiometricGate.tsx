@@ -15,6 +15,11 @@ import { useColors } from '@/hooks/useColors';
 import { tokenStorage } from '@/lib/storage';
 import { useAuthStore } from '@/stores/authStore';
 
+let _lastExternalAuthAt = 0;
+export function markBiometricAuthCompleted() {
+  _lastExternalAuthAt = Date.now();
+}
+
 export function BiometricGate({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const c = useColors();
@@ -25,11 +30,15 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [busy, setBusy] = useState(false);
   const appState = useRef<AppStateStatus>(AppState.currentState);
+  const lastAuthAt = useRef(0);
+
+  const AUTH_COOLDOWN_MS = 3000;
 
   const tryUnlock = useCallback(async () => {
     setBusy(true);
     try {
       const result = await authenticate();
+      lastAuthAt.current = Date.now();
       if (result.success) setLocked(false);
     } finally {
       setBusy(false);
@@ -40,11 +49,19 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (next) => {
       const wasBackground = appState.current.match(/inactive|background/);
       if (wasBackground && next === 'active') {
+        const now = Date.now();
+        const recentInternal = now - lastAuthAt.current < AUTH_COOLDOWN_MS;
+        const recentExternal = now - _lastExternalAuthAt < AUTH_COOLDOWN_MS;
+        if (recentInternal || recentExternal) {
+          appState.current = next;
+          return;
+        }
         void (async () => {
           const enabled = tokenStorage.getBiometricEnabled();
           if (enabled && useAuthStore.getState().isAuthenticated) {
             setLocked(true);
             const result = await authenticate();
+            lastAuthAt.current = Date.now();
             if (result.success) setLocked(false);
           }
         })();

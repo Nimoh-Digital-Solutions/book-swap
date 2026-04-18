@@ -4,15 +4,8 @@ import { Image } from "expo-image";
 
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { Avatar } from "@/components/Avatar";
 import type { BrowseBook } from "@/features/books/hooks/useBooks";
-
-const AVATAR_GRADIENTS = [
-  "#6366F1",
-  "#8B5CF6",
-  "#EC4899",
-  "#F59E0B",
-  "#10B981",
-];
 
 const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
 
@@ -27,7 +20,6 @@ export function BookCard({
   const isDark = useIsDark();
   const coverUri = book.cover_url || book.primary_photo;
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
-  const ownerInitial = book.owner.username?.charAt(0).toUpperCase() ?? "?";
 
   return (
     <Pressable
@@ -84,19 +76,11 @@ export function BookCard({
         </Text>
 
         <View style={s.ownerRow}>
-          <View
-            style={[
-              s.ownerAvatar,
-              {
-                backgroundColor:
-                  AVATAR_GRADIENTS[
-                    book.id.charCodeAt(0) % AVATAR_GRADIENTS.length
-                  ],
-              },
-            ]}
-          >
-            <Text style={s.ownerInitial}>{ownerInitial}</Text>
-          </View>
+          <Avatar
+            uri={book.owner.avatar}
+            name={book.owner.username}
+            size={20}
+          />
           <Text style={[s.ownerName, { color: c.text.primary }]}>
             {book.owner.username}
           </Text>
@@ -168,13 +152,5 @@ const s = StyleSheet.create({
   },
   bookAuthor: { fontSize: 12, marginBottom: spacing.md },
   ownerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  ownerAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ownerInitial: { color: "#fff", fontSize: 9, fontWeight: "700" },
   ownerName: { fontSize: 10, fontWeight: "500" },
 });

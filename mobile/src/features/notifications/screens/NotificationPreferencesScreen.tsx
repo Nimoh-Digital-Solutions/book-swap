@@ -197,7 +197,7 @@ const s = StyleSheet.create({
   scroll: {
     paddingHorizontal: spacing.md + 4,
     paddingTop: spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
 
   headerSection: {

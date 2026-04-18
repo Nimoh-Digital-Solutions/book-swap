@@ -12,6 +12,7 @@ export interface UpdateProfilePayload {
   last_name?: string;
   bio?: string;
   avatar?: { uri: string; type: string; name: string } | null;
+  avatar_removed?: boolean;
   preferred_genres?: string[];
   preferred_language?: string;
   preferred_radius?: number;
@@ -30,11 +31,12 @@ export function useUpdateProfile() {
 
   return useMutation<User, Error, UpdateProfilePayload>({
     mutationFn: async (payload) => {
-      const { avatar, ...jsonFields } = payload;
+      const { avatar, avatar_removed, ...jsonFields } = payload;
 
       const hasAvatar = avatar && avatar.uri;
+      const needsFormData = hasAvatar || avatar_removed;
 
-      if (hasAvatar) {
+      if (needsFormData) {
         const form = new FormData();
 
         Object.entries(jsonFields).forEach(([key, value]) => {
@@ -46,14 +48,18 @@ export function useUpdateProfile() {
           }
         });
 
-        form.append('avatar', {
-          uri: avatar.uri,
-          type: avatar.type || 'image/jpeg',
-          name: avatar.name || 'avatar.jpg',
-        } as unknown as Blob);
+        if (hasAvatar) {
+          form.append('avatar', {
+            uri: avatar.uri,
+            type: avatar.type || 'image/jpeg',
+            name: avatar.name || 'avatar.jpg',
+          } as unknown as Blob);
+        } else if (avatar_removed) {
+          form.append('avatar', '');
+        }
 
         const { data } = await http.patch<User>(API.users.me, form, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { 'Content-Type': undefined as unknown as string },
         });
         return data;
       }

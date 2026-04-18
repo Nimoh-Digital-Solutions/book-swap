@@ -417,7 +417,7 @@ const s = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: spacing.sm,
   },
   searchEmptyPad: { paddingBottom: 0 },

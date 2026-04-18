@@ -27,7 +27,7 @@ import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius as themeRadius } from "@/constants/theme";
 import { darkGreenMapStyle, lightMapStyle } from "@/constants/mapStyle";
-import { useBrowseBooks, type BrowseBook } from "@/features/books/hooks/useBooks";
+import { useBrowseBooks, useRadiusCounts, type BrowseBook } from "@/features/books/hooks/useBooks";
 import { GENRE_OPTIONS, DISTANCE_OPTIONS } from "@/features/books/constants";
 import { BookCard } from "@/features/books/components/BookCard";
 import { BookMapMarker } from "@/features/books/components/BookMapMarker";
@@ -147,6 +147,9 @@ export function BrowseMapScreen() {
     search: debouncedSearch || undefined,
     genre: genreParam,
   });
+
+  const { data: radiusData } = useRadiusCounts(region.latitude, region.longitude);
+  const radiusCounts = radiusData?.counts;
 
   const books: BrowseBook[] = useMemo(
     () => data?.pages.flatMap((p) => p.results) ?? [],
@@ -303,6 +306,7 @@ export function BrowseMapScreen() {
       >
         {DISTANCE_OPTIONS.map((opt) => {
           const active = selectedRadius === opt.value;
+          const count = radiusCounts?.[String(opt.value)];
           return (
             <Pressable
               key={opt.value}
@@ -326,6 +330,17 @@ export function BrowseMapScreen() {
                 ]}
               >
                 {opt.label}
+                {count != null && (
+                  <Text
+                    style={{
+                      color: active ? "rgba(255,255,255,0.7)" : c.text.placeholder,
+                      fontSize: 11,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {` (${count})`}
+                  </Text>
+                )}
               </Text>
             </Pressable>
           );
@@ -740,7 +755,7 @@ const s = StyleSheet.create({
   sheetListContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: spacing.sm,
   },
 
@@ -784,7 +799,7 @@ const s = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: spacing.sm,
   },
 

@@ -53,6 +53,16 @@ export const authApi = {
     return data;
   },
 
+  async passwordResetConfirm(uid: string, token: string, newPassword: string) {
+    const { data } = await plain.post(API.auth.passwordResetConfirm, {
+      uid,
+      token,
+      new_password: newPassword,
+      new_password_confirm: newPassword,
+    });
+    return data;
+  },
+
   async verifyEmail(token: string) {
     const { data } = await plain.post<{ detail: string }>(
       API.auth.emailVerify,
@@ -63,6 +73,15 @@ export const authApi = {
 
   async resendVerificationEmail() {
     const { data } = await http.post<{ detail: string }>(API.auth.emailResend);
+    return data;
+  },
+
+  async changePassword(payload: {
+    old_password: string;
+    new_password1: string;
+    new_password2: string;
+  }) {
+    const { data } = await http.post(API.auth.passwordChange, payload);
     return data;
   },
 

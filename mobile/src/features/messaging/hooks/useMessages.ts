@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
-import type { Message } from '@/types';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { enqueueMutation } from '@/lib/offlineMutationQueue';
+import { useAuthStore } from '@/stores/authStore';
+import { showInfoToast } from '@/components/Toast';
+import type { Message, User } from '@/types';
 
 interface MessagesResponse {
   count: number;
@@ -25,12 +30,37 @@ export function useMessages(exchangeId: string) {
 
 export function useSendMessage() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
+  const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+
   return useMutation({
     mutationFn: async ({ exchangeId, content }: { exchangeId: string; content: string }) => {
-      const { data } = await http.post<Message>(
-        API.messaging.messages(exchangeId),
-        { content },
-      );
+      const endpoint = API.messaging.messages(exchangeId);
+
+      if (isOffline) {
+        enqueueMutation({
+          endpoint,
+          method: 'post',
+          data: { content },
+          invalidateKeys: ['messages'],
+        });
+
+        const optimistic: Message = {
+          id: `offline-${Date.now()}`,
+          exchange: exchangeId,
+          sender: (user ?? { id: '', username: '' }) as User,
+          content,
+          image: null,
+          read_at: null,
+          created_at: new Date().toISOString(),
+        };
+
+        showInfoToast(t('offline.queuedForSync'));
+        return optimistic;
+      }
+
+      const { data } = await http.post<Message>(endpoint, { content });
       return data;
     },
     onSuccess: (newMsg, { exchangeId }) => {

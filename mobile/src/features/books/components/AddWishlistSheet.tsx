@@ -194,7 +194,7 @@ function SectionLabel({ text, c }: { text: string; c: ReturnType<typeof useColor
 const s = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
   subtitle: { fontSize: 14, marginBottom: spacing.md },

@@ -35,3 +35,20 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const passwordResetConfirmSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'At least 8 characters')
+      .regex(/[A-Z]/, 'Must contain an uppercase letter')
+      .regex(/[a-z]/, 'Must contain a lowercase letter')
+      .regex(/[0-9]/, 'Must contain a digit'),
+    password_confirm: z.string().min(1, 'Required'),
+  })
+  .refine((d) => d.password === d.password_confirm, {
+    message: 'Passwords do not match',
+    path: ['password_confirm'],
+  });
+
+export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;

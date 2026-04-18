@@ -27,6 +27,7 @@ export { ViewToggle } from './components/ViewToggle';
 export { discoveryKeys } from './hooks/discoveryKeys';
 export { useBrowseBooks } from './hooks/useBrowseBooks';
 export { useBrowseFilters } from './hooks/useBrowseFilters';
+export { useCommunityStats } from './hooks/useCommunityStats';
 export { useMapBooks } from './hooks/useMapBooks';
 export { useNearbyCount } from './hooks/useNearbyCount';
 export { useRadiusCounts } from './hooks/useRadiusCounts';
@@ -40,10 +41,12 @@ export { BrowsePage } from './pages/BrowsePage';
 // Types
 export type { ViewMode } from './components/ViewToggle';
 export type {
+  ActivityFeedItem,
   BrowseBook,
   BrowseBookOwner,
   BrowseFilters,
   BrowseOrdering,
+  CommunityStats,
   NearbyCount,
   OwnerLocation,
   PaginatedBrowseBooks,

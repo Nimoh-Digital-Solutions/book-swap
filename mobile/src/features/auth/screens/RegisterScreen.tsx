@@ -1,16 +1,17 @@
 import React, { useCallback, useRef } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, AtSign, Mail, Lock, Check } from 'lucide-react-native';
+import { User, AtSign, Mail, Lock, Check, CheckCircle2, XCircle } from 'lucide-react-native';
 
 import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
 import { spacing, typography, radius } from '@/constants/theme';
 import { showErrorToast, showSuccessToast } from '@/components/Toast';
+import { useCheckUsername } from '@/features/profile/hooks/useProfile';
 
 import { registerSchema, type RegisterInput } from '../schemas/auth.schemas';
 import { useRegister } from '../hooks/useRegister';
@@ -37,6 +38,7 @@ export function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -50,6 +52,18 @@ export function RegisterScreen() {
       terms_accepted: false as unknown as true,
     },
   });
+
+  const watchedUsername = watch('username');
+  const { data: usernameCheck, isLoading: isCheckingUsername } = useCheckUsername(watchedUsername);
+  const usernameTaken = !!(watchedUsername.length >= 3 && usernameCheck && !usernameCheck.available);
+
+  const usernameStatusIcon = (() => {
+    if (watchedUsername.trim().length < 3) return null;
+    if (isCheckingUsername) return <ActivityIndicator size="small" color={c.auth.textMuted} />;
+    if (usernameCheck?.available) return <CheckCircle2 size={18} color={c.status.success} />;
+    if (usernameCheck && !usernameCheck.available) return <XCircle size={18} color={c.status.error} />;
+    return null;
+  })();
 
   const onSubmit = useCallback(
     (data: RegisterInput) => {
@@ -144,7 +158,8 @@ export function RegisterScreen() {
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
-            error={errors.username?.message}
+            error={usernameTaken ? t('profile.edit.usernameTaken') : errors.username?.message}
+            rightIcon={usernameStatusIcon}
             autoCapitalize="none"
             textContentType="username"
             autoComplete="username-new"
@@ -262,6 +277,7 @@ export function RegisterScreen() {
         label={t('auth.register')}
         onPress={handleSubmit(onSubmit)}
         loading={register.isPending}
+        disabled={usernameTaken}
       />
 
       <SocialAuthSection />

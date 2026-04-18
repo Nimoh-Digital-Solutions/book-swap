@@ -43,6 +43,7 @@ urlpatterns = [
         name="browse-radius-counts",
     ),
     path("books/nearby-count/", views.NearbyCountView.as_view(), name="nearby-count"),
+    path("books/community-stats/", views.CommunityStatsView.as_view(), name="community-stats"),
     # ── Router-generated Book & Wishlist CRUD ─────────────────────────
     path("", include(router.urls)),
 ]

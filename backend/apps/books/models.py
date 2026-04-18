@@ -115,13 +115,25 @@ class BookPhoto(TimeStampedModel):
 
 
 class WishlistItem(TimeStampedModel):
-    """A book a user is looking for. At least one of isbn/title/genre is required."""
+    """A book a user is looking for.
+
+    When created from a book detail page, ``book`` links directly to the listing.
+    Manual wishlist entries (no specific listing) leave ``book`` NULL and must
+    supply at least one of isbn/title/genre.
+    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="wishlist_items",
+    )
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="wishlist_entries",
     )
     isbn = models.CharField(max_length=13, blank=True)
     title = models.CharField(max_length=300, blank=True)
@@ -131,10 +143,17 @@ class WishlistItem(TimeStampedModel):
 
     class Meta:
         ordering = ["-created_at"]  # noqa: RUF012
+        constraints = [  # noqa: RUF012
+            models.UniqueConstraint(
+                fields=["user", "book"],
+                condition=models.Q(book__isnull=False),
+                name="unique_user_book_wishlist",
+            ),
+        ]
 
     def clean(self):
         super().clean()
-        if not any([self.isbn, self.title, self.genre]):
+        if not self.book and not any([self.isbn, self.title, self.genre]):
             raise ValidationError("At least one of isbn, title, or genre must be provided.")
 
     def __str__(self):

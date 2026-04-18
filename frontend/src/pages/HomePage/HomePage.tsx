@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
 import HeroBackground from '@assets/hero-image.png';
-import { useNearbyCount } from '@features/discovery';
+import type { ActivityFeedItem } from '@features/discovery';
+import { useCommunityStats, useNearbyCount } from '@features/discovery';
 import { useDocumentTitle, useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
@@ -87,6 +88,7 @@ const HomePage = (): ReactElement => {
   useDocumentTitle(routeMetadata[PATHS.HOME].title);
 
   const { data: nearbyData } = useNearbyCount(lat, lng, DEFAULT_RADIUS);
+  const { data: communityData } = useCommunityStats(lat, lng, DEFAULT_RADIUS);
 
   const handleSearch = (term: string) => {
     const q = term.trim();
@@ -324,7 +326,9 @@ const HomePage = (): ReactElement => {
                   </div>
                 </div>
                 <div className="bg-[#152018] rounded-2xl p-6 text-center border border-[#28382D]">
-                  <div className="text-3xl font-bold text-[#E4B643] mb-1">852</div>
+                  <div className="text-3xl font-bold text-[#E4B643] mb-1">
+                    {communityData ? communityData.swaps_this_week.toLocaleString() : '—'}
+                  </div>
                   <div className="text-[10px] font-bold text-[#5A6A60] uppercase tracking-wider">
                     {t('home.community.swapsThisWeek', 'Swaps This Week')}
                   </div>
@@ -332,31 +336,43 @@ const HomePage = (): ReactElement => {
               </div>
 
               <div className="space-y-3 mb-8">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
-                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
-                    <BookOpen className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
-                  </div>
-                  <p className="text-sm text-[#8C9C92]">
-                    <span className="text-[#E4B643] font-bold">Emma</span> listed Dune in De Pijp.
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
-                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
-                    <ArrowLeftRight className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
-                  </div>
-                  <p className="text-sm text-[#8C9C92]">
-                    <span className="text-[#E4B643] font-bold">Liam</span> &{' '}
-                    <span className="text-[#E4B643] font-bold">Noah</span> just swapped books!
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
-                  <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
-                    <Star className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
-                  </div>
-                  <p className="text-sm text-[#8C9C92]">
-                    New BookDrop location added in Jordaan.
-                  </p>
-                </div>
+                {(communityData?.activity_feed ?? []).map((item: ActivityFeedItem, i: number) => {
+                  const IconMap = { new_listing: BookOpen, completed_swap: ArrowLeftRight, new_rating: Star };
+                  const Icon = IconMap[item.type];
+                  return (
+                    <div key={`${item.type}-${item.timestamp}-${i}`} className="flex items-center gap-4 p-4 rounded-xl bg-[#152018] border border-[#28382D]">
+                      <div className="w-8 h-8 rounded-full bg-[#28382D] flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-[#8C9C92]" aria-hidden="true" />
+                      </div>
+                      <p className="text-sm text-[#8C9C92]">
+                        {item.type === 'new_listing' && (
+                          <>
+                            <span className="text-[#E4B643] font-bold">{item.user_name}</span>
+                            {' listed '}
+                            {item.book_title ? <em>{item.book_title}</em> : 'a book'}
+                            {item.neighbourhood ? ` in ${item.neighbourhood}` : ''}.
+                          </>
+                        )}
+                        {item.type === 'completed_swap' && (
+                          <>
+                            <span className="text-[#E4B643] font-bold">{item.user_name}</span>
+                            {' & '}
+                            <span className="text-[#E4B643] font-bold">{item.partner_name}</span>
+                            {' just swapped books!'}
+                          </>
+                        )}
+                        {item.type === 'new_rating' && (
+                          <>
+                            <span className="text-[#E4B643] font-bold">{item.user_name}</span>
+                            {' rated '}
+                            <span className="text-[#E4B643] font-bold">{item.partner_name}</span>
+                            {item.score ? ` ${'★'.repeat(item.score)}` : ''}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
 
               <button className="w-full py-4 rounded-xl border border-[#28382D] text-[#E4B643] font-bold text-sm uppercase tracking-wider hover:bg-[#28382D]/50 transition-colors">

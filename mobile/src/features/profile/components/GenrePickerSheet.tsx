@@ -1,14 +1,15 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   ScrollView,
+  Modal,
 } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { Check } from 'lucide-react-native';
+import { Check, X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
@@ -27,8 +28,7 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['60%'], []);
+  const insets = useSafeAreaInsets();
 
   const accent = c.auth.golden;
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -46,109 +46,122 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
     [value, onChange],
   );
 
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-      />
-    ),
-    [],
-  );
-
-  if (!open) return null;
-
   return (
-    <BottomSheet
-      ref={sheetRef}
-      index={0}
-      snapPoints={snapPoints}
-      enablePanDownToClose
-      onClose={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: bg }}
-      handleIndicatorStyle={{ backgroundColor: cardBorder, width: 40 }}
-    >
-      <View style={s.header}>
-        <Text style={[s.title, { color: c.text.primary }]}>
-          {t('profile.edit.genresLabel', 'Preferred Genres')}
-        </Text>
-        <Text style={[s.counter, { color: c.text.secondary }]}>
-          {value.length}/{MAX_GENRES}
-        </Text>
-      </View>
+    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={s.overlay} onPress={onClose}>
+        <Pressable
+          style={[
+            s.sheet,
+            { backgroundColor: bg, paddingBottom: insets.bottom || spacing.md },
+          ]}
+          onPress={() => {}}
+        >
+          <View style={s.handleWrap}>
+            <View style={[s.handle, { backgroundColor: cardBorder }]} />
+          </View>
 
-      <ScrollView
-        contentContainerStyle={s.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {GENRE_OPTIONS.map((genre) => {
-          const selected = value.includes(genre);
-          const disabled = !selected && value.length >= MAX_GENRES;
-          return (
+          <View style={s.header}>
+            <Text style={[s.title, { color: c.text.primary }]}>
+              {t('profile.edit.genresLabel', 'Preferred Genres')}
+            </Text>
+            <View style={s.headerRight}>
+              <Text style={[s.counter, { color: c.text.secondary }]}>
+                {value.length}/{MAX_GENRES}
+              </Text>
+              <Pressable onPress={onClose} hitSlop={12}>
+                <X size={20} color={c.text.secondary} />
+              </Pressable>
+            </View>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={s.listContent}
+            showsVerticalScrollIndicator={false}
+            style={s.list}
+          >
+            {GENRE_OPTIONS.map((genre) => {
+              const selected = value.includes(genre);
+              const disabled = !selected && value.length >= MAX_GENRES;
+              return (
+                <Pressable
+                  key={genre}
+                  onPress={() => !disabled && toggle(genre)}
+                  style={({ pressed }) => [
+                    s.row,
+                    {
+                      backgroundColor: selected ? accent + '14' : cardBg,
+                      borderColor: selected ? accent : cardBorder,
+                      opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.rowText,
+                      { color: selected ? (isDark ? accent : '#152018') : c.text.primary },
+                    ]}
+                  >
+                    {genre}
+                  </Text>
+                  {selected && (
+                    <View style={[s.checkCircle, { backgroundColor: accent }]}>
+                      <Check size={14} color="#fff" strokeWidth={3} />
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <View style={[s.footer, { borderTopColor: cardBorder }]}>
             <Pressable
-              key={genre}
-              onPress={() => !disabled && toggle(genre)}
+              onPress={onClose}
               style={({ pressed }) => [
-                s.row,
-                {
-                  backgroundColor: selected ? accent + '14' : cardBg,
-                  borderColor: selected ? accent : cardBorder,
-                  opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
-                },
+                s.doneBtn,
+                { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
               ]}
             >
-              <Text
-                style={[
-                  s.rowText,
-                  { color: selected ? accent : c.text.primary },
-                ]}
-              >
-                {genre}
+              <Text style={s.doneBtnText}>
+                {t('common.done', 'Done')}
               </Text>
-              {selected && (
-                <View style={[s.checkCircle, { backgroundColor: accent }]}>
-                  <Check size={14} color="#fff" strokeWidth={3} />
-                </View>
-              )}
             </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      <View style={[s.footer, { borderTopColor: cardBorder }]}>
-        <Pressable
-          onPress={onClose}
-          style={({ pressed }) => [
-            s.doneBtn,
-            { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
-          ]}
-        >
-          <Text style={s.doneBtnText}>
-            {t('common.done', 'Done')}
-          </Text>
+          </View>
         </Pressable>
-      </View>
-    </BottomSheet>
+      </Pressable>
+    </Modal>
   );
 }
 
 const s = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    maxHeight: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  handleWrap: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
+  handle: { width: 40, height: 4, borderRadius: 2 },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
   },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   title: { fontSize: 18, fontWeight: '700' },
   counter: { fontSize: 14, fontWeight: '600' },
 
+  list: { flexShrink: 1 },
   listContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.md,
     gap: spacing.xs + 2,
   },
 
@@ -173,7 +186,7 @@ const s = StyleSheet.create({
   footer: {
     borderTopWidth: 1,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
   },
   doneBtn: {
     alignItems: 'center',

@@ -111,7 +111,7 @@ export function WishlistScreen() {
           {
             text: t('common.remove', 'Remove'),
             style: 'destructive',
-            onPress: () => removeItem.mutate(id),
+            onPress: () => removeItem.mutate({ id }),
           },
         ],
       );
@@ -184,7 +184,7 @@ export function WishlistScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  list: { padding: spacing.md, paddingBottom: 100, gap: spacing.sm },
+  list: { padding: spacing.md, paddingBottom: 20, gap: spacing.sm },
 
   card: {
     flexDirection: 'row',

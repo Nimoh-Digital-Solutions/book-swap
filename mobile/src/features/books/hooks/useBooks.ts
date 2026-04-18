@@ -36,6 +36,24 @@ export function useBrowseBooks(params: BrowseParams) {
   });
 }
 
+export interface RadiusCounts {
+  counts: Record<string, number>;
+}
+
+export function useRadiusCounts(lat?: number, lng?: number) {
+  return useQuery<RadiusCounts>({
+    queryKey: ['radiusCounts', lat, lng],
+    queryFn: async () => {
+      const { data } = await http.get<RadiusCounts>(API.browse.radiusCounts, {
+        params: { lat, lng },
+      });
+      return data;
+    },
+    enabled: !!lat && !!lng,
+    staleTime: 30_000,
+  });
+}
+
 export function useBookDetail(bookId: string) {
   return useQuery({
     queryKey: ['book', bookId],
@@ -69,6 +87,31 @@ export function useUserBooks(userId: string) {
       return data.results;
     },
     enabled: !!userId,
+  });
+}
+
+export interface ExternalBookResult {
+  isbn: string;
+  title: string;
+  author: string;
+  description: string;
+  cover_url: string;
+  page_count: number | null;
+  publish_year: number | null;
+}
+
+export function useExternalBookSearch(query: string) {
+  return useQuery<ExternalBookResult[]>({
+    queryKey: ['externalBookSearch', query],
+    queryFn: async () => {
+      const { data } = await http.get<ExternalBookResult[]>(
+        API.books.searchExternal,
+        { params: { q: query } },
+      );
+      return data;
+    },
+    enabled: query.trim().length >= 2,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -271,5 +314,36 @@ export function useNearbyCount(lat?: number, lng?: number, radius = 10000) {
       return data;
     },
     enabled: lat != null && lng != null,
+  });
+}
+
+// ── Community Stats ──────────────────────────────────────────────────
+
+export interface ActivityFeedItem {
+  type: 'new_listing' | 'completed_swap' | 'new_rating';
+  user_name: string;
+  partner_name?: string;
+  book_title?: string | null;
+  score?: number;
+  neighbourhood: string;
+  timestamp: string;
+}
+
+export interface CommunityStats {
+  swaps_this_week: number;
+  activity_feed: ActivityFeedItem[];
+}
+
+export function useCommunityStats(lat?: number, lng?: number, radius = 10000) {
+  return useQuery<CommunityStats>({
+    queryKey: ['communityStats', lat, lng, radius],
+    queryFn: async () => {
+      const { data } = await http.get<CommunityStats>(API.browse.communityStats, {
+        params: { lat, lng, radius },
+      });
+      return data;
+    },
+    enabled: lat != null && lng != null,
+    staleTime: 60_000,
   });
 }

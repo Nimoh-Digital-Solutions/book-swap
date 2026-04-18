@@ -20,9 +20,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   Camera,
-  Check,
-  AlertCircle,
-  Loader2,
   Save,
   ChevronRight,
 } from 'lucide-react-native';
@@ -31,7 +28,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
-import { useUpdateProfile, useCheckUsername } from '@/features/profile/hooks/useProfile';
+import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { GenrePickerSheet } from '@/features/profile/components/GenrePickerSheet';
 
 // ── Schema ───────────────────────────────────────────────────────────
@@ -88,15 +85,6 @@ export function EditProfileScreen() {
     name: string;
   } | null>(null);
   const [avatarRemoved, setAvatarRemoved] = useState(false);
-
-  // Username state (read-only on backend, but we show availability check)
-  const [usernameInput, setUsernameInput] = useState(user?.username ?? '');
-  const { data: usernameCheck, isLoading: isCheckingUsername } = useCheckUsername(
-    usernameInput,
-    user?.username,
-  );
-  const usernameChanged =
-    usernameInput.toLowerCase() !== (user?.username ?? '').toLowerCase();
 
   // Genre picker sheet visibility
   const [genreSheetOpen, setGenreSheetOpen] = useState(false);
@@ -224,6 +212,8 @@ export function EditProfileScreen() {
 
       if (avatarLocal) {
         payload.avatar = avatarLocal;
+      } else if (avatarRemoved) {
+        payload.avatar_removed = true;
       }
 
       updateProfile.mutate(payload, {
@@ -242,7 +232,7 @@ export function EditProfileScreen() {
         },
       });
     },
-    [avatarLocal, updateProfile, navigation, t],
+    [avatarLocal, avatarRemoved, updateProfile, navigation, t],
   );
 
   if (!user) return null;
@@ -270,7 +260,7 @@ export function EditProfileScreen() {
             ) : (
               <Avatar uri={null} name={fullName} size={100} borderColor={accent} />
             )}
-            <View style={[s.avatarBadge, { backgroundColor: accent }]}>
+            <View style={[s.avatarBadge, { backgroundColor: accent, borderColor: bg }]}>
               <Camera size={14} color="#152018" strokeWidth={2.5} />
             </View>
           </View>
@@ -284,38 +274,15 @@ export function EditProfileScreen() {
           text={t('profile.edit.usernameLabel', 'Username')}
           c={c}
         />
-        <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
+        <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder, opacity: 0.6 }]}>
           <Text style={[s.atPrefix, { color: c.text.secondary }]}>@</Text>
           <TextInput
-            style={[s.inputFlex, { color: c.text.primary }]}
-            value={usernameInput}
-            onChangeText={setUsernameInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholderTextColor={c.text.placeholder}
+            style={[s.inputFlex, { color: c.text.secondary }]}
+            value={user?.username ?? ''}
+            editable={false}
+            selectTextOnFocus={false}
           />
-          <View style={s.usernameStatus}>
-            {isCheckingUsername && (
-              <Loader2 size={16} color={c.text.placeholder} />
-            )}
-            {!isCheckingUsername && usernameChanged && usernameCheck?.available && (
-              <Check size={16} color={c.status.success} />
-            )}
-            {!isCheckingUsername && usernameChanged && usernameCheck && !usernameCheck.available && (
-              <AlertCircle size={16} color={c.status.error} />
-            )}
-          </View>
         </View>
-        {usernameChanged && usernameCheck && !usernameCheck.available && (
-          <Text style={[s.errorText, { color: c.status.error }]}>
-            {t('profile.edit.usernameTaken', 'This username is taken.')}
-            {usernameCheck.suggestions && usernameCheck.suggestions.length > 0
-              ? ` ${t('profile.edit.usernameSuggestions', 'Try: {{suggestions}}', {
-                  suggestions: usernameCheck.suggestions.join(', '),
-                })}`
-              : ''}
-          </Text>
-        )}
         <Text style={[s.hintText, { color: c.text.subtle }]}>
           {t('profile.edit.usernameHint', 'Username changes are not yet supported.')}
         </Text>
@@ -467,7 +434,7 @@ export function EditProfileScreen() {
                       key={g}
                       style={[s.genreChip, { backgroundColor: accent + '18', borderColor: accent }]}
                     >
-                      <Text style={[s.genreChipText, { color: accent }]}>{g}</Text>
+                      <Text style={[s.genreChipText, { color: isDark ? accent : '#152018' }]}>{g}</Text>
                     </View>
                   ))}
                 </View>
@@ -632,7 +599,7 @@ const s = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: 120,
+    paddingBottom: 20,
   },
 
   // Avatar
@@ -654,7 +621,6 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#1a2f23',
   },
   avatarHint: { fontSize: 13, fontWeight: '500', marginTop: spacing.sm },
 
@@ -690,7 +656,6 @@ const s = StyleSheet.create({
   },
   inputFlex: { flex: 1, fontSize: 15, paddingVertical: 12 },
   atPrefix: { fontSize: 15, fontWeight: '600', marginRight: 2 },
-  usernameStatus: { width: 20, alignItems: 'center' },
 
   // Errors / hints
   errorText: { fontSize: 12, marginTop: 4 },

@@ -3,7 +3,7 @@
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.contrib.postgres.search import SearchQuery, SearchRank
-from django.db.models import Case, Count, F, IntegerField, When
+from django.db.models import Case, Count, F, IntegerField, Q, When
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import mixins, status, viewsets
 from rest_framework import serializers as drf_serializers
@@ -232,13 +232,20 @@ class WishlistItemViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """CRUD for the user's wishlist (max 20 items)."""
+    """CRUD for the user's wishlist (max 20 items).
+
+    Supports ``?book=<uuid>`` filter to check if a specific book is wishlisted.
+    """
 
     permission_classes = (IsAuthenticated,)
     serializer_class = WishlistItemSerializer
 
     def get_queryset(self):
-        return WishlistItem.objects.filter(user=self.request.user)
+        qs = WishlistItem.objects.filter(user=self.request.user)
+        book_id = self.request.query_params.get("book")
+        if book_id:
+            qs = qs.filter(book_id=book_id)
+        return qs
 
 
 # ── Browse / Discovery ────────────────────────────────────────────────────────
@@ -464,3 +471,161 @@ class NearbyCountView(APIView):
         user_count = nearby_qs.values("owner").distinct().count()
 
         return Response({"count": count, "user_count": user_count, "radius": radius})
+
+
+class CommunityStatsView(APIView):
+    """GET /books/community-stats/ — weekly swap count + recent activity feed."""
+
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        summary="Community stats and activity feed",
+        description=(
+            "Returns the number of swaps completed this week and the most recent "
+            "community activity (new listings, completed swaps, ratings) within the "
+            "given radius of the provided coordinates."
+        ),
+        parameters=[
+            OpenApiParameter(name="lat", type=float, required=True),
+            OpenApiParameter(name="lng", type=float, required=True),
+            OpenApiParameter(name="radius", type=int, required=False, description="meters (default 10000)"),
+        ],
+        tags=["books"],
+    )
+    def get(self, request):
+        from itertools import islice
+
+        from django.contrib.gis.geos import Point
+        from django.utils import timezone
+
+        from apps.exchanges.models import ExchangeRequest, ExchangeStatus
+        from apps.ratings.models import Rating
+
+        try:
+            lat = float(request.query_params.get("lat", ""))
+            lng = float(request.query_params.get("lng", ""))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Valid 'lat' and 'lng' query params are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+            return Response(
+                {"detail": "lat must be [-90,90] and lng must be [-180,180]."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            search_radius = int(request.query_params.get("radius", 10000))
+        except (TypeError, ValueError):
+            search_radius = 10000
+        search_radius = max(500, min(search_radius, 50000))
+
+        point = Point(lng, lat, srid=4326)
+        one_week_ago = timezone.now() - timezone.timedelta(days=7)
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        nearby_user_ids = (
+            User.objects.filter(
+                location__isnull=False,
+                location__distance_lte=(point, D(m=search_radius)),
+            )
+            .values_list("id", flat=True)
+        )
+
+        swap_statuses = (
+            ExchangeStatus.SWAP_CONFIRMED,
+            ExchangeStatus.COMPLETED,
+            ExchangeStatus.RETURN_REQUESTED,
+            ExchangeStatus.RETURNED,
+        )
+        swaps_this_week = ExchangeRequest.objects.filter(
+            status__in=swap_statuses,
+            updated_at__gte=one_week_ago,
+        ).filter(
+            Q(requester_id__in=nearby_user_ids) | Q(owner_id__in=nearby_user_ids),
+        ).count()
+
+        feed = []
+        seen_users: set[str] = set()
+
+        new_listings = (
+            Book.objects.filter(
+                status=BookStatus.AVAILABLE,
+                created_at__gte=one_week_ago,
+                owner_id__in=nearby_user_ids,
+            )
+            .select_related("owner")
+            .order_by("-created_at")[:15]
+        )
+        for book in new_listings:
+            uid = str(book.owner_id)
+            if uid in seen_users:
+                continue
+            seen_users.add(uid)
+            feed.append({
+                "type": "new_listing",
+                "user_name": book.owner.first_name or book.owner.username,
+                "book_title": book.title,
+                "neighbourhood": book.owner.neighborhood,
+                "timestamp": book.created_at.isoformat(),
+            })
+
+        completed_swaps = (
+            ExchangeRequest.objects.filter(
+                status__in=swap_statuses,
+                updated_at__gte=one_week_ago,
+            )
+            .filter(
+                Q(requester_id__in=nearby_user_ids) | Q(owner_id__in=nearby_user_ids),
+            )
+            .select_related("requester", "owner")
+            .order_by("-updated_at")[:15]
+        )
+        for swap in completed_swaps:
+            uid = str(swap.requester_id)
+            if uid in seen_users:
+                continue
+            seen_users.add(uid)
+            feed.append({
+                "type": "completed_swap",
+                "user_name": swap.requester.first_name or swap.requester.username,
+                "partner_name": swap.owner.first_name or swap.owner.username,
+                "book_title": None,
+                "neighbourhood": swap.requester.neighborhood or swap.owner.neighborhood,
+                "timestamp": swap.updated_at.isoformat(),
+            })
+
+        recent_ratings = (
+            Rating.objects.filter(
+                created_at__gte=one_week_ago,
+                rater_id__in=nearby_user_ids,
+            )
+            .select_related("rater", "rated")
+            .order_by("-created_at")[:15]
+        )
+        for rating in recent_ratings:
+            uid = str(rating.rater_id)
+            if uid in seen_users:
+                continue
+            seen_users.add(uid)
+            feed.append({
+                "type": "new_rating",
+                "user_name": rating.rater.first_name or rating.rater.username,
+                "partner_name": rating.rated.first_name or rating.rated.username,
+                "score": rating.score,
+                "book_title": None,
+                "neighbourhood": rating.rater.neighborhood,
+                "timestamp": rating.created_at.isoformat(),
+            })
+
+        feed.sort(key=lambda e: e["timestamp"], reverse=True)
+        feed = list(islice(feed, 5))
+
+        return Response({
+            "swaps_this_week": swaps_this_week,
+            "activity_feed": feed,
+        })

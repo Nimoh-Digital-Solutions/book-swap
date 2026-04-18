@@ -11,6 +11,11 @@ import { WishlistScreen } from '@/features/books/screens/WishlistScreen';
 import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
 import { NotificationPreferencesScreen } from '@/features/notifications/screens/NotificationPreferencesScreen';
 import { BlockedUsersScreen } from '@/features/trust-safety/screens/BlockedUsersScreen';
+import { ChangePasswordScreen } from '@/features/auth/screens/ChangePasswordScreen';
+import { MyReviewsScreen } from '@/features/ratings/screens/MyReviewsScreen';
+import { AppearanceScreen } from '@/features/profile/screens/AppearanceScreen';
+import { LanguageScreen } from '@/features/profile/screens/LanguageScreen';
+import { AboutScreen } from '@/features/profile/screens/AboutScreen';
 import { useProfileHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -38,6 +43,31 @@ export function ProfileStack() {
         name="BlockedUsers"
         component={BlockedUsersScreen}
         options={{ ...child, headerTitle: 'Blocked Users' }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ ...child, headerTitle: 'Change Password' }}
+      />
+      <Stack.Screen
+        name="MyReviews"
+        component={MyReviewsScreen}
+        options={{ ...child, headerTitle: 'Reviews' }}
+      />
+      <Stack.Screen
+        name="Appearance"
+        component={AppearanceScreen}
+        options={{ ...child, headerTitle: 'Appearance' }}
+      />
+      <Stack.Screen
+        name="Language"
+        component={LanguageScreen}
+        options={{ ...child, headerTitle: 'Language' }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{ ...child, headerTitle: 'About' }}
       />
     </Stack.Navigator>
   );

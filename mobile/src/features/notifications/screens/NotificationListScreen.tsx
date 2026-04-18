@@ -216,7 +216,7 @@ const s = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.md + 4,
     paddingTop: spacing.sm,
-    paddingBottom: 120,
+    paddingBottom: 20,
     gap: spacing.xs + 2,
   },
   markAllBtn: {

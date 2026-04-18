@@ -4,7 +4,7 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Camera, PenLine, RotateCcw, AlertCircle } from 'lucide-react-native';
+import { Camera, PenLine, RotateCcw, Search } from 'lucide-react-native';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
@@ -124,6 +124,19 @@ export function ScannerScreen() {
             <Text style={s.actionBtnText}>{t('common.retry', 'Scan Again')}</Text>
           </Pressable>
         ) : null}
+
+        <Pressable
+          style={({ pressed }) => [
+            s.manualBtn,
+            { backgroundColor: cardBg, borderColor: cardBorder, opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => navigation.navigate('BookSearch')}
+        >
+          <Search size={18} color={accent} />
+          <Text style={[s.manualBtnText, { color: c.text.primary }]}>
+            {t('scanner.searchByTitle', 'Search by title')}
+          </Text>
+        </Pressable>
 
         <Pressable
           style={({ pressed }) => [

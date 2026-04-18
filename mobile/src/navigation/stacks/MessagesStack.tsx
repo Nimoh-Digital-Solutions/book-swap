@@ -7,6 +7,7 @@ import { IncomingRequestsScreen } from '@/features/exchanges/screens/IncomingReq
 import { CounterOfferScreen } from '@/features/exchanges/screens/CounterOfferScreen';
 import { ChatScreen } from '@/features/messaging/screens/ChatScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
+import { UserReviewsScreen } from '@/features/ratings/screens/UserReviewsScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
 
 const Stack = createNativeStackNavigator<MessagesStackParamList>();
@@ -46,6 +47,11 @@ export function MessagesStack() {
         name="UserProfile"
         component={UserProfileScreen}
         options={{ ...child, headerTitle: 'Profile' }}
+      />
+      <Stack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{ ...child, headerTitle: 'Reviews' }}
       />
     </Stack.Navigator>
   );

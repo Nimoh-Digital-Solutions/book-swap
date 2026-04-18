@@ -9,7 +9,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import type { HomeStackParamList } from "@/navigation/types";
-import { useNearbyCount, useRecentBooks } from "../hooks/useBooks";
+import { useCommunityStats, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
 
 import { HomeCommunitySection } from "../components/home/HomeCommunitySection";
 import { HomeNearbyBadge } from "../components/home/HomeNearbyBadge";
@@ -49,6 +49,7 @@ export function HomeScreen() {
 
   const { data: nearbyData } = useNearbyCount(coords?.lat, coords?.lng);
   const { data: recentBooks, isLoading: booksLoading } = useRecentBooks(coords?.lat, coords?.lng);
+  const { data: communityData } = useCommunityStats(coords?.lat, coords?.lng);
 
   const tabNav = navigation.getParent();
   const goToBrowse = useCallback(
@@ -74,6 +75,7 @@ export function HomeScreen() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nearbyCount"] }),
       queryClient.invalidateQueries({ queryKey: ["recentBooks"] }),
+      queryClient.invalidateQueries({ queryKey: ["communityStats"] }),
     ]);
     setRefreshing(false);
   }, [queryClient]);
@@ -146,6 +148,8 @@ export function HomeScreen() {
 
         <HomeCommunitySection
           bookCount={nearbyData?.count}
+          swapsThisWeek={communityData?.swaps_this_week}
+          activityFeed={communityData?.activity_feed}
           communityLabel={t(
             "home.liveCommunity",
             "LIVE COMMUNITY",
@@ -172,5 +176,5 @@ export function HomeScreen() {
 const s = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: 16 },
-  bottomSpacer: { height: 100 },
+  bottomSpacer: { height: 20 },
 });

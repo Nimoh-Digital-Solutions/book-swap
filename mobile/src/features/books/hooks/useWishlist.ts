@@ -3,9 +3,10 @@ import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import type { WishlistItem, CreateWishlistPayload, PaginatedResponse } from '@/types';
 
-const wishlistKeys = {
+export const wishlistKeys = {
   all: ['wishlist'] as const,
   list: () => [...wishlistKeys.all, 'list'] as const,
+  byBook: (bookId: string) => [...wishlistKeys.all, 'book', bookId] as const,
 };
 
 export function useWishlist() {
@@ -16,6 +17,18 @@ export function useWishlist() {
         API.wishlist.list,
       );
       return data;
+    },
+  });
+}
+
+export function useBookWishlistStatus(bookId: string) {
+  return useQuery<WishlistItem | null>({
+    queryKey: wishlistKeys.byBook(bookId),
+    queryFn: async () => {
+      const { data } = await http.get<PaginatedResponse<WishlistItem>>(
+        API.wishlist.byBook(bookId),
+      );
+      return data.results?.[0] ?? null;
     },
   });
 }
@@ -31,8 +44,11 @@ export function useAddWishlistItem() {
       );
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
+      if (variables.book) {
+        queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.book) });
+      }
     },
   });
 }
@@ -40,12 +56,15 @@ export function useAddWishlistItem() {
 export function useRemoveWishlistItem() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, string>({
-    mutationFn: async (id) => {
+  return useMutation<void, Error, { id: string; bookId?: string }>({
+    mutationFn: async ({ id }) => {
       await http.delete(API.wishlist.detail(id));
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.list() });
+      if (variables.bookId) {
+        queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.bookId) });
+      }
     },
   });
 }

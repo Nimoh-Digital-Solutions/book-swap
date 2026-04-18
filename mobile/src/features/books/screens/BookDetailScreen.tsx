@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import {
   ArrowLeftRight,
   BookOpen,
+  ChevronRight,
   FileText,
   Globe,
   Heart,
@@ -11,15 +12,17 @@ import {
   Sparkles,
   Tag,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
+import { Avatar } from "@/components/Avatar";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { useAuthStore } from "@/stores/authStore";
 import { useBookDetail } from "../hooks/useBooks";
-import { AddWishlistSheet } from "../components/AddWishlistSheet";
+import { useBookWishlistStatus, useAddWishlistItem, useRemoveWishlistItem } from "../hooks/useWishlist";
 
 type Route = RouteProp<{ BookDetail: { bookId: string } }, "BookDetail">;
 
@@ -30,13 +33,6 @@ const CONDITION_LABELS: Record<string, string> = {
   acceptable: "Acceptable",
 };
 
-const AVATAR_GRADIENTS = [
-  "#6366F1",
-  "#8B5CF6",
-  "#EC4899",
-  "#F59E0B",
-  "#10B981",
-];
 
 const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
 
@@ -54,9 +50,36 @@ export function BookDetailScreen() {
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
   const navigation = useNavigation<any>();
-  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { data: rawBook, isLoading } = useBookDetail(params.bookId);
+  const { data: wishlistEntry, isLoading: wishlistLoading } = useBookWishlistStatus(params.bookId);
+  const addWishlist = useAddWishlistItem();
+  const removeWishlist = useRemoveWishlistItem();
+
+  const isWishlisted = !!wishlistEntry;
+  const wishlistBusy = addWishlist.isPending || removeWishlist.isPending;
+
+  const handleWishlistPress = useCallback(() => {
+    if (wishlistBusy) return;
+
+    if (isWishlisted && wishlistEntry) {
+      Alert.alert(
+        t("books.wishlist.removeTitle", "Remove from Wishlist"),
+        t("books.wishlist.removeMsg", "Are you sure you want to remove this book from your wishlist?"),
+        [
+          { text: t("common.cancel", "Cancel"), style: "cancel" },
+          {
+            text: t("common.remove", "Remove"),
+            style: "destructive",
+            onPress: () => removeWishlist.mutate({ id: wishlistEntry.id, bookId: params.bookId }),
+          },
+        ],
+      );
+    } else {
+      addWishlist.mutate({ book: params.bookId });
+    }
+  }, [wishlistBusy, isWishlisted, wishlistEntry, addWishlist, removeWishlist, params.bookId, t]);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -85,10 +108,10 @@ export function BookDetailScreen() {
   const owner: BookOwner | null =
     typeof book.owner === "object" && book.owner !== null ? book.owner : null;
   const ownerName = owner?.username ?? "Unknown";
-  const ownerInitial = ownerName.charAt(0).toUpperCase();
   const coverUri = book.cover_url || book.photos?.[0]?.image || null;
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
   const isAvailable = book.status === "available";
+  const isOwnBook = owner?.id === currentUserId;
   const genres: string[] = Array.isArray(book.genres)
     ? book.genres
     : book.genre
@@ -217,20 +240,22 @@ export function BookDetailScreen() {
 
         {/* ── Listed by ── */}
         {owner && (
-          <View style={[s.ownerStrip, { borderTopColor: cardBorder }]}>
-            <View
-              style={[
-                s.ownerAvatar,
-                {
-                  backgroundColor:
-                    AVATAR_GRADIENTS[
-                      book.id.charCodeAt(0) % AVATAR_GRADIENTS.length
-                    ],
-                },
-              ]}
-            >
-              <Text style={s.ownerInitial}>{ownerInitial}</Text>
-            </View>
+          <Pressable
+            onPress={() => {
+              if (!isOwnBook) navigation.navigate('UserProfile', { userId: owner.id });
+            }}
+            disabled={isOwnBook}
+            style={({ pressed }) => [
+              s.ownerStrip,
+              { borderTopColor: cardBorder },
+              !isOwnBook && pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Avatar
+              uri={owner.avatar}
+              name={ownerName}
+              size={38}
+            />
             <View style={s.ownerInfo}>
               <Text style={[s.ownerName, { color: c.text.primary }]}>
                 {ownerName}
@@ -255,53 +280,52 @@ export function BookDetailScreen() {
                 </Text>
               </View>
             </View>
-          </View>
+            {!isOwnBook && <ChevronRight size={18} color={c.text.placeholder} />}
+          </Pressable>
         )}
 
         <View style={s.bottomSpacer} />
       </ScrollView>
 
-      {/* ── Bottom CTA ── */}
-      <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
-        {isAvailable && (
+      {!isOwnBook && (
+        <View style={[s.ctaWrap, { borderTopColor: cardBorder }]}>
+          {isAvailable && (
+            <Pressable
+              onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
+              style={({ pressed }) => [
+                s.ctaBtn,
+                { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+              ]}
+            >
+              <ArrowLeftRight size={18} color="#fff" />
+              <Text style={s.ctaBtnText}>
+                {t("books.requestSwap", "Request Swap")}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
-            onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
+            onPress={handleWishlistPress}
+            disabled={wishlistBusy || wishlistLoading}
             style={({ pressed }) => [
-              s.ctaBtn,
-              { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+              s.wishlistBtn,
+              isWishlisted
+                ? { backgroundColor: accent, borderColor: accent }
+                : { borderColor: accent },
+              { opacity: pressed || wishlistBusy ? 0.7 : 1 },
             ]}
           >
-            <ArrowLeftRight size={18} color="#fff" />
-            <Text style={s.ctaBtnText}>
-              {t("books.requestSwap", "Request Swap")}
-            </Text>
+            {wishlistBusy ? (
+              <ActivityIndicator size="small" color={isWishlisted ? "#fff" : accent} />
+            ) : (
+              <Heart
+                size={18}
+                color={isWishlisted ? "#fff" : accent}
+                fill={isWishlisted ? "#fff" : "none"}
+              />
+            )}
           </Pressable>
-        )}
-        <Pressable
-          onPress={() => setWishlistOpen(true)}
-          style={({ pressed }) => [
-            s.ctaBtnSecondary,
-            { borderColor: accent, opacity: pressed ? 0.8 : 1 },
-          ]}
-        >
-          <Heart size={18} color={accent} />
-          <Text style={[s.ctaBtnSecondaryText, { color: accent }]}>
-            {t("books.saveToWishlist", "Save to Wishlist")}
-          </Text>
-        </Pressable>
-      </View>
-
-      <AddWishlistSheet
-        open={wishlistOpen}
-        onClose={() => setWishlistOpen(false)}
-        prefill={{
-          title: book.title,
-          author: book.author,
-          isbn: book.isbn,
-          genre: genres[0],
-          cover_url: coverUri ?? undefined,
-        }}
-      />
+        </View>
+      )}
     </View>
   );
 }
@@ -433,14 +457,6 @@ const s = StyleSheet.create({
     paddingVertical: spacing.md + 2,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  ownerAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ownerInitial: { color: "#fff", fontSize: 17, fontWeight: "700" },
   ownerInfo: { flex: 1 },
   ownerName: { fontSize: 15, fontWeight: "700" },
   ownerStatsRow: {
@@ -453,6 +469,8 @@ const s = StyleSheet.create({
   ownerDot: { fontSize: 12 },
 
   ctaWrap: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.xl,
@@ -460,6 +478,7 @@ const s = StyleSheet.create({
     gap: spacing.sm,
   },
   ctaBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -468,16 +487,14 @@ const s = StyleSheet.create({
     borderRadius: radius.xl,
   },
   ctaBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  ctaBtnSecondary: {
-    flexDirection: "row",
+  wishlistBtn: {
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 14,
     borderRadius: radius.xl,
     borderWidth: 1.5,
   },
-  ctaBtnSecondaryText: { fontSize: 15, fontWeight: "700" },
 
   bottomSpacer: { height: 20 },
 });

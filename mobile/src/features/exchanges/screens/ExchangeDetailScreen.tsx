@@ -274,5 +274,5 @@ const s = StyleSheet.create({
     fontWeight: '500',
   },
 
-  bottomSpacer: { height: 120 },
+  bottomSpacer: { height: 20 },
 });

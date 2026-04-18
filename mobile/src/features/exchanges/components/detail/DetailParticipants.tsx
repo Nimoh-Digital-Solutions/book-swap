@@ -3,11 +3,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
-
-const AVATAR_COLORS = ["#6366F1", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"];
+import { Avatar } from "@/components/Avatar";
 
 interface Participant {
   username: string;
+  avatar: string | null;
   swap_count: number;
 }
 
@@ -28,13 +28,7 @@ export function DetailParticipants({
 }: Props) {
   const c = useColors();
   const isDark = useIsDark();
-  const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
-
-  const reqColor =
-    AVATAR_COLORS[requester.username.charCodeAt(0) % AVATAR_COLORS.length];
-  const ownColor =
-    AVATAR_COLORS[owner.username.charCodeAt(0) % AVATAR_COLORS.length];
 
   return (
     <View style={[s.wrap, { borderColor: cardBorder + '40' }]}>
@@ -42,11 +36,11 @@ export function DetailParticipants({
 
       <View style={s.row}>
         <View style={s.participant}>
-          <View style={[s.avatar, { backgroundColor: reqColor + "20" }]}>
-            <Text style={[s.avatarText, { color: reqColor }]}>
-              {requester.username.charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <Avatar
+            uri={requester.avatar}
+            name={requester.username}
+            size={36}
+          />
           <View style={s.info}>
             <Text style={[s.name, { color: c.text.primary }]} numberOfLines={1}>
               @{requester.username}
@@ -61,11 +55,11 @@ export function DetailParticipants({
         </View>
 
         <View style={s.participant}>
-          <View style={[s.avatar, { backgroundColor: ownColor + "20" }]}>
-            <Text style={[s.avatarText, { color: ownColor }]}>
-              {owner.username.charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <Avatar
+            uri={owner.avatar}
+            name={owner.username}
+            size={36}
+          />
           <View style={s.info}>
             <Text style={[s.name, { color: c.text.primary }]} numberOfLines={1}>
               @{owner.username}
@@ -110,14 +104,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontSize: 15, fontWeight: "700" },
   info: { flex: 1 },
   name: { fontSize: 13, fontWeight: "700" },
   role: { fontSize: 10, marginTop: 1 },

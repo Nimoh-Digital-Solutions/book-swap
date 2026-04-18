@@ -177,23 +177,38 @@ class ExternalSearchSerializer(serializers.Serializer):
 
 
 class WishlistItemSerializer(serializers.ModelSerializer):
+    book_id = serializers.UUIDField(source="book.id", read_only=True, default=None)
+    book = serializers.PrimaryKeyRelatedField(
+        queryset=Book.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+
     class Meta:
         model = WishlistItem
-        fields = ("id", "isbn", "title", "author", "genre", "cover_url", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = ("id", "book", "book_id", "isbn", "title", "author", "genre", "cover_url", "created_at")
+        read_only_fields = ("id", "book_id", "created_at")
 
     def validate(self, attrs):
-        isbn = attrs.get("isbn", "")
-        title = attrs.get("title", "")
-        genre = attrs.get("genre", "")
-        if not any([isbn, title, genre]):
-            raise serializers.ValidationError("At least one of 'isbn', 'title', or 'genre' is required.")
+        book = attrs.get("book")
+        if not book:
+            isbn = attrs.get("isbn", "")
+            title = attrs.get("title", "")
+            genre = attrs.get("genre", "")
+            if not any([isbn, title, genre]):
+                raise serializers.ValidationError("At least one of 'isbn', 'title', or 'genre' is required.")
         return attrs
 
     def create(self, validated_data):
         user = self.context["request"].user
         if user.wishlist_items.count() >= 20:
             raise serializers.ValidationError("You can have up to 20 wishlist items.")
+
+        book = validated_data.get("book")
+        if book and WishlistItem.objects.filter(user=user, book=book).exists():
+            raise serializers.ValidationError("This book is already on your wishlist.")
+
         validated_data["user"] = user
         return super().create(validated_data)
 

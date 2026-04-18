@@ -1,3 +1,48 @@
+// ---------------------------------------------------------------------------
+// Re-exports from @bookswap/shared (source of truth for web + mobile)
+// ---------------------------------------------------------------------------
+
+// Exchange types — identical across platforms
+export type {
+  ExchangeStatus,
+  ExchangeParticipant,
+  ExchangeBook,
+  ExchangeListItem,
+  CreateExchangePayload,
+  CounterProposePayload,
+  DeclinePayload,
+} from '@shared/types/exchange';
+
+// Notification types
+export type {
+  NotificationType,
+  Notification,
+  NotificationPreferences,
+  PatchNotificationPreferences,
+} from '@shared/types/notification';
+
+// Trust & Safety types
+export type {
+  ReportCategory,
+  BlockedUser,
+  Block,
+  CreateReportPayload,
+} from '@shared/types/trust-safety';
+
+// Profile types — account deletion payloads
+export type {
+  AccountDeletionPayload,
+  AccountDeletionResponse,
+  AccountDeletionCancelPayload,
+} from '@shared/types/profile';
+
+// Rating — submit payload
+export type { SubmitRatingPayload } from '@shared/types/rating';
+
+// ---------------------------------------------------------------------------
+// Mobile-specific types (diverged from shared or mobile-only)
+// ---------------------------------------------------------------------------
+
 export interface User {
   id: string;
   email: string;
@@ -18,6 +63,7 @@ export interface User {
   profile_public: boolean;
   onboarding_completed: boolean;
   email_verified: boolean;
+  auth_provider: string;
   created_at: string;
 }
 
@@ -46,54 +92,12 @@ export interface BookPhoto {
   order: number;
 }
 
-export type ExchangeStatus =
-  | 'pending'
-  | 'accepted'
-  | 'conditions_pending'
-  | 'active'
-  | 'swap_confirmed'
-  | 'completed'
-  | 'declined'
-  | 'cancelled'
-  | 'expired'
-  | 'return_requested'
-  | 'returned';
-
 export type DeclineReason = 'not_interested' | 'reserved' | 'counter_proposed' | 'other';
 
-export interface ExchangeParticipant {
-  id: string;
-  username: string;
-  avatar: string | null;
-  avg_rating: number | null;
-  swap_count: number;
-}
-
-export interface ExchangeBook {
-  id: string;
-  title: string;
-  author: string;
-  cover_url: string;
-  condition: string;
-  primary_photo: string | null;
-}
-
-export interface ExchangeListItem {
-  id: string;
-  status: ExchangeStatus;
-  message: string;
-  requester: ExchangeParticipant;
-  owner: ExchangeParticipant;
-  requested_book: ExchangeBook;
-  offered_book: ExchangeBook;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ExchangeDetail extends ExchangeListItem {
+export interface ExchangeDetail extends import('@shared/types/exchange').ExchangeListItem {
   decline_reason: DeclineReason | null;
   counter_to: string | null;
-  original_offered_book: ExchangeBook | null;
+  original_offered_book: import('@shared/types/exchange').ExchangeBook | null;
   last_counter_by: string | null;
   counter_approved_at: string | null;
   requester_confirmed_at: string | null;
@@ -107,22 +111,8 @@ export interface ExchangeDetail extends ExchangeListItem {
   conditions_version: string;
 }
 
-export interface CreateExchangePayload {
-  requested_book_id: string;
-  offered_book_id: string;
-  message?: string;
-}
-
-export interface CounterProposePayload {
-  offered_book_id: string;
-}
-
-export interface DeclinePayload {
-  reason?: DeclineReason;
-}
-
 /** @deprecated Use ExchangeListItem or ExchangeDetail instead */
-export type ExchangeRequest = ExchangeListItem;
+export type ExchangeRequest = import('@shared/types/exchange').ExchangeListItem;
 
 export interface Message {
   id: string;
@@ -133,37 +123,6 @@ export interface Message {
   read_at: string | null;
   created_at: string;
 }
-
-export type NotificationType =
-  | 'new_request'
-  | 'request_accepted'
-  | 'request_declined'
-  | 'request_expired'
-  | 'exchange_completed'
-  | 'new_message'
-  | 'rating_received';
-
-export interface Notification {
-  id: string;
-  notification_type: NotificationType;
-  title: string;
-  body: string;
-  link: string;
-  is_read: boolean;
-  read_at: string | null;
-  created_at: string;
-}
-
-export interface NotificationPreferences {
-  email_new_request: boolean;
-  email_request_accepted: boolean;
-  email_request_declined: boolean;
-  email_new_message: boolean;
-  email_exchange_completed: boolean;
-  email_rating_received: boolean;
-}
-
-export type PatchNotificationPreferences = Partial<NotificationPreferences>;
 
 export interface RatingUser {
   id: string;
@@ -189,11 +148,6 @@ export interface ExchangeRatingStatus {
   rating_deadline: string;
 }
 
-export interface SubmitRatingPayload {
-  score: number;
-  comment?: string;
-}
-
 export interface PaginatedRatings {
   count: number;
   next: string | null;
@@ -201,51 +155,9 @@ export interface PaginatedRatings {
   results: Rating[];
 }
 
-export interface BlockedUser {
-  id: string;
-  username: string;
-  first_name: string;
-  avatar: string | null;
-}
-
-export interface Block {
-  id: string;
-  blocked_user: BlockedUser;
-  created_at: string;
-}
-
-export type ReportCategory =
-  | 'inappropriate'
-  | 'fake_listing'
-  | 'no_show'
-  | 'misrepresented'
-  | 'harassment'
-  | 'spam'
-  | 'other';
-
-export interface CreateReportPayload {
-  reported_user_id: string;
-  reported_book_id?: string;
-  reported_exchange_id?: string;
-  category: ReportCategory;
-  description?: string;
-}
-
-export interface AccountDeletionPayload {
-  password: string;
-}
-
-export interface AccountDeletionResponse {
-  detail: string;
-  cancel_token: string;
-}
-
-export interface AccountDeletionCancelPayload {
-  token: string;
-}
-
 export interface WishlistItem {
   id: string;
+  book_id: string | null;
   title: string;
   author: string;
   isbn: string;
@@ -255,6 +167,7 @@ export interface WishlistItem {
 }
 
 export interface CreateWishlistPayload {
+  book?: string;
   title?: string;
   author?: string;
   isbn?: string;

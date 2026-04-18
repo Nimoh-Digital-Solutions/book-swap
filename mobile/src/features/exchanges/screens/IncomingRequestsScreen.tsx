@@ -191,7 +191,7 @@ export function IncomingRequestsScreen() {
           renderItem={renderItem}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={<View style={{ height: 120 }} />}
+          ListFooterComponent={<View style={{ height: 20 }} />}
         />
       )}
     </View>

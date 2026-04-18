@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useIsDark } from '@/hooks/useColors';
 
 interface Props {
   uri?: string | null;
@@ -12,6 +12,7 @@ interface Props {
 
 export function Avatar({ uri, name, size = 48, borderColor }: Props) {
   const c = useColors();
+  const isDark = useIsDark();
   const [loadFailed, setLoadFailed] = useState(false);
   const prevUri = useRef(uri);
 
@@ -68,12 +69,12 @@ export function Avatar({ uri, name, size = 48, borderColor }: Props) {
           height: size,
           borderRadius,
           borderColor: resolvedBorder,
-          backgroundColor: c.auth.bg,
+          backgroundColor: isDark ? c.auth.bg : c.neutral[200],
         },
       ]}
       accessibilityLabel={name}
     >
-      <Text style={[s.initials, { fontSize: size * 0.38, color: c.auth.cream }]}>
+      <Text style={[s.initials, { fontSize: size * 0.38, color: isDark ? c.auth.cream : c.text.primary }]}>
         {initials || '?'}
       </Text>
     </View>

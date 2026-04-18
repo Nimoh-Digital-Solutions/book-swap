@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -27,9 +26,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
-import { useUserRatings } from '@/features/ratings/hooks/useRatings';
-import { RatingCard } from '@/features/ratings/components/RatingCard';
-import { EmptyState } from '@/components/EmptyState';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, 'MyProfile'>;
@@ -65,81 +61,11 @@ function InfoCard({ icon: Icon, title, content }: {
         borderColor: isDark ? c.auth.cardBorder : c.border.default,
       },
     ]}>
-      <View style={[s.infoIcon, { backgroundColor: c.auth.golden + '18' }]}>
-        <Icon size={18} color={c.auth.golden} />
-      </View>
-      <View style={s.infoTextWrap}>
+      <View style={s.infoHeader}>
+        <Icon size={15} color={c.auth.golden} />
         <Text style={[s.infoTitle, { color: c.text.secondary }]}>{title}</Text>
-        <Text style={[s.infoContent, { color: c.text.primary }]}>{content}</Text>
       </View>
-    </View>
-  );
-}
-
-function RecentReviews({ userId }: { userId: string }) {
-  const { t } = useTranslation();
-  const c = useColors();
-  const isDark = useIsDark();
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useUserRatings(userId);
-  const accent = c.auth.golden;
-
-  const ratings = useMemo(
-    () => data?.pages.flatMap((p) => p.results) ?? [],
-    [data],
-  );
-
-  if (isLoading) {
-    return (
-      <View style={s.reviewsSection}>
-        <Text style={[s.reviewsTitle, { color: c.text.primary }]}>
-          {t('profile.recentReviews', 'Recent Reviews')}
-        </Text>
-        <ActivityIndicator size="small" color={accent} style={{ marginTop: spacing.md }} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={s.reviewsSection}>
-      <Text style={[s.reviewsTitle, { color: c.text.primary }]}>
-        {t('profile.recentReviews', 'Recent Reviews')}
-      </Text>
-      {ratings.length === 0 ? (
-        <EmptyState
-          icon={MessageSquareQuote}
-          title={t('profile.noReviews', 'No reviews yet')}
-          subtitle={t('profile.noReviewsHint', 'Complete swaps to receive ratings from other users.')}
-          compact
-        />
-      ) : (
-        <View style={s.reviewsList}>
-          {ratings.map((r) => (
-            <RatingCard key={r.id} rating={r} />
-          ))}
-          {hasNextPage && (
-            <Pressable
-              onPress={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              style={({ pressed }) => [
-                s.loadMoreBtn,
-                {
-                  borderColor: isDark ? c.auth.cardBorder : c.border.default,
-                  opacity: pressed ? 0.7 : 1,
-                },
-              ]}
-            >
-              {isFetchingNextPage ? (
-                <ActivityIndicator size="small" color={accent} />
-              ) : (
-                <Text style={[s.loadMoreText, { color: accent }]}>
-                  {t('profile.loadMore', 'Load more')}
-                </Text>
-              )}
-            </Pressable>
-          )}
-        </View>
-      )}
+      <Text style={[s.infoContent, { color: c.text.primary }]}>{content}</Text>
     </View>
   );
 }
@@ -209,9 +135,6 @@ export function MyProfileScreen() {
           />
         </View>
 
-        {/* ── Recent Reviews ── */}
-        <RecentReviews userId={user.id} />
-
         {/* ── Info Cards ── */}
         <View style={s.infoSection}>
           <InfoCard
@@ -279,6 +202,21 @@ export function MyProfileScreen() {
           <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
 
           <Pressable
+            onPress={() => navigation.navigate('MyReviews')}
+            style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
+          >
+            <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
+              <MessageSquareQuote size={18} color={accent} />
+            </View>
+            <Text style={[s.actionLabel, { color: c.text.primary }]}>
+              {t('profile.reviews', 'Reviews')}
+            </Text>
+            <ChevronRight size={18} color={c.text.placeholder} />
+          </Pressable>
+
+          <View style={[s.actionDivider, { backgroundColor: cardBorder + '50' }]} />
+
+          <Pressable
             onPress={() => navigation.navigate('Settings')}
             style={({ pressed }) => [s.actionRow, pressed && { opacity: 0.7 }]}
           >
@@ -298,7 +236,7 @@ export function MyProfileScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { paddingHorizontal: spacing.md + 4, paddingTop: spacing.lg, paddingBottom: 40 },
+  scroll: { paddingHorizontal: spacing.md + 4, paddingTop: spacing.lg, paddingBottom: 20 },
 
   hero: { alignItems: 'center', marginBottom: spacing.xl },
   heroAvatarWrap: { marginBottom: spacing.md },
@@ -322,23 +260,17 @@ const s = StyleSheet.create({
 
   infoSection: { gap: spacing.sm, marginBottom: spacing.xl },
   infoCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
     padding: spacing.md + 4,
     borderRadius: radius.xl,
     borderWidth: 1,
   },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  infoHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
+    gap: 6,
+    marginBottom: 6,
   },
-  infoTextWrap: { flex: 1 },
-  infoTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 },
+  infoTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
   infoContent: { fontSize: 15, lineHeight: 22 },
 
   actionsCard: {
@@ -362,16 +294,4 @@ const s = StyleSheet.create({
   },
   actionLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
   actionDivider: { height: 1, marginHorizontal: spacing.md },
-
-  reviewsSection: { marginBottom: spacing.xl },
-  reviewsTitle: { fontSize: 17, fontWeight: '700', marginBottom: spacing.md },
-  reviewsList: { gap: spacing.sm },
-  loadMoreBtn: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginTop: spacing.sm,
-  },
-  loadMoreText: { fontSize: 14, fontWeight: '600' },
 });
