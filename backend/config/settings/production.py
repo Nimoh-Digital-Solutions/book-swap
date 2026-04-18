@@ -33,5 +33,5 @@ SECURE_HSTS_PRELOAD = True
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-# Switch to single-line JSON for log aggregation in production
-LOGGING["handlers"]["console"]["formatter"] = "json"  # type: ignore[index]  # noqa: F405
+# Use the same human-readable dev_console formatter as development
+LOGGING["handlers"]["console"]["formatter"] = "dev_console"  # type: ignore[index]  # noqa: F405
