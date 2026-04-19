@@ -78,6 +78,8 @@ export interface Book {
   genre: string;
   language: string;
   status: string;
+  cover_url?: string | null;
+  primary_photo?: string | null;
   photos: BookPhoto[];
   is_available: boolean;
   created_at: string;

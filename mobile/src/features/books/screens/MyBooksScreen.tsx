@@ -159,9 +159,9 @@ export function MyBooksScreen() {
 
   const renderBook = useCallback(
     ({ item }: { item: Book }) => {
-      const statusKey = (item as any).status ?? "available";
-      const coverUri = (item as any).cover_url || item.photos?.[0]?.image;
-      const condition = (item as any).condition;
+      const statusKey = item.status ?? "available";
+      const coverUri = item.cover_url || item.primary_photo || item.photos?.[0]?.image;
+      const condition = item.condition;
 
       return (
         <Pressable

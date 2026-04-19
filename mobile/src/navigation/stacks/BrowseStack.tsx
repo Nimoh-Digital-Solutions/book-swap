@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { BrowseStackParamList } from '@/navigation/types';
 import { BrowseMapScreen } from '@/features/books/screens/BrowseMapScreen';
 import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
+import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
 import { RequestSwapScreen } from '@/features/exchanges/screens/RequestSwapScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { UserReviewsScreen } from '@/features/ratings/screens/UserReviewsScreen';
@@ -27,6 +28,11 @@ export function BrowseStack() {
     <Stack.Navigator>
       <Stack.Screen name="BrowseMap" component={BrowseMapScreen} options={browseOptions} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
+      <Stack.Screen
+        name="EditBook"
+        component={EditBookScreen}
+        options={{ ...child, headerTitle: t('navigation.editBook', 'Edit Book') }}
+      />
       <Stack.Screen
         name="RequestSwap"
         component={RequestSwapScreen}

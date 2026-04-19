@@ -20,6 +20,7 @@ export type MainTabParamList = {
 export type HomeStackParamList = {
   Home: undefined;
   BookDetail: { bookId: string };
+  EditBook: { bookId: string };
   UserProfile: { userId: string };
   UserReviews: { userId: string; username?: string };
   RequestSwap: { bookId: string };
@@ -29,6 +30,7 @@ export type HomeStackParamList = {
 export type BrowseStackParamList = {
   BrowseMap: { initialSearch?: string } | undefined;
   BookDetail: { bookId: string };
+  EditBook: { bookId: string };
   RequestSwap: { bookId: string };
   UserProfile: { userId: string };
   UserReviews: { userId: string; username?: string };

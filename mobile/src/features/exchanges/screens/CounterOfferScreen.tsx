@@ -78,7 +78,7 @@ export function CounterOfferScreen() {
 
   const renderBook = ({ item }: { item: Book }) => {
     const isSelected = selectedBookId === item.id;
-    const coverUri = (item as any).cover_url || item.photos?.[0]?.image || null;
+    const coverUri = item.cover_url || item.primary_photo || item.photos?.[0]?.image || null;
     const coverBg = COVER_COLORS[item.id.charCodeAt(0) % COVER_COLORS.length];
 
     return (

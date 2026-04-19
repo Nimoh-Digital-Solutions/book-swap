@@ -17,6 +17,7 @@ const HIDDEN_CHILD_ROUTES = new Set([
   'ScanResult',
   'RequestSwap',
   'CounterOffer',
+  'EditBook',
   'Notifications',
 ]);
 

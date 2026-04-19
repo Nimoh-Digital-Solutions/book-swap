@@ -100,7 +100,7 @@ export function EditBookScreen() {
     }
   }, [book, hydrated, bookAny]);
 
-  const coverUrl: string | undefined = bookAny?.cover_url;
+  const coverUrl: string | undefined = bookAny?.cover_url || book?.photos?.[0]?.image;
   const isbn: string | undefined = book?.isbn;
 
   const canSubmit = useMemo(

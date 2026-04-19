@@ -7,6 +7,7 @@ import { HomeScreen } from '@/features/books/screens/HomeScreen';
 import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
 import { UserProfileScreen } from '@/features/profile/screens/UserProfileScreen';
 import { UserReviewsScreen } from '@/features/ratings/screens/UserReviewsScreen';
+import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
 import { RequestSwapScreen } from '@/features/exchanges/screens/RequestSwapScreen';
 import { NotificationListScreen } from '@/features/notifications/screens/NotificationListScreen';
 import { useSharedHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
@@ -44,6 +45,11 @@ export function HomeStack() {
         options={{ ...shared, headerTitle: () => <HomeHeaderTitle /> }}
       />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
+      <Stack.Screen
+        name="EditBook"
+        component={EditBookScreen}
+        options={{ ...child, headerTitle: t('navigation.editBook', 'Edit Book') }}
+      />
       <Stack.Screen
         name="RequestSwap"
         component={RequestSwapScreen}

@@ -67,6 +67,7 @@ export function BookDetailScreen() {
   const { exchange: existingExchange, status: exchangeStatus } = useBookExchangeStatus(params.bookId);
   const cancelExchange = useCancelExchange();
   const [reportVisible, setReportVisible] = useState(false);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
   const isWishlisted = !!wishlistEntry;
   const wishlistBusy = addWishlist.isPending || removeWishlist.isPending;
@@ -203,7 +204,6 @@ export function BookDetailScreen() {
     : book.genre
       ? [book.genre]
       : [];
-  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
