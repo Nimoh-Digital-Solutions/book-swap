@@ -61,6 +61,7 @@ class ExchangeRequestListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "status",
+            "swap_type",
             "message",
             "created_at",
             "updated_at",
@@ -177,6 +178,7 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
                 requested_book=self._requested_book,
                 offered_book=self._offered_book,
                 message=validated_data.get("message", ""),
+                swap_type=self._requested_book.swap_type,
             )
         except IntegrityError:
             raise serializers.ValidationError("You already have a pending request for this book.") from None

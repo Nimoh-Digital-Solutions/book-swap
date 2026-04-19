@@ -37,9 +37,14 @@ export interface ConditionsAcceptanceItem {
   conditions_version: string;
 }
 
+import type { SwapType } from './book';
+
+export type { SwapType } from './book';
+
 export interface ExchangeListItem {
   id: string;
   status: ExchangeStatus;
+  swap_type: SwapType;
   message: string;
   requester: ExchangeParticipant;
   owner: ExchangeParticipant;

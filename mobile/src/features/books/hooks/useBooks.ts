@@ -135,6 +135,7 @@ export interface CreateBookPayload {
   condition: 'new' | 'like_new' | 'good' | 'acceptable';
   genres?: string[];
   language: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'other';
+  swap_type: 'temporary' | 'permanent';
   notes?: string;
   page_count?: number | null;
   publish_year?: number | null;
@@ -164,6 +165,7 @@ export interface UpdateBookPayload {
   condition?: CreateBookPayload['condition'];
   genres?: string[];
   language?: CreateBookPayload['language'];
+  swap_type?: CreateBookPayload['swap_type'];
   notes?: string;
   status?: string;
 }

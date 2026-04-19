@@ -189,6 +189,7 @@
       "descriptionPlaceholder": "Décrivez l'état du livre, l'édition, etc.",
       "genresLabel": "Genres",
       "languageLabel": "Langue",
+      "swapTypeLabel": "Type d'échange",
       "notesLabel": "Notes",
       "notesPlaceholder": "Notes supplémentaires pour l'échangeur",
       "submit": "Ajouter le livre",
@@ -196,6 +197,10 @@
       "successTitle": "Livre ajouté",
       "successMsg": "Votre livre a été publié !",
       "errorMsg": "Échec de l'ajout. Veuillez réessayer."
+    },
+    "swapTypes": {
+      "temporary": "Temporaire (avec retour)",
+      "permanent": "Permanent (garder)"
     },
     "editBook": {
       "title": "Modifier le livre",
@@ -358,6 +363,7 @@
     "sendCounterOffer": "Envoyer la contre-offre",
     "sendRequest": "Envoyer la demande",
     "swapComplete": "Échange terminé !",
+    "permanentSwapNote": "C'est un échange permanent — aucun retour nécessaire.",
     "theirBook": "Leur livre",
     "theirOffer": "Leur offre",
     "theyOffer": "Ils offrent",
@@ -601,9 +607,9 @@
     "locationDeniedMsg": "Activez la localisation dans les réglages de votre appareil.",
     "locationError": "Échec de la détection de la position",
     "locationSearch": "Rechercher un lieu",
-    "locationUpdated": "Position mise à jour : {{city}}",
-    "locationUpdatedGeneric": "Position mise à jour",
-    "locationUpdatedMsg": "Votre zone de recherche a été mise à jour.",
+    "locationUpdated": "Position mise à jour",
+    "locationUpdatedGeneric": "Votre position a été mise à jour.",
+    "locationUpdatedMsg": "Défini sur {{neighborhood}}",
     "logout": "Se déconnecter",
     "noLocation": "Aucune position définie",
     "notifications": "Notifications",

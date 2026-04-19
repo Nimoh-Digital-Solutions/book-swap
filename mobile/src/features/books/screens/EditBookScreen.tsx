@@ -50,6 +50,11 @@ const LANGUAGES: { key: CreateBookPayload["language"]; label: string }[] = [
   { key: "other", label: "Other" },
 ];
 
+const SWAP_TYPES: { key: CreateBookPayload["swap_type"]; label: string }[] = [
+  { key: "temporary", label: "Temporary (with return)" },
+  { key: "permanent", label: "Permanent (keep)" },
+];
+
 const MAX_GENRES = 3;
 
 export function EditBookScreen() {
@@ -74,6 +79,7 @@ export function EditBookScreen() {
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState<CreateBookPayload["condition"] | null>(null);
   const [language, setLanguage] = useState<CreateBookPayload["language"] | null>(null);
+  const [swapType, setSwapType] = useState<CreateBookPayload["swap_type"]>("temporary");
   const [genres, setGenres] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [hydrated, setHydrated] = useState(false);
@@ -88,6 +94,7 @@ export function EditBookScreen() {
       setDescription(book.description ?? "");
       setCondition(book.condition as CreateBookPayload["condition"] ?? null);
       setLanguage(book.language as CreateBookPayload["language"] ?? null);
+      setSwapType((book.swap_type as CreateBookPayload["swap_type"]) ?? "temporary");
       setNotes(bookAny?.notes ?? "");
 
       const bookGenres: string[] = Array.isArray(bookAny?.genres)
@@ -131,6 +138,7 @@ export function EditBookScreen() {
       description: description.trim(),
       condition,
       language,
+      swap_type: swapType,
       genres,
       notes: notes.trim(),
     };
@@ -326,6 +334,35 @@ export function EditBookScreen() {
                     style={[s.chipText, { color: selected ? "#152018" : c.text.secondary }]}
                   >
                     {t(`books.languages.${item.key}`, item.label)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        {/* ── Swap Type ── */}
+        <SectionLabel text={t("books.addBook.swapTypeLabel", "Swap Type")} required c={c} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
+          <View style={s.chipRow}>
+            {SWAP_TYPES.map((item) => {
+              const selected = swapType === item.key;
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => setSwapType(item.key)}
+                  style={[
+                    s.chip,
+                    {
+                      backgroundColor: selected ? accent : cardBg,
+                      borderColor: selected ? accent : cardBorder,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[s.chipText, { color: selected ? "#152018" : c.text.secondary }]}
+                  >
+                    {t(`books.swapTypes.${item.key}`, item.label)}
                   </Text>
                 </Pressable>
               );

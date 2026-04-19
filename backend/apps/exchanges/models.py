@@ -11,6 +11,8 @@ from django.conf import settings
 from django.db import models
 from nimoh_base.core.models import TimeStampedModel
 
+from apps.books.models import SwapType
+
 
 class ExchangeStatus(models.TextChoices):
     PENDING = "pending", "Pending"
@@ -143,6 +145,13 @@ class ExchangeRequest(TimeStampedModel):
         blank=True,
         related_name="counter_requests",
         help_text="References the original request when counter-proposed.",
+    )
+
+    swap_type = models.CharField(
+        max_length=10,
+        choices=SwapType.choices,
+        default=SwapType.TEMPORARY,
+        help_text="Effective swap type for this exchange. Defaults from requested_book.swap_type.",
     )
 
     # Two-phase swap confirmation (US-504)

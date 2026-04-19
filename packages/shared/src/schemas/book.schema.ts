@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const bookConditionSchema = z.enum(['new', 'like_new', 'good', 'acceptable']);
 export const bookStatusSchema = z.enum(['available', 'in_exchange', 'returned']);
 export const bookLanguageSchema = z.enum(['en', 'nl', 'de', 'fr', 'es', 'other']);
+export const swapTypeSchema = z.enum(['temporary', 'permanent']);
 
 export const bookOwnerSchema = z.object({
   id: z.string(),
@@ -27,6 +28,7 @@ export const bookListItemSchema = z.object({
   condition: bookConditionSchema,
   language: bookLanguageSchema,
   status: bookStatusSchema,
+  swap_type: swapTypeSchema,
   primary_photo: z.string().nullable(),
   owner: bookOwnerSchema,
   created_at: z.string(),

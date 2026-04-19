@@ -4,7 +4,7 @@
 
 // Book
 export type {
-  BookCondition, BookStatus, BookLanguage, BookOwner, BookPhoto,
+  BookCondition, BookStatus, BookLanguage, SwapType, BookOwner, BookPhoto,
   BookListItem, Book, BookMetadata, PaginatedBooks,
   CreateBookPayload, UpdateBookPayload,
   WishlistItem, PaginatedWishlist, BookListFilters,
@@ -66,7 +66,7 @@ export type {
 
 // Book
 export {
-  bookConditionSchema, bookStatusSchema, bookLanguageSchema,
+  bookConditionSchema, bookStatusSchema, bookLanguageSchema, swapTypeSchema,
   bookOwnerSchema, bookPhotoSchema, bookListItemSchema,
   bookDetailSchema, paginatedBooksSchema,
 } from './schemas/book.schema';
@@ -101,8 +101,8 @@ export type { SubmitRatingFormValues } from './schemas/rating.schema';
 // ---------------------------------------------------------------------------
 
 export {
-  BOOK_CONDITIONS, BOOK_STATUSES, BOOK_LANGUAGES,
-  BOOK_CONDITION_LABELS, BOOK_LANGUAGE_LABELS,
+  BOOK_CONDITIONS, BOOK_STATUSES, BOOK_LANGUAGES, SWAP_TYPES,
+  BOOK_CONDITION_LABELS, BOOK_LANGUAGE_LABELS, SWAP_TYPE_LABELS,
 } from './constants/books';
 
 export {

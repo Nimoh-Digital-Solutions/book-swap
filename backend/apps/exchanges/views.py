@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.books.models import BookStatus
+from apps.books.models import BookStatus, SwapType
 from apps.messaging.models import Message
 from bookswap.permissions import IsEmailVerified
 
@@ -440,10 +440,19 @@ class ExchangeRequestViewSet(
         exchange.transition_to(ExchangeStatus.COMPLETED)
         exchange.save(update_fields=["status", "updated_at"])
 
-        exchange.requested_book.status = BookStatus.AVAILABLE
-        exchange.requested_book.save(update_fields=["status"])
-        exchange.offered_book.status = BookStatus.AVAILABLE
-        exchange.offered_book.save(update_fields=["status"])
+        if exchange.swap_type == SwapType.PERMANENT:
+            # Transfer ownership: each party keeps the other's book
+            exchange.requested_book.owner = exchange.requester
+            exchange.requested_book.status = BookStatus.AVAILABLE
+            exchange.requested_book.save(update_fields=["owner", "status"])
+            exchange.offered_book.owner = exchange.owner
+            exchange.offered_book.status = BookStatus.AVAILABLE
+            exchange.offered_book.save(update_fields=["owner", "status"])
+        else:
+            exchange.requested_book.status = BookStatus.AVAILABLE
+            exchange.requested_book.save(update_fields=["status"])
+            exchange.offered_book.status = BookStatus.AVAILABLE
+            exchange.offered_book.save(update_fields=["status"])
 
         from apps.notifications.tasks import send_exchange_completed_notification
 
@@ -461,6 +470,11 @@ class ExchangeRequestViewSet(
     def request_return(self, request, pk=None):
         """Initiate a book return."""
         exchange = self.get_object()
+        if exchange.swap_type == SwapType.PERMANENT:
+            return Response(
+                {"detail": "Returns are not available for permanent swaps."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if exchange.status != ExchangeStatus.SWAP_CONFIRMED:
             return Response(
                 {"detail": "Returns can only be requested after swap is confirmed."},

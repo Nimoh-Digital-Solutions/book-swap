@@ -350,24 +350,33 @@ export function DetailActions({ exchange }: Props) {
   }
 
   if (status === 'swap_confirmed') {
+    const isPermanent = exchange.swap_type === 'permanent';
     return (
       <View style={s.wrap}>
         <InfoRow icon={CheckCircle} text={t('exchanges.swapComplete', 'Swap confirmed by both parties!')} color={accent} />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('exchanges.requestReturn', 'Request Return')}
-          style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
-          onPress={() => doConfirm(
-            t('exchanges.returnTitle', 'Request Return?'),
-            t('exchanges.returnMsg', 'You can request to return the books.'),
-            () => requestReturn.mutate(exchange.id),
-          )}
-        >
-          <RotateCcw size={16} color={c.text.secondary} />
-          <Text style={[s.outlineBtnText, { color: c.text.secondary }]}>
-            {t('exchanges.requestReturn', 'Request Return')}
-          </Text>
-        </Pressable>
+        {isPermanent ? (
+          <InfoRow
+            icon={ArrowLeftRight}
+            text={t('exchanges.permanentSwapNote', 'This is a permanent swap — no return needed.')}
+            color={c.text.secondary}
+          />
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.requestReturn', 'Request Return')}
+            style={({ pressed }) => [s.outlineBtn, { borderColor: c.text.placeholder, opacity: pressed ? 0.9 : 1 }]}
+            onPress={() => doConfirm(
+              t('exchanges.returnTitle', 'Request Return?'),
+              t('exchanges.returnMsg', 'You can request to return the books.'),
+              () => requestReturn.mutate(exchange.id),
+            )}
+          >
+            <RotateCcw size={16} color={c.text.secondary} />
+            <Text style={[s.outlineBtnText, { color: c.text.secondary }]}>
+              {t('exchanges.requestReturn', 'Request Return')}
+            </Text>
+          </Pressable>
+        )}
       </View>
     );
   }

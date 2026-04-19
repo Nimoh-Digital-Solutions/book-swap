@@ -42,6 +42,11 @@ const LANGUAGES: { key: CreateBookPayload["language"]; label: string }[] = [
   { key: "other", label: "Other" },
 ];
 
+const SWAP_TYPES: { key: CreateBookPayload["swap_type"]; label: string }[] = [
+  { key: "temporary", label: "Temporary (with return)" },
+  { key: "permanent", label: "Permanent (keep)" },
+];
+
 const MAX_GENRES = 3;
 
 const LANG_CODE_MAP: Record<string, CreateBookPayload["language"]> = {
@@ -80,6 +85,7 @@ export function AddBookScreen() {
   const [language, setLanguage] = useState<CreateBookPayload["language"] | null>(
     resolveLanguage(params?.language),
   );
+  const [swapType, setSwapType] = useState<CreateBookPayload["swap_type"]>("temporary");
   const [genres, setGenres] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
 
@@ -105,6 +111,7 @@ export function AddBookScreen() {
       author: author.trim(),
       condition,
       language,
+      swap_type: swapType,
       ...(isbn && { isbn }),
       ...(description.trim() && { description: description.trim() }),
       ...(coverUrl && { cover_url: coverUrl }),
@@ -268,6 +275,38 @@ export function AddBookScreen() {
                     ]}
                   >
                     {t(`books.languages.${item.key}`, item.label)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        {/* ── Swap Type ── */}
+        <SectionLabel text={t("books.addBook.swapTypeLabel", "Swap Type")} required c={c} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
+          <View style={s.chipRow}>
+            {SWAP_TYPES.map((item) => {
+              const selected = swapType === item.key;
+              return (
+                <Pressable
+                  key={item.key}
+                  onPress={() => setSwapType(item.key)}
+                  style={[
+                    s.chip,
+                    {
+                      backgroundColor: selected ? accent : cardBg,
+                      borderColor: selected ? accent : cardBorder,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.chipText,
+                      { color: selected ? "#152018" : c.text.secondary },
+                    ]}
+                  >
+                    {t(`books.swapTypes.${item.key}`, item.label)}
                   </Text>
                 </Pressable>
               );

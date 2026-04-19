@@ -69,6 +69,8 @@ export interface User {
   created_at: string;
 }
 
+export type SwapType = 'temporary' | 'permanent';
+
 export interface Book {
   id: string;
   owner: string;
@@ -82,6 +84,7 @@ export interface Book {
   genre?: string;
   language: string;
   status: string;
+  swap_type: SwapType;
   cover_url?: string | null;
   primary_photo?: string | null;
   photos: BookPhoto[];

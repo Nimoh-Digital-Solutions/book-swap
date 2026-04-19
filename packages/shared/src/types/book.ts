@@ -4,6 +4,8 @@ export type BookStatus = 'available' | 'in_exchange' | 'returned';
 
 export type BookLanguage = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'other';
 
+export type SwapType = 'temporary' | 'permanent';
+
 export interface BookOwner {
   id: string;
   username: string;
@@ -27,6 +29,7 @@ export interface BookListItem {
   condition: BookCondition;
   language: BookLanguage;
   status: BookStatus;
+  swap_type: SwapType;
   primary_photo: string | null;
   owner: BookOwner;
   created_at: string;
@@ -43,6 +46,7 @@ export interface Book {
   genres: string[];
   language: BookLanguage;
   status: BookStatus;
+  swap_type: SwapType;
   notes: string;
   page_count: number | null;
   publish_year: number | null;
@@ -78,6 +82,7 @@ export interface CreateBookPayload {
   condition: BookCondition;
   genres?: string[];
   language: BookLanguage;
+  swap_type: SwapType;
   notes?: string;
   page_count?: number | null;
   publish_year?: number | null;
@@ -91,6 +96,7 @@ export interface UpdateBookPayload {
   condition?: BookCondition;
   genres?: string[];
   language?: BookLanguage;
+  swap_type?: SwapType;
   notes?: string;
   page_count?: number | null;
   publish_year?: number | null;

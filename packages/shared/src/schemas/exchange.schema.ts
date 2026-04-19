@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { swapTypeSchema } from './book.schema';
+
 export const exchangeStatusSchema = z.enum([
   'pending', 'accepted', 'conditions_pending', 'active', 'swap_confirmed',
   'completed', 'declined', 'cancelled', 'expired', 'return_requested', 'returned',
@@ -27,6 +29,7 @@ const exchangeBookSchema = z.object({
 export const exchangeListItemSchema = z.object({
   id: z.string(),
   status: exchangeStatusSchema,
+  swap_type: swapTypeSchema,
   message: z.string(),
   requester: exchangeParticipantSchema,
   owner: exchangeParticipantSchema,

@@ -24,6 +24,11 @@ class BookStatus(models.TextChoices):
     RETURNED = "returned", "Returned"
 
 
+class SwapType(models.TextChoices):
+    TEMPORARY = "temporary", "Temporary (with return)"
+    PERMANENT = "permanent", "Permanent (no return)"
+
+
 BOOK_LANGUAGE_CHOICES = [
     ("en", "English"),
     ("nl", "Dutch"),
@@ -69,6 +74,12 @@ class Book(TimeStampedModel):
         db_index=True,
     )
     notes = models.CharField(max_length=200, blank=True)
+    swap_type = models.CharField(
+        max_length=10,
+        choices=SwapType.choices,
+        default=SwapType.TEMPORARY,
+        help_text="Whether the book must be returned after a swap or is given away permanently.",
+    )
 
     # ── Seed / demo data ─────────────────────────────────────────────
     is_seed = models.BooleanField(

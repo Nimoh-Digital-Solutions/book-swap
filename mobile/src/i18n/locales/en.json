@@ -189,6 +189,7 @@
       "descriptionPlaceholder": "Describe the book's condition, edition, etc.",
       "genresLabel": "Genres",
       "languageLabel": "Language",
+      "swapTypeLabel": "Swap Type",
       "notesLabel": "Notes",
       "notesPlaceholder": "Any additional notes for the swapper",
       "submit": "Add Book",
@@ -196,6 +197,10 @@
       "successTitle": "Book Added",
       "successMsg": "Your book has been listed!",
       "errorMsg": "Failed to add book. Please try again."
+    },
+    "swapTypes": {
+      "temporary": "Temporary (with return)",
+      "permanent": "Permanent (keep)"
     },
     "editBook": {
       "title": "Edit Book",
@@ -358,6 +363,7 @@
     "sendCounterOffer": "Send Counter Offer",
     "sendRequest": "Send Request",
     "swapComplete": "Swap complete!",
+    "permanentSwapNote": "This is a permanent swap — no return needed.",
     "theirBook": "Their Book",
     "theirOffer": "Their Offer",
     "theyOffer": "They offer",
@@ -601,9 +607,9 @@
     "locationDeniedMsg": "Enable location in your device settings.",
     "locationError": "Failed to detect location",
     "locationSearch": "Search for a location",
-    "locationUpdated": "Location updated to {{city}}",
-    "locationUpdatedGeneric": "Location updated",
-    "locationUpdatedMsg": "Your search area has been updated.",
+    "locationUpdated": "Location updated",
+    "locationUpdatedGeneric": "Your location has been updated.",
+    "locationUpdatedMsg": "Set to {{neighborhood}}",
     "logout": "Log Out",
     "noLocation": "No location set",
     "notifications": "Notifications",

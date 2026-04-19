@@ -189,6 +189,7 @@
       "descriptionPlaceholder": "Beschrijf de staat van het boek, editie, enz.",
       "genresLabel": "Genres",
       "languageLabel": "Taal",
+      "swapTypeLabel": "Type ruil",
       "notesLabel": "Notities",
       "notesPlaceholder": "Eventuele notities voor de ruiler",
       "submit": "Boek toevoegen",
@@ -196,6 +197,10 @@
       "successTitle": "Boek toegevoegd",
       "successMsg": "Je boek is gepubliceerd!",
       "errorMsg": "Toevoegen mislukt. Probeer het opnieuw."
+    },
+    "swapTypes": {
+      "temporary": "Tijdelijk (met retour)",
+      "permanent": "Permanent (houden)"
     },
     "editBook": {
       "title": "Boek bewerken",
@@ -358,6 +363,7 @@
     "sendCounterOffer": "Tegenbod versturen",
     "sendRequest": "Verzoek versturen",
     "swapComplete": "Ruil voltooid!",
+    "permanentSwapNote": "Dit is een permanente ruil — geen retour nodig.",
     "theirBook": "Hun boek",
     "theirOffer": "Hun aanbod",
     "theyOffer": "Zij bieden aan",
@@ -601,9 +607,9 @@
     "locationDeniedMsg": "Schakel locatie in via je apparaatinstellingen.",
     "locationError": "Locatie detecteren mislukt",
     "locationSearch": "Zoek een locatie",
-    "locationUpdated": "Locatie bijgewerkt naar {{city}}",
-    "locationUpdatedGeneric": "Locatie bijgewerkt",
-    "locationUpdatedMsg": "Je zoekgebied is bijgewerkt.",
+    "locationUpdated": "Locatie bijgewerkt",
+    "locationUpdatedGeneric": "Je locatie is bijgewerkt.",
+    "locationUpdatedMsg": "Ingesteld op {{neighborhood}}",
     "logout": "Uitloggen",
     "noLocation": "Geen locatie ingesteld",
     "notifications": "Meldingen",
