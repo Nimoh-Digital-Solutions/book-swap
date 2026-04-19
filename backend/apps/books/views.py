@@ -76,16 +76,17 @@ class BookViewSet(
 
     def get_queryset(self):
         qs = Book.objects.select_related("owner").prefetch_related("photos")
+        user = self.request.user
 
         if self.action in ("update", "partial_update", "destroy"):
-            return qs.filter(owner=self.request.user)
+            return qs.filter(owner=user)
 
         owner_param = self.request.query_params.get("owner")
-        if owner_param == "me":
-            return qs.filter(owner=self.request.user)
+        if owner_param == "me" and user.is_authenticated:
+            return qs.filter(owner=user)
 
-        blocked_ids = _get_blocked_user_ids(self.request.user)
-        if owner_param:
+        blocked_ids = _get_blocked_user_ids(user) if user.is_authenticated else set()
+        if owner_param and owner_param != "me":
             return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
         return qs.filter(status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
 
@@ -94,6 +95,8 @@ class BookViewSet(
             return [IsAuthenticated(), IsBookOwner()]
         if self.action == "create":
             return [IsAuthenticated(), IsEmailVerified()]
+        if self.action in ("list", "retrieve"):
+            return [AllowAny()]
         return [IsAuthenticated()]
 
     def perform_destroy(self, instance):
@@ -424,9 +427,9 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 
 class NearbyCountView(APIView):
-    """GET /books/nearby-count/ — book count for authenticated users."""
+    """GET /books/nearby-count/ — book count (public, used on landing page)."""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     @extend_schema(
         summary="Count nearby books",
@@ -482,9 +485,9 @@ class NearbyCountView(APIView):
 
 
 class CommunityStatsView(APIView):
-    """GET /books/community-stats/ — weekly swap count + recent activity feed."""
+    """GET /books/community-stats/ — weekly swap count + recent activity feed (public)."""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     @extend_schema(
         summary="Community stats and activity feed",
