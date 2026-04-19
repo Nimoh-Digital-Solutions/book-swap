@@ -28,7 +28,8 @@
     "exchanges": "Ruilen",
     "incomingRequests": "Ontvangen verzoeken",
     "settings": "Instellingen",
-    "blockedUsers": "Geblokkeerde gebruikers"
+    "blockedUsers": "Geblokkeerde gebruikers",
+    "editBook": "Boek bewerken"
   },
   "validation": {
     "required": "Verplicht",
@@ -177,6 +178,7 @@
       "errorMsg": "Toevoegen mislukt. Probeer het opnieuw."
     },
     "editBook": {
+      "title": "Boek bewerken",
       "dangerZone": "Gevarenzone",
       "delete": "Boek verwijderen",
       "deleteTitle": "Boek verwijderen",
@@ -189,6 +191,12 @@
       "successMsg": "Je boek is bijgewerkt.",
       "errorMsg": "Bijwerken mislukt. Probeer het opnieuw."
     },
+    "editBookA11y": "Boek bewerken",
+    "statusToggleError": "Status bijwerken mislukt. Probeer opnieuw.",
+    "statusAvailable": "Beschikbaar",
+    "statusUnavailable": "Niet beschikbaar",
+    "markUnavailableA11y": "Markeer als niet beschikbaar",
+    "markAvailableA11y": "Markeer als beschikbaar",
     "filter": {
       "all": "Alle",
       "available": "Beschikbaar",
@@ -354,6 +362,18 @@
       "expired": "Verlopen",
       "return_requested": "Retour aangevraagd",
       "returned": "Teruggebracht"
+    },
+    "bookCta": {
+      "swapRequested": "Ruil aangevraagd",
+      "swapActive": "Ruil actief",
+      "swapCompleted": "Voltooid",
+      "requestDeclined": "Aanvraag afgewezen",
+      "returnRequested": "Retour aangevraagd",
+      "returned": "Teruggebracht",
+      "cancelRequest": "Annuleer aanvraag",
+      "viewExchange": "Bekijk ruil",
+      "cancelConfirmTitle": "Annuleer aanvraag",
+      "cancelConfirmMsg": "Weet je zeker dat je deze ruilaanvraag wilt annuleren?"
     }
   },
   "home": {

@@ -40,7 +40,27 @@ export interface WsErrorMessage {
  *
  * Add new message types here as the protocol evolves.
  */
-export type WsMessage = WsChunkMessage | WsCompleteMessage | WsErrorMessage;
+export interface WsAuthSuccessMessage {
+  type: 'auth.success';
+}
+
+export interface WsAuthFailedMessage {
+  type: 'auth.failed';
+  reason: string;
+}
+
+export interface WsAuthRequiredMessage {
+  type: 'auth.required';
+  reason: string;
+}
+
+export type WsMessage =
+  | WsChunkMessage
+  | WsCompleteMessage
+  | WsErrorMessage
+  | WsAuthSuccessMessage
+  | WsAuthFailedMessage
+  | WsAuthRequiredMessage;
 
 // ---------------------------------------------------------------------------
 // WebSocket configuration types
@@ -69,7 +89,7 @@ export type WsCloseCode = (typeof WS_CLOSE_CODES)[keyof typeof WS_CLOSE_CODES];
 export interface WebSocketOptions {
   /** Full WebSocket URL (ws:// or wss://). */
   url: string;
-  /** JWT access token appended as `?token=<jwt>` query parameter. */
+  /** JWT access token sent as first message after connection. */
   token: string;
   /** Handler invoked for every parsed message from the server. */
   onMessage: (data: WsMessage) => void;

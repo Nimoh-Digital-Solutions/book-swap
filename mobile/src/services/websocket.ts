@@ -18,6 +18,7 @@ class WebSocketManager {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private currentPath = '';
   private appStateSub: { remove: () => void } | null = null;
+  private authenticated = false;
 
   constructor() {
     const onAppState = (next: AppStateStatus) => {
@@ -63,10 +64,11 @@ class WebSocketManager {
   }
 
   private doConnect(path: string) {
-    const token = tokenStorage.getAccess();
     const wsRoot = getWsBaseUrl();
-    const url = `${wsRoot}${path.startsWith('/') ? path : `/${path}`}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    const url = `${wsRoot}${path.startsWith('/') ? path : `/${path}`}`;
     addBreadcrumb('websocket', 'connect', { path });
+
+    this.authenticated = false;
 
     const oldWs = this.ws;
     if (oldWs) {
@@ -82,8 +84,7 @@ class WebSocketManager {
 
     ws.onopen = () => {
       if (this.ws !== ws) return;
-      this.reconnectAttempts = 0;
-      this.handlers.get('__connected__')?.forEach((h) => h({}));
+      this.sendAuthMessage();
     };
 
     ws.onmessage = (event) => {
@@ -91,6 +92,19 @@ class WebSocketManager {
       try {
         const data = JSON.parse(event.data) as { type?: string };
         const type = data.type as string;
+
+        if (type === 'auth.success') {
+          this.authenticated = true;
+          this.reconnectAttempts = 0;
+          this.handlers.get('__connected__')?.forEach((h) => h({}));
+          return;
+        }
+
+        if (type === 'auth.failed' || type === 'auth.required') {
+          addBreadcrumb('websocket', 'auth failed', { reason: (data as any).reason });
+          return;
+        }
+
         this.handlers.get(type)?.forEach((h) => h(data));
         this.handlers.get('*')?.forEach((h) => h(data));
       } catch { /* ignore parse errors */ }
@@ -98,6 +112,7 @@ class WebSocketManager {
 
     ws.onclose = () => {
       if (this.ws !== ws) return;
+      this.authenticated = false;
       this.handlers.get('__disconnected__')?.forEach((h) => h({}));
       if (this.currentPath) this.scheduleReconnect();
     };
@@ -106,6 +121,13 @@ class WebSocketManager {
       if (this.ws !== ws) return;
       ws.close();
     };
+  }
+
+  private sendAuthMessage() {
+    const token = tokenStorage.getAccess();
+    if (token && this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'authenticate', token }));
+    }
   }
 
   reconnectWithNewToken() {
@@ -124,13 +146,14 @@ class WebSocketManager {
   }
 
   send(data: Record<string, unknown>) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.authenticated) {
       this.ws.send(JSON.stringify(data));
     }
   }
 
   disconnect() {
     this.currentPath = '';
+    this.authenticated = false;
     this.clearReconnectTimer();
     try {
       this.ws?.close();

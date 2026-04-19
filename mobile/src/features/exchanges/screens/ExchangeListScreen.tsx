@@ -174,6 +174,7 @@ export function ExchangeListScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={s.tabScroll}
         contentContainerStyle={s.tabRow}
       >
         {tabs.map(({ key, label, count }) => {
@@ -262,8 +263,12 @@ const s = StyleSheet.create({
   },
   incomingText: { fontSize: 13, fontWeight: '600' },
 
+  tabScroll: {
+    flexGrow: 0,
+  },
   tabRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

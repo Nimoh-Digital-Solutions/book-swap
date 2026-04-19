@@ -32,7 +32,8 @@
     "exchanges": "Exchanges",
     "incomingRequests": "Incoming Requests",
     "settings": "Settings",
-    "blockedUsers": "Blocked Users"
+    "blockedUsers": "Blocked Users",
+    "editBook": "Edit Book"
   },
   "validation": {
     "required": "Required",
@@ -181,6 +182,7 @@
       "errorMsg": "Failed to add book. Please try again."
     },
     "editBook": {
+      "title": "Edit Book",
       "dangerZone": "Danger Zone",
       "delete": "Delete Book",
       "deleteTitle": "Delete Book",
@@ -193,6 +195,12 @@
       "successMsg": "Your book has been updated.",
       "errorMsg": "Failed to update book. Please try again."
     },
+    "editBookA11y": "Edit book",
+    "statusToggleError": "Could not update status. Try again.",
+    "statusAvailable": "Available",
+    "statusUnavailable": "Unavailable",
+    "markUnavailableA11y": "Mark as unavailable",
+    "markAvailableA11y": "Mark as available",
     "filter": {
       "all": "All",
       "available": "Available",
@@ -361,6 +369,18 @@
       "expired": "Expired",
       "return_requested": "Return Requested",
       "returned": "Returned"
+    },
+    "bookCta": {
+      "swapRequested": "Swap Requested",
+      "swapActive": "Swap Active",
+      "swapCompleted": "Completed",
+      "requestDeclined": "Request Declined",
+      "returnRequested": "Return Requested",
+      "returned": "Returned",
+      "cancelRequest": "Cancel Request",
+      "viewExchange": "View Exchange",
+      "cancelConfirmTitle": "Cancel Request",
+      "cancelConfirmMsg": "Are you sure you want to cancel this swap request?"
     }
   },
   "home": {

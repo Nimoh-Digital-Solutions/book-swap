@@ -3,7 +3,7 @@ WebSocket consumer for real-time notification bell (US-902).
 
 Route   : ws/notifications/
 Group   : notifications_{user.id}
-Protocol: Authenticated only — unauthenticated connections are rejected (4001).
+Protocol: Authenticated via first-message auth (or query-string fallback).
 
 The consumer joins a per-user channel group on connect and forwards any
 'notification.push' messages to the WebSocket client as JSON.
@@ -15,27 +15,29 @@ import logging
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from bookswap.ws_first_msg_auth import FirstMessageAuthMixin
+
 logger = logging.getLogger(__name__)
 
 
-class NotificationConsumer(AsyncJsonWebsocketConsumer):
+class NotificationConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
     """
     Real-time notification push for the in-app bell (US-902).
 
     Route: ws/notifications/
     """
 
-    async def connect(self):
-        user = self.scope.get("user")
-        if not user or not user.is_authenticated:
-            await self.close(code=4001)
-            return
-
-        self.user = user
+    async def post_authenticate(self):
+        """Called after successful auth — join the user's notification group."""
+        user = self.user
         self.group_name = f"notifications_{user.id}"
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        await self.accept()
+
+        if not self._ws_accepted:
+            await self.accept()
+            self._ws_accepted = True
+
         logger.debug("NotificationConsumer: user %s connected.", user.id)
 
     async def disconnect(self, code):
@@ -48,8 +50,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def receive_json(self, content, **kwargs):
+        if not await self.ensure_authenticated(content):
+            return
         # Clients don't send messages to this consumer — read-only push channel.
-        pass
 
     # -------------------------------------------------------------------------
     # Channel-layer message handlers

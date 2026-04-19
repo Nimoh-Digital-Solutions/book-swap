@@ -28,7 +28,8 @@
     "exchanges": "Échanges",
     "incomingRequests": "Demandes reçues",
     "settings": "Paramètres",
-    "blockedUsers": "Utilisateurs bloqués"
+    "blockedUsers": "Utilisateurs bloqués",
+    "editBook": "Modifier le livre"
   },
   "validation": {
     "required": "Obligatoire",
@@ -177,6 +178,7 @@
       "errorMsg": "Échec de l'ajout. Veuillez réessayer."
     },
     "editBook": {
+      "title": "Modifier le livre",
       "dangerZone": "Zone de danger",
       "delete": "Supprimer le livre",
       "deleteTitle": "Supprimer le livre",
@@ -189,6 +191,12 @@
       "successMsg": "Votre livre a été mis à jour.",
       "errorMsg": "Échec de la mise à jour. Veuillez réessayer."
     },
+    "editBookA11y": "Modifier le livre",
+    "statusToggleError": "Impossible de mettre à jour le statut. Réessayez.",
+    "statusAvailable": "Disponible",
+    "statusUnavailable": "Indisponible",
+    "markUnavailableA11y": "Marquer comme indisponible",
+    "markAvailableA11y": "Marquer comme disponible",
     "filter": {
       "all": "Tous",
       "available": "Disponibles",
@@ -354,6 +362,18 @@
       "expired": "Expiré",
       "return_requested": "Retour demandé",
       "returned": "Rendu"
+    },
+    "bookCta": {
+      "swapRequested": "Échange demandé",
+      "swapActive": "Échange en cours",
+      "swapCompleted": "Terminé",
+      "requestDeclined": "Demande refusée",
+      "returnRequested": "Retour demandé",
+      "returned": "Rendu",
+      "cancelRequest": "Annuler la demande",
+      "viewExchange": "Voir l'échange",
+      "cancelConfirmTitle": "Annuler la demande",
+      "cancelConfirmMsg": "Êtes-vous sûr de vouloir annuler cette demande d'échange ?"
     }
   },
   "home": {

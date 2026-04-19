@@ -189,7 +189,7 @@ export function ScanResultScreen() {
           <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <BookText size={11} color={c.text.secondary} />
             <Text style={[s.pillText, { color: c.text.secondary }]}>
-              {displayData.page_count} {t("scanner.pages", "pages")}
+              {t("scanner.pages", "{{count}} pages", { count: displayData.page_count })}
             </Text>
           </View>
         ) : null}

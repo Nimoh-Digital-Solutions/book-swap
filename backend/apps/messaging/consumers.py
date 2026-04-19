@@ -6,35 +6,29 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from apps.exchanges.models import ExchangeRequest
+from bookswap.ws_first_msg_auth import FirstMessageAuthMixin
 
 from .models import Message
 from .permissions import CHAT_ELIGIBLE_STATUSES, CHAT_WRITABLE_STATUSES
 
 
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
     """
     Real-time chat WebSocket for exchange partners.
 
     Route: ws/chat/{exchange_id}/
     """
 
-    # Rate limit: max 5 messages per 10-second window.
     RATE_LIMIT_MAX = 5
     RATE_LIMIT_WINDOW = 10
 
-    async def connect(self):
-        # Reject unauthenticated connections.
-        user = self.scope.get("user")
-        if not user or not user.is_authenticated:
-            await self.close(code=4001)
-            return
-
+    async def post_authenticate(self):
+        """Called after successful auth — validate exchange and join group."""
+        user = self.user
         self.exchange_id = self.scope["url_route"]["kwargs"]["exchange_id"]
         self.group_name = f"chat_{self.exchange_id}"
-        self.user = user
         self.send_timestamps: list[float] = []
 
-        # Validate exchange and participant.
         exchange = await self._get_exchange()
         if exchange is None:
             await self.close(code=4004)
@@ -44,7 +38,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4003)
             return
 
-        # Block check: reject if the other party is blocked
         other_id = exchange.owner_id if user.id == exchange.requester_id else exchange.requester_id
         if await self._is_blocked(user, other_id):
             await self.close(code=4003)
@@ -56,9 +49,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         self.is_read_only = exchange.status not in CHAT_WRITABLE_STATUSES
 
-        # Join the chat group.
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        await self.accept()
+
+        if not self._ws_accepted:
+            await self.accept()
+            self._ws_accepted = True
 
         if self.is_read_only:
             await self.send_json(
@@ -76,6 +71,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def receive_json(self, content, **kwargs):
+        if not await self.ensure_authenticated(content):
+            return
+
         msg_type = content.get("type")
 
         if msg_type == "chat.message":
@@ -104,7 +102,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        # Email verification gate (US-803)
         if not await self._is_email_verified():
             await self.send_json(
                 {
@@ -114,7 +111,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        # Rate limiting.
         now = time.monotonic()
         self.send_timestamps = [ts for ts in self.send_timestamps if now - ts < self.RATE_LIMIT_WINDOW]
         if len(self.send_timestamps) >= self.RATE_LIMIT_MAX:
@@ -148,7 +144,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         message = await self._save_message(text)
 
-        # Broadcast to the group.
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -171,7 +166,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if self.is_read_only:
             return
 
-        # Broadcast typing indicator to the group (excluding sender via frontend).
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -214,7 +208,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def chat_typing(self, event):
-        # Don't echo typing back to the sender.
         if event["user_id"] != str(self.user.id):
             await self.send_json(
                 {
@@ -234,7 +227,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def chat_read_all(self, event):
-        """Bulk read receipt — all messages up to read_at are marked as read."""
         await self.send_json(
             {
                 "type": "chat.read_all",
