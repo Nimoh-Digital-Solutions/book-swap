@@ -7,8 +7,8 @@ import { useEffect, useState } from 'react';
 const CACHE_KEY = 'bookswap_city_cache';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// Fallback: Amsterdam city centre
-const FALLBACK_CITY = 'Amsterdam';
+// Fallback: NL centre (Amsterdam coordinates kept for map centering, label is generic)
+const FALLBACK_CITY = 'your area';
 const FALLBACK_LAT = 52.3676;
 const FALLBACK_LNG = 4.9041;
 

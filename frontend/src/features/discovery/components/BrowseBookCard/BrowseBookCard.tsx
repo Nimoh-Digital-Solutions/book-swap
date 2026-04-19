@@ -5,7 +5,8 @@
  */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 
 import type { BrowseBook } from '../../types/discovery.types';
 
@@ -35,7 +36,7 @@ export function BrowseBookCard({ book, onRequestSwap }: BrowseBookCardProps): Re
   return (
     <div className="bg-surface-dark rounded-2xl overflow-hidden border border-white/5 hover:border-white/10 transition-colors flex flex-col h-full">
       {/* Cover area with blurred background */}
-      <Link
+      <LocaleLink
         to={`/books/${book.id}`}
         className="relative aspect-[3/4] bg-[#0f1a12] p-6 flex items-center justify-center overflow-hidden"
         aria-label={t('books.card.viewDetail', { title: book.title })}
@@ -76,15 +77,15 @@ export function BrowseBookCard({ book, onRequestSwap }: BrowseBookCardProps): Re
             </span>
           </div>
         )}
-      </Link>
+      </LocaleLink>
 
       {/* Card body */}
       <div className="p-5 flex flex-col flex-1">
-        <Link to={`/books/${book.id}`} className="block mb-1 group">
+        <LocaleLink to={`/books/${book.id}`} className="block mb-1 group">
           <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-[#E4B643] transition-colors">
             {book.title}
           </h3>
-        </Link>
+        </LocaleLink>
         <p className="text-gray-400 text-sm mb-4">{book.author}</p>
 
         <div className="flex items-center gap-2 text-xs text-gray-300 mb-6 mt-auto">

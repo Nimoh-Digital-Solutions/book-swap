@@ -1,29 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const GENRE_OPTIONS = [
-  'Fiction',
-  'Non-Fiction',
-  'Sci-Fi',
-  'Fantasy',
-  'Mystery/Thriller',
-  'Romance',
-  'Biography',
-  'History',
-  'Science',
-  'Philosophy',
-  'Self-Help',
-  'Business',
-  'Poetry',
-  'Graphic Novel',
-  "Children's",
-  'Young Adult',
-  'Horror',
-  'Travel',
-  'Cooking',
-  'Art',
-  'Other',
-] as const;
+import { GENRE_OPTIONS } from '@constants/bookOptions';
 
 const MAX_GENRES = 3;
 

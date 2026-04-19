@@ -2,7 +2,9 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { BlockUserButton, ReportButton } from '@features/trust-safety';
+import { BookCard, useBooks } from '@features/books';
+import { RatingsList } from '@features/ratings';
+import { BlockUserButton, ReportButton, useIsBlocked } from '@features/trust-safety';
 import { useDocumentTitle } from '@hooks';
 import { routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Globe, MapPin, Star, UserX } from 'lucide-react';
@@ -14,6 +16,11 @@ export function PublicProfilePage(): ReactElement {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data: profile, isLoading, isError } = usePublicProfile(id);
+  const isBlocked = useIsBlocked(id ?? '');
+  const { data: userBooks, isLoading: booksLoading } = useBooks(
+    { owner: id!, page_size: 12 },
+    !!id && !isLoading && !!profile,
+  );
 
   useDocumentTitle(
     profile
@@ -51,6 +58,14 @@ export function PublicProfilePage(): ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      {isBlocked && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+          <p className="text-sm text-red-400 font-medium">
+            {t('profile.public.blocked', 'You have blocked this user.')}
+          </p>
+        </div>
+      )}
+
       {/* Header card */}
       <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-8">
         <div className="flex flex-col sm:flex-row gap-6">
@@ -176,16 +191,46 @@ export function PublicProfilePage(): ReactElement {
         </div>
       )}
 
-      {/* Listed books placeholder */}
+      {/* Listed books */}
       <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-6">
         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[#E4B643]" aria-hidden="true" />
           {t('profile.public.listedBooks', 'Listed Books')}
         </h2>
-        <p className="text-sm text-[#5A6A60]">
-          {t('profile.public.noBooksYet', 'No books listed yet.')}
-        </p>
+        {booksLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-[#152018] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
+              >
+                <div className="aspect-[3/4] bg-[#1A251D]" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-[#28382D] rounded w-3/4" />
+                  <div className="h-2 bg-[#28382D] rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (userBooks?.results?.length ?? 0) > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {userBooks!.results.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[#5A6A60]">
+            {t('profile.public.noBooksYet', 'No books listed yet.')}
+          </p>
+        )}
       </div>
+
+      {/* Ratings */}
+      {id && (
+        <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-6">
+          <RatingsList userId={id} />
+        </div>
+      )}
     </div>
   );
 }

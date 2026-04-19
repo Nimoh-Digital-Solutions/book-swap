@@ -27,7 +27,10 @@ export function DeleteAccountDialog({
     deleteAccount.mutate(
       { password },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          if (data.cancel_token) {
+            localStorage.setItem('bs_deletion_cancel_token', data.cancel_token);
+          }
           onDeleted?.();
         },
       },

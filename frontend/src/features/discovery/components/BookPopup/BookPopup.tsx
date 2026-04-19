@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 
 import type { BrowseBook } from '../../types/discovery.types';
 
@@ -44,12 +45,12 @@ export function BookPopup({ books }: BookPopupProps): ReactElement {
                 ? t('discovery.bookPopup.lessThan1km', '< 1 km')
                 : `~${book.distance} km`}
             </p>
-            <Link
+            <LocaleLink
               to={`/books/${book.id}`}
               className="text-xs font-medium text-[#E4B643] hover:underline"
             >
               {t('discovery.bookPopup.viewBook', 'View Book →')}
-            </Link>
+            </LocaleLink>
           </div>
         </div>
       ))}

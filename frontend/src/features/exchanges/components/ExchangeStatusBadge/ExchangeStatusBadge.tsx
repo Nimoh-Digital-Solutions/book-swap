@@ -5,6 +5,7 @@ import type { ExchangeStatus } from '../../types/exchange.types';
 
 const STATUS_STYLES: Record<ExchangeStatus, string> = {
   pending: 'bg-yellow-500/20 text-yellow-400',
+  counter_proposed: 'bg-purple-500/20 text-purple-400',
   accepted: 'bg-blue-500/20 text-blue-400',
   conditions_pending: 'bg-blue-500/20 text-blue-400',
   active: 'bg-green-500/20 text-green-400',

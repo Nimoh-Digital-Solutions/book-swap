@@ -16,9 +16,11 @@ import { useExchange } from '../hooks/useExchange';
 import {
   useAcceptConditions,
   useAcceptExchange,
+  useApproveCounter,
   useCancelExchange,
   useConfirmReturn,
   useConfirmSwap,
+  useCounterExchange,
   useDeclineExchange,
   useRequestReturn,
 } from '../hooks/useExchangeMutations';
@@ -91,6 +93,8 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
 
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
+  const counterMutation = useCounterExchange();
+  const approveCounterMutation = useApproveCounter();
   const cancelMutation = useCancelExchange();
   const acceptConditionsMutation = useAcceptConditions();
   const confirmSwapMutation = useConfirmSwap();
@@ -100,6 +104,7 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
   const isOwner = currentUserId === exchange.owner.id;
   const isRequester = currentUserId === exchange.requester.id;
   const busy = acceptMutation.isPending || declineMutation.isPending || cancelMutation.isPending
+    || counterMutation.isPending || approveCounterMutation.isPending
     || acceptConditionsMutation.isPending || confirmSwapMutation.isPending
     || requestReturnMutation.isPending || confirmReturnMutation.isPending;
 
@@ -139,6 +144,40 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
           onClick={() => mutate(cancelMutation, t('action.cancelled', 'Request cancelled.'))}>
           {t('request.cancel', 'Cancel Request')}
         </button>
+      );
+    }
+  }
+
+  // Counter proposed — requester can approve or decline
+  if (exchange.status === 'counter_proposed') {
+    if (isRequester) {
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-[#8C9C92]">
+            {t('counter.proposed', 'The owner has proposed a different book for the swap.')}
+          </p>
+          <div className="flex gap-3">
+            <button type="button" disabled={busy} className={btnPrimary}
+              onClick={() => mutate(approveCounterMutation, t('counter.approved', 'Counter offer accepted!'))}>
+              {t('counter.approve', 'Accept Counter')}
+            </button>
+            <button type="button" disabled={busy} className={btnDanger}
+              onClick={() => declineMutation.mutate({ id: exchange.id }, {
+                onSuccess: () => addNotification(t('action.declined', 'Exchange declined.'), { variant: 'success' }),
+                onError: () => addNotification(t('error.action', 'Action failed.'), { variant: 'error' }),
+              })}>
+              {t('incoming.decline', 'Decline')}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    if (isOwner) {
+      return (
+        <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+          <Clock className="w-4 h-4" />
+          {t('counter.waitingApproval', 'Waiting for the requester to review your counter offer.')}
+        </p>
       );
     }
   }

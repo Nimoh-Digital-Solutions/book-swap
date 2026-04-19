@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { BookOpen } from 'lucide-react';
 
 import type { BookListItem } from '../../types/book.types';
@@ -21,7 +21,7 @@ export function BookCard({ book }: BookCardProps): ReactElement {
   };
 
   return (
-    <Link
+    <LocaleLink
       to={`/books/${book.id}`}
       className="group block bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden hover:border-[#E4B643]/50 transition-colors"
     >
@@ -67,6 +67,6 @@ export function BookCard({ book }: BookCardProps): ReactElement {
           )}
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

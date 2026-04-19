@@ -105,19 +105,21 @@ export function LoginForm({
             {t('auth.google', 'Google')}
           </span>
         </button>
-        <button
-          type="button"
-          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors"
-          aria-disabled="true"
-          title={t('auth.appleComingSoon', 'Apple sign-in coming soon')}
-        >
-          <svg aria-hidden="true" className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M13.064 3.245c.083 1.838-1.077 3.515-2.22 4.14-1.082.59-2.61.542-3.32-.437-.767-1.055-.386-3.058.74-4.22 1.05-1.085 3.033-1.127 4.8-.517zM12.986 6.94c2.256-.254 3.733 1.258 4.256 1.638 1.488-1.083 3.03-1.01 3.597-.733.204 1.144-.64 2.45-1.637 3.692-1.22 1.517-1.11 3.284.225 5.176 1.156 1.634.355 3.525-1.074 4.137-1.23.527-2.68.32-4.103-.23-1.378-.535-2.716-.475-4.102-.036-1.554.49-3.023.76-4.39-.023-1.572-.9-2.072-2.73-1.074-4.137 1.063-1.498 1.405-3.23.366-4.996-.803-1.365-1.353-2.623-.42-3.832.613-.794 1.76-1.464 3.23-1.233.91.143 1.95.83 2.76 1.255.856.45 1.795.397 2.366-.68z" />
-          </svg>
-          <span className="text-sm font-medium text-white">
-            {t('auth.apple', 'Apple')}
-          </span>
-        </button>
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border-dark rounded-xl bg-background-dark hover:bg-border-dark transition-colors opacity-50 cursor-not-allowed"
+            aria-disabled="true"
+            title={t('auth.appleComingSoon', 'Apple sign-in coming soon')}
+          >
+            <svg aria-hidden="true" className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13.064 3.245c.083 1.838-1.077 3.515-2.22 4.14-1.082.59-2.61.542-3.32-.437-.767-1.055-.386-3.058.74-4.22 1.05-1.085 3.033-1.127 4.8-.517zM12.986 6.94c2.256-.254 3.733 1.258 4.256 1.638 1.488-1.083 3.03-1.01 3.597-.733.204 1.144-.64 2.45-1.637 3.692-1.22 1.517-1.11 3.284.225 5.176 1.156 1.634.355 3.525-1.074 4.137-1.23.527-2.68.32-4.103-.23-1.378-.535-2.716-.475-4.102-.036-1.554.49-3.023.76-4.39-.023-1.572-.9-2.072-2.73-1.074-4.137 1.063-1.498 1.405-3.23.366-4.996-.803-1.365-1.353-2.623-.42-3.832.613-.794 1.76-1.464 3.23-1.233.91.143 1.95.83 2.76 1.255.856.45 1.795.397 2.366-.68z" />
+            </svg>
+            <span className="text-sm font-medium text-white">
+              {t('auth.apple', 'Apple')}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Divider */}

@@ -26,6 +26,8 @@ export const bookService = {
     if (filters?.genre) params.set('genre', filters.genre);
     if (filters?.language) params.set('language', filters.language);
     if (filters?.search) params.set('search', filters.search);
+    if (filters?.ordering) params.set('ordering', filters.ordering);
+    if (filters?.page_size) params.set('page_size', String(filters.page_size));
     const qs = params.toString();
     const url = qs ? `${API.books.list}?${qs}` : API.books.list;
     const { data } = await http.get<PaginatedBooks>(url);

@@ -14,12 +14,12 @@ export interface AuthSplitPanelProps {
   brandingTitle: ReactNode;
   /** Subtitle text for the branding panel */
   brandingSubtitle: string;
-  /** Testimonial quote */
-  quote: string;
+  /** Testimonial quote (optional — omit to hide testimonial card) */
+  quote?: string;
   /** Testimonial author name */
-  authorName: string;
+  authorName?: string;
   /** Testimonial author detail line */
-  authorDetails: string;
+  authorDetails?: string;
   /** Progress bar 0–100. Default 100. */
   progress?: number;
 }
@@ -63,26 +63,31 @@ export function AuthSplitPanel({
             </p>
           </div>
 
-          {/* Testimonial card */}
-          <div className="relative z-10 mt-12 md:mt-0">
-            <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
-              <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
-                ))}
-              </div>
-              <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
-                  {authorName ? authorName.charAt(0) + authorName.split(' ').slice(-1)[0]?.charAt(0) : 'AB'}
+          {quote && (
+            <div className="relative z-10 mt-12 md:mt-0">
+              <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
+                <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
+                  ))}
                 </div>
-                <div>
-                  <p className="font-bold text-sm text-white">{authorName}</p>
-                  <p className="text-xs text-text-secondary">{authorDetails}</p>
-                </div>
+                <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
+                {authorName && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
+                      {authorName.charAt(0) + (authorName.split(' ').slice(-1)[0]?.charAt(0) ?? '')}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-white">{authorName}</p>
+                      {authorDetails && (
+                        <p className="text-xs text-text-secondary">{authorDetails}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Form panel (right) ──────────────────────────────── */}

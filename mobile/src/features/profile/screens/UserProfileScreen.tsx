@@ -220,7 +220,7 @@ export function UserProfileScreen() {
           <StatItem
             icon={Star}
             value={
-              profile.avg_rating > 0
+              profile.avg_rating != null && profile.avg_rating > 0
                 ? Number(profile.avg_rating).toFixed(1)
                 : '—'
             }

@@ -38,6 +38,7 @@ const MOCK_PROFILE: UserProfile = {
   email_verified: true,
   profile_public: true,
   member_since: '2024-03-01T00:00:00Z',
+  deletion_requested_at: null,
 };
 
 const renderPage = () =>

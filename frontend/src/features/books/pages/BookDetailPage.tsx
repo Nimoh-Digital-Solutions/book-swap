@@ -8,6 +8,7 @@ import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import type { BrowseBook } from '@features/discovery';
 import { SwapFlowModal } from '@features/discovery';
+import { useIsBlocked } from '@features/trust-safety';
 import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
@@ -48,6 +49,7 @@ export function BookDetailPage(): ReactElement {
   const { data: book, isLoading, isError } = useBook(id!);
   const addWishlist = useAddWishlistItem();
   const [swapModalOpen, setSwapModalOpen] = useState(false);
+  const isOwnerBlocked = useIsBlocked(book?.owner?.id ?? '');
 
   useDocumentTitle(book?.title ?? routeMetadata[PATHS.BOOK_DETAIL].title);
 
@@ -344,6 +346,12 @@ export function BookDetailPage(): ReactElement {
                 <Edit2 className="w-5 h-5" aria-hidden="true" />
                 {t('books.detail.editListing', 'Edit Listing')}
               </LocaleLink>
+            </div>
+          ) : isOwnerBlocked ? (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+              <p className="text-sm text-red-400">
+                {t('books.detail.blockedOwner', 'You have blocked this user. Swap actions are unavailable.')}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4">

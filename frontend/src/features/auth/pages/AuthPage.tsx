@@ -25,15 +25,11 @@ function pathToView(pathname: string): AuthView {
   return 'login';
 }
 
-// Per-view branding content for the split panel
 const BRANDING: Record<
   AuthView,
   {
     title: ReactElement;
     subtitle: string;
-    quote: string;
-    authorName: string;
-    authorDetails: string;
     progress: number;
   }
 > = {
@@ -44,12 +40,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
-    subtitle:
-      'Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam.',
-    quote:
-      "The quality of books I've found here is incredible. It feels like browsing a curated boutique, but everything is free to swap!",
-    authorName: 'Elena Rodriguez',
-    authorDetails: 'Member since 2022',
+    subtitle: 'Your next favorite story is waiting. Reconnect with fellow book lovers.',
     progress: 100,
   },
   register: {
@@ -59,12 +50,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
-    subtitle:
-      'Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam.',
-    quote:
-      "I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion.",
-    authorName: 'Sarah Jenkins',
-    authorDetails: 'Swapping since 2021',
+    subtitle: 'Trade stories, share recommendations, and build a sustainable reading culture.',
     progress: 50,
   },
   forgot: {
@@ -74,12 +60,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Password</span>
       </>
     ),
-    subtitle:
-      "No worries — it happens to the best of us. We'll help you get back to your books.",
-    quote:
-      'The support team got me back into my account in minutes. Fantastic community!',
-    authorName: 'David Park',
-    authorDetails: 'Member since 2023',
+    subtitle: "No worries — it happens to the best of us. We'll help you get back to your books.",
     progress: 100,
   },
 };
@@ -95,7 +76,7 @@ export function AuthPage() {
   const { city } = useUserCity();
   const citySubtitles: Partial<Record<AuthView, string>> = {
     login: `Your next favorite story is waiting. Reconnect with fellow book lovers in ${city}.`,
-    register: `Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in ${city}.`,
+    register: `Trade stories, share recommendations, and build a sustainable reading culture in ${city}.`,
   };
 
   useDocumentTitle(
@@ -172,9 +153,6 @@ export function AuthPage() {
       view={view}
       brandingTitle={branding.title}
       brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
-      quote={branding.quote}
-      authorName={branding.authorName}
-      authorDetails={branding.authorDetails}
       progress={branding.progress}
       formContent={
         <AnimatePresence mode="wait" custom={directionRef.current}>

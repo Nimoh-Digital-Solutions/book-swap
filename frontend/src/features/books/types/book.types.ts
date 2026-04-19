@@ -177,4 +177,6 @@ export interface BookListFilters {
   genre?: string;
   language?: BookLanguage;
   search?: string;
+  ordering?: string;
+  page_size?: number;
 }

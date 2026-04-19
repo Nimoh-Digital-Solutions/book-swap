@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { ArrowRightLeft, BookOpen } from 'lucide-react';
 
 import type { ExchangeListItem } from '../../types/exchange.types';
@@ -28,7 +28,7 @@ export function ExchangeCard({ exchange }: ExchangeCardProps): ReactElement {
   const offeredPhoto = exchange.offered_book.primary_photo ?? exchange.offered_book.cover_url;
 
   return (
-    <Link
+    <LocaleLink
       to={`/exchanges/${exchange.id}`}
       className="block bg-[#1A251D] rounded-xl border border-[#28382D] p-4 hover:border-[#E4B643]/40 transition-colors"
     >
@@ -52,6 +52,6 @@ export function ExchangeCard({ exchange }: ExchangeCardProps): ReactElement {
           </p>
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

@@ -49,6 +49,7 @@ export interface UserProfile {
   email_verified: boolean;
   member_since: string;
   profile_public: boolean;
+  deletion_requested_at: string | null;
 }
 
 /**

@@ -45,6 +45,7 @@ class UserPrivateSerializer(serializers.ModelSerializer):
             "email_verified",
             "member_since",
             "profile_public",
+            "deletion_requested_at",
         )
         read_only_fields = (
             "id",
@@ -57,6 +58,7 @@ class UserPrivateSerializer(serializers.ModelSerializer):
             "onboarding_completed",
             "email_verified",
             "member_since",
+            "deletion_requested_at",
         )
 
     def get_location(self, obj) -> dict | None:

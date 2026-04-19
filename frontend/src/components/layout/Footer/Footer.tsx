@@ -13,7 +13,7 @@ export const Footer = ({ className }: { className?: string | undefined }): React
       className={`border-t border-[#28382D] py-8 text-center text-[#5A6A60] text-sm font-medium ${className ?? ''}`}
     >
       <p>
-        &copy; {currentYear} {t('app.name', 'BookSwap')} Amsterdam.{' '}
+        &copy; {currentYear} {t('app.name', 'BookSwap')}.{' '}
         {t('footer.tagline', 'Built for readers.')}
       </p>
       <nav className="mt-3 flex justify-center gap-4" aria-label={t('footer.legal', 'Legal')}>

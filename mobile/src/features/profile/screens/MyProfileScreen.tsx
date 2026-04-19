@@ -127,7 +127,7 @@ export function MyProfileScreen() {
           <View style={[s.statDivider, { backgroundColor: cardBorder }]} />
           <StatItem
             icon={Star}
-            value={user.avg_rating > 0 ? user.avg_rating.toFixed(1) : '—'}
+            value={user.avg_rating != null && Number(user.avg_rating) > 0 ? Number(user.avg_rating).toFixed(1) : '—'}
             label={t('profile.rating', 'Rating')}
           />
           <View style={[s.statDivider, { backgroundColor: cardBorder }]} />

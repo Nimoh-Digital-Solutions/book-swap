@@ -13,6 +13,7 @@
 
 export type ExchangeStatus =
   | 'pending'
+  | 'counter_proposed'
   | 'accepted'
   | 'conditions_pending'
   | 'active'

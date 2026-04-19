@@ -1,94 +1,60 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
 
 import HeroBackground from '@assets/hero-image.png';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
+import { BookCard, useBooks } from '@features/books';
 import type { ActivityFeedItem } from '@features/discovery';
 import { useCommunityStats, useNearbyCount } from '@features/discovery';
 import { useDocumentTitle, useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   ArrowLeftRight,
   BookOpen,
-  Clock,
   Search,
   Star,
 } from 'lucide-react';
 
 const DEFAULT_RADIUS = 10000; // 10 km
 
-const POPULAR_TAGS = ['Sci-Fi', 'Dutch Literature', 'Cookbooks', 'Biographies'];
-
-const BOOKS = [
-  {
-    title: 'The Midnight Library',
-    author: 'Matt Haig',
-    genre: 'Fantasy',
-    time: '5h 20m',
-    available: true,
-    owner: { initial: 'S', name: 'Sarah J.' },
-    cover: 'bg-gradient-to-b from-[#1A2B4C] to-[#0D1526]',
-  },
-  {
-    title: 'Cloud Cuckoo Land',
-    author: 'Anthony Doerr',
-    genre: 'Hist. Fiction',
-    time: '12h 15m',
-    available: false,
-    owner: { initial: 'M', name: 'Mark T.' },
-    cover: 'bg-gradient-to-b from-[#7FB5D5] to-[#A3CBE3]',
-  },
-  {
-    title: 'The Seven Husbands...',
-    author: 'Taylor Jenkins Reid',
-    genre: 'Romance',
-    time: '8h 45m',
-    available: false,
-    owner: { initial: 'E', name: 'Elena R.' },
-    cover: 'bg-[#1E4D4F]',
-  },
-  {
-    title: 'Project Hail Mary',
-    author: 'Andy Weir',
-    genre: 'Sci-Fi',
-    time: '10h 30m',
-    available: false,
-    owner: { initial: 'D', name: 'David K.' },
-    cover: 'bg-gradient-to-b from-[#0F2B2F] to-[#0A1A1C]',
-  },
-];
-
-const STEPS = [
-  {
-    icon: BookOpen,
-    title: 'List Your Books',
-    description:
-      "Scan your book's barcode or type the title. We'll automatically fetch the details and cover art for you.",
-  },
-  {
-    icon: Search,
-    title: 'Find & Request',
-    description:
-      'Browse the local map for books nearby. Request a swap or offer a credit for titles you love.',
-  },
-  {
-    icon: ArrowLeftRight,
-    title: 'Swap Locally',
-    description:
-      'Meet up at a safe, public spot or use one of our verified BookDrop locations in the city.',
-  },
-];
+const STEP_ICONS = [BookOpen, Search, ArrowLeftRight];
+const STEP_KEYS = ['list', 'find', 'swap'] as const;
 
 const HomePage = (): ReactElement => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { city, lat, lng, loading: cityLoading } = useUserCity();
+  const { data: recentBooks, isLoading: recentBooksLoading } = useBooks(
+    { page_size: 4, ordering: '-created_at' },
+  );
 
   useDocumentTitle(routeMetadata[PATHS.HOME].title);
 
   const { data: nearbyData } = useNearbyCount(lat, lng, DEFAULT_RADIUS);
   const { data: communityData } = useCommunityStats(lat, lng, DEFAULT_RADIUS);
+
+  const popularTags = [
+    t('home.tags.sciFi', 'Sci-Fi'),
+    t('home.tags.dutchLit', 'Dutch Literature'),
+    t('home.tags.cookbooks', 'Cookbooks'),
+    t('home.tags.biographies', 'Biographies'),
+  ];
+
+  const steps = STEP_KEYS.map((key, i) => ({
+    icon: STEP_ICONS[i]!,
+    title: t(`home.howItWorks.steps.${key}.title`, {
+      list: 'List Your Books',
+      find: 'Find & Request',
+      swap: 'Swap Locally',
+    }[key]),
+    description: t(`home.howItWorks.steps.${key}.description`, {
+      list: "Scan your book's barcode or type the title. We'll automatically fetch the details and cover art for you.",
+      find: 'Browse the local map for books nearby. Request a swap or offer a credit for titles you love.',
+      swap: 'Meet up at a safe, public spot or use one of our verified BookDrop locations in the city.',
+    }[key]),
+  }));
 
   const handleSearch = (term: string) => {
     const q = term.trim();
@@ -168,7 +134,7 @@ const HomePage = (): ReactElement => {
             <span className="text-[#5A6A60] font-medium mr-2">
               {t('home.hero.popularNow', 'Popular now:')}
             </span>
-            {POPULAR_TAGS.map((tag) => (
+            {popularTags.map((tag) => (
               <button
                 key={tag}
                 type="button"
@@ -193,66 +159,31 @@ const HomePage = (): ReactElement => {
               {t('home.recentlyAdded.subtitle', 'Fresh arrivals from the community library.')}
             </p>
           </div>
-          <Link
+          <LocaleLink
             to={PATHS.CATALOGUE}
             className="text-[#E4B643] font-semibold text-sm hover:text-white transition-colors flex items-center gap-1 no-underline"
           >
-            {t('home.recentlyAdded.viewAll', 'View all books')}{' '}
-            {/* <ArrowRight className="w-4 h-4" /> */}
-          </Link>
+            {t('home.recentlyAdded.viewAll', 'View all books')}
+          </LocaleLink>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {BOOKS.map((book) => (
-            <div
-              key={book.title}
-              className="bg-[#1A251D] rounded-2xl p-4 border border-[#28382D] group hover:border-[#E4B643]/30 transition-colors"
-            >
-              <div className="bg-[#E8ECE9] rounded-xl p-4 flex justify-center items-center mb-4 h-64 relative">
-                {book.available && (
-                  <div className="absolute top-3 right-3 bg-[#E4B643] text-[#152018] text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10">
-                    {t('home.book.available', 'Available')}
-                  </div>
-                )}
+          {recentBooksLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
                 <div
-                  className={`w-36 h-52 shadow-xl rounded-sm overflow-hidden ${book.cover} flex flex-col items-center justify-center p-4 text-center border-l-4 border-white/20`}
+                  key={i}
+                  className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
                 >
-                  <h3 className="text-white/90 font-serif text-sm tracking-widest uppercase mb-1">
-                    {book.title}
-                  </h3>
-                  <p className="text-white/50 text-[8px] uppercase tracking-widest">
-                    {book.author}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[#E4B643] text-[10px] font-bold uppercase tracking-wider">
-                  {book.genre}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-[#5A6A60]">
-                  <Clock className="w-3 h-3" /> {book.time}
-                </span>
-              </div>
-              <h3 className="text-white font-bold text-lg leading-tight mb-1">
-                {book.title}
-              </h3>
-              <p className="text-sm text-[#8C9C92] mb-4">{book.author}</p>
-              <div className="flex items-center justify-between pt-4 border-t border-[#28382D]">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
-                    {book.owner.initial}
+                  <div className="aspect-[3/4] bg-[#152018]" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-[#28382D] rounded w-3/4" />
+                    <div className="h-3 bg-[#28382D] rounded w-1/2" />
                   </div>
-                  <span className="text-xs text-white">{book.owner.name}</span>
                 </div>
-                <button
-                  className="text-[#E4B643] hover:text-white transition-colors"
-                  aria-label={t('home.book.swap', 'Swap {{title}}', { title: book.title })}
-                >
-                  <ArrowLeftRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+              ))
+            : (recentBooks?.results ?? []).map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
         </div>
       </section>
 
@@ -281,7 +212,7 @@ const HomePage = (): ReactElement => {
                 aria-hidden="true"
               />
               <div className="space-y-8">
-                {STEPS.map((step, i) => (
+                {steps.map((step, i) => (
                   <div key={step.title} className="flex gap-6 relative">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#152018] border border-[#E4B643] text-[#E4B643] flex items-center justify-center font-bold text-sm z-10">
                       {i + 1}
@@ -312,7 +243,7 @@ const HomePage = (): ReactElement => {
                   {t('home.community.label', 'Live Community')}
                 </span>
                 <h3 className="text-3xl font-extrabold text-white">
-                  {t('home.community.title', 'Connect with Amsterdam')}
+                  {t('home.community.title', 'Connect with {{city}}', { city })}
                 </h3>
               </div>
 
@@ -393,17 +324,18 @@ const HomePage = (): ReactElement => {
             <p className="text-[#152018]/80 text-lg font-medium">
               {t(
                 'home.cta.subtitle',
-                'Join 15,000+ book lovers in Amsterdam and start trading today.',
+                'Join book lovers in {{city}} and start trading today.',
+                { city },
               )}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <Link
+            <LocaleLink
               to={PATHS.REGISTER}
               className="bg-[#152018] hover:bg-black text-white px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center no-underline"
             >
               {t('home.cta.createAccount', 'Create Free Account')}
-            </Link>
+            </LocaleLink>
             <a
               href="#how-it-works"
               className="bg-transparent border border-[#152018]/30 text-[#152018] hover:bg-[#152018]/10 px-8 py-4 rounded-full font-bold transition-colors whitespace-nowrap text-center no-underline"

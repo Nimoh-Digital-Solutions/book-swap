@@ -205,10 +205,14 @@ export const routes: RouteObject[] = [
             index: true,
             element: <LazyPage component={HomePage} />,
           },
-          {
-            path: rel(PATHS.COMPONENTS_DEMO),
-            element: <LazyPage component={ComponentsDemoPage} />,
-          },
+          ...(import.meta.env.DEV
+            ? [
+                {
+                  path: rel(PATHS.COMPONENTS_DEMO),
+                  element: <LazyPage component={ComponentsDemoPage} />,
+                },
+              ]
+            : []),
           {
             path: rel(PATHS.CATALOGUE),
             element: <LazyPage component={BrowsePage} />,
