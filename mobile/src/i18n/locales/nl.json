@@ -222,6 +222,11 @@
     "statusUnavailable": "Niet beschikbaar",
     "markUnavailableA11y": "Markeer als niet beschikbaar",
     "markAvailableA11y": "Markeer als beschikbaar",
+    "status": {
+      "available": "Beschikbaar",
+      "in_exchange": "In ruil",
+      "returned": "Teruggebracht"
+    },
     "filter": {
       "all": "Alle",
       "available": "Beschikbaar",

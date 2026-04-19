@@ -274,11 +274,13 @@
       "addError": "Toevoegen aan verlanglijst mislukt.",
       "removeError": "Verwijderen van verlanglijst mislukt."
     },
-    "card": {
-      "by": "door {{author}}",
+    "status": {
       "available": "Beschikbaar",
       "in_exchange": "In ruil",
       "returned": "Geretourneerd"
+    },
+    "card": {
+      "by": "door {{author}}"
     },
     "photo": {
       "uploadSuccess": "Foto geüpload.",

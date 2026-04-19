@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";
 
 import { radius, shadows, spacing } from "@/constants/theme";
@@ -16,6 +17,7 @@ export function BookCard({
   book: BrowseBook;
   onPress?: () => void;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const coverUri = book.cover_url || book.primary_photo;
@@ -59,7 +61,7 @@ export function BookCard({
           <View style={s.availRow}>
             <View style={[s.availDot, { backgroundColor: c.auth.golden }]} />
             <Text style={[s.availLabel, { color: c.text.secondary }]}>
-              Available
+              {t("books.status.available", "Available")}
             </Text>
           </View>
         )}
