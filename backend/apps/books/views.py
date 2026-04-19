@@ -399,11 +399,6 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
         return qs
 
     def list(self, request, *args, **kwargs):
-        if self._get_user_location() is None:
-            return Response(
-                {"detail": "Provide 'lat' and 'lng' query params or set your profile location first."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         return super().list(request, *args, **kwargs)
 
     @action(detail=False, methods=["get"], url_path="radius-counts")
