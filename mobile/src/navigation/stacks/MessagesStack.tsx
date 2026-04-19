@@ -38,7 +38,7 @@ export function MessagesStack() {
       <Stack.Screen
         name="CounterOffer"
         component={CounterOfferScreen}
-        options={{ ...child, headerTitle: 'Counter Offer' }}
+        options={{ ...child, headerTitle: t('navigation.counterOffer', 'Counter Offer') }}
       />
       <Stack.Screen
         name="Chat"
@@ -48,12 +48,12 @@ export function MessagesStack() {
       <Stack.Screen
         name="UserProfile"
         component={UserProfileScreen}
-        options={{ ...child, headerTitle: 'Profile' }}
+        options={{ ...child, headerTitle: t('navigation.profile', 'Profile') }}
       />
       <Stack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{ ...child, headerTitle: 'Reviews' }}
+        options={{ ...child, headerTitle: t('navigation.reviews', 'Reviews') }}
       />
     </Stack.Navigator>
   );

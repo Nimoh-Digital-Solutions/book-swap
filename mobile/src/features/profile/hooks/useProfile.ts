@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { showErrorToast } from '@/components/Toast';
 import { useAuthStore } from '@/stores/authStore';
 import type { User } from '@/types';
 
@@ -70,6 +71,7 @@ export function useUpdateProfile() {
     onSuccess: (user) => {
       setUser(user);
     },
+    onError: () => showErrorToast('Failed to update profile'),
   });
 }
 

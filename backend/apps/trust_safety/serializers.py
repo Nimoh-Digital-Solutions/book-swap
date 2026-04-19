@@ -65,20 +65,34 @@ class ReportCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         from apps.books.models import Book
 
+        user = self.context["request"].user
+        reported_user_id = validated_data["reported_user_id"]
         book = None
         exchange = None
         book_id = validated_data.pop("reported_book_id", None)
         exchange_id = validated_data.pop("reported_exchange_id", None)
+
         if book_id:
-            book = Book.objects.filter(pk=book_id).first()
+            book = Book.objects.filter(pk=book_id, owner_id=reported_user_id).first()
+            if not book:
+                raise serializers.ValidationError(
+                    {"reported_book_id": "Book does not belong to the reported user."}
+                )
+
         if exchange_id:
             from apps.exchanges.models import ExchangeRequest
 
             exchange = ExchangeRequest.objects.filter(pk=exchange_id).first()
+            if exchange:
+                participants = {exchange.requester_id, exchange.owner_id}
+                if user.pk not in participants or reported_user_id not in participants:
+                    raise serializers.ValidationError(
+                        {"reported_exchange_id": "You and the reported user must both be participants in this exchange."}
+                    )
 
         return Report.objects.create(
-            reporter=self.context["request"].user,
-            reported_user_id=validated_data["reported_user_id"],
+            reporter=user,
+            reported_user_id=reported_user_id,
             reported_book=book,
             reported_exchange=exchange,
             category=validated_data["category"],

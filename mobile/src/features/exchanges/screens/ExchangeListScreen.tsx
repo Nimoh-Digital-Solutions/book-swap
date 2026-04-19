@@ -64,7 +64,7 @@ export function ExchangeListScreen() {
   const currentUserId = useAuthStore((st) => st.user?.id);
 
   useExchangeWsRefresh();
-  const { data: exchanges, isLoading, isError, refetch } = useExchanges();
+  const { data: exchanges, isLoading, isError, isRefetching, refetch } = useExchanges();
   const { data: incomingCount } = useIncomingCount();
   const [activeTab, setActiveTab] = useState<Tab>('chats');
 
@@ -142,8 +142,8 @@ export function ExchangeListScreen() {
     if (activeTab === 'history') {
       return {
         icon: BookOpen,
-        title: t('exchanges.noExchanges', 'No exchanges yet'),
-        subtitle: t('exchanges.noHistory', 'Your completed exchanges will appear here.'),
+        title: t('exchanges.noHistory', 'No exchange history'),
+        subtitle: t('exchanges.noHistorySub', 'Your completed exchanges will appear here.'),
       };
     }
     return {
@@ -241,6 +241,8 @@ export function ExchangeListScreen() {
           renderItem={renderItem}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
+          onRefresh={refetch}
+          refreshing={isRefetching}
           ListFooterComponent={<View style={{ height: 20 }} />}
         />
       )}

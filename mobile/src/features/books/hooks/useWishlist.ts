@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { showErrorToast } from '@/components/Toast';
 import type { WishlistItem, CreateWishlistPayload, PaginatedResponse } from '@/types';
 
 export const wishlistKeys = {
@@ -50,6 +51,7 @@ export function useAddWishlistItem() {
         queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.book) });
       }
     },
+    onError: () => showErrorToast('Failed to add to wishlist'),
   });
 }
 
@@ -66,5 +68,6 @@ export function useRemoveWishlistItem() {
         queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.bookId) });
       }
     },
+    onError: () => showErrorToast('Failed to remove from wishlist'),
   });
 }

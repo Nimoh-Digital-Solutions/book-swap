@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
+  AlertTriangle,
   Mail,
   UserPlus,
   UserCheck,
@@ -20,6 +21,7 @@ import {
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
+import { EmptyState } from '@/components/EmptyState';
 import type { NotificationPreferences } from '@/types';
 import {
   useNotificationPreferences,
@@ -90,7 +92,7 @@ export function NotificationPreferencesScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const { data: prefs, isLoading } = useNotificationPreferences();
+  const { data: prefs, isLoading, isError, refetch } = useNotificationPreferences();
   const patch = usePatchNotificationPreferences();
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
@@ -104,6 +106,20 @@ export function NotificationPreferencesScreen() {
     return (
       <View style={[s.root, s.center, { backgroundColor: bg }]}>
         <ActivityIndicator size="large" color={accent} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[s.root, s.center, { backgroundColor: bg }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.loadError', 'Something went wrong')}
+          subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
       </View>
     );
   }

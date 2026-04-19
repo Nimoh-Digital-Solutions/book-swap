@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { showErrorToast } from '@/components/Toast';
 import type { NotificationPreferences, PatchNotificationPreferences } from '@/types';
 
 const prefKeys = {
@@ -50,6 +51,7 @@ export function usePatchNotificationPreferences() {
           (context as { previous: NotificationPreferences }).previous,
         );
       }
+      showErrorToast('Failed to update preferences');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: prefKeys.all });

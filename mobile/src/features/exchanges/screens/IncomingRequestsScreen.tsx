@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { CheckCircle, Eye, Inbox, MessageSquare, XCircle } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle, Eye, Inbox, MessageSquare, XCircle } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -33,7 +33,7 @@ export function IncomingRequestsScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
 
-  const { data: requests, isLoading } = useIncomingRequests();
+  const { data: requests, isLoading, isError, refetch, isRefetching } = useIncomingRequests();
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
 
@@ -160,6 +160,8 @@ export function IncomingRequestsScreen() {
             </Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.viewDetail', 'View exchange details')}
             onPress={() => goToDetail(item.id)}
             style={({ pressed }) => [s.actionBtn, s.viewBtn, { borderColor: cardBorder, opacity: pressed ? 0.9 : 1 }]}
           >
@@ -170,6 +172,20 @@ export function IncomingRequestsScreen() {
     ),
     [c, isDark, cardBg, cardBorder, accent, handleAccept, handleDecline, goToDetail, t],
   );
+
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: 'center' }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.loadError', 'Something went wrong')}
+          subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
@@ -191,6 +207,8 @@ export function IncomingRequestsScreen() {
           renderItem={renderItem}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
+          onRefresh={refetch}
+          refreshing={isRefetching}
           ListFooterComponent={<View style={{ height: 20 }} />}
         />
       )}

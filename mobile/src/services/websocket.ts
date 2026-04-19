@@ -1,4 +1,5 @@
 import { AppState, type AppStateStatus } from 'react-native';
+import axios from 'axios';
 import { tokenStorage } from '@/lib/storage';
 import { addBreadcrumb } from '@/lib/sentry';
 import { env } from '@/configs/env';
@@ -101,7 +102,8 @@ class WebSocketManager {
         }
 
         if (type === 'auth.failed' || type === 'auth.required') {
-          addBreadcrumb('websocket', 'auth failed', { reason: (data as any).reason });
+          addBreadcrumb('websocket', 'auth failed — attempting token refresh', { reason: (data as any).reason });
+          this.attemptTokenRefreshAndReconnect();
           return;
         }
 
@@ -127,6 +129,29 @@ class WebSocketManager {
     const token = tokenStorage.getAccess();
     if (token && this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'authenticate', token }));
+    }
+  }
+
+  private refreshingToken = false;
+
+  private async attemptTokenRefreshAndReconnect() {
+    if (this.refreshingToken) return;
+    this.refreshingToken = true;
+    try {
+      const refresh = tokenStorage.getRefresh();
+      if (!refresh) return;
+      const { data } = await axios.post(`${env.apiUrl}/auth/token/refresh/`, { refresh }, {
+        headers: { 'X-Client-Type': 'mobile' },
+      });
+      const newAccess = data.access as string;
+      const newRefresh = (data.refresh as string) || refresh;
+      tokenStorage.setTokens(newAccess, newRefresh);
+      addBreadcrumb('websocket', 'token refreshed — reconnecting', {});
+      this.reconnectWithNewToken();
+    } catch {
+      addBreadcrumb('websocket', 'token refresh failed — giving up', {});
+    } finally {
+      this.refreshingToken = false;
     }
   }
 

@@ -19,7 +19,7 @@ export function BrowseStack() {
 
   const browseOptions = {
     ...shared,
-    headerTitle: 'Browse',
+    headerTitle: t('navigation.browse', 'Browse'),
     headerLeft: () => <HeaderHomeButton />,
     headerRight: () => <NotificationBell />,
   };
@@ -38,8 +38,8 @@ export function BrowseStack() {
         component={RequestSwapScreen}
         options={{ ...child, headerTitle: t('navigation.requestSwap', 'Request Swap') }}
       />
-      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: 'Profile' }} />
-      <Stack.Screen name="UserReviews" component={UserReviewsScreen} options={{ ...child, headerTitle: 'Reviews' }} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: t('navigation.profile', 'Profile') }} />
+      <Stack.Screen name="UserReviews" component={UserReviewsScreen} options={{ ...child, headerTitle: t('navigation.reviews', 'Reviews') }} />
     </Stack.Navigator>
   );
 }

@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import {
+  AlertTriangle,
   BookOpen,
   ChevronRight,
   Plus,
@@ -49,7 +50,7 @@ export function MyBooksScreen() {
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
-  const { data: books, isLoading, isRefetching, refetch } = useMyBooks();
+  const { data: books, isLoading, isError, isRefetching, refetch } = useMyBooks();
   const { requireVerified } = useEmailVerificationGate();
   const deleteBook = useDeleteBook();
 
@@ -363,6 +364,20 @@ export function MyBooksScreen() {
           <SkeletonCard />
           <SkeletonCard />
         </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: "center" }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t("common.loadError", "Something went wrong")}
+          subtitle={t("common.loadErrorHint", "Check your connection and try again.")}
+          actionLabel={t("common.retry", "Retry")}
+          onAction={() => refetch()}
+        />
       </View>
     );
   }

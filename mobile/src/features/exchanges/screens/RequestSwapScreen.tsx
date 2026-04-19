@@ -4,7 +4,7 @@ import {
   type RouteProp,
 } from "@react-navigation/native";
 import { Image } from "expo-image";
-import { BookOpen, Check, MessageSquare, Send } from "lucide-react-native";
+import { AlertTriangle, BookOpen, Check, MessageSquare, Send } from "lucide-react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -39,7 +39,7 @@ export function RequestSwapScreen() {
   const navigation = useNavigation();
   const { params } = useRoute<Route>();
 
-  const { data: myBooks, isLoading: loadingBooks } = useMyBooks();
+  const { data: myBooks, isLoading: loadingBooks, isError: booksError, refetch: refetchBooks } = useMyBooks();
   const createExchange = useCreateExchange();
 
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -101,6 +101,9 @@ export function RequestSwapScreen() {
 
     return (
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('exchanges.selectBookA11y', '{{title}} by {{author}}', { title: item.title, author: item.author })}
+        accessibilityState={{ selected: isSelected }}
         onPress={() => setSelectedBookId(item.id)}
         style={({ pressed }) => [
           s.gridCard,
@@ -197,6 +200,9 @@ export function RequestSwapScreen() {
         />
       </View>
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("exchanges.sendRequest", "Send Swap Request")}
+        accessibilityState={{ disabled: !selectedBookId || createExchange.isPending }}
         onPress={handleSubmit}
         disabled={!selectedBookId || createExchange.isPending}
         style={({ pressed }) => [
@@ -220,6 +226,20 @@ export function RequestSwapScreen() {
       </Pressable>
     </View>
   );
+
+  if (booksError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: 'center' }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.loadError', 'Something went wrong')}
+          subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetchBooks()}
+        />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView

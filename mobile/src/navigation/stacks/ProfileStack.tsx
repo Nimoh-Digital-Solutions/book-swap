@@ -28,13 +28,13 @@ export function ProfileStack() {
 
   return (
     <Stack.Navigator>
-      <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ ...profile, headerTitle: 'Profile' }} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ ...child, headerTitle: 'Edit profile' }} />
-      <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ ...child, headerTitle: 'My books' }} />
+      <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ ...profile, headerTitle: t('navigation.profile', 'Profile') }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ ...child, headerTitle: t('navigation.editProfile', 'Edit profile') }} />
+      <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ ...child, headerTitle: t('navigation.myBooks', 'My books') }} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
-      <Stack.Screen name="AddBook" component={AddBookScreen} options={{ ...child, headerTitle: 'Add book' }} />
-      <Stack.Screen name="EditBook" component={EditBookScreen} options={{ ...child, headerTitle: 'Edit book' }} />
-      <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ ...child, headerTitle: 'Wishlist' }} />
+      <Stack.Screen name="AddBook" component={AddBookScreen} options={{ ...child, headerTitle: t('navigation.addBook', 'Add book') }} />
+      <Stack.Screen name="EditBook" component={EditBookScreen} options={{ ...child, headerTitle: t('navigation.editBook', 'Edit book') }} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ ...child, headerTitle: t('navigation.wishlist', 'Wishlist') }} />
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
@@ -53,27 +53,27 @@ export function ProfileStack() {
       <Stack.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}
-        options={{ ...child, headerTitle: 'Change Password' }}
+        options={{ ...child, headerTitle: t('navigation.changePassword', 'Change Password') }}
       />
       <Stack.Screen
         name="MyReviews"
         component={MyReviewsScreen}
-        options={{ ...child, headerTitle: 'Reviews' }}
+        options={{ ...child, headerTitle: t('navigation.reviews', 'Reviews') }}
       />
       <Stack.Screen
         name="Appearance"
         component={AppearanceScreen}
-        options={{ ...child, headerTitle: 'Appearance' }}
+        options={{ ...child, headerTitle: t('navigation.appearance', 'Appearance') }}
       />
       <Stack.Screen
         name="Language"
         component={LanguageScreen}
-        options={{ ...child, headerTitle: 'Language' }}
+        options={{ ...child, headerTitle: t('navigation.language', 'Language') }}
       />
       <Stack.Screen
         name="About"
         component={AboutScreen}
-        options={{ ...child, headerTitle: 'About' }}
+        options={{ ...child, headerTitle: t('navigation.about', 'About') }}
       />
     </Stack.Navigator>
   );

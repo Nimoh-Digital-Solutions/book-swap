@@ -416,9 +416,9 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 
 class NearbyCountView(APIView):
-    """GET /books/nearby-count/ — public book count for landing page."""
+    """GET /books/nearby-count/ — book count for authenticated users."""
 
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     @extend_schema(
         summary="Count nearby books",
@@ -476,7 +476,7 @@ class NearbyCountView(APIView):
 class CommunityStatsView(APIView):
     """GET /books/community-stats/ — weekly swap count + recent activity feed."""
 
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     @extend_schema(
         summary="Community stats and activity feed",

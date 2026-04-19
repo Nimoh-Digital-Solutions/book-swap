@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Heart, Plus, Trash2 } from 'lucide-react-native';
+import { AlertTriangle, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -37,7 +37,11 @@ function WishlistCard({
   const coverBg = COVER_COLORS[item.id.charCodeAt(0) % COVER_COLORS.length];
 
   return (
-    <View style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+    <View
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title || 'Untitled'}${item.author ? `, ${item.author}` : ''}`}
+      style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
+    >
       <View style={[s.coverWrap, { backgroundColor: coverBg }]}>
         {item.cover_url ? (
           <Image
@@ -95,7 +99,7 @@ export function WishlistScreen() {
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const accent = c.auth.golden;
 
-  const { data, isLoading, refetch, isRefetching } = useWishlist();
+  const { data, isLoading, isError, refetch, isRefetching } = useWishlist();
   const removeItem = useRemoveWishlistItem();
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -140,6 +144,20 @@ export function WishlistScreen() {
     );
   }
 
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: 'center' }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.loadError', 'Something went wrong')}
+          subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
       {items.length === 0 ? (
@@ -165,6 +183,8 @@ export function WishlistScreen() {
 
       {/* ── FAB ── */}
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('books.wishlist.addA11y', 'Add to wishlist')}
         onPress={() => setSheetOpen(true)}
         style={({ pressed }) => [
           s.fab,

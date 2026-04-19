@@ -1,6 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { BookOpen, Check, RefreshCw } from 'lucide-react-native';
+import { AlertTriangle, BookOpen, Check, RefreshCw } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -32,7 +32,7 @@ export function CounterOfferScreen() {
   const navigation = useNavigation();
   const { params } = useRoute<Route>();
 
-  const { data: requesterBooks, isLoading } = useUserBooks(params.requesterId);
+  const { data: requesterBooks, isLoading, isError, refetch } = useUserBooks(params.requesterId);
   const counterMutation = useCounterExchange();
 
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -83,6 +83,9 @@ export function CounterOfferScreen() {
 
     return (
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('exchanges.selectBookA11y', '{{title}} by {{author}}', { title: item.title, author: item.author })}
+        accessibilityState={{ selected: isSelected }}
         onPress={() => setSelectedBookId(item.id)}
         style={({ pressed }) => [
           s.gridCard,
@@ -169,6 +172,20 @@ export function CounterOfferScreen() {
       </Pressable>
     </View>
   );
+
+  if (isError) {
+    return (
+      <View style={[s.root, { backgroundColor: bg, justifyContent: 'center' }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t('common.loadError', 'Something went wrong')}
+          subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+          actionLabel={t('common.retry', 'Retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>

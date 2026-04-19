@@ -16,7 +16,11 @@
     "permissionDenied": "Toestemming geweigerd",
     "remove": "Verwijderen",
     "saving": "Opslaan...",
-    "ok": "OK"
+    "ok": "OK",
+    "close": "Sluiten"
+  },
+  "errors": {
+    "websocketExhausted": "Kan niet opnieuw verbinden. Trek om te vernieuwen of heropen de app."
   },
   "navigation": {
     "openProfile": "Profiel openen",
@@ -29,7 +33,22 @@
     "incomingRequests": "Ontvangen verzoeken",
     "settings": "Instellingen",
     "blockedUsers": "Geblokkeerde gebruikers",
-    "editBook": "Boek bewerken"
+    "editBook": "Boek bewerken",
+    "profile": "Profiel",
+    "editProfile": "Profiel bewerken",
+    "myBooks": "Mijn boeken",
+    "addBook": "Boek toevoegen",
+    "wishlist": "Verlanglijst",
+    "changePassword": "Wachtwoord wijzigen",
+    "reviews": "Beoordelingen",
+    "appearance": "Weergave",
+    "language": "Taal",
+    "about": "Over",
+    "browse": "Verkennen",
+    "scan": "Scannen",
+    "searchBooks": "Boeken zoeken",
+    "bookFound": "Boek gevonden",
+    "counterOffer": "Tegenaanbod"
   },
   "validation": {
     "required": "Verplicht",
@@ -246,11 +265,14 @@
       "removeTitle": "Verwijderen van verlanglijst",
       "removeMsg": "Dit boek verwijderen van je verlanglijst?",
       "titleLabel": "Titel",
-      "titlePlaceholder": "Vul de boektitel in"
+      "titlePlaceholder": "Vul de boektitel in",
+      "removeError": "Kan niet verwijderen van verlanglijst. Probeer opnieuw."
     }
   },
   "browse": {
     "noBooks": "Geen boeken gevonden in dit gebied",
+    "loadErrorTitle": "Kan kaartgegevens niet laden",
+    "loadErrorBody": "Controleer je verbinding en probeer opnieuw.",
     "tryDifferentFilters": "Pas je zoekopdracht of filters aan.",
     "noBooksNearby": "Nog geen boeken beschikbaar in dit gebied.",
     "searchPlaceholder": "Zoek boeken, auteurs...",
@@ -310,6 +332,7 @@
     "noBooks": "Geen boeken om aan te bieden",
     "noExchanges": "Nog geen ruilen",
     "noHistory": "Geen ruilgeschiedenis",
+    "noHistorySub": "Je afgeronde ruilen verschijnen hier.",
     "noIncoming": "Geen ontvangen verzoeken",
     "noIncomingSub": "Wanneer iemand je boek wil, verschijnt het hier",
     "noOtherBooks": "Geen andere boeken beschikbaar",
@@ -410,7 +433,10 @@
     "locationDeniedBannerTitle": "Locatie is uitgeschakeld",
     "locationDeniedBannerBody": "Schakel locatie in via Instellingen om boeken, aantallen en activiteit in de buurt te zien.",
     "openSettings": "Instellingen openen",
-    "queryError": "Sommige gegevens konden niet geladen worden. Tik om opnieuw te proberen."
+    "queryError": "Sommige gegevens konden niet geladen worden. Tik om opnieuw te proberen.",
+    "locationUnavailable": "—",
+    "locationDeniedRecentTitle": "Schakel locatie in om boeken in de buurt te zien",
+    "locationDeniedRecentBody": "We gebruiken je geschatte locatie om recente aanbiedingen en activiteit te tonen."
   },
   "messaging": {
     "connected": "Verbonden",
@@ -427,12 +453,17 @@
     "suggestMeetup": "Ontmoeting voorstellen",
     "typing": "aan het typen...",
     "attachImage": "Afbeelding bijvoegen",
-    "meetupProposal": "Ontmoetingsvoorstel"
+    "meetupProposal": "Ontmoetingsvoorstel",
+    "loadFailedTitle": "Kan berichten niet laden",
+    "loadFailedBody": "Controleer je verbinding en probeer opnieuw.",
+    "sendFailed": "Bericht kon niet worden verzonden. Probeer opnieuw."
   },
   "notifications": {
     "title": "Meldingen",
     "markAllRead": "Alles als gelezen markeren",
     "emptyTitle": "Nog geen meldingen",
+    "markReadError": "Kan melding niet bijwerken.",
+    "markAllReadError": "Kan niet alles als gelezen markeren.",
     "pref": {
       "title": "Meldingsvoorkeuren",
       "description": "Kies welke e-mailmeldingen je wilt ontvangen. Je kunt dit altijd aanpassen.",
@@ -533,7 +564,9 @@
     "submitButton": "Beoordeling versturen",
     "submitFailed": "Versturen mislukt. Probeer het opnieuw.",
     "submitted": "Beoordeling verstuurd",
-    "thankYou": "Bedankt voor je feedback!"
+    "thankYou": "Bedankt voor je feedback!",
+    "loadFailed": "Kan beoordelingsstatus niet laden.",
+    "retry": "Opnieuw proberen"
   },
   "scanner": {
     "addManually": "Handmatig toevoegen",
@@ -585,7 +618,8 @@
     "emptySubtitle": "Geblokkeerde gebruikers kunnen je boeken niet zien en geen contact met je opnemen.",
     "unblock": "Deblokkeren",
     "unblockTitle": "Gebruiker deblokkeren",
-    "unblockMessage": "Ze kunnen je boeken weer zien en je ruilverzoeken sturen."
+    "unblockMessage": "Ze kunnen je boeken weer zien en je ruilverzoeken sturen.",
+    "unblockFailed": "Kan gebruiker niet deblokkeren. Probeer opnieuw."
   },
   "report": {
     "button": "Melden",

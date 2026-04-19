@@ -16,7 +16,11 @@
     "permissionDenied": "Permission refusée",
     "remove": "Retirer",
     "saving": "Enregistrement...",
-    "ok": "OK"
+    "ok": "OK",
+    "close": "Fermer"
+  },
+  "errors": {
+    "websocketExhausted": "Impossible de se reconnecter. Tirez pour rafraîchir ou rouvrez l'application."
   },
   "navigation": {
     "openProfile": "Ouvrir le profil",
@@ -29,7 +33,22 @@
     "incomingRequests": "Demandes reçues",
     "settings": "Paramètres",
     "blockedUsers": "Utilisateurs bloqués",
-    "editBook": "Modifier le livre"
+    "editBook": "Modifier le livre",
+    "profile": "Profil",
+    "editProfile": "Modifier le profil",
+    "myBooks": "Mes livres",
+    "addBook": "Ajouter un livre",
+    "wishlist": "Liste de souhaits",
+    "changePassword": "Changer le mot de passe",
+    "reviews": "Avis",
+    "appearance": "Apparence",
+    "language": "Langue",
+    "about": "À propos",
+    "browse": "Parcourir",
+    "scan": "Scanner",
+    "searchBooks": "Rechercher des livres",
+    "bookFound": "Livre trouvé",
+    "counterOffer": "Contre-offre"
   },
   "validation": {
     "required": "Obligatoire",
@@ -246,11 +265,14 @@
       "removeTitle": "Retirer de la liste de souhaits",
       "removeMsg": "Retirer ce livre de votre liste de souhaits ?",
       "titleLabel": "Titre",
-      "titlePlaceholder": "Saisissez le titre du livre"
+      "titlePlaceholder": "Saisissez le titre du livre",
+      "removeError": "Impossible de retirer de la liste. Réessayez."
     }
   },
   "browse": {
     "noBooks": "Aucun livre trouvé dans cette zone",
+    "loadErrorTitle": "Impossible de charger les données de la carte",
+    "loadErrorBody": "Vérifiez votre connexion et réessayez.",
     "tryDifferentFilters": "Modifiez votre recherche ou vos filtres.",
     "noBooksNearby": "Aucun livre disponible dans cette zone pour le moment.",
     "searchPlaceholder": "Rechercher des livres, des auteurs...",
@@ -310,6 +332,7 @@
     "noBooks": "Aucun livre à proposer",
     "noExchanges": "Aucun échange pour le moment",
     "noHistory": "Aucun historique d'échange",
+    "noHistorySub": "Vos échanges terminés apparaîtront ici.",
     "noIncoming": "Aucune demande reçue",
     "noIncomingSub": "Quand quelqu'un voudra votre livre, la demande apparaîtra ici",
     "noOtherBooks": "Aucun autre livre disponible",
@@ -410,7 +433,10 @@
     "locationDeniedBannerTitle": "La localisation est désactivée",
     "locationDeniedBannerBody": "Activez la localisation dans les Réglages pour voir les livres, les compteurs et l'activité à proximité.",
     "openSettings": "Ouvrir les réglages",
-    "queryError": "Impossible de charger certaines données. Appuyez pour réessayer."
+    "queryError": "Impossible de charger certaines données. Appuyez pour réessayer.",
+    "locationUnavailable": "—",
+    "locationDeniedRecentTitle": "Activez la localisation pour voir les livres à proximité",
+    "locationDeniedRecentBody": "Nous utilisons votre zone approximative pour afficher les annonces et l'activité récentes."
   },
   "messaging": {
     "connected": "Connecté",
@@ -427,12 +453,17 @@
     "suggestMeetup": "Suggérer un rendez-vous",
     "typing": "écrit...",
     "attachImage": "Joindre une image",
-    "meetupProposal": "Suggestion de lieu de rencontre"
+    "meetupProposal": "Suggestion de lieu de rencontre",
+    "loadFailedTitle": "Impossible de charger les messages",
+    "loadFailedBody": "Vérifiez votre connexion et réessayez.",
+    "sendFailed": "Le message n'a pas pu être envoyé. Réessayez."
   },
   "notifications": {
     "title": "Notifications",
     "markAllRead": "Tout marquer comme lu",
     "emptyTitle": "Pas encore de notifications",
+    "markReadError": "Impossible de mettre à jour la notification.",
+    "markAllReadError": "Impossible de tout marquer comme lu.",
     "pref": {
       "title": "Préférences de notification",
       "description": "Choisissez les e-mails que vous souhaitez recevoir. Vous pouvez modifier ces réglages à tout moment.",
@@ -533,7 +564,9 @@
     "submitButton": "Envoyer la note",
     "submitFailed": "Échec de l'envoi. Veuillez réessayer.",
     "submitted": "Note envoyée",
-    "thankYou": "Merci pour votre retour !"
+    "thankYou": "Merci pour votre retour !",
+    "loadFailed": "Impossible de charger le statut de la note.",
+    "retry": "Réessayer"
   },
   "scanner": {
     "addManually": "Ajouter manuellement",
@@ -585,7 +618,8 @@
     "emptySubtitle": "Les utilisateurs que vous bloquez ne verront pas vos livres et ne pourront pas vous contacter.",
     "unblock": "Débloquer",
     "unblockTitle": "Débloquer l'utilisateur",
-    "unblockMessage": "Il pourra à nouveau voir vos livres et vous envoyer des demandes d'échange."
+    "unblockMessage": "Il pourra à nouveau voir vos livres et vous envoyer des demandes d'échange.",
+    "unblockFailed": "Impossible de débloquer l'utilisateur. Réessayez."
   },
   "report": {
     "button": "Signaler",

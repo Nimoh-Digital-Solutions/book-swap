@@ -32,59 +32,59 @@
 
 ---
 
-## 3. MEDIUM (27)
+## 3. MEDIUM (27) — ALL RESOLVED
 
 ### Error handling
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| M-01 | Error states | `MyBooksScreen.tsx` | `useMyBooks()` no `isError` — failures show empty list | Add error+retry |
-| M-02 | Error states | `WishlistScreen.tsx` | No `isError` from `useWishlist()` | Add error+retry |
-| M-03 | Error states | `IncomingRequestsScreen.tsx` | `useIncomingRequests()` no `isError` | Handle errors |
-| M-04 | Error states | `CounterOfferScreen.tsx` | `useUserBooks` loading only — no error UI | Add error state |
-| M-05 | Error states | `RequestSwapScreen.tsx` | `useMyBooks` has no error state | Add error state |
-| M-06 | Error states | `NotificationPreferencesScreen.tsx` | Only `isLoading` — preferences failure unhandled | Handle `isError` |
-| M-07 | Mutations | Many hooks | Most mutations lack `onError` callbacks — errors only surface via React Query state or global toasts | Add `onError` with `showErrorToast` consistently |
+| M-01 | Error states | `MyBooksScreen.tsx` | `useMyBooks()` no `isError` — failures show empty list | **RESOLVED** — Added `isError` + EmptyState with retry |
+| M-02 | Error states | `WishlistScreen.tsx` | No `isError` from `useWishlist()` | **RESOLVED** — Added `isError` + EmptyState with retry |
+| M-03 | Error states | `IncomingRequestsScreen.tsx` | `useIncomingRequests()` no `isError` | **RESOLVED** — Added `isError` + EmptyState with retry |
+| M-04 | Error states | `CounterOfferScreen.tsx` | `useUserBooks` loading only — no error UI | **RESOLVED** — Added `isError` + EmptyState with retry |
+| M-05 | Error states | `RequestSwapScreen.tsx` | `useMyBooks` has no error state | **RESOLVED** — Added `booksError` + EmptyState with retry |
+| M-06 | Error states | `NotificationPreferencesScreen.tsx` | Only `isLoading` — preferences failure unhandled | **RESOLVED** — Added `isError` + EmptyState with retry |
+| M-07 | Mutations | Many hooks | Most mutations lack `onError` callbacks | **RESOLVED** — Added `showErrorToast` to all mutations in useBooks, useWishlist, useProfile, useNotificationPreferences |
 
 ### i18n
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| M-08 | i18n | `ProfileStack.tsx` | 11 hardcoded English `headerTitle` values | Use `t()` with existing nav keys |
-| M-09 | i18n | `ScanStack.tsx` | All titles hardcoded (`"Scan"`, `"Book found"`, etc.) | Add `useTranslation` + i18n keys |
-| M-10 | i18n | `BrowseStack.tsx` / `HomeStack.tsx` / `MessagesStack.tsx` | Hardcoded `'Browse'`, `'Profile'`, `'Reviews'`, `'Counter Offer'` | Use `t()` |
-| M-11 | i18n | `fr.json` / `nl.json` | Missing ~15 error/edge-case keys that exist in `en.json` (websocket error, map errors, messaging failures, etc.) | Sync all three locale files |
-| M-12 | i18n | `ExchangeListScreen.tsx:145-147` | `noHistory` fallback text and actual key value disagree | Align copy |
+| M-08 | i18n | `ProfileStack.tsx` | 11 hardcoded English `headerTitle` values | **RESOLVED** — All 11 titles now use `t()` with navigation keys |
+| M-09 | i18n | `ScanStack.tsx` | All titles hardcoded | **RESOLVED** — Added `useTranslation` + i18n keys for all 4 screens |
+| M-10 | i18n | `BrowseStack.tsx` / `HomeStack.tsx` / `MessagesStack.tsx` | Hardcoded titles | **RESOLVED** — All titles now use `t()` with navigation keys |
+| M-11 | i18n | `fr.json` / `nl.json` | Missing ~15 keys from `en.json` | **RESOLVED** — All 16 missing keys added to both fr.json and nl.json |
+| M-12 | i18n | `ExchangeListScreen.tsx` | `noHistory` fallback text disagrees with key value | **RESOLVED** — Split into `noHistory` (title) + `noHistorySub` (subtitle) in all locales |
 
 ### Accessibility
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| M-13 | A11y | `WishlistScreen.tsx` | Card rows and FAB lack `accessibilityRole`/`accessibilityLabel` | Add labels |
-| M-14 | A11y | `RequestSwapScreen.tsx` | Book grid items and submit CTA lack a11y props | Add roles and labels |
-| M-15 | A11y | `CounterOfferScreen.tsx` | Same as M-14 | Add roles and labels |
-| M-16 | A11y | `IncomingRequestsScreen.tsx:142-168` | "View" icon-only action has no `accessibilityLabel` | Add label |
+| M-13 | A11y | `WishlistScreen.tsx` | Card rows and FAB lack a11y props | **RESOLVED** — Added `accessibilityRole`/`accessibilityLabel` to cards and FAB |
+| M-14 | A11y | `RequestSwapScreen.tsx` | Book grid items and submit CTA lack a11y props | **RESOLVED** — Added roles, labels, and states to book cards and submit button |
+| M-15 | A11y | `CounterOfferScreen.tsx` | Same as M-14 | **RESOLVED** — Same a11y props added |
+| M-16 | A11y | `IncomingRequestsScreen.tsx` | "View" icon-only action has no `accessibilityLabel` | **RESOLVED** — Added role and label |
 
 ### UX / Pull-to-refresh
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| M-17 | UX | `ExchangeListScreen.tsx:238-245` | Main exchanges `FlatList` has no pull-to-refresh | Add `RefreshControl` |
-| M-18 | UX | `IncomingRequestsScreen.tsx` | No pull-to-refresh on incoming list | Add `RefreshControl` |
+| M-17 | UX | `ExchangeListScreen.tsx` | Main exchanges FlatList no pull-to-refresh | **RESOLVED** — Added `onRefresh`/`refreshing` props |
+| M-18 | UX | `IncomingRequestsScreen.tsx` | No pull-to-refresh | **RESOLVED** — Added `onRefresh`/`refreshing` props |
 
 ### Backend
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| M-19 | Auth / WS | `websocket.ts:103-106` | On `auth.failed` from WS, client only logs — no token refresh or reconnect attempt | Trigger `reconnectWithNewToken` after refresh |
-| M-20 | Authorization | `messaging/views.py:216-225` | `MeetupSuggestionViewSet` doesn't apply block check (unlike `MessageViewSet`) | Reuse block check mixin |
-| M-21 | Privacy | `books/views.py:418-473,476-631` | `NearbyCountView` / `CommunityStatsView` are `AllowAny` — expose location-driven PII in activity feed | Require auth or reduce fields for anon |
-| M-22 | Validation | `messaging/serializers.py:36-47` | Chat image uploads validate content_type only — no magic-byte/Pillow check (unlike book photos) | Reuse `validate_book_photo` pattern |
-| M-23 | Validation | `trust_safety/serializers.py:65-86` | Report doesn't verify book belongs to reported user or exchange involves both parties | Validate ownership/participation |
-| M-24 | Race | `exchanges/views.py:155-178` | `accept()` TOCTOU — concurrent accepts for same book could both pass | Use `select_for_update()` in transaction |
-| M-25 | Types | `shared ExchangeDetail` vs `mobile ExchangeDetail` | Shared omits fields mobile adds (`original_offered_book`, etc.) | Extend shared type |
-| M-26 | Queries | `useBooks.ts:75-84` | `useMyBooks` has no `enabled: isAuthenticated` — fires 401 after logout | Gate with auth state |
-| M-27 | WS | `messaging/consumers.py:73-91` | Unknown `msg_type` returns error but no rate limit on invalid frames | Rate-limit invalid message types |
+| M-19 | Auth / WS | `websocket.ts` | On `auth.failed`, client only logs — no token refresh | **RESOLVED** — Added `attemptTokenRefreshAndReconnect()` that refreshes JWT and reconnects |
+| M-20 | Authorization | `messaging/views.py` | `MeetupSuggestionViewSet` no block check | **RESOLVED** — Added `get_blocked_user_ids` check in `initial()` |
+| M-21 | Privacy | `books/views.py` | `NearbyCountView`/`CommunityStatsView` are `AllowAny` | **RESOLVED** — Changed to `IsAuthenticated` |
+| M-22 | Validation | `messaging/serializers.py` | Chat image uploads: no Pillow magic-byte check | **RESOLVED** — Added `PILImage.open().verify()` validation |
+| M-23 | Validation | `trust_safety/serializers.py` | Report doesn't verify book ownership or exchange participation | **RESOLVED** — Validates book belongs to reported user and both users are exchange participants |
+| M-24 | Race | `exchanges/views.py` | `accept()` TOCTOU race | **RESOLVED** — Wrapped in `transaction.atomic()` with `select_for_update()` |
+| M-25 | Types | `shared ExchangeDetail` vs `mobile ExchangeDetail` | Shared omits fields mobile adds | **RESOLVED** — Already fixed in H-12 |
+| M-26 | Queries | `useBooks.ts` | `useMyBooks` fires 401 after logout | **RESOLVED** — Added `enabled: isAuthenticated` gate |
+| M-27 | WS | `messaging/consumers.py` | Unknown `msg_type` not rate-limited | **RESOLVED** — Added rate limiter (5 invalid/30s) with disconnect on abuse |
 
 ---
 

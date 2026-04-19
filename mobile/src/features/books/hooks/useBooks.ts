@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { showErrorToast } from '@/components/Toast';
+import { useAuthStore } from '@/stores/authStore';
 import type { Book, PaginatedResponse } from '@/types';
 
 export interface BrowseParams {
@@ -73,6 +75,7 @@ export function useBookDetail(bookId: string) {
 }
 
 export function useMyBooks() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: ['myBooks'],
     queryFn: async () => {
@@ -81,6 +84,7 @@ export function useMyBooks() {
       });
       return data.results;
     },
+    enabled: isAuthenticated,
   });
 }
 
@@ -149,6 +153,7 @@ export function useCreateBook() {
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
       queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
+    onError: () => showErrorToast('Failed to create book'),
   });
 }
 
@@ -176,6 +181,7 @@ export function useUpdateBook(bookId: string) {
       queryClient.invalidateQueries({ queryKey: ['browse'] });
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
     },
+    onError: () => showErrorToast('Failed to update book'),
   });
 }
 
@@ -191,6 +197,7 @@ export function useDeleteBook() {
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
       queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
+    onError: () => showErrorToast('Failed to delete book'),
   });
 }
 
@@ -218,6 +225,7 @@ export function useUploadBookPhoto(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
+    onError: () => showErrorToast('Failed to upload photo'),
   });
 }
 
@@ -230,6 +238,7 @@ export function useDeleteBookPhoto(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
+    onError: () => showErrorToast('Failed to delete photo'),
   });
 }
 
@@ -246,6 +255,7 @@ export function useReorderBookPhotos(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
+    onError: () => showErrorToast('Failed to reorder photos'),
   });
 }
 

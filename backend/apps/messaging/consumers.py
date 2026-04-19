@@ -21,6 +21,8 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
 
     RATE_LIMIT_MAX = 5
     RATE_LIMIT_WINDOW = 10
+    INVALID_MSG_LIMIT = 5
+    INVALID_MSG_WINDOW = 30
 
     async def post_authenticate(self):
         """Called after successful auth — validate exchange and join group."""
@@ -28,6 +30,7 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         self.exchange_id = self.scope["url_route"]["kwargs"]["exchange_id"]
         self.group_name = f"chat_{self.exchange_id}"
         self.send_timestamps: list[float] = []
+        self.invalid_msg_timestamps: list[float] = []
 
         exchange = await self._get_exchange()
         if exchange is None:
@@ -83,6 +86,15 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         elif msg_type == "chat.read":
             await self._handle_read(content)
         else:
+            now = time.time()
+            self.invalid_msg_timestamps = [
+                ts for ts in self.invalid_msg_timestamps if now - ts < self.INVALID_MSG_WINDOW
+            ]
+            self.invalid_msg_timestamps.append(now)
+            if len(self.invalid_msg_timestamps) > self.INVALID_MSG_LIMIT:
+                await self.send_json({"type": "chat.error", "message": "Too many invalid messages. Disconnecting."})
+                await self.close(code=4008)
+                return
             await self.send_json(
                 {
                     "type": "chat.error",
