@@ -592,6 +592,8 @@ export function BrowseMapScreen() {
   const mapUsable =
     mapsAvailable && MapView && (Platform.OS !== "android" || hasGoogleMapsKey);
 
+  const snapPoints = useMemo(() => ["15%", "45%", "85%"], []);
+
   if (!mapUsable) {
     return (
       <View style={[s.root, { backgroundColor: bg }]}>
@@ -621,8 +623,6 @@ export function BrowseMapScreen() {
   }
 
   // ── Map + Bottom Sheet ───────────────────────────────────────────
-
-  const snapPoints = useMemo(() => ["15%", "45%", "85%"], []);
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>

@@ -9,7 +9,7 @@
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| C-01 | Hooks | `BrowseMapScreen.tsx:595-625` | `useMemo` for `snapPoints` runs only when `mapUsable` is true, after early return — hooks ordering violation | Move all hooks above `if (!mapUsable)` branch |
+| C-01 | Hooks | `BrowseMapScreen.tsx:595-625` | `useMemo` for `snapPoints` runs only when `mapUsable` is true, after early return — hooks ordering violation | **RESOLVED** — Moved `snapPoints` useMemo above the `if (!mapUsable)` early return |
 
 ---
 
