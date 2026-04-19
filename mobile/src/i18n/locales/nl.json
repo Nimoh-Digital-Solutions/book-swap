@@ -254,6 +254,9 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "chats": "Berichten",
+    "noChats": "Nog geen gesprekken",
+    "noChatsHint": "Start een ruil en chat met je ruilpartner.",
     "accept": "Accepteren",
     "acceptMsg": "Je wordt verbonden met de aanvrager om de ruil te regelen.",
     "acceptTitle": "Verzoek accepteren",

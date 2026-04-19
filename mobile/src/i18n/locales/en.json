@@ -261,6 +261,9 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "chats": "Chats",
+    "noChats": "No conversations yet",
+    "noChatsHint": "Start a swap and chat with your exchange partner.",
     "accept": "Accept",
     "acceptMsg": "You will be connected with the requester to arrange the swap.",
     "acceptTitle": "Accept Request",

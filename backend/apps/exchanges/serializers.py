@@ -52,6 +52,9 @@ class ExchangeRequestListSerializer(serializers.ModelSerializer):
     owner = ExchangeParticipantSerializer(read_only=True)
     requested_book = ExchangeBookSerializer(read_only=True)
     offered_book = ExchangeBookSerializer(read_only=True)
+    unread_count = serializers.IntegerField(read_only=True, default=0)
+    last_message_at = serializers.DateTimeField(read_only=True, default=None)
+    last_message_preview = serializers.CharField(read_only=True, default="")
 
     class Meta:
         model = ExchangeRequest
@@ -65,6 +68,9 @@ class ExchangeRequestListSerializer(serializers.ModelSerializer):
             "owner",
             "requested_book",
             "offered_book",
+            "unread_count",
+            "last_message_at",
+            "last_message_preview",
         )
         read_only_fields = fields
 

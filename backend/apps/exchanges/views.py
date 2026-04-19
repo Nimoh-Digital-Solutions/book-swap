@@ -1,6 +1,8 @@
 """Exchange views — REST endpoints for the full exchange lifecycle."""
 
 from django.db import models as db_models
+from django.db.models import Count, Max, Q, Subquery, OuterRef, CharField
+from django.db.models.functions import Substr
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -8,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.books.models import BookStatus
+from apps.messaging.models import Message
 from bookswap.permissions import IsEmailVerified
 
 from .models import (
@@ -60,10 +63,19 @@ class ExchangeRequestViewSet(
     def get_queryset(self):
         from apps.trust_safety.services import get_blocked_user_ids
 
-        blocked_ids = get_blocked_user_ids(self.request.user)
+        user = self.request.user
+        blocked_ids = get_blocked_user_ids(user)
+
+        last_msg_preview = Subquery(
+            Message.objects.filter(exchange=OuterRef("pk"))
+            .order_by("-created_at")
+            .values("content")[:1],
+            output_field=CharField(),
+        )
+
         return (
             ExchangeRequest.objects.filter(
-                db_models.Q(requester=self.request.user) | db_models.Q(owner=self.request.user)
+                db_models.Q(requester=user) | db_models.Q(owner=user)
             )
             .exclude(requester_id__in=blocked_ids)
             .exclude(owner_id__in=blocked_ids)
@@ -77,6 +89,15 @@ class ExchangeRequestViewSet(
                 "requested_book__photos",
                 "offered_book__photos",
                 "conditions_acceptances",
+            )
+            .annotate(
+                unread_count=Count(
+                    "messages",
+                    filter=Q(messages__read_at__isnull=True)
+                    & ~Q(messages__sender=user),
+                ),
+                last_message_at=Max("messages__created_at"),
+                last_message_preview=Substr(last_msg_preview, 1, 80),
             )
         )
 

@@ -1,11 +1,12 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AlertTriangle, ArrowLeftRight, Bell, BookOpen, Inbox } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeftRight, Bell, BookOpen, MessageCircle } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -13,6 +14,7 @@ import {
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { useAuthStore } from '@/stores/authStore';
 import { SkeletonCard } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
 import type { MessagesStackParamList } from '@/navigation/types';
@@ -32,15 +34,24 @@ import {
 } from '../hooks/useExchanges';
 
 type Nav = NativeStackNavigationProp<MessagesStackParamList, 'ExchangeList'>;
-type Tab = 'active' | 'pending' | 'history';
+type Tab = 'chats' | 'active' | 'pending' | 'history';
 
-const TAB_FILTERS: Record<Tab, string[]> = {
+const TAB_FILTERS: Record<Exclude<Tab, 'chats'>, string[]> = {
   active: ACTIVE_STATUSES,
   pending: PENDING_STATUSES,
   history: HISTORY_STATUSES,
 };
 
 function filterByTab(items: ExchangeListItem[], tab: Tab): ExchangeListItem[] {
+  if (tab === 'chats') {
+    return items
+      .filter((e) => !!e.last_message_at)
+      .sort((a, b) => {
+        const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+        const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+        return tb - ta;
+      });
+  }
   const statuses = TAB_FILTERS[tab];
   return items.filter((e) => statuses.includes(e.status));
 }
@@ -50,11 +61,12 @@ export function ExchangeListScreen() {
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
+  const currentUserId = useAuthStore((st) => st.user?.id);
 
   useExchangeWsRefresh();
   const { data: exchanges, isLoading, isError, refetch } = useExchanges();
   const { data: incomingCount } = useIncomingCount();
-  const [activeTab, setActiveTab] = useState<Tab>('active');
+  const [activeTab, setActiveTab] = useState<Tab>('chats');
 
   useFocusEffect(
     useCallback(() => {
@@ -63,31 +75,45 @@ export function ExchangeListScreen() {
   );
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
-  const cardBg = isDark ? c.auth.card : c.surface.white;
-  const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const accent = c.auth.golden;
 
   const all = exchanges ?? [];
   const filtered = useMemo(() => filterByTab(all, activeTab), [all, activeTab]);
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'active', label: t('exchanges.active', 'Active') },
-    { key: 'pending', label: t('exchanges.pending', 'Pending') },
-    { key: 'history', label: t('exchanges.history', 'History') },
-  ];
-
-  const tabCounts = useMemo(
-    () => ({
-      active: filterByTab(all, 'active').length,
-      pending: filterByTab(all, 'pending').length,
-      history: filterByTab(all, 'history').length,
-    }),
+  const totalUnread = useMemo(
+    () => all.reduce((sum, e) => sum + (e.unread_count ?? 0), 0),
     [all],
   );
+
+  const chatsCount = useMemo(
+    () => all.filter((e) => !!e.last_message_at).length,
+    [all],
+  );
+
+  const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: 'chats', label: t('exchanges.chats', 'Chats'), count: totalUnread },
+    { key: 'active', label: t('exchanges.active', 'Active'), count: filterByTab(all, 'active').length },
+    { key: 'pending', label: t('exchanges.pending', 'Pending'), count: filterByTab(all, 'pending').length },
+    { key: 'history', label: t('exchanges.history', 'History'), count: filterByTab(all, 'history').length },
+  ];
 
   const goToDetail = useCallback(
     (exchangeId: string) => navigation.navigate('ExchangeDetail', { exchangeId }),
     [navigation],
+  );
+
+  const goToChat = useCallback(
+    (item: ExchangeListItem) => {
+      const isOwner = currentUserId === item.owner.id;
+      const other = isOwner ? item.requester : item.owner;
+      navigation.navigate('Chat', {
+        exchangeId: item.id,
+        partnerName: other.username,
+        partnerAvatar: other.avatar,
+        exchangeStatus: item.status,
+      });
+    },
+    [navigation, currentUserId],
   );
 
   const goToIncoming = useCallback(
@@ -97,10 +123,35 @@ export function ExchangeListScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: ExchangeListItem }) => (
-      <ExchangeCard exchange={item} onPress={() => goToDetail(item.id)} />
+      <ExchangeCard
+        exchange={item}
+        onPress={() => activeTab === 'chats' ? goToChat(item) : goToDetail(item.id)}
+      />
     ),
-    [goToDetail],
+    [goToDetail, goToChat, activeTab],
   );
+
+  const emptyProps = useMemo(() => {
+    if (activeTab === 'chats') {
+      return {
+        icon: MessageCircle,
+        title: t('exchanges.noChats', 'No conversations yet'),
+        subtitle: t('exchanges.noChatsHint', 'Start a swap and chat with your exchange partner.'),
+      };
+    }
+    if (activeTab === 'history') {
+      return {
+        icon: BookOpen,
+        title: t('exchanges.noExchanges', 'No exchanges yet'),
+        subtitle: t('exchanges.noHistory', 'Your completed exchanges will appear here.'),
+      };
+    }
+    return {
+      icon: ArrowLeftRight,
+      title: t('exchanges.noExchanges', 'No exchanges yet'),
+      subtitle: t('exchanges.browseToStart', 'Browse books nearby to start swapping!'),
+    };
+  }, [activeTab, t]);
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
@@ -120,9 +171,14 @@ export function ExchangeListScreen() {
       )}
 
       {/* Tab bar */}
-      <View style={s.tabRow}>
-        {tabs.map(({ key, label }) => {
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.tabRow}
+      >
+        {tabs.map(({ key, label, count }) => {
           const isActive = activeTab === key;
+          const showDot = key === 'chats' && totalUnread > 0 && !isActive;
           return (
             <Pressable
               key={key}
@@ -141,17 +197,20 @@ export function ExchangeListScreen() {
               <Text style={[s.tabLabel, { color: isActive ? accent : c.text.secondary }]}>
                 {label}
               </Text>
-              {tabCounts[key] > 0 && (
+              {count > 0 && (
                 <View style={[s.tabBadge, { backgroundColor: isActive ? accent : c.text.placeholder + '30' }]}>
                   <Text style={[s.tabBadgeText, { color: isActive ? '#fff' : c.text.secondary }]}>
-                    {tabCounts[key]}
+                    {count}
                   </Text>
                 </View>
+              )}
+              {showDot && (
+                <View style={[s.unreadDot, { backgroundColor: accent }]} />
               )}
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* Content */}
       {isLoading ? (
@@ -170,13 +229,9 @@ export function ExchangeListScreen() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={activeTab === 'history' ? BookOpen : ArrowLeftRight}
-          title={t('exchanges.noExchanges', 'No exchanges yet')}
-          subtitle={
-            activeTab !== 'history'
-              ? t('exchanges.browseToStart', 'Browse books nearby to start swapping!')
-              : t('exchanges.noHistory', 'Your completed exchanges will appear here.')
-          }
+          icon={emptyProps.icon}
+          title={emptyProps.title}
+          subtitle={emptyProps.subtitle}
         />
       ) : (
         <FlatList
@@ -232,12 +287,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 5,
   },
   tabBadgeText: { fontSize: 10, fontWeight: '700' },
-
-  loader: { marginTop: 40 },
-
-  empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: spacing.xl },
-  emptyTitle: { fontSize: 17, fontWeight: '700', marginTop: spacing.md },
-  emptySub: { fontSize: 13, textAlign: 'center', marginTop: 4, lineHeight: 18 },
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    top: 4,
+    right: 4,
+  },
 
   list: { paddingHorizontal: spacing.lg, gap: spacing.sm },
 });

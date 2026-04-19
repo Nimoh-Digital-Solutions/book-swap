@@ -254,6 +254,9 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "chats": "Messages",
+    "noChats": "Pas encore de conversations",
+    "noChatsHint": "Commencez un échange et discutez avec votre partenaire.",
     "accept": "Accepter",
     "acceptMsg": "Vous serez mis en contact avec le demandeur pour organiser l'échange.",
     "acceptTitle": "Accepter la demande",

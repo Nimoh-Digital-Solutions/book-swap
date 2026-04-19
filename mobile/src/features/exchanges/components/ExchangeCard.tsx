@@ -3,7 +3,7 @@ import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
 import type { ExchangeBook, ExchangeListItem } from "@/types";
 import { Image } from "expo-image";
-import { ArrowLeftRight } from "lucide-react-native";
+import { ArrowLeftRight, MessageCircle } from "lucide-react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -117,7 +117,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
         <BookThumb book={rightBook} label={t("exchanges.theirs", "Theirs")} />
       </View>
 
-      {/* Partner */}
+      {/* Partner + last message */}
       <View
         style={[
           s.partnerRow,
@@ -128,12 +128,36 @@ export function ExchangeCard({ exchange, onPress }: Props) {
           },
         ]}
       >
-        <Text
-          style={[s.partner, { color: c.text.secondary }]}
-          numberOfLines={1}
-        >
-          with @{otherUser.username}
-        </Text>
+        <View style={s.partnerLine}>
+          <Text
+            style={[s.partner, { color: c.text.secondary }]}
+            numberOfLines={1}
+          >
+            with @{otherUser.username}
+          </Text>
+          {exchange.unread_count > 0 && (
+            <View style={[s.unreadBadge, { backgroundColor: accent }]}>
+              <Text style={s.unreadText}>
+                {exchange.unread_count > 9 ? "9+" : exchange.unread_count}
+              </Text>
+            </View>
+          )}
+        </View>
+        {!!exchange.last_message_preview && (
+          <View style={s.previewRow}>
+            <MessageCircle size={11} color={c.text.placeholder} />
+            <Text
+              style={[
+                s.previewText,
+                { color: exchange.unread_count > 0 ? c.text.primary : c.text.secondary },
+                exchange.unread_count > 0 && s.previewBold,
+              ]}
+              numberOfLines={1}
+            >
+              {exchange.last_message_preview}
+            </Text>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -237,10 +261,43 @@ const s = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
+    gap: 4,
+  },
+  partnerLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
   partner: {
     fontSize: 12,
     fontWeight: "500",
     textAlign: "center",
+  },
+  unreadBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+  },
+  unreadText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  previewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  previewText: {
+    fontSize: 11,
+    maxWidth: "85%",
+  },
+  previewBold: {
+    fontWeight: "600",
   },
 });
