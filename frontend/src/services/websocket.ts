@@ -169,7 +169,7 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
 
       if (message.type === 'auth.failed' || message.type === 'auth.required') {
         if (import.meta.env.DEV) {
-          logger.warn('[ws] Auth failed', message);
+          logger.warn('[ws] Auth failed', message as unknown as Record<string, unknown>);
         }
         return;
       }
