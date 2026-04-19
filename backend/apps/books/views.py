@@ -91,10 +91,16 @@ class BookViewSet(
             return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
         return qs.filter(status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
 
-    def get_authenticators(self):
-        if self.action in ("list", "retrieve"):
-            return [OptionalJWTAuthentication()]
-        return super().get_authenticators()
+    def perform_authentication(self, request):
+        try:
+            super().perform_authentication(request)
+        except Exception:
+            if self.action in ("list", "retrieve"):
+                from django.contrib.auth.models import AnonymousUser
+                request._user = AnonymousUser()
+                request._auth = None
+            else:
+                raise
 
     def get_permissions(self):
         if self.action in ("update", "partial_update", "destroy"):
