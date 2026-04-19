@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bookswap.permissions import IsEmailVerified
+from config.authentication import OptionalJWTAuthentication
 
 from .models import Book, BookPhoto, BookStatus, WishlistItem
 from .permissions import IsBookOwner
@@ -89,6 +90,11 @@ class BookViewSet(
         if owner_param and owner_param != "me":
             return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
         return qs.filter(status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
+
+    def get_authenticators(self):
+        if self.action in ("list", "retrieve"):
+            return [OptionalJWTAuthentication()]
+        return super().get_authenticators()
 
     def get_permissions(self):
         if self.action in ("update", "partial_update", "destroy"):
@@ -272,6 +278,7 @@ class BrowsePagination(PageNumberPagination):
 class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     """Browse nearby available books, sorted by distance."""
 
+    authentication_classes = (OptionalJWTAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = BrowseBookListSerializer
     pagination_class = BrowsePagination
@@ -429,6 +436,7 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
 class NearbyCountView(APIView):
     """GET /books/nearby-count/ — book count (public, used on landing page)."""
 
+    authentication_classes = (OptionalJWTAuthentication,)
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -487,6 +495,7 @@ class NearbyCountView(APIView):
 class CommunityStatsView(APIView):
     """GET /books/community-stats/ — weekly swap count + recent activity feed (public)."""
 
+    authentication_classes = (OptionalJWTAuthentication,)
     permission_classes = (AllowAny,)
 
     @extend_schema(
