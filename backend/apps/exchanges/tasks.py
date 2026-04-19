@@ -39,21 +39,33 @@ def expire_stale_conditions():
 
     Runs daily via Celery Beat. Gives both users 14 days to accept
     conditions after the owner accepts the request.
+    Books are released back to AVAILABLE since they were locked at accept time.
     """
+    from apps.books.models import BookStatus
+
     from .models import ExchangeRequest, ExchangeStatus
 
     cutoff = timezone.now() - timedelta(days=14)
-    expired = ExchangeRequest.objects.filter(
-        status__in=[ExchangeStatus.ACCEPTED, ExchangeStatus.CONDITIONS_PENDING],
-        updated_at__lte=cutoff,
-    ).update(
-        status=ExchangeStatus.EXPIRED,
-        expired_at=timezone.now(),
+    now = timezone.now()
+    stale = list(
+        ExchangeRequest.objects.filter(
+            status__in=[ExchangeStatus.ACCEPTED, ExchangeStatus.CONDITIONS_PENDING],
+            updated_at__lte=cutoff,
+        ).select_related("requested_book", "offered_book")
     )
+    for exchange in stale:
+        exchange.status = ExchangeStatus.EXPIRED
+        exchange.expired_at = now
+        exchange.save(update_fields=["status", "expired_at", "updated_at"])
 
-    if expired:
-        logger.info("Expired %d exchanges with stale conditions.", expired)
-    return expired
+        exchange.requested_book.status = BookStatus.AVAILABLE
+        exchange.requested_book.save(update_fields=["status"])
+        exchange.offered_book.status = BookStatus.AVAILABLE
+        exchange.offered_book.save(update_fields=["status"])
+
+    if stale:
+        logger.info("Expired %d exchanges with stale conditions.", len(stale))
+    return len(stale)
 
 
 @shared_task(name="exchanges.auto_confirm_stale_swaps")
@@ -65,8 +77,6 @@ def auto_confirm_stale_swaps():
     and advance to swap_confirmed.
     """
     from django.contrib.auth import get_user_model
-
-    from apps.books.models import BookStatus
 
     from .models import ExchangeRequest, ExchangeStatus
 
@@ -94,10 +104,6 @@ def auto_confirm_stale_swaps():
                 "updated_at",
             ]
         )
-        exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=["status"])
-        exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=["status"])
         affected_user_ids.add(exchange.requester_id)
         affected_user_ids.add(exchange.owner_id)
         total += 1
@@ -120,10 +126,6 @@ def auto_confirm_stale_swaps():
                 "updated_at",
             ]
         )
-        exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=["status"])
-        exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=["status"])
         affected_user_ids.add(exchange.requester_id)
         affected_user_ids.add(exchange.owner_id)
         total += 1

@@ -1,7 +1,8 @@
 """Exchange views — REST endpoints for the full exchange lifecycle."""
 
-from django.db import models as db_models, transaction
-from django.db.models import Count, Max, Q, Subquery, OuterRef, CharField
+from django.db import models as db_models
+from django.db import transaction
+from django.db.models import CharField, Count, Max, OuterRef, Q, Subquery
 from django.db.models.functions import Substr
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
@@ -176,8 +177,22 @@ class ExchangeRequestViewSet(
             exchange.transition_to(ExchangeStatus.ACCEPTED)
             exchange.save(update_fields=["status", "updated_at"])
 
+            # Lock both books so they can't be requested by others
+            exchange.requested_book.status = BookStatus.IN_EXCHANGE
+            exchange.requested_book.save(update_fields=["status"])
+            exchange.offered_book.status = BookStatus.IN_EXCHANGE
+            exchange.offered_book.save(update_fields=["status"])
+
+            # Decline all other pending requests involving either book
             ExchangeRequest.objects.filter(
                 requested_book=exchange.requested_book,
+                status=ExchangeStatus.PENDING,
+            ).exclude(pk=exchange.pk).update(
+                status=ExchangeStatus.DECLINED,
+                decline_reason=DeclineReason.RESERVED,
+            )
+            ExchangeRequest.objects.filter(
+                offered_book=exchange.offered_book,
                 status=ExchangeStatus.PENDING,
             ).exclude(pk=exchange.pk).update(
                 status=ExchangeStatus.DECLINED,
@@ -404,12 +419,6 @@ class ExchangeRequestViewSet(
         if exchange.is_swap_confirmed:
             exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
             update_fields.append("status")
-
-            # Update book statuses
-            exchange.requested_book.status = BookStatus.IN_EXCHANGE
-            exchange.requested_book.save(update_fields=["status"])
-            exchange.offered_book.status = BookStatus.IN_EXCHANGE
-            exchange.offered_book.save(update_fields=["status"])
 
             # Increment swap_count for both users
             from django.contrib.auth import get_user_model

@@ -238,13 +238,31 @@ class TestAcceptExchange:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "accepted"
 
-    def test_auto_decline_other_pending(self):
+        exchange.requested_book.refresh_from_db()
+        exchange.offered_book.refresh_from_db()
+        assert exchange.requested_book.status == BookStatus.IN_EXCHANGE
+        assert exchange.offered_book.status == BookStatus.IN_EXCHANGE
+
+    def test_auto_decline_other_pending_for_requested_book(self):
         owner = UserFactory(with_location=True, onboarded=True)
         book = BookFactory(owner=owner)
         e1 = ExchangeRequestFactory(owner=owner, requested_book=book)
         e2 = ExchangeRequestFactory(owner=owner, requested_book=book)
 
         client = api_client(owner)
+        client.post(exchange_url(pk=e1.pk, action="accept"))
+
+        e2.refresh_from_db()
+        assert e2.status == ExchangeStatus.DECLINED
+        assert e2.decline_reason == DeclineReason.RESERVED
+
+    def test_auto_decline_other_pending_for_offered_book(self):
+        requester = UserFactory(with_location=True, onboarded=True)
+        offered = BookFactory(owner=requester)
+        e1 = ExchangeRequestFactory(requester=requester, offered_book=offered)
+        e2 = ExchangeRequestFactory(requester=requester, offered_book=offered)
+
+        client = api_client(e1.owner)
         client.post(exchange_url(pk=e1.pk, action="accept"))
 
         e2.refresh_from_db()
@@ -590,11 +608,6 @@ class TestReturnFlow:
 
     def test_both_confirm_return(self):
         exchange = ExchangeRequestFactory(return_requested=True)
-        # Set books to in_exchange for the return test
-        exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=["status"])
-        exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=["status"])
 
         api_client(exchange.requester).post(
             exchange_url(pk=exchange.pk, action="confirm-return"),
@@ -695,3 +708,8 @@ class TestCeleryTasks:
 
         exchange.refresh_from_db()
         assert exchange.status == ExchangeStatus.EXPIRED
+
+        exchange.requested_book.refresh_from_db()
+        exchange.offered_book.refresh_from_db()
+        assert exchange.requested_book.status == BookStatus.AVAILABLE
+        assert exchange.offered_book.status == BookStatus.AVAILABLE
