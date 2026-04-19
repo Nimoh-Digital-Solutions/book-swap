@@ -404,7 +404,9 @@
     "selectMeetup": "Sélectionner un point de rencontre",
     "send": "Envoyer",
     "suggestMeetup": "Suggérer un rendez-vous",
-    "typing": "écrit..."
+    "typing": "écrit...",
+    "attachImage": "Joindre une image",
+    "meetupProposal": "Suggestion de lieu de rencontre"
   },
   "notifications": {
     "title": "Notifications",
@@ -696,5 +698,10 @@
     "es": "Espagnol",
     "both": "EN / NL",
     "other": "Autre"
+  },
+  "emailGate": {
+    "title": "E-mail non vérifié",
+    "message": "Veuillez vérifier votre adresse e-mail avant de continuer. Consultez votre boîte de réception pour le lien de vérification.",
+    "goVerify": "Vérifier maintenant"
   }
 }

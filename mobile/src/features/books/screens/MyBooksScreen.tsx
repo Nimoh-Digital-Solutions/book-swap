@@ -30,6 +30,7 @@ import { SkeletonCard } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { AddBookModal } from "@/features/books/components/AddBookModal";
 import { prefsStorage, type AddBookPreference } from "@/lib/storage";
+import { useEmailVerificationGate } from "@/hooks/useEmailVerificationGate";
 import { useMyBooks, useDeleteBook } from "@/features/books/hooks/useBooks";
 import type { Book } from "@/types";
 import type { ProfileStackParamList } from "@/navigation/types";
@@ -49,6 +50,7 @@ export function MyBooksScreen() {
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
   const { data: books, isLoading, isRefetching, refetch } = useMyBooks();
+  const { requireVerified } = useEmailVerificationGate();
   const deleteBook = useDeleteBook();
 
   const [search, setSearch] = useState("");
@@ -131,13 +133,15 @@ export function MyBooksScreen() {
   );
 
   const handleFabPress = useCallback(() => {
-    const saved = prefsStorage.getAddBookPref();
-    if (saved) {
-      navigateToChoice(saved);
-    } else {
-      setModalVisible(true);
-    }
-  }, [navigateToChoice]);
+    requireVerified(() => {
+      const saved = prefsStorage.getAddBookPref();
+      if (saved) {
+        navigateToChoice(saved);
+      } else {
+        setModalVisible(true);
+      }
+    });
+  }, [navigateToChoice, requireVerified]);
 
   const handleFabLongPress = useCallback(() => {
     prefsStorage.clearAddBookPref();

@@ -28,6 +28,12 @@ export function useMessages(exchangeId: string) {
   });
 }
 
+interface SendMessagePayload {
+  exchangeId: string;
+  content?: string;
+  imageUri?: string;
+}
+
 export function useSendMessage() {
   const qc = useQueryClient();
   const { isOffline } = useNetworkStatus();
@@ -35,10 +41,10 @@ export function useSendMessage() {
   const user = useAuthStore((s) => s.user);
 
   return useMutation({
-    mutationFn: async ({ exchangeId, content }: { exchangeId: string; content: string }) => {
+    mutationFn: async ({ exchangeId, content, imageUri }: SendMessagePayload) => {
       const endpoint = API.messaging.messages(exchangeId);
 
-      if (isOffline) {
+      if (isOffline && content) {
         enqueueMutation({
           endpoint,
           method: 'post',
@@ -50,7 +56,7 @@ export function useSendMessage() {
           id: `offline-${Date.now()}`,
           exchange: exchangeId,
           sender: (user ?? { id: '', username: '' }) as User,
-          content,
+          content: content ?? '',
           image: null,
           read_at: null,
           created_at: new Date().toISOString(),
@@ -58,6 +64,19 @@ export function useSendMessage() {
 
         showInfoToast(t('offline.queuedForSync'));
         return optimistic;
+      }
+
+      if (imageUri) {
+        const form = new FormData();
+        if (content) form.append('content', content);
+        const filename = imageUri.split('/').pop() ?? 'photo.jpg';
+        const ext = filename.split('.').pop()?.toLowerCase();
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        form.append('image', { uri: imageUri, name: filename, type: mimeType } as any);
+        const { data } = await http.post<Message>(endpoint, form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return data;
       }
 
       const { data } = await http.post<Message>(endpoint, { content });

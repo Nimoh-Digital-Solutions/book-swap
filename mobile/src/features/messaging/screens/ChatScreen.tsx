@@ -32,6 +32,7 @@ import { useMeetupSuggestions } from '../hooks/useMeetupSuggestions';
 import { useAuthStore } from '@/stores/authStore';
 import { useExchangeDetail } from '@/features/exchanges/hooks/useExchanges';
 import { showErrorToast } from '@/components/Toast';
+import { useEmailVerificationGate } from '@/hooks/useEmailVerificationGate';
 
 type Route = RouteProp<MessagesStackParamList, 'Chat'>;
 
@@ -46,6 +47,7 @@ export function ChatScreen() {
 
   const { data: exchangeDetail } = useExchangeDetail(params.exchangeId);
   const isOwner = exchangeDetail ? currentUser?.id === exchangeDetail.owner.id : false;
+  const { requireVerified } = useEmailVerificationGate();
   const other = exchangeDetail
     ? (isOwner ? exchangeDetail.requester : exchangeDetail.owner)
     : null;
@@ -104,34 +106,34 @@ export function ChatScreen() {
   }, [params.exchangeId, messages.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = useCallback(
-    (content: string) => {
-      sendMutation.mutate(
-        { exchangeId: params.exchangeId, content },
-        {
-          onSuccess: () => {
-            isNearBottom.current = true;
-            setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    (content: string, imageUri?: string) => {
+      requireVerified(() => {
+        sendMutation.mutate(
+          { exchangeId: params.exchangeId, content: content || undefined, imageUri },
+          {
+            onSuccess: () => {
+              isNearBottom.current = true;
+              setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+            },
+            onError: () => {
+              showErrorToast(
+                t('messaging.sendFailed', 'Message could not be sent. Try again.'),
+              );
+            },
           },
-          onError: () => {
-            showErrorToast(
-              t('messaging.sendFailed', 'Message could not be sent. Try again.'),
-            );
-          },
-        },
-      );
+        );
+      });
     },
-    [params.exchangeId, sendMutation, t],
+    [params.exchangeId, sendMutation, t, requireVerified],
   );
 
   const handleMeetupSelect = useCallback(
-    (loc: { name: string }) => {
+    (loc: { name: string; address?: string }) => {
       setShowMeetup(false);
-      handleSend(t('messaging.meetupSuggestion', {
-        defaultValue: "Let's meet at {{name}}!",
-        name: loc.name,
-      }));
+      const meetupContent = `[MEETUP]${loc.name}|${loc.address ?? ''}`;
+      handleSend(meetupContent);
     },
-    [handleSend, t],
+    [handleSend],
   );
 
   const renderMessage = useCallback(

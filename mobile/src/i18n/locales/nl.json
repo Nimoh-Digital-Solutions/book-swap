@@ -404,7 +404,9 @@
     "selectMeetup": "Selecteer een ontmoetingspunt",
     "send": "Versturen",
     "suggestMeetup": "Ontmoeting voorstellen",
-    "typing": "aan het typen..."
+    "typing": "aan het typen...",
+    "attachImage": "Afbeelding bijvoegen",
+    "meetupProposal": "Ontmoetingsvoorstel"
   },
   "notifications": {
     "title": "Meldingen",
@@ -696,5 +698,10 @@
     "es": "Spaans",
     "both": "EN / NL",
     "other": "Anders"
+  },
+  "emailGate": {
+    "title": "E-mail niet geverifieerd",
+    "message": "Verifieer je e-mailadres voordat je verdergaat. Controleer je inbox voor de verificatielink.",
+    "goVerify": "Nu verifiëren"
   }
 }

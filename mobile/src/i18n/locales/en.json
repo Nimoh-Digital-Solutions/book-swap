@@ -417,7 +417,9 @@
     "typing": "typing...",
     "loadFailedTitle": "Could not load messages",
     "loadFailedBody": "Check your connection and try again.",
-    "sendFailed": "Message could not be sent. Try again."
+    "sendFailed": "Message could not be sent. Try again.",
+    "attachImage": "Attach image",
+    "meetupProposal": "Meetup suggestion"
   },
   "notifications": {
     "title": "Notifications",
@@ -714,5 +716,10 @@
     "es": "Español",
     "both": "EN / NL",
     "other": "Other"
+  },
+  "emailGate": {
+    "title": "Email not verified",
+    "message": "Please verify your email address before continuing. Check your inbox for the verification link.",
+    "goVerify": "Verify now"
   }
 }

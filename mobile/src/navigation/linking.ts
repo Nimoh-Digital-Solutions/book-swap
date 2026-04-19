@@ -40,8 +40,11 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
       screens: {
         HomeTab: {
           screens: {
+            Home: 'home',
             BookDetail: 'book/:bookId',
             UserProfile: 'user/:userId',
+            UserReviews: 'user/:userId/reviews',
+            Notifications: 'notifications',
           },
         },
         BrowseTab: {
@@ -49,14 +52,32 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
             BrowseMap: 'browse',
           },
         },
+        ScanTab: {
+          screens: {
+            Scanner: 'scan',
+            AddBook: 'add-book',
+          },
+        },
         MessagesTab: {
           screens: {
+            ExchangeList: 'exchanges',
+            IncomingRequests: 'exchanges/incoming',
+            ExchangeDetail: 'exchange/:exchangeId',
             Chat: 'chat/:exchangeId',
           },
         },
         ProfileTab: {
           screens: {
             MyProfile: 'profile',
+            EditProfile: 'profile/edit',
+            MyBooks: 'profile/books',
+            Wishlist: 'profile/wishlist',
+            Settings: 'settings',
+            NotificationPreferences: 'settings/notifications',
+            BlockedUsers: 'settings/blocked',
+            ChangePassword: 'settings/password',
+            Appearance: 'settings/appearance',
+            Language: 'settings/language',
           },
         },
       },

@@ -15,7 +15,7 @@ import {
 } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
 import { showErrorToast } from "@/components/Toast";
@@ -23,6 +23,7 @@ import { Avatar } from "@/components/Avatar";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
+import { useEmailVerificationGate } from "@/hooks/useEmailVerificationGate";
 import { ReportSheet } from "@/features/trust-safety/components/ReportSheet";
 import { useBookDetail } from "../hooks/useBooks";
 import { useBookWishlistStatus, useAddWishlistItem, useRemoveWishlistItem } from "../hooks/useWishlist";
@@ -47,6 +48,7 @@ export function BookDetailScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<any>();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const { requireVerified } = useEmailVerificationGate();
 
   const { data: rawBook, isLoading } = useBookDetail(params.bookId);
   const { data: wishlistEntry, isLoading: wishlistLoading } = useBookWishlistStatus(params.bookId);
@@ -125,7 +127,18 @@ export function BookDetailScreen() {
   const owner: BookOwner | null =
     typeof book.owner === "object" && book.owner !== null ? book.owner : null;
   const ownerName = owner?.username ?? "Unknown";
-  const coverUri = book.cover_url || book.photos?.[0]?.image || null;
+
+  const photoUris: string[] = [];
+  if (book.cover_url) photoUris.push(book.cover_url);
+  if (Array.isArray(book.photos)) {
+    for (const p of book.photos) {
+      const uri = p.image;
+      if (uri && !photoUris.includes(uri)) photoUris.push(uri);
+    }
+  }
+  const coverUri = photoUris[0] ?? null;
+  const hasMultiplePhotos = photoUris.length > 1;
+
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
   const isAvailable = book.status === "available";
   const isOwnBook = owner?.id === currentUserId;
@@ -134,6 +147,7 @@ export function BookDetailScreen() {
     : book.genre
       ? [book.genre]
       : [];
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
@@ -141,35 +155,74 @@ export function BookDetailScreen() {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Cover Hero ── */}
-        <View style={[s.coverHero, { borderColor: cardBorder }]}>
-          {coverUri ? (
-            <Image
-              source={{ uri: coverUri }}
-              style={s.coverImage}
-              contentFit="cover"
-              transition={200}
-              accessibilityRole="image"
-              accessibilityLabel={t("books.coverImageA11y", "{{title}} cover image", {
-                title: book.title,
-              })}
+        {/* ── Cover Hero / Photo Gallery ── */}
+        {hasMultiplePhotos ? (
+          <View style={[s.coverHero, { borderColor: cardBorder }]}>
+            <FlatList
+              data={photoUris}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(_, i) => String(i)}
+              onMomentumScrollEnd={(e) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / (Dimensions.get("window").width - spacing.sm * 2));
+                setActivePhotoIdx(idx);
+              }}
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={[s.coverImage, { width: Dimensions.get("window").width - spacing.sm * 2 }]}
+                  contentFit="cover"
+                  transition={200}
+                />
+              )}
             />
-          ) : (
-            <View style={[s.coverPlaceholder, { backgroundColor: coverBg }]}>
-              <Text style={s.coverTitle} numberOfLines={3}>
-                {book.title}
-              </Text>
-              <Text style={s.coverAuthor}>{book.author}</Text>
+            <View style={s.dotsRow}>
+              {photoUris.map((_, i) => (
+                <View
+                  key={i}
+                  style={[s.dot, { backgroundColor: i === activePhotoIdx ? "#fff" : "rgba(255,255,255,0.4)" }]}
+                />
+              ))}
             </View>
-          )}
-          {isAvailable && (
-            <View style={[s.availBadge, { backgroundColor: accent }]}>
-              <Text style={s.availBadgeText}>
-                {t("books.available", "Available")}
-              </Text>
-            </View>
-          )}
-        </View>
+            {isAvailable && (
+              <View style={[s.availBadge, { backgroundColor: accent }]}>
+                <Text style={s.availBadgeText}>
+                  {t("books.available", "Available")}
+                </Text>
+              </View>
+            )}
+          </View>
+        ) : (
+          <View style={[s.coverHero, { borderColor: cardBorder }]}>
+            {coverUri ? (
+              <Image
+                source={{ uri: coverUri }}
+                style={s.coverImage}
+                contentFit="cover"
+                transition={200}
+                accessibilityRole="image"
+                accessibilityLabel={t("books.coverImageA11y", "{{title}} cover image", {
+                  title: book.title,
+                })}
+              />
+            ) : (
+              <View style={[s.coverPlaceholder, { backgroundColor: coverBg }]}>
+                <Text style={s.coverTitle} numberOfLines={3}>
+                  {book.title}
+                </Text>
+                <Text style={s.coverAuthor}>{book.author}</Text>
+              </View>
+            )}
+            {isAvailable && (
+              <View style={[s.availBadge, { backgroundColor: accent }]}>
+                <Text style={s.availBadgeText}>
+                  {t("books.available", "Available")}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* ── Title + Author ── */}
         <View style={s.titleSection}>
@@ -351,7 +404,7 @@ export function BookDetailScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("books.requestSwap", "Request Swap")}
-              onPress={() => navigation.navigate("RequestSwap", { bookId: book.id })}
+              onPress={() => requireVerified(() => navigation.navigate("RequestSwap", { bookId: book.id }))}
               style={({ pressed }) => [
                 s.ctaBtn,
                 { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
@@ -434,6 +487,20 @@ const s = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 2,
     textTransform: "uppercase",
+  },
+  dotsRow: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 5,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   availBadge: {
     position: "absolute",
