@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { queryClient } from './queryClient';
 
@@ -11,14 +12,17 @@ if (Platform.OS !== 'web') {
     const { MMKV } = require('react-native-mmkv');
     mmkv = new MMKV({ id: 'bookswap-mutation-queue' });
   } catch {
-    // Expo Go fallback
+    // Expo Go fallback — will use AsyncStorage
   }
 }
+
+let _asyncCache: string | null = null;
+let _asyncCacheLoaded = false;
 
 function readRaw(): string | null {
   if (mmkv) return mmkv.getString(STORAGE_KEY) ?? null;
   if (Platform.OS === 'web') return localStorage.getItem(STORAGE_KEY);
-  return null;
+  return _asyncCache;
 }
 
 function writeRaw(value: string) {
@@ -26,7 +30,20 @@ function writeRaw(value: string) {
     mmkv.set(STORAGE_KEY, value);
   } else if (Platform.OS === 'web') {
     localStorage.setItem(STORAGE_KEY, value);
+  } else {
+    _asyncCache = value;
+    AsyncStorage.setItem(STORAGE_KEY, value).catch(() => {});
   }
+}
+
+export async function hydrateOfflineQueue(): Promise<void> {
+  if (mmkv || Platform.OS === 'web' || _asyncCacheLoaded) return;
+  try {
+    _asyncCache = await AsyncStorage.getItem(STORAGE_KEY);
+  } catch {
+    _asyncCache = null;
+  }
+  _asyncCacheLoaded = true;
 }
 
 export interface QueuedMutation {
@@ -73,9 +90,9 @@ export function enqueueMutation(mutation: Omit<QueuedMutation, 'id' | 'createdAt
   });
 }
 
-export async function drainMutationQueue(): Promise<{ succeeded: number; failed: number }> {
+export async function drainMutationQueue(): Promise<{ succeeded: number; failed: number; failedKeys: string[] }> {
   const queue = loadQueue();
-  if (queue.length === 0) return { succeeded: 0, failed: 0 };
+  if (queue.length === 0) return { succeeded: 0, failed: 0, failedKeys: [] };
 
   addBreadcrumb('offline-queue', `Draining ${queue.length} queued mutations`);
 
@@ -83,6 +100,7 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
   const remaining: QueuedMutation[] = [];
   let succeeded = 0;
   let failed = 0;
+  const failedKeys: string[] = [];
 
   for (const mutation of queue) {
     try {
@@ -102,6 +120,7 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
       const status = error?.response?.status;
       if (status && status >= 400 && status < 500 && status !== 429) {
         failed++;
+        if (mutation.invalidateKeys) failedKeys.push(...mutation.invalidateKeys);
         addBreadcrumb('offline-queue', `Dropped mutation (${status}): ${mutation.method} ${mutation.endpoint}`);
       } else {
         mutation.retries++;
@@ -109,6 +128,7 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
           remaining.push(mutation);
         } else {
           failed++;
+          if (mutation.invalidateKeys) failedKeys.push(...mutation.invalidateKeys);
           captureException(error, { offlineMutation: mutation.endpoint });
         }
       }
@@ -116,8 +136,13 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
   }
 
   saveQueue(remaining);
+
+  for (const key of new Set(failedKeys)) {
+    queryClient.invalidateQueries({ queryKey: [key] });
+  }
+
   addBreadcrumb('offline-queue', `Drain complete: ${succeeded} ok, ${failed} dropped, ${remaining.length} retry later`);
-  return { succeeded, failed };
+  return { succeeded, failed, failedKeys };
 }
 
 export function pendingMutationCount(): number {

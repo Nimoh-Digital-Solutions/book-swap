@@ -73,14 +73,18 @@ def auto_confirm_stale_swaps():
     UserModel = get_user_model()
     cutoff = timezone.now() - timedelta(days=60)
     now = timezone.now()
+    affected_user_ids: set[int] = set()
+    total = 0
 
     # Requester confirmed but owner hasn't
-    requester_only = ExchangeRequest.objects.filter(
-        status=ExchangeStatus.ACTIVE,
-        requester_confirmed_at__lte=cutoff,
-        owner_confirmed_at__isnull=True,
+    requester_only = list(
+        ExchangeRequest.objects.filter(
+            status=ExchangeStatus.ACTIVE,
+            requester_confirmed_at__lte=cutoff,
+            owner_confirmed_at__isnull=True,
+        ).select_related("requested_book", "offered_book")
     )
-    for exchange in requester_only.iterator():
+    for exchange in requester_only:
         exchange.owner_confirmed_at = now
         exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
         exchange.save(
@@ -94,14 +98,19 @@ def auto_confirm_stale_swaps():
         exchange.requested_book.save(update_fields=["status"])
         exchange.offered_book.status = BookStatus.IN_EXCHANGE
         exchange.offered_book.save(update_fields=["status"])
+        affected_user_ids.add(exchange.requester_id)
+        affected_user_ids.add(exchange.owner_id)
+        total += 1
 
     # Owner confirmed but requester hasn't
-    owner_only = ExchangeRequest.objects.filter(
-        status=ExchangeStatus.ACTIVE,
-        owner_confirmed_at__lte=cutoff,
-        requester_confirmed_at__isnull=True,
+    owner_only = list(
+        ExchangeRequest.objects.filter(
+            status=ExchangeStatus.ACTIVE,
+            owner_confirmed_at__lte=cutoff,
+            requester_confirmed_at__isnull=True,
+        ).select_related("requested_book", "offered_book")
     )
-    for exchange in owner_only.iterator():
+    for exchange in owner_only:
         exchange.requester_confirmed_at = now
         exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
         exchange.save(
@@ -115,19 +124,16 @@ def auto_confirm_stale_swaps():
         exchange.requested_book.save(update_fields=["status"])
         exchange.offered_book.status = BookStatus.IN_EXCHANGE
         exchange.offered_book.save(update_fields=["status"])
+        affected_user_ids.add(exchange.requester_id)
+        affected_user_ids.add(exchange.owner_id)
+        total += 1
 
-    total = requester_only.count() + owner_only.count()
+    if affected_user_ids:
+        UserModel.objects.filter(pk__in=affected_user_ids).update(
+            swap_count=F("swap_count") + 1,
+        )
+
     if total:
-        # Increment swap_count for affected users
-        affected_ids = set()
-        for qs in (requester_only, owner_only):
-            for exchange in qs:
-                affected_ids.add(exchange.requester_id)
-                affected_ids.add(exchange.owner_id)
-        if affected_ids:
-            UserModel.objects.filter(pk__in=affected_ids).update(
-                swap_count=F("swap_count") + 1,
-            )
         logger.info("Auto-confirmed %d stale swaps.", total)
 
     return total

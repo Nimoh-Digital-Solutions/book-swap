@@ -6,6 +6,7 @@ import type { Message } from '@/types';
 
 const TYPING_TIMEOUT_MS = 3_000;
 const TYPING_COOLDOWN_MS = 500;
+const RECONNECT_DELAY_MS = 300;
 
 interface Options {
   exchangeId: string;
@@ -42,9 +43,15 @@ export function useChatWebSocket({ exchangeId, enabled = true }: Options) {
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSentRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled || !exchangeId) return;
+
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
 
     const wsPath = `/ws/chat/${exchangeId}/`;
     wsManager.connect(wsPath);
@@ -117,11 +124,20 @@ export function useChatWebSocket({ exchangeId, enabled = true }: Options) {
       unsubs.forEach((u) => u());
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       wsManager.disconnect();
-      if (useAuthStore.getState().isAuthenticated) {
-        wsManager.connect('/ws/notifications/');
-      }
+
+      reconnectTimerRef.current = setTimeout(() => {
+        if (useAuthStore.getState().isAuthenticated) {
+          wsManager.connect('/ws/notifications/');
+        }
+      }, RECONNECT_DELAY_MS);
     };
   }, [exchangeId, enabled, currentUserId, qc]);
+
+  useEffect(() => {
+    return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    };
+  }, []);
 
   const sendTyping = useCallback(() => {
     const now = Date.now();

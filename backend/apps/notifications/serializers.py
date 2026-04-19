@@ -75,8 +75,16 @@ class MobileDeviceSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict) -> MobileDevice:
         user = self.context["request"].user
+        token = validated_data["push_token"]
+
+        # Prevent token hijack: deactivate other users' registration of this token
+        MobileDevice.objects.filter(push_token=token).exclude(user=user).update(
+            is_active=False,
+        )
+
         device, _ = MobileDevice.objects.update_or_create(
-            push_token=validated_data["push_token"],
-            defaults={**validated_data, "user": user, "is_active": True},
+            user=user,
+            push_token=token,
+            defaults={**validated_data, "is_active": True},
         )
         return device

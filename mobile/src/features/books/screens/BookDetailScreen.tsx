@@ -1,6 +1,7 @@
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { Image } from "expo-image";
 import {
+  AlertTriangle,
   ArrowLeftRight,
   BookOpen,
   CheckCircle2,
@@ -25,6 +26,7 @@ import { ActivityIndicator, Alert, Dimensions, FlatList, Pressable, ScrollView, 
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
 import { showErrorToast, showInfoToast } from "@/components/Toast";
+import { EmptyState } from "@/components/EmptyState";
 import { Avatar } from "@/components/Avatar";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -59,7 +61,7 @@ export function BookDetailScreen() {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const { requireVerified } = useEmailVerificationGate();
 
-  const { data: rawBook, isLoading } = useBookDetail(params.bookId);
+  const { data: rawBook, isLoading, isError, refetch } = useBookDetail(params.bookId);
   const { data: wishlistEntry, isLoading: wishlistLoading } = useBookWishlistStatus(params.bookId);
   const addWishlist = useAddWishlistItem();
   const removeWishlist = useRemoveWishlistItem();
@@ -166,6 +168,20 @@ export function BookDetailScreen() {
     return (
       <View style={[s.root, { backgroundColor: bg }]}>
         <SkeletonBookDetail />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <EmptyState
+          icon={AlertTriangle}
+          title={t("common.loadError", "Something went wrong")}
+          subtitle={t("common.loadErrorHint", "Check your connection and try again.")}
+          actionLabel={t("common.retry", "Retry")}
+          onAction={() => refetch()}
+        />
       </View>
     );
   }

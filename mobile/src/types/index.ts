@@ -8,6 +8,8 @@ export type {
   ExchangeParticipant,
   ExchangeBook,
   ExchangeListItem,
+  ExchangeDetail,
+  DeclineReason,
   CreateExchangePayload,
   CounterProposePayload,
   DeclinePayload,
@@ -75,7 +77,9 @@ export interface Book {
   isbn: string;
   description: string;
   condition: BookCondition;
-  genre: string;
+  genres: string[];
+  /** @deprecated Use `genres` instead */
+  genre?: string;
   language: string;
   status: string;
   cover_url?: string | null;
@@ -94,24 +98,6 @@ export interface BookPhoto {
   order: number;
 }
 
-export type DeclineReason = 'not_interested' | 'reserved' | 'counter_proposed' | 'other';
-
-export interface ExchangeDetail extends import('@shared/types/exchange').ExchangeListItem {
-  decline_reason: DeclineReason | null;
-  counter_to: string | null;
-  original_offered_book: import('@shared/types/exchange').ExchangeBook | null;
-  last_counter_by: string | null;
-  counter_approved_at: string | null;
-  requester_confirmed_at: string | null;
-  owner_confirmed_at: string | null;
-  return_requested_at: string | null;
-  return_confirmed_requester: string | null;
-  return_confirmed_owner: string | null;
-  expired_at: string | null;
-  conditions_accepted_by_me: boolean;
-  conditions_accepted_count: number;
-  conditions_version: string;
-}
 
 /** @deprecated Use ExchangeListItem or ExchangeDetail instead */
 export type ExchangeRequest = import('@shared/types/exchange').ExchangeListItem;

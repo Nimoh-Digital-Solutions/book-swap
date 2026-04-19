@@ -48,7 +48,7 @@ export function ScanResultScreen() {
 
   const hasPrefilledMetadata = !!params.title;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["isbn-lookup", params.isbn],
     queryFn: async () => {
       const { data: result } = await http.get(API.books.isbnLookup, {
@@ -81,6 +81,49 @@ export function ScanResultScreen() {
         <Text style={[s.loadingSub, { color: c.text.secondary }]}>
           ISBN {params.isbn}
         </Text>
+      </View>
+    );
+  }
+
+  if (isError && !hasPrefilledMetadata) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <View
+          style={[
+            s.errorIcon,
+            { backgroundColor: isDark ? c.auth.card : "#FEE2E2" },
+          ]}
+        >
+          <AlertTriangle size={36} color={c.status?.error ?? "#DC2626"} />
+        </View>
+        <Text style={[s.errorTitle, { color: c.text.primary }]}>
+          {t("scanner.lookupError", "Lookup failed")}
+        </Text>
+        <Text style={[s.errorSub, { color: c.text.secondary }]}>
+          {t("scanner.lookupErrorSub", "We couldn't reach the book database. Check your connection and try again.")}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            s.primaryBtn,
+            { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => refetch()}
+        >
+          <Text style={s.primaryBtnText}>
+            {t("common.retry", "Retry")}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            s.secondaryBtn,
+            { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
+        >
+          <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
+            {t("scanner.addManually", "Add manually")}
+          </Text>
+        </Pressable>
       </View>
     );
   }

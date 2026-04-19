@@ -25,6 +25,8 @@ export function useMessages(exchangeId: string) {
       return data.results;
     },
     enabled: !!exchangeId,
+    select: (serverMessages) =>
+      serverMessages.filter((m) => !m.id.startsWith('offline-')),
   });
 }
 

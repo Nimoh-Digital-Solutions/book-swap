@@ -17,18 +17,18 @@
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| H-01 | Error states | `BookDetailScreen.tsx:62-180` | `useBookDetail` ignores `isError` — API failure shows "Book not found" instead of error+retry | Branch on `isError` with retry UI |
-| H-02 | Error states | `ScanResultScreen.tsx:51-134` | Failed ISBN lookup shows "not found" UI, not error+retry | Handle `isError`/`error` with dedicated error state |
-| H-03 | Error states | `UserReviewsScreen.tsx:32-91` | No `isError` — failed query looks like "No reviews yet" | Show error+retry when `isError` |
-| H-04 | Error states | `MyReviewsScreen.tsx:29-91` | Same as H-03 | Same fix |
-| H-05 | WS / race | `useChatWebSocket.ts:116-123` | Any `exchangeId`/`enabled` change tears down chat WS and reconnects notifications — rapid navigation can drop messages | Debounce reconnects or use refcount strategy |
-| H-06 | Offline | `offlineMutationQueue.ts:24-30` | Queue only persists with MMKV or web localStorage — native without MMKV silently drops queued work | Fallback to AsyncStorage or block offline queue UI |
-| H-07 | Offline | `useMessages.ts:47-91` | Optimistic text messages have no rollback on sync failure — fake `offline-*` IDs can remain | Remove optimistic rows on drain failure, or wait for server ack |
-| H-08 | Celery | `exchanges/tasks.py:119-133` | `auto_confirm_stale_swaps` queries for affected IDs *after* status update — returns 0 rows; `swap_count` never incremented | Collect user IDs inside update loops before status change |
-| H-09 | Business logic | `exchanges/views.py` (lifecycle) | `COMPLETED` status is in valid transitions but no API action transitions to it; notifications for `completed` never fire | Add explicit action or auto-transition from `swap_confirmed` |
-| H-10 | Security | `notifications/serializers.py:76-82` | `MobileDeviceSerializer.create` uses `update_or_create(push_token=...)` — registering a token already tied to another user reassigns it (token hijack) | Scope uniqueness to `(user, push_token)` or reject if user differs |
-| H-11 | i18n / logic | `ExchangeListScreen.tsx:162-169` | Incoming requests banner uses `t('exchanges.incomingRequests')` which is the nav title "Incoming Requests" — count `{{count}}` is never interpolated | Use a dedicated key with `{{count}}` interpolation |
-| H-12 | Types | `shared/types vs mobile/types` | Mobile `Book` has `genre: string`, shared has `genres: string[]`; `User` `avg_rating` is string vs number; `location` shapes differ — causes `as any` everywhere | Align mobile types with shared; single source of truth |
+| H-01 | Error states | `BookDetailScreen.tsx` | `useBookDetail` ignores `isError` — API failure shows "Book not found" instead of error+retry | **RESOLVED** — Added `isError`+`refetch` with EmptyState error+retry UI |
+| H-02 | Error states | `ScanResultScreen.tsx` | Failed ISBN lookup shows "not found" UI, not error+retry | **RESOLVED** — Added `isError` branch with retry button before "not found" |
+| H-03 | Error states | `UserReviewsScreen.tsx` | No `isError` — failed query looks like "No reviews yet" | **RESOLVED** — Added `isError` with EmptyState error+retry |
+| H-04 | Error states | `MyReviewsScreen.tsx` | Same as H-03 | **RESOLVED** — Same fix applied |
+| H-05 | WS / race | `useChatWebSocket.ts` | Rapid navigation causes WS reconnect storms | **RESOLVED** — Debounced notification WS reconnect with 300ms delay; cancel on re-entry |
+| H-06 | Offline | `offlineMutationQueue.ts` | Queue silently drops on native without MMKV | **RESOLVED** — Added AsyncStorage fallback with sync in-memory cache |
+| H-07 | Offline | `useMessages.ts` | Optimistic `offline-*` messages persist on failure | **RESOLVED** — `select` strips `offline-*` IDs from server data; drain invalidates failed keys |
+| H-08 | Celery | `exchanges/tasks.py` | `auto_confirm_stale_swaps` counts 0 after status update | **RESOLVED** — Collect IDs inside loops before status change; eagerly evaluate querysets |
+| H-09 | Business logic | `exchanges/views.py` | `COMPLETED` unreachable — no API action | **RESOLVED** — Added `complete` action (SWAP_CONFIRMED → COMPLETED) with notifications |
+| H-10 | Security | `notifications/serializers.py` | Push token hijack via `update_or_create(push_token=...)` | **RESOLVED** — Scoped to `(user, push_token)`; deactivate other users' registration |
+| H-11 | i18n / logic | `ExchangeListScreen.tsx` | Incoming banner uses nav title key without `{{count}}` | **RESOLVED** — New `exchanges.incomingBanner` key with count interpolation in all locales |
+| H-12 | Types | `shared/types vs mobile/types` | `Book.genre` vs `genres`; `ExchangeDetail` diverged | **RESOLVED** — `Book.genres: string[]` primary; shared `ExchangeDetail` now includes counter fields; mobile re-exports from shared |
 
 ---
 

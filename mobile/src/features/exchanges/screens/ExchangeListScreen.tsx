@@ -159,13 +159,13 @@ export function ExchangeListScreen() {
       {(incomingCount ?? 0) > 0 && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('exchanges.incomingRequests', '{{count}} incoming request(s)', { count: incomingCount })}
+          accessibilityLabel={t('exchanges.incomingBanner', '{{count}} incoming request(s)', { count: incomingCount })}
           onPress={goToIncoming}
           style={[s.incomingBanner, { backgroundColor: accent + '15', borderColor: accent + '30' }]}
         >
           <Bell size={16} color={accent} />
           <Text style={[s.incomingText, { color: accent }]}>
-            {t('exchanges.incomingRequests', '{{count}} incoming request(s)', { count: incomingCount })}
+            {t('exchanges.incomingBanner', '{{count}} incoming request(s)', { count: incomingCount })}
           </Text>
         </Pressable>
       )}

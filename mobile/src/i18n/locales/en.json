@@ -312,6 +312,7 @@
     "declineTitle": "Decline Request",
     "history": "History",
     "iAcceptConditions": "I accept the exchange conditions",
+    "incomingBanner": "{{count}} incoming request(s)",
     "incomingRequests": "Incoming Requests",
     "noBooks": "No books to offer",
     "noExchanges": "No exchanges yet",

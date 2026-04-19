@@ -120,6 +120,7 @@ class ExchangeRequestViewSet(
             "accept_conditions",
             "conditions",
             "confirm_swap",
+            "complete",
             "request_return",
             "confirm_return",
         ):
@@ -415,6 +416,33 @@ class ExchangeRequestViewSet(
             ).update(swap_count=F("swap_count") + 1)
 
         exchange.save(update_fields=update_fields)
+
+        serializer = ExchangeRequestDetailSerializer(
+            exchange,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request, pk=None):
+        """Mark a swap-confirmed exchange as completed."""
+        exchange = self.get_object()
+        if exchange.status != ExchangeStatus.SWAP_CONFIRMED:
+            return Response(
+                {"detail": "Only swap-confirmed exchanges can be completed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        exchange.transition_to(ExchangeStatus.COMPLETED)
+        exchange.save(update_fields=["status", "updated_at"])
+
+        exchange.requested_book.status = BookStatus.AVAILABLE
+        exchange.requested_book.save(update_fields=["status"])
+        exchange.offered_book.status = BookStatus.AVAILABLE
+        exchange.offered_book.save(update_fields=["status"])
+
+        from apps.notifications.tasks import send_exchange_completed_notification
+
+        send_exchange_completed_notification.delay(str(exchange.pk))
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,

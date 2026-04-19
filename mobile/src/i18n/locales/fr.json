@@ -305,6 +305,7 @@
     "declineTitle": "Refuser la demande",
     "history": "Historique",
     "iAcceptConditions": "J'accepte les conditions d'échange",
+    "incomingBanner": "{{count}} demande(s) reçue(s)",
     "incomingRequests": "Demandes reçues",
     "noBooks": "Aucun livre à proposer",
     "noExchanges": "Aucun échange pour le moment",

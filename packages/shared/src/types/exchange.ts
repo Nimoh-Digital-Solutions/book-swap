@@ -55,6 +55,9 @@ export interface ExchangeListItem {
 export interface ExchangeDetail extends ExchangeListItem {
   decline_reason: DeclineReason | null;
   counter_to: string | null;
+  original_offered_book: ExchangeBook | null;
+  last_counter_by: string | null;
+  counter_approved_at: string | null;
   requester_confirmed_at: string | null;
   owner_confirmed_at: string | null;
   return_requested_at: string | null;

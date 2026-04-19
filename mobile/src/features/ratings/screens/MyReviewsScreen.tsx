@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { MessageSquareQuote } from 'lucide-react-native';
+import { AlertTriangle, MessageSquareQuote } from 'lucide-react-native';
 
 import { useAuthStore } from '@/stores/authStore';
 import { useUserRatings } from '@/features/ratings/hooks/useRatings';
@@ -26,7 +26,7 @@ export function MyReviewsScreen() {
   const user = useAuthStore((s) => s.user);
   const accent = c.auth.golden;
 
-  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } =
     useUserRatings(user?.id ?? '');
 
   const ratings = useMemo(
@@ -72,6 +72,22 @@ export function MyReviewsScreen() {
       <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['bottom']}>
         <View style={s.center}>
           <ActivityIndicator size="large" color={accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['bottom']}>
+        <View style={s.center}>
+          <EmptyState
+            icon={AlertTriangle}
+            title={t('common.loadError', 'Something went wrong')}
+            subtitle={t('common.loadErrorHint', 'Check your connection and try again.')}
+            actionLabel={t('common.retry', 'Retry')}
+            onAction={() => refetch()}
+          />
         </View>
       </SafeAreaView>
     );

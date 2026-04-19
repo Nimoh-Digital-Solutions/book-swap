@@ -305,6 +305,7 @@
     "declineTitle": "Verzoek afwijzen",
     "history": "Geschiedenis",
     "iAcceptConditions": "Ik accepteer de ruilvoorwaarden",
+    "incomingBanner": "{{count}} ontvangen verzoek(en)",
     "incomingRequests": "Ontvangen verzoeken",
     "noBooks": "Geen boeken om aan te bieden",
     "noExchanges": "Nog geen ruilen",
