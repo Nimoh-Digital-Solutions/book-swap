@@ -45,6 +45,12 @@ def _get_blocked_user_ids(user):
 # ── Book CRUD ─────────────────────────────────────────────────────────────────
 
 
+class BookPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = "page_size"
+    max_page_size = 200
+
+
 class BookViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -56,6 +62,7 @@ class BookViewSet(
     """CRUD for book listings."""
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = BookPagination
     lookup_field = "pk"
 
     def get_serializer_class(self):
@@ -398,7 +405,8 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             owner__location__isnull=False,
         )
         if request.user.is_authenticated:
-            base_qs = base_qs.exclude(owner=request.user)
+            blocked_ids = _get_blocked_user_ids(request.user)
+            base_qs = base_qs.exclude(owner=request.user).exclude(owner_id__in=blocked_ids)
 
         whens = [
             When(

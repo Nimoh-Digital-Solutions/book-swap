@@ -17,7 +17,8 @@
     "remove": "Retirer",
     "saving": "Enregistrement...",
     "ok": "OK",
-    "close": "Fermer"
+    "close": "Fermer",
+    "unknownUser": "Inconnu"
   },
   "errors": {
     "websocketExhausted": "Impossible de se reconnecter. Tirez pour rafraîchir ou rouvrez l'application."

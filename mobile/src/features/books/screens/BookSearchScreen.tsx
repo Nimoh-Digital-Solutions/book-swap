@@ -63,6 +63,8 @@ export function BookSearchScreen() {
 
   const renderItem = ({ item }: { item: ExternalBookResult }) => (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${item.title}${item.author ? `, ${item.author}` : ''}`}
       style={({ pressed }) => [
         s.resultRow,
         {

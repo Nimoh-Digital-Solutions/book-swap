@@ -17,7 +17,8 @@
     "remove": "Verwijderen",
     "saving": "Opslaan...",
     "ok": "OK",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "unknownUser": "Onbekend"
   },
   "errors": {
     "websocketExhausted": "Kan niet opnieuw verbinden. Trek om te vernieuwen of heropen de app."

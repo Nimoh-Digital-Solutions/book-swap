@@ -79,7 +79,7 @@ export function RequestSwapScreen() {
               "exchanges.requestSentMsg",
               "The owner will be notified of your swap request.",
             ),
-            [{ text: "OK", onPress: () => navigation.goBack() }],
+            [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
           );
         },
         onError: (err: any) => {

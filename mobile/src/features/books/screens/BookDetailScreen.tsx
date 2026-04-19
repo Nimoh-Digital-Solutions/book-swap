@@ -199,7 +199,7 @@ export function BookDetailScreen() {
   const book = rawBook as any;
   const owner: BookOwner | null =
     typeof book.owner === "object" && book.owner !== null ? book.owner : null;
-  const ownerName = owner?.username ?? "Unknown";
+  const ownerName = owner?.username ?? t("common.unknownUser", "Unknown");
 
   const photoUris: string[] = [];
   if (book.cover_url) photoUris.push(book.cover_url);

@@ -62,7 +62,7 @@ export function CounterOfferScreen() {
           Alert.alert(
             t('exchanges.counterSent', 'Counter Offer Sent!'),
             t('exchanges.counterSentMsg', 'The other party will be notified of your counter offer.'),
-            [{ text: 'OK', onPress: () => navigation.goBack() }],
+            [{ text: t('common.ok', 'OK'), onPress: () => navigation.goBack() }],
           );
         },
         onError: (err: any) => {

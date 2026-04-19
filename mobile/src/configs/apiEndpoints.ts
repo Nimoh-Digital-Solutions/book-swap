@@ -32,6 +32,7 @@ export const API = {
     meDelete: `${USERS}/me/delete/`,
     meDeleteCancel: `${USERS}/me/delete/cancel/`,
     meDataExport: `${USERS}/me/data-export/`,
+    meDevices: `${USERS}/me/devices/`,
     checkUsername: `${USERS}/check-username/`,
     detail: (id: string) => `${USERS}/${id}/`,
   },

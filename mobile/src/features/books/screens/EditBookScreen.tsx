@@ -140,7 +140,7 @@ export function EditBookScreen() {
         Alert.alert(
           t("books.editBook.successTitle", "Book updated!"),
           t("books.editBook.successMsg", "Your changes have been saved."),
-          [{ text: "OK", onPress: () => navigation.goBack() }],
+          [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
         );
       },
       onError: () => {

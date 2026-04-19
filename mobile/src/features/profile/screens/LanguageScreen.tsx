@@ -78,6 +78,7 @@ export function LanguageScreen() {
                     },
                   ]}
                   accessibilityRole="radio"
+                  accessibilityLabel={lang.label}
                   accessibilityState={{ selected }}
                 >
                   <View style={s.rowLeft}>

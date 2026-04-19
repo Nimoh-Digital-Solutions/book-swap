@@ -223,7 +223,7 @@ export function EditProfileScreen() {
           Alert.alert(
             t('profile.edit.successTitle', 'Profile Updated'),
             t('profile.edit.successMsg', 'Your profile has been saved.'),
-            [{ text: 'OK', onPress: () => navigation.goBack() }],
+            [{ text: t('common.ok', 'OK'), onPress: () => navigation.goBack() }],
           );
         },
         onError: () => {

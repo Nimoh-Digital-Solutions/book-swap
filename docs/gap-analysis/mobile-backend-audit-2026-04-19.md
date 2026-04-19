@@ -88,28 +88,28 @@
 
 ---
 
-## 4. LOW (18)
+## 4. LOW (18) — 17 RESOLVED, 1 SKIPPED
 
 | ID | Area | Location | Finding | Fix |
 |----|------|----------|---------|-----|
-| L-01 | i18n | `EditBookScreen.tsx:143` | Success alert uses hardcoded `"OK"` | Use `t("common.ok")` |
-| L-02 | i18n | `EditProfileScreen.tsx:226` | Same hardcoded `"OK"` | Use `t("common.ok")` |
-| L-03 | i18n | `RequestSwapScreen.tsx:82` | Same | Use `t("common.ok")` |
-| L-04 | i18n | `CounterOfferScreen.tsx:65` | Same | Use `t("common.ok")` |
-| L-05 | i18n | `BookDetailScreen.tsx:186` | Fallback `"Unknown"` for owner name is English-only | Use `t("common.unknownUser")` |
-| L-06 | A11y | `LanguageScreen.tsx:70-82` | Radio rows have `accessibilityRole="radio"` but no label | Add language name as label |
-| L-07 | A11y | `AppearanceScreen.tsx:84-96` | Same — radio without label | Label each theme |
-| L-08 | A11y | `BookSearchScreen.tsx:64-106` | Result rows lack a11y props | Add labels |
-| L-09 | Types | Various | `as any` on navigation, errors, FormData | Replace with typed alternatives |
-| L-10 | Edge case | `timeAgo.ts:1-17` | Invalid `dateStr` yields NaN and odd strings | Guard `Number.isNaN` |
-| L-11 | Memory | `useDeletionCancelDeepLink.ts:46-48` | `Linking.getInitialURL()` not cancelled on unmount | Track cancelled flag |
-| L-12 | Memory | `BiometricGate.tsx:59-67` | Async in AppState listener has no unmount guard | Add cancelled flag |
-| L-13 | Network | `useNetworkStatus.ts:8-19` | `STALE_QUERY_KEYS` misses many query keys — coming online only refreshes subset | Extend list or use predicate |
-| L-14 | Config | `pushNotifications.ts:35-40` | Hard-coded `/api/v1/users/me/devices/` instead of centralized endpoint | Use `API` config |
-| L-15 | Backend | `books/views.py:70-83` | `BookViewSet.list` has no pagination — large payload possible | Add pagination |
-| L-16 | Backend | `books/views.py:386-415` | `radius_counts` doesn't exclude blocked users (browse list does) | Apply same exclusion |
-| L-17 | Backend | `notifications/views.py:109-127` | `UnsubscribeView.get` performs state-changing update on GET | Use POST or document |
-| L-18 | Backend | `bookswap/routing.py:11` | `ExampleConsumer` echo WebSocket is still wired in production | Remove or guard behind DEBUG |
+| L-01 | i18n | `EditBookScreen.tsx` | Success alert uses hardcoded `"OK"` | **RESOLVED** — Changed to `t("common.ok", "OK")` |
+| L-02 | i18n | `EditProfileScreen.tsx` | Same hardcoded `"OK"` | **RESOLVED** — Changed to `t('common.ok', 'OK')` |
+| L-03 | i18n | `RequestSwapScreen.tsx` | Same | **RESOLVED** — Changed to `t("common.ok", "OK")` |
+| L-04 | i18n | `CounterOfferScreen.tsx` | Same | **RESOLVED** — Changed to `t('common.ok', 'OK')` |
+| L-05 | i18n | `BookDetailScreen.tsx` | Fallback `"Unknown"` is English-only | **RESOLVED** — Changed to `t("common.unknownUser", "Unknown")` with fr/nl translations |
+| L-06 | A11y | `LanguageScreen.tsx` | Radio rows have no a11y label | **RESOLVED** — Added `accessibilityLabel={lang.label}` |
+| L-07 | A11y | `AppearanceScreen.tsx` | Same — radio without label | **RESOLVED** — Added `accessibilityLabel={t(opt.labelKey)}` |
+| L-08 | A11y | `BookSearchScreen.tsx` | Result rows lack a11y props | **RESOLVED** — Added `accessibilityRole` + `accessibilityLabel` |
+| L-09 | Types | Various | `as any` on navigation, errors, FormData | **SKIPPED** — Most are navigation casts requiring complex type refactoring; low risk |
+| L-10 | Edge case | `timeAgo.ts` | Invalid `dateStr` yields NaN | **RESOLVED** — Added `Number.isNaN` guard, returns empty string |
+| L-11 | Memory | `useDeletionCancelDeepLink.ts` | `getInitialURL()` not cancelled on unmount | **RESOLVED** — Added `cancelled` flag checked before state updates |
+| L-12 | Memory | `BiometricGate.tsx` | Async in AppState listener has no unmount guard | **RESOLVED** — Added `unmounted` flag with cleanup |
+| L-13 | Network | `useNetworkStatus.ts` | `STALE_QUERY_KEYS` misses many query keys | **RESOLVED** — Extended to 16 keys covering all features |
+| L-14 | Config | `pushNotifications.ts` | Hard-coded `/api/v1/users/me/devices/` | **RESOLVED** — Added `API.users.meDevices` endpoint and used it |
+| L-15 | Backend | `books/views.py` | `BookViewSet.list` has no pagination | **RESOLVED** — Added `BookPagination` (50/page, max 200) |
+| L-16 | Backend | `books/views.py` | `radius_counts` doesn't exclude blocked users | **RESOLVED** — Added `_get_blocked_user_ids` exclusion |
+| L-17 | Backend | `notifications/views.py` | `UnsubscribeView.get` performs state change on GET | **RESOLVED** — Added POST handler; kept GET for email client compatibility |
+| L-18 | Backend | `bookswap/routing.py` | `ExampleConsumer` echo WS in production | **RESOLVED** — Removed from routing |
 
 ---
 

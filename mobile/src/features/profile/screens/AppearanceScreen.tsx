@@ -92,6 +92,7 @@ export function AppearanceScreen() {
                     },
                   ]}
                   accessibilityRole="radio"
+                  accessibilityLabel={t(opt.labelKey)}
                   accessibilityState={{ selected }}
                 >
                   <View style={s.rowLeft}>

@@ -97,16 +97,7 @@ class UnsubscribeView(APIView):
 
     permission_classes = [AllowAny]  # noqa: RUF012
 
-    @extend_schema(
-        summary="One-click email unsubscribe",
-        description="Disable all email notifications for the user identified by the unsubscribe token.",
-        responses={
-            200: OpenApiResponse(description="Successfully unsubscribed"),
-            404: OpenApiResponse(description="Invalid or expired token"),
-        },
-        tags=["notifications"],
-    )
-    def get(self, request: Request, token: str) -> Response:
+    def _unsubscribe(self, token: str) -> Response:
         try:
             prefs = NotificationPreferences.objects.get(unsubscribe_token=token)
         except NotificationPreferences.DoesNotExist:
@@ -115,7 +106,6 @@ class UnsubscribeView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Disable all email notifications
         NotificationPreferences.objects.filter(pk=prefs.pk).update(
             email_new_request=False,
             email_request_accepted=False,
@@ -125,3 +115,27 @@ class UnsubscribeView(APIView):
             email_rating_received=False,
         )
         return Response({"detail": "You have been unsubscribed from all BookSwap emails."})
+
+    @extend_schema(
+        summary="One-click email unsubscribe (POST)",
+        description="Disable all email notifications for the user identified by the unsubscribe token.",
+        responses={
+            200: OpenApiResponse(description="Successfully unsubscribed"),
+            404: OpenApiResponse(description="Invalid or expired token"),
+        },
+        tags=["notifications"],
+    )
+    def post(self, request: Request, token: str) -> Response:
+        return self._unsubscribe(token)
+
+    @extend_schema(
+        summary="One-click email unsubscribe (GET — kept for email client compatibility)",
+        description="Disable all email notifications. Prefer POST for programmatic use.",
+        responses={
+            200: OpenApiResponse(description="Successfully unsubscribed"),
+            404: OpenApiResponse(description="Invalid or expired token"),
+        },
+        tags=["notifications"],
+    )
+    def get(self, request: Request, token: str) -> Response:
+        return self._unsubscribe(token)

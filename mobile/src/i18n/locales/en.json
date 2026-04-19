@@ -17,7 +17,8 @@
     "remove": "Remove",
     "saving": "Saving...",
     "close": "Close",
-    "ok": "OK"
+    "ok": "OK",
+    "unknownUser": "Unknown"
   },
   "errors": {
     "websocketExhausted": "Could not reconnect. Pull to refresh or reopen the app to restore live updates."

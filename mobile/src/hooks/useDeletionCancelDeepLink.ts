@@ -11,6 +11,8 @@ export function useDeletionCancelDeepLink() {
   const { t } = useTranslation();
 
   useEffect(() => {
+    let cancelled = false;
+
     const handleUrl = async ({ url }: { url: string }) => {
       try {
         const parsed = Linking.parse(url);
@@ -21,6 +23,7 @@ export function useDeletionCancelDeepLink() {
         if (!token) return;
 
         await http.post(API.users.meDeleteCancel, { token });
+        if (cancelled) return;
         deletionStorage.clearCancelToken();
 
         Alert.alert(
@@ -31,6 +34,7 @@ export function useDeletionCancelDeepLink() {
           ),
         );
       } catch {
+        if (cancelled) return;
         Alert.alert(
           t('common.error', 'Error'),
           t(
@@ -44,9 +48,12 @@ export function useDeletionCancelDeepLink() {
     const subscription = Linking.addEventListener('url', handleUrl);
 
     Linking.getInitialURL().then((url) => {
-      if (url) handleUrl({ url });
+      if (!cancelled && url) handleUrl({ url });
     });
 
-    return () => subscription.remove();
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
   }, [t]);
 }

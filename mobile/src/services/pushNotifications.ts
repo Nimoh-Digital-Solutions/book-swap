@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { http } from '@/services/http';
+import { API } from '@/configs/apiEndpoints';
 
 /** Foreground / tap behaviour is registered in `initNotificationHandlers` (`@/services/notificationHandler`). */
 
@@ -33,7 +34,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
 }
 
 export async function sendPushTokenToBackend(token: string): Promise<void> {
-  await http.post('/api/v1/users/me/devices/', {
+  await http.post(API.users.meDevices, {
     push_token: token,
     platform: Platform.OS,
     device_name: Device.deviceName ?? 'Unknown',

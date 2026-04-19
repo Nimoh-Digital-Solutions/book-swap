@@ -46,6 +46,7 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
   }, [authenticate]);
 
   useEffect(() => {
+    let unmounted = false;
     const sub = AppState.addEventListener('change', (next) => {
       const wasBackground = appState.current.match(/inactive|background/);
       if (wasBackground && next === 'active') {
@@ -57,10 +58,12 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
           return;
         }
         void (async () => {
+          if (unmounted) return;
           const enabled = tokenStorage.getBiometricEnabled();
           if (enabled && useAuthStore.getState().isAuthenticated) {
             setLocked(true);
             const result = await authenticate();
+            if (unmounted) return;
             lastAuthAt.current = Date.now();
             if (result.success) setLocked(false);
           }
@@ -68,7 +71,10 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
       }
       appState.current = next;
     });
-    return () => sub.remove();
+    return () => {
+      unmounted = true;
+      sub.remove();
+    };
   }, [authenticate]);
 
   const handleLogout = useCallback(() => {
