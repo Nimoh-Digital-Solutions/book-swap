@@ -48,6 +48,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install system dependencies (GDAL/GEOS for GeoDjango)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -yqq gdal-bin libgdal-dev libgeos-dev
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
         with:
@@ -78,6 +83,8 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
           SECRET_KEY: ci-test-secret-key-not-for-production
           REDIS_URL: redis://localhost:6379/0
+          GDAL_LIBRARY_PATH: ""
+          GEOS_LIBRARY_PATH: ""
         run: python manage.py makemigrations --check --dry-run
 
       - name: Run tests
@@ -86,6 +93,8 @@ jobs:
           SECRET_KEY: ci-test-secret-key-not-for-production
           CELERY_TASK_ALWAYS_EAGER: "True"
           REDIS_URL: redis://localhost:6379/0
+          GDAL_LIBRARY_PATH: ""
+          GEOS_LIBRARY_PATH: ""
         run: python -m pytest --tb=short -q --cov=apps --cov=bookswap --cov-report=term-missing --cov-fail-under=80
 
   # ── Frontend ───────────────────────────────────────────────────────────────
