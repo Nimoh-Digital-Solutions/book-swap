@@ -624,9 +624,11 @@ export function BrowseMapScreen() {
 
   // ── Map + Bottom Sheet ───────────────────────────────────────────
 
+  const ResolvedMapView = MapView!;
+
   return (
     <View style={[s.root, { backgroundColor: bg }]}>
-      <MapView
+      <ResolvedMapView
         ref={mapRef}
         style={s.map}
         provider={useGoogleProvider ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
@@ -652,7 +654,8 @@ export function BrowseMapScreen() {
 
         {/* Clustered book markers */}
         {clusters.map((feature) => {
-          const [lng, lat] = feature.geometry.coordinates;
+          const lng = feature.geometry.coordinates[0] ?? 0;
+          const lat = feature.geometry.coordinates[1] ?? 0;
           const isCluster =
             "cluster" in feature.properties &&
             feature.properties.cluster;
@@ -682,7 +685,7 @@ export function BrowseMapScreen() {
             </MapMarker>
           ) : null;
         })}
-      </MapView>
+      </ResolvedMapView>
 
       {/* Map controls */}
       <View style={[s.mapControls, { backgroundColor: cardBg, borderColor: cardBorder }]}>

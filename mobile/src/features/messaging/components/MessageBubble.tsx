@@ -18,7 +18,7 @@ const MEETUP_RE = /^\[MEETUP](.+?)(?:\|(.*))?$/;
 function parseMeetup(content: string): { name: string; address: string } | null {
   const m = content.match(MEETUP_RE);
   if (!m) return null;
-  return { name: m[1], address: m[2] ?? '' };
+  return { name: m[1] ?? '', address: m[2] ?? '' };
 }
 
 function formatTime(iso: string): string {

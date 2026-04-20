@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import { documentDirectory, writeAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useTranslation } from 'react-i18next';
 
@@ -19,10 +19,10 @@ export function useDataExport() {
     try {
       const { data } = await http.get(API.users.meDataExport);
       const json = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + FILENAME;
+      const fileUri = documentDirectory + FILENAME;
 
-      await FileSystem.writeAsStringAsync(fileUri, json, {
-        encoding: FileSystem.EncodingType.UTF8,
+      await writeAsStringAsync(fileUri, json, {
+        encoding: EncodingType.UTF8,
       });
 
       const sharingAvailable = await Sharing.isAvailableAsync();

@@ -13,6 +13,7 @@ import {
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import type { AccountDeletionPayload } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useDeleteAccount } from '../hooks/useAccountDeletion';
 
@@ -53,7 +54,7 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
     setError('');
 
     deleteAccount.mutate(
-      isSocialOnly ? {} : { password },
+      isSocialOnly ? ({ password: '' } as AccountDeletionPayload) : { password },
       {
         onError: (err) => {
           const ax = err as { response?: { data?: { password?: string[]; detail?: string } } };
