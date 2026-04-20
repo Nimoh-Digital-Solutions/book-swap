@@ -47,11 +47,12 @@ class MessageCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"image": "Only JPEG and PNG images are allowed."})
             try:
                 from PIL import Image as PILImage
+
                 img = PILImage.open(image)
                 img.verify()
                 image.seek(0)
-            except Exception:
-                raise serializers.ValidationError({"image": "File does not appear to be a valid image."})
+            except Exception as exc:
+                raise serializers.ValidationError({"image": "File does not appear to be a valid image."}) from exc
         return attrs
 
 

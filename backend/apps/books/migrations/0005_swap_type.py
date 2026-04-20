@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('books', '0004_wishlistitem_add_book_fk'),
+        ("books", "0004_wishlistitem_add_book_fk"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='book',
-            name='swap_type',
-            field=models.CharField(choices=[('temporary', 'Temporary (with return)'), ('permanent', 'Permanent (no return)')], default='temporary', help_text='Whether the book must be returned after a swap or is given away permanently.', max_length=10),
+            model_name="book",
+            name="swap_type",
+            field=models.CharField(
+                choices=[("temporary", "Temporary (with return)"), ("permanent", "Permanent (no return)")],
+                default="temporary",
+                help_text="Whether the book must be returned after a swap or is given away permanently.",
+                max_length=10,
+            ),
         ),
     ]

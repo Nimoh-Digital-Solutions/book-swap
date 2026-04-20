@@ -68,16 +68,12 @@ class ExchangeRequestViewSet(
         blocked_ids = get_blocked_user_ids(user)
 
         last_msg_preview = Subquery(
-            Message.objects.filter(exchange=OuterRef("pk"))
-            .order_by("-created_at")
-            .values("content")[:1],
+            Message.objects.filter(exchange=OuterRef("pk")).order_by("-created_at").values("content")[:1],
             output_field=CharField(),
         )
 
         return (
-            ExchangeRequest.objects.filter(
-                db_models.Q(requester=user) | db_models.Q(owner=user)
-            )
+            ExchangeRequest.objects.filter(db_models.Q(requester=user) | db_models.Q(owner=user))
             .exclude(requester_id__in=blocked_ids)
             .exclude(owner_id__in=blocked_ids)
             .select_related(
@@ -94,8 +90,7 @@ class ExchangeRequestViewSet(
             .annotate(
                 unread_count=Count(
                     "messages",
-                    filter=Q(messages__read_at__isnull=True)
-                    & ~Q(messages__sender=user),
+                    filter=Q(messages__read_at__isnull=True) & ~Q(messages__sender=user),
                 ),
                 last_message_at=Max("messages__created_at"),
                 last_message_preview=Substr(last_msg_preview, 1, 80),
@@ -159,8 +154,7 @@ class ExchangeRequestViewSet(
         """Owner accepts a pending request → status 'accepted'."""
         with transaction.atomic():
             exchange = (
-                ExchangeRequest.objects
-                .select_for_update()
+                ExchangeRequest.objects.select_for_update()
                 .select_related("requested_book", "offered_book", "requester", "owner")
                 .get(pk=self.get_object().pk)
             )
@@ -255,13 +249,15 @@ class ExchangeRequestViewSet(
         exchange.offered_book = ser._offered_book
         exchange.last_counter_by = request.user
         exchange.counter_approved_at = None
-        exchange.save(update_fields=[
-            "offered_book",
-            "original_offered_book",
-            "last_counter_by",
-            "counter_approved_at",
-            "updated_at",
-        ])
+        exchange.save(
+            update_fields=[
+                "offered_book",
+                "original_offered_book",
+                "last_counter_by",
+                "counter_approved_at",
+                "updated_at",
+            ]
+        )
 
         from apps.notifications.tasks import send_counter_proposed_notification
 

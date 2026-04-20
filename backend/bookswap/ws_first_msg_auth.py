@@ -19,8 +19,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
-
 from .ws_auth import get_user_from_token
 
 logger = logging.getLogger(__name__)

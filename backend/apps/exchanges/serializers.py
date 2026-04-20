@@ -157,10 +157,14 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError("Requested and offered books must be different.")
 
         terminal_statuses = {"cancelled", "expired", "declined", "completed", "returned"}
-        active_exchange = ExchangeRequest.objects.filter(
-            requester=self.context["request"].user,
-            requested_book_id=attrs["requested_book_id"],
-        ).exclude(status__in=terminal_statuses).first()
+        active_exchange = (
+            ExchangeRequest.objects.filter(
+                requester=self.context["request"].user,
+                requested_book_id=attrs["requested_book_id"],
+            )
+            .exclude(status__in=terminal_statuses)
+            .first()
+        )
         if active_exchange:
             raise serializers.ValidationError(
                 f"You already have an active exchange for this book (status: {active_exchange.status})."

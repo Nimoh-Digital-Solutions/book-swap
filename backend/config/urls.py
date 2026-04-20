@@ -52,8 +52,6 @@ else:
     urlpatterns += [
         path(
             "media/<path:path>",
-            lambda request, path: _serve_static(
-                request, path, document_root=settings.MEDIA_ROOT
-            ),
+            lambda request, path: _serve_static(request, path, document_root=settings.MEDIA_ROOT),
         ),
     ]

@@ -97,7 +97,10 @@ class ISBNLookupService:
             work_key = works[0].get("key", "")
             if work_key:
                 language, description = cls._enrich_from_works(
-                    work_key, client, language, description,
+                    work_key,
+                    client,
+                    language,
+                    description,
                 )
 
         return {

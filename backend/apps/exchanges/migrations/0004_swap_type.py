@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('exchanges', '0003_counter_approved_at'),
+        ("exchanges", "0003_counter_approved_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='exchangerequest',
-            name='swap_type',
-            field=models.CharField(choices=[('temporary', 'Temporary (with return)'), ('permanent', 'Permanent (no return)')], default='temporary', help_text='Effective swap type for this exchange. Defaults from requested_book.swap_type.', max_length=10),
+            model_name="exchangerequest",
+            name="swap_type",
+            field=models.CharField(
+                choices=[("temporary", "Temporary (with return)"), ("permanent", "Permanent (no return)")],
+                default="temporary",
+                help_text="Effective swap type for this exchange. Defaults from requested_book.swap_type.",
+                max_length=10,
+            ),
         ),
     ]

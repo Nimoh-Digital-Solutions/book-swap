@@ -226,9 +226,7 @@ class MeetupSuggestionViewSet(GenericViewSet):
         if request.user.is_authenticated:
             blocked_ids = get_blocked_user_ids(request.user)
             other_id = (
-                self.exchange.owner_id
-                if self.exchange.requester_id == request.user.pk
-                else self.exchange.requester_id
+                self.exchange.owner_id if self.exchange.requester_id == request.user.pk else self.exchange.requester_id
             )
             if other_id in blocked_ids:
                 raise NotFound("Exchange not found.")

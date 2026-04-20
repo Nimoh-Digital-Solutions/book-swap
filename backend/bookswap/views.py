@@ -1,6 +1,7 @@
 """bookswap views — user profile, location, onboarding, account, and login endpoints."""
 
 import logging
+from typing import ClassVar
 
 from django.contrib.auth import get_user_model
 from django.core import signing
@@ -409,14 +410,13 @@ class GoogleMobileAuthView(APIView):
     verifies it server-side, finds or creates the user, and returns JWT tokens.
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         from django.conf import settings as django_settings
         from django.contrib.auth.hashers import make_password
         from django.db import transaction
         from django.utils import timezone as tz
-
         from google.auth.transport import requests as google_requests
         from google.oauth2 import id_token as google_id_token
         from rest_framework_simplejwt.tokens import RefreshToken
@@ -541,8 +541,8 @@ class AppleMobileAuthView(APIView):
     the user, and returns JWT tokens.
     """
 
-    permission_classes = [AllowAny]
-    _apple_keys_cache: dict = {}  # noqa: RUF012
+    permission_classes = (AllowAny,)
+    _apple_keys_cache: ClassVar[dict] = {}
 
     @classmethod
     def _get_apple_public_keys(cls):
@@ -568,12 +568,11 @@ class AppleMobileAuthView(APIView):
         return keys
 
     def post(self, request):
+        import jwt
         from django.conf import settings as django_settings
         from django.contrib.auth.hashers import make_password
         from django.db import transaction
         from django.utils import timezone as tz
-
-        import jwt
         from rest_framework_simplejwt.tokens import RefreshToken
         from social_django.models import UserSocialAuth
 
@@ -634,9 +633,7 @@ class AppleMobileAuthView(APIView):
         try:
             with transaction.atomic():
                 social = (
-                    UserSocialAuth.objects.filter(provider="apple-id", uid=apple_sub)
-                    .select_related("user")
-                    .first()
+                    UserSocialAuth.objects.filter(provider="apple-id", uid=apple_sub).select_related("user").first()
                 )
 
                 if social:

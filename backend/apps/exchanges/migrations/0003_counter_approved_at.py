@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('exchanges', '0002_counter_proposal_in_place'),
+        ("exchanges", "0002_counter_proposal_in_place"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='exchangerequest',
-            name='counter_approved_at',
-            field=models.DateTimeField(blank=True, help_text='When the other party approved the latest counter-proposal.', null=True),
+            model_name="exchangerequest",
+            name="counter_approved_at",
+            field=models.DateTimeField(
+                blank=True, help_text="When the other party approved the latest counter-proposal.", null=True
+            ),
         ),
     ]

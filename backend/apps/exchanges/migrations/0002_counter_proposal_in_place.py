@@ -6,22 +6,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('books', '0003_book_is_seed'),
-        ('exchanges', '0001_initial'),
+        ("books", "0003_book_is_seed"),
+        ("exchanges", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='exchangerequest',
-            name='last_counter_by',
-            field=models.ForeignKey(blank=True, help_text='The user who made the most recent counter-proposal.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
+            model_name="exchangerequest",
+            name="last_counter_by",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="The user who made the most recent counter-proposal.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='exchangerequest',
-            name='original_offered_book',
-            field=models.ForeignKey(blank=True, help_text='Snapshot of the first offered book before any counter-proposals.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='books.book'),
+            model_name="exchangerequest",
+            name="original_offered_book",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Snapshot of the first offered book before any counter-proposals.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to="books.book",
+            ),
         ),
     ]

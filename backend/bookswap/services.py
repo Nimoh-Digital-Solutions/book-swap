@@ -156,21 +156,18 @@ class OverpassPOIService:
                 continue
 
             address = OverpassPOIService._build_address(tags)
-            city = (
-                tags.get("addr:city")
-                or tags.get("addr:town")
-                or tags.get("addr:municipality")
-                or ""
-            )
+            city = tags.get("addr:city") or tags.get("addr:town") or tags.get("addr:municipality") or ""
 
-            results.append({
-                "name": name,
-                "address": address,
-                "category": category,
-                "city": city,
-                "lat": float(elem_lat),
-                "lng": float(elem_lng),
-            })
+            results.append(
+                {
+                    "name": name,
+                    "address": address,
+                    "category": category,
+                    "city": city,
+                    "lat": float(elem_lat),
+                    "lng": float(elem_lng),
+                }
+            )
 
         return results
 

@@ -6,7 +6,7 @@ import httpx
 import pytest
 from django.contrib.gis.geos import Point
 
-from bookswap.services import GeocodingError, NominatimGeocodingService, build_data_export
+from bookswap.services import NominatimGeocodingService, build_data_export
 from bookswap.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db

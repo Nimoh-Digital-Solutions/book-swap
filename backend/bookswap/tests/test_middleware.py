@@ -98,9 +98,7 @@ class TestFrontendOriginConnect:
         assert response["Content-Security-Policy"] == NIMOH_BASE_CSP
 
     def test_no_duplicate_if_already_present(self, make_middleware, rf):
-        csp_with_origin = NIMOH_BASE_CSP.replace(
-            "connect-src 'self'", "connect-src 'self' https://app.bookswap.nl"
-        )
+        csp_with_origin = NIMOH_BASE_CSP.replace("connect-src 'self'", "connect-src 'self' https://app.bookswap.nl")
         mw = make_middleware(frontend_url="https://app.bookswap.nl", csp=csp_with_origin)
         response = mw(rf.get("/api/v1/books/"))
         assert response["Content-Security-Policy"].count("https://app.bookswap.nl") == 1

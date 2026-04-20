@@ -97,6 +97,7 @@ class BookViewSet(
         except Exception:
             if self.action in ("list", "retrieve"):
                 from django.contrib.auth.models import AnonymousUser
+
                 request._user = AnonymousUser()
                 request._auth = None
             else:
@@ -547,15 +548,13 @@ class CommunityStatsView(APIView):
         one_week_ago = timezone.now() - timezone.timedelta(days=7)
 
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
 
-        nearby_user_ids = (
-            User.objects.filter(
-                location__isnull=False,
-                location__distance_lte=(point, D(m=search_radius)),
-            )
-            .values_list("id", flat=True)
-        )
+        nearby_user_ids = User.objects.filter(
+            location__isnull=False,
+            location__distance_lte=(point, D(m=search_radius)),
+        ).values_list("id", flat=True)
 
         swap_statuses = (
             ExchangeStatus.SWAP_CONFIRMED,
@@ -563,12 +562,16 @@ class CommunityStatsView(APIView):
             ExchangeStatus.RETURN_REQUESTED,
             ExchangeStatus.RETURNED,
         )
-        swaps_this_week = ExchangeRequest.objects.filter(
-            status__in=swap_statuses,
-            updated_at__gte=one_week_ago,
-        ).filter(
-            Q(requester_id__in=nearby_user_ids) | Q(owner_id__in=nearby_user_ids),
-        ).count()
+        swaps_this_week = (
+            ExchangeRequest.objects.filter(
+                status__in=swap_statuses,
+                updated_at__gte=one_week_ago,
+            )
+            .filter(
+                Q(requester_id__in=nearby_user_ids) | Q(owner_id__in=nearby_user_ids),
+            )
+            .count()
+        )
 
         feed = []
         seen_users: set[str] = set()
@@ -587,13 +590,15 @@ class CommunityStatsView(APIView):
             if uid in seen_users:
                 continue
             seen_users.add(uid)
-            feed.append({
-                "type": "new_listing",
-                "user_name": book.owner.first_name or book.owner.username,
-                "book_title": book.title,
-                "neighbourhood": book.owner.neighborhood,
-                "timestamp": book.created_at.isoformat(),
-            })
+            feed.append(
+                {
+                    "type": "new_listing",
+                    "user_name": book.owner.first_name or book.owner.username,
+                    "book_title": book.title,
+                    "neighbourhood": book.owner.neighborhood,
+                    "timestamp": book.created_at.isoformat(),
+                }
+            )
 
         completed_swaps = (
             ExchangeRequest.objects.filter(
@@ -611,14 +616,16 @@ class CommunityStatsView(APIView):
             if uid in seen_users:
                 continue
             seen_users.add(uid)
-            feed.append({
-                "type": "completed_swap",
-                "user_name": swap.requester.first_name or swap.requester.username,
-                "partner_name": swap.owner.first_name or swap.owner.username,
-                "book_title": None,
-                "neighbourhood": swap.requester.neighborhood or swap.owner.neighborhood,
-                "timestamp": swap.updated_at.isoformat(),
-            })
+            feed.append(
+                {
+                    "type": "completed_swap",
+                    "user_name": swap.requester.first_name or swap.requester.username,
+                    "partner_name": swap.owner.first_name or swap.owner.username,
+                    "book_title": None,
+                    "neighbourhood": swap.requester.neighborhood or swap.owner.neighborhood,
+                    "timestamp": swap.updated_at.isoformat(),
+                }
+            )
 
         recent_ratings = (
             Rating.objects.filter(
@@ -633,20 +640,24 @@ class CommunityStatsView(APIView):
             if uid in seen_users:
                 continue
             seen_users.add(uid)
-            feed.append({
-                "type": "new_rating",
-                "user_name": rating.rater.first_name or rating.rater.username,
-                "partner_name": rating.rated.first_name or rating.rated.username,
-                "score": rating.score,
-                "book_title": None,
-                "neighbourhood": rating.rater.neighborhood,
-                "timestamp": rating.created_at.isoformat(),
-            })
+            feed.append(
+                {
+                    "type": "new_rating",
+                    "user_name": rating.rater.first_name or rating.rater.username,
+                    "partner_name": rating.rated.first_name or rating.rated.username,
+                    "score": rating.score,
+                    "book_title": None,
+                    "neighbourhood": rating.rater.neighborhood,
+                    "timestamp": rating.created_at.isoformat(),
+                }
+            )
 
         feed.sort(key=lambda e: e["timestamp"], reverse=True)
         feed = list(islice(feed, 5))
 
-        return Response({
-            "swaps_this_week": swaps_this_week,
-            "activity_feed": feed,
-        })
+        return Response(
+            {
+                "swaps_this_week": swaps_this_week,
+                "activity_feed": feed,
+            }
+        )

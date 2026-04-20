@@ -44,17 +44,12 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
 
         from .models import MobileDevice
 
-        tokens = list(
-            MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", flat=True)
-        )
+        tokens = list(MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", flat=True))
         if not tokens:
             return
 
         client = PushClient()
-        messages = [
-            PushMessage(to=token, title=title, body=body, data=data or {}, sound="default")
-            for token in tokens
-        ]
+        messages = [PushMessage(to=token, title=title, body=body, data=data or {}, sound="default") for token in tokens]
         responses = client.publish_multiple(messages)
         for token, response in zip(tokens, responses, strict=False):
             try:
