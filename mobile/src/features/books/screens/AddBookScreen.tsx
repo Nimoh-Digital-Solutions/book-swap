@@ -122,20 +122,39 @@ export function AddBookScreen() {
     };
 
     createBook.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const goToMyBooks = () => {
+          navigation.popToTop();
+          const tabNav = navigation.getParent();
+          if (tabNav) {
+            (tabNav as any).navigate("ProfileTab", { screen: "MyBooks" });
+          }
+        };
+        const goToPhotos = () => {
+          navigation.popToTop();
+          const tabNav = navigation.getParent();
+          if (tabNav) {
+            (tabNav as any).navigate("ProfileTab", {
+              screen: "EditBook",
+              params: { bookId: data.id },
+            });
+          }
+        };
+
         Alert.alert(
           t("books.addBook.successTitle", "Book listed!"),
           t("books.addBook.successMsg", "Your book is now available for swapping."),
-          [{
-            text: t("common.ok", "OK"),
-            onPress: () => {
-              navigation.popToTop();
-              const tabNav = navigation.getParent();
-              if (tabNav) {
-                (tabNav as any).navigate("ProfileTab", { screen: "MyBooks" });
-              }
+          [
+            {
+              text: t("books.addBook.addPhotos", "Add Photos"),
+              onPress: goToPhotos,
             },
-          }],
+            {
+              text: t("books.addBook.skipPhotos", "Done"),
+              style: "cancel",
+              onPress: goToMyBooks,
+            },
+          ],
         );
       },
       onError: () => {

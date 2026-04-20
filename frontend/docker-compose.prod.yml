@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8150:8080"
+      - "${FE_HOST_PORT:-3071}:8080"
     environment:
       - CSP_CONNECT_SRC=${CSP_CONNECT_SRC:-'self'}
       - BACKEND_URL=${BACKEND_URL:-http://web:8000}

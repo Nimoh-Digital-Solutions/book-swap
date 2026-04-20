@@ -48,8 +48,8 @@ This is needed for `eas submit` to upload builds automatically.
 
 ```bash
 cd mobile
-eas secret:create --scope project --name ASC_API_KEY_ID --value "<your-key-id>"
-eas secret:create --scope project --name ASC_API_KEY_ISSUER_ID --value "<your-issuer-id>"
+eas env:create --environment production --name ASC_API_KEY_ID --value "<your-key-id>" --type string --visibility sensitive
+eas env:create --environment production --name ASC_API_KEY_ISSUER_ID --value "<your-issuer-id>" --type string --visibility sensitive
 # The .p8 key is passed via eas.json ascApiKeyPath or interactively
 ```
 
@@ -89,13 +89,7 @@ action needed — just confirm when prompted.
 9. Find the service account → click **Manage Play Console permissions**
 10. Grant: **Releases** → all sub-permissions (create/edit/release)
 11. Click **Invite user** → **Done**
-12. Store as EAS secret:
-
-```bash
-cd mobile
-eas secret:create --scope project --name GOOGLE_SERVICE_ACCOUNT_KEY \
-  --type file --value ./path-to-service-account.json
-```
+12. Place the JSON file at `mobile/google-service-account.json` (gitignored). This is the path `eas.json` references for `submit.production.android.serviceAccountKeyPath`.
 
 ### 2c. Complete the App Dashboard Checklist
 
@@ -153,8 +147,8 @@ Replace the placeholder in `mobile/app.json`:
 
 ```bash
 cd mobile
-eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID --value "<web-client-id>"
-eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID --value "<ios-client-id>"
+eas env:create --environment production --name EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID --value "<web-client-id>" --type string --visibility plain
+eas env:create --environment production --name EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID --value "<ios-client-id>" --type string --visibility plain
 ```
 
 ---
@@ -164,7 +158,7 @@ eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID --valu
 A privacy policy URL is required by both stores. The privacy policy for
 BookSwap is available at:
 
-**URL:** `https://book-swaps.com/privacy`
+**URL:** `https://bookswap.app/en/privacy-policy`
 
 If you haven't deployed it yet, you can use:
 - A page on your website

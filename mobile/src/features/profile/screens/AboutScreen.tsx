@@ -17,8 +17,8 @@ import { useColors, useIsDark } from "@/hooks/useColors";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 const SUPPORT_EMAIL = "support@bookswap.app";
-const PRIVACY_URL = "https://bookswap.app/privacy";
-const TERMS_URL = "https://bookswap.app/terms";
+const PRIVACY_URL = "https://bookswap.app/en/privacy-policy";
+const TERMS_URL = "https://bookswap.app/en/terms-of-service";
 
 function LinkRow({
   icon,
@@ -106,7 +106,7 @@ export function AboutScreen() {
               <Shield size={20} color={isDark ? accent : c.text.secondary} />
             }
             label={t("about.privacyPolicy", "Privacy Policy")}
-            subtitle="bookswap.app/privacy"
+            subtitle="bookswap.app/privacy-policy"
             onPress={() => Linking.openURL(PRIVACY_URL)}
           />
           <View style={[s.divider, { backgroundColor: divider }]} />
@@ -115,7 +115,7 @@ export function AboutScreen() {
               <FileText size={20} color={isDark ? accent : c.text.secondary} />
             }
             label={t("about.termsOfService", "Terms of Service")}
-            subtitle="bookswap.app/terms"
+            subtitle="bookswap.app/terms-of-service"
             onPress={() => Linking.openURL(TERMS_URL)}
           />
         </View>

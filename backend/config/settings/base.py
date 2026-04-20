@@ -125,6 +125,7 @@ INSTALLED_APPS = (
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
+    "bookswap.middleware.AuthThrottleMiddleware",
     "bookswap.middleware.BookSwapSecurityHeadersMiddleware",
     *NimohBaseSettings.get_base_middleware(),
 ]

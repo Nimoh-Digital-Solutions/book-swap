@@ -3,12 +3,67 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Callable
 
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 
 logger = logging.getLogger(__name__)
+
+AUTH_THROTTLE_PATHS = re.compile(
+    r"^/api/v1/auth/(register|token/refresh)/$"
+)
+AUTH_SENSITIVE_PATHS = re.compile(
+    r"^/api/v1/auth/password/(reset|change)/$"
+)
+
+
+class AuthThrottleMiddleware:
+    """Apply stricter IP-based throttles to auth endpoints served by nimoh-base.
+
+    Login is handled separately in bookswap.views.login_view (manual throttle).
+    This middleware covers register, token/refresh, password/reset, and
+    password/change — endpoints defined inside nimoh_base_urlpatterns().
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        if request.method != "POST":
+            return self.get_response(request)
+
+        path = request.path
+
+        if AUTH_SENSITIVE_PATHS.match(path):
+            from bookswap.throttles import AuthSensitiveRateThrottle
+
+            throttle = AuthSensitiveRateThrottle()
+            if not self._allow(throttle, request):
+                return JsonResponse(
+                    {"detail": "Request was throttled. Please try again later."},
+                    status=429,
+                )
+
+        elif AUTH_THROTTLE_PATHS.match(path):
+            from bookswap.throttles import AuthRateThrottle
+
+            throttle = AuthRateThrottle()
+            if not self._allow(throttle, request):
+                return JsonResponse(
+                    {"detail": "Request was throttled. Please try again later."},
+                    status=429,
+                )
+
+        return self.get_response(request)
+
+    @staticmethod
+    def _allow(throttle, request: HttpRequest) -> bool:
+        try:
+            return throttle.allow_request(request, None)
+        except Exception:
+            return True
 
 
 class BookSwapSecurityHeadersMiddleware:

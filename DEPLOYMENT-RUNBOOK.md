@@ -24,7 +24,7 @@ Operational guide for deploying **BookSwap** to a **Raspberry Pi 5** with **Dock
 | Environment | Where | Backend (host) | Frontend (host) | Branches / deploy |
 |-------------|--------|----------------|------------------|-------------------|
 | **Development** | Your machine | `8070` | `3070` | Local only |
-| **Staging** | Pi5 Docker | `8070` | `3070` | `staging` → auto-deploy |
+| **Staging** | Pi5 Docker | `8110` | `3004` | `staging` → auto-deploy |
 | **Production** | Pi5 Docker | `8071` | `3071` | `production` → auto-deploy (CI must be green) |
 
 **Public URLs (from deploy workflows)**
@@ -283,7 +283,7 @@ Workflow: `.github/workflows/deploy-staging.yml`
   4. **Backend:** build `backend/docker-compose.stag.yml`, recreate services
   5. **Frontend:** build `frontend/docker-compose.staging.yml`, recreate
   6. **Mobile:** if mobile/shared changed (or manual all): `npm ci` in `mobile/`, then `eas update --branch staging ...`
-  7. Health checks on `http://localhost:8070` and `http://localhost:3070`
+  7. Health checks on `http://localhost:8110` and `http://localhost:3004`
   8. Smoke: `GET /api/v1/health/`, `/api/v1/books/`, `/api/v1/exchanges/`
 
 ### 4.3 Production — merge to `production`
@@ -450,7 +450,7 @@ Same git reset + rebuild frontend compose stack. Static assets are in the image;
 | Check | URL / command |
 |--------|----------------|
 | Health endpoint | `GET /api/v1/health/` |
-| Staging (Pi) | `curl -sf http://localhost:8070/api/v1/health/` |
+| Staging (Pi) | `curl -sf http://localhost:8110/api/v1/health/` |
 | Production (Pi) | `curl -sf http://localhost:8071/api/v1/health/` |
 | Public | `curl -sf https://api-stag.bookswap.app/api/v1/health/` or production API URL |
 
@@ -460,7 +460,7 @@ Same git reset + rebuild frontend compose stack. Static assets are in the image;
 
 | Environment | Check |
 |-------------|--------|
-| Staging | `curl -sf http://localhost:3070/` |
+| Staging | `curl -sf http://localhost:3004/` |
 | Production | `curl -sf http://localhost:3071/` |
 
 Nginx health inside the image may use `/health` on port 8080 internally (see `frontend/docker-compose*.yml`).
@@ -470,7 +470,7 @@ Nginx health inside the image may use `/health` on port 8080 internally (see `fr
 As in CI:
 
 ```bash
-BASE="http://localhost:8070/api/v1"   # staging
+BASE="http://localhost:8110/api/v1"   # staging
 for path in health/ books/ exchanges/; do
   curl -sf -o /dev/null -w "%{http_code} $path\n" "$BASE/$path"
 done
@@ -510,7 +510,7 @@ docker compose -p bs_staging -f docker-compose.stag.yml exec web python manage.p
 ### 9.4 Port already in use
 
 ```bash
-sudo ss -tlnp | grep -E '8070|8071|3070|3071'
+sudo ss -tlnp | grep -E '8110|8071|3004|3071'
 ```
 
 Stop the conflicting process or adjust compose port mappings.

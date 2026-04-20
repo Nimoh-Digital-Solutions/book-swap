@@ -105,14 +105,16 @@ jobs:
       - name: Remove old backend containers
         if: steps.detect.outputs.backend == 'true'
         run: |
-          docker rm -f bs_web_prod bs_celery_prod bs_beat_prod 2>/dev/null || true
+          docker rm -f bookswap-be-web bookswap-be-celery bookswap-be-celery-email \
+            bookswap-be-celery-maintenance bookswap-be-celery-beat bookswap-be-redis \
+            2>/dev/null || true
 
       - name: Deploy backend
         if: steps.detect.outputs.backend == 'true'
         working-directory: /home/gnimoh001/apps/bookswap/backend
         run: |
           docker compose -p bs_prod -f docker-compose.prod.yml \
-            up -d --force-recreate web celery_worker celery_beat
+            up -d --force-recreate web celery celery-email celery-maintenance celery-beat
 
       # ── Frontend ─────────────────────────────────────────────────────────────
       - name: Build frontend image
@@ -125,7 +127,7 @@ jobs:
 
       - name: Remove old frontend container
         if: steps.detect.outputs.frontend == 'true'
-        run: docker rm -f bs_frontend_prod 2>/dev/null || true
+        run: docker rm -f bookswap-fe-prod 2>/dev/null || true
 
       - name: Deploy frontend
         if: steps.detect.outputs.frontend == 'true'
@@ -138,7 +140,7 @@ jobs:
       - name: Health check — backend
         if: steps.detect.outputs.backend == 'true'
         run: |
-          echo "Waiting for bs_web_prod to become healthy..."
+          echo "Waiting for bookswap-be-web to become healthy..."
           for i in $(seq 1 30); do
             if curl -sf http://localhost:8071/api/v1/health/ > /dev/null 2>&1; then
               echo "Backend healthy ✓"; break
@@ -181,7 +183,7 @@ jobs:
       # ── Summary ───────────────────────────────────────────────────────────────
       - name: Container status
         if: always()
-        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "bs_|NAMES" || true
+        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "bookswap-|NAMES" || true
 
       - name: Deployment summary
         if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true'

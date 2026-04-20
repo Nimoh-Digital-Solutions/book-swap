@@ -49,7 +49,7 @@ books,swap,exchange,trade,reading,community,local,barcode,library,free
 https://bookswap.app/support
 
 ## Privacy Policy URL
-https://bookswap.app/privacy
+https://bookswap.app/en/privacy-policy
 
 ## Marketing URL (optional)
 https://bookswap.app

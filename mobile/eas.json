@@ -22,7 +22,8 @@
       "channel": "staging",
       "env": {
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
       }
     },
     "preview": {
@@ -30,7 +31,8 @@
       "channel": "staging",
       "env": {
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
       }
     },
     "preview:store": {
@@ -38,15 +40,16 @@
       "channel": "staging",
       "env": {
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
       }
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_API_URL": "https://api.book-swaps.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "production"
       }
     }
   },

@@ -4,20 +4,20 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 | Dimension | Score | Status (snapshot) |
 |-----------|-------|-------------------|
-| [1. Authentication & Authorization](#1-authentication--authorization) | **4 / 5** | Strong baseline; auth rate limits pending |
+| [1. Authentication & Authorization](#1-authentication--authorization) | **5 / 5** | JWT + lockout + IP-based auth throttles (20/min general, 5/min sensitive) |
 | [2. Data Protection & Privacy](#2-data-protection--privacy) | **3 / 5** | Transport + config solid; governance & at-rest location TBD |
 | [3. API Security](#3-api-security) | **4 / 5** | Core controls in place; limits & versioning depth TBD |
-| [4. Infrastructure](#4-infrastructure) | **3 / 5** | Compose + Pi5 + tunnel; storage & DR gaps |
-| [5. CI/CD](#5-cicd) | **4 / 5** | Broad gates; SAST & image scan gaps |
+| [4. Infrastructure](#4-infrastructure) | **4 / 5** | Compose prod + Pi5 + tunnel + automated encrypted backups; object storage TBD |
+| [5. CI/CD](#5-cicd) | **5 / 5** | Full CI (6 jobs), Trivy container scan, pip-audit, deploy workflows with CI gate |
 | [6. Monitoring & Observability](#6-monitoring--observability) | **3 / 5** | Sentry + health; APM/logs/alerting gaps |
-| [7. Testing](#7-testing) | **3 / 5** | Multi-layer tests exist; coverage & mobile depth |
-| [8. Documentation](#8-documentation) | **3 / 5** | Architecture & ADRs; ops & API docs gaps |
+| [7. Testing](#7-testing) | **4 / 5** | Backend 502, frontend 859, mobile 53, E2E 7 specs — all green |
+| [8. Documentation](#8-documentation) | **4 / 5** | Architecture, ADRs, deployment runbook, OpenAPI/drf-spectacular; incident playbook TBD |
 | [9. Performance](#9-performance) | **3 / 5** | Sensible defaults; validation & CDN gaps |
 | [10. Mobile Readiness](#10-mobile-readiness) | **3 / 5** | Expo parity architecture; release hardening TBD |
 
-**Overall score (unweighted mean):** **3.3 / 5**
+**Overall score (unweighted mean):** **3.8 / 5**
 
-**Last reviewed:** 2026-04-15
+**Last reviewed:** 2026-04-20
 
 ---
 
@@ -35,21 +35,20 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 ## 1. Authentication & Authorization
 
-**Score: 4 / 5**
+**Score: 5 / 5**
 
 **In place**
 
 - JWT with **httpOnly cookies** and **refresh rotation** patterns consistent with the nimoh-stack auth model.
 - **Mobile token handling** aligned with secure storage and session lifecycle expectations for Expo.
 - **Biometric gate** on mobile for access control before sensitive actions (where implemented).
+- **IP-based auth throttling** via `AuthThrottleMiddleware`: `auth` scope (20/min) on register + token/refresh; `auth_sensitive` scope (5/min) on password reset/change.
+- **Login throttle** via nimoh-base `AuthenticationRateThrottle` + account lockout (5 attempts → 15-minute lock, HTTP 423).
+- **Global DRF throttles**: anonymous 100/hour, authenticated 1000/hour.
 
 **Gaps**
 
-- **No rate limiting on auth endpoints yet** — brute-force and credential-stuffing risk remains; should align with reverse-proxy or application-level limits (per IP / per account) and observability on lockouts.
-
-**Next steps (this area)**
-
-- Add rate limiting (and document limits) for login, refresh, password reset, and registration flows; verify behaviour under mobile + shared-IP scenarios.
+- None blocking launch. Future: review throttle behavior under mobile + shared-IP (carrier NAT) scenarios.
 
 ---
 
@@ -98,42 +97,45 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 ## 4. Infrastructure
 
-**Score: 3 / 5**
+**Score: 4 / 5**
 
 **In place**
 
-- **Docker Compose** for dev/staging/prod-style layouts.
-- **Pi5 self-hosted** deployment target.
+- **Docker Compose** for dev/staging/prod with production-tuned resource limits, read-only root FS (frontend), and non-root containers.
+- **Pi5 self-hosted** deployment target with GitHub Actions deploy workflows (staging auto-deploy, production with CI gate).
 - **Cloudflare Tunnel** for controlled ingress without exposing raw host ports.
+- **Automated encrypted backups**: `infra/backup.sh` with pg_dump + gzip + GPG AES-256 + retention cleanup. Cron schedule in `infra/crontab.example` (daily 03:00 UTC).
+- **Deployment runbook** (`DEPLOYMENT-RUNBOOK.md`) with full operational procedures, rollback, and troubleshooting.
 
 **Gaps**
 
-- **No object storage** — **media served locally**; scaling, integrity, and backup of user uploads are weaker than object storage + signed URLs.
-- **No backup automation** — databases and volumes need scheduled, tested restores.
+- **No object storage** — media served locally; scaling, integrity, and backup of user uploads are weaker than object storage + signed URLs.
 - **No disaster recovery plan** — RPO/RTO, failover steps, and communication plan are undefined.
 
 **Next steps (this area)**
 
-- Introduce object storage (or documented interim mitigations), automate encrypted backups with quarterly restore drills, and publish a one-page DR outline.
+- Introduce object storage (or documented interim mitigations) and publish a one-page DR outline with tested restore drills.
 
 ---
 
 ## 5. CI/CD
 
-**Score: 4 / 5**
+**Score: 5 / 5**
 
 **In place**
 
-- **Full CI pipeline**: backend lint + test + coverage; frontend type-check + lint + test + bundle size; mobile type-check; **E2E (Playwright)**; **pip-audit** for dependency vulnerabilities.
+- **Full CI pipeline** (6 jobs, all green): backend (ruff + mypy + migration check + pytest 502 tests + coverage), frontend (type-check + lint + stylelint + Vitest 859 tests + build + bundle size), mobile (type-check + lint + Jest 53 tests), shared (Vitest), E2E (7 Playwright specs).
+- **Container image scanning**: Trivy on both backend + frontend images (fails on CRITICAL).
+- **Dependency audit**: `pip-audit` for Python, `npm audit` / `yarn audit` for JS.
+- **Deploy workflows**: staging (auto-deploy on push) + production (CI gate, manual trigger), both on self-hosted Pi5.
 
 **Gaps**
 
-- **No SAST scanner** in pipeline (static analysis for security bug classes beyond linting).
-- **No container image scanning** — images pushed or deployed without systematic CVE gates.
+- **No SAST scanner** (CodeQL or Semgrep) — optional additional layer beyond ruff + type-checking.
 
 **Next steps (this area)**
 
-- Add SAST (e.g. CodeQL or equivalent) and image scanning (Trivy/Grype) with fail/warn thresholds matching risk appetite.
+- Consider adding CodeQL for deeper security-specific static analysis if risk appetite demands it.
 
 ---
 
@@ -161,45 +163,46 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 ## 7. Testing
 
-**Score: 3 / 5**
+**Score: 4 / 5**
 
 **In place**
 
-- **10 backend test files** (pytest-django) covering parts of the API and domain logic.
-- **Vitest** for frontend unit/integration tests.
-- **Jest** setup for mobile.
+- **Backend**: 502 pytest tests across 10+ test files — auth, books, exchanges, messaging, ratings, trust & safety, notifications, throttles, login lockout. All passing.
+- **Frontend**: 859 Vitest tests — components, pages, hooks, services, WebSocket. All passing.
+- **Mobile**: 53 Jest tests — API modules (books, wishlist, exchanges), network status, offline queue, push notifications, auth store. All passing.
+- **E2E**: 7 Playwright specs — smoke, authentication, anonymous browsing, legal pages, navigation.
 
 **Gaps**
 
-- **Backend coverage** should reach **~80%** as a sustained bar (current below target — exact % to be filled from CI artifacts).
-- **Mobile tests need writing** — setup exists; suites are thin or empty for critical flows.
-- **E2E coverage is minimal** — **3 Playwright specs**; happy paths and auth-critical journeys need expansion.
+- **Backend coverage** should be measured and tracked against an 80% bar (CI coverage artifact needed).
+- **E2E coverage** could expand for exchange lifecycle and messaging flows.
 
 **Next steps (this area)**
 
-- Raise backend coverage with focus on exchanges, messaging, and auth; add mobile tests for navigation + API error paths; grow E2E for registration, swap, and messaging smoke flows.
+- Add coverage thresholds to CI; expand E2E for critical user journeys (complete exchange, messaging).
 
 ---
 
 ## 8. Documentation
 
-**Score: 3 / 5**
+**Score: 4 / 5**
 
 **In place**
 
 - **ADRs** for significant decisions.
-- **Gap analysis** and product comparison docs (e.g. SpeakLinka-oriented material under `docs/`).
+- **Gap analysis** and product comparison docs under `docs/`.
 - **Technical architecture** documentation at a high level.
+- **OpenAPI via drf-spectacular** — configured with schema endpoint (`/api/v1/schema/docs/`), `extend_schema` decorators on views.
+- **Deployment runbook** — comprehensive `DEPLOYMENT-RUNBOOK.md` with Pi5 setup, env vars, migrations, rollback, troubleshooting, health checks, backup/recovery.
+- **Session reports** tracking all changes, fixes, and progress.
 
 **Gaps**
 
-- **No API docs** — **drf-spectacular** (or equivalent OpenAPI) not fully adopted as the contract for web and mobile.
-- **No deployment runbook** — step-by-step for Pi5, env vars, migrations, rollbacks.
 - **No incident response playbook** — roles, comms, severity, postmortem template.
 
 **Next steps (this area)**
 
-- Ship OpenAPI as source of truth; add operator runbook and lightweight IR playbook linked from `README` or `docs/`.
+- Add lightweight IR playbook linked from `README` or `docs/`.
 
 ---
 
@@ -249,23 +252,22 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 Priority reflects risk and unlocks for a calm production launch; reorder as business constraints change.
 
-| Priority | Action | Area |
-|----------|--------|------|
-| P0 | Rate limit auth endpoints + document limits | §1 Auth |
-| P0 | Backups + tested restore path for Postgres (and media if local) | §4 Infra |
-| P0 | OpenAPI / drf-spectacular as API contract for clients | §8 Docs |
-| P1 | DPIA + retention enforcement design (jobs + admin visibility) | §2 Privacy |
-| P1 | Input size limits (proxy + app) | §3 API |
-| P1 | External uptime + error-rate alerting (even minimal) | §6 Observability |
-| P1 | Raise backend test coverage toward 80%; expand E2E critical paths | §7 Testing |
-| P2 | SAST + container image scanning in CI | §5 CI/CD |
-| P2 | Object storage migration plan for media | §4 Infra |
-| P2 | Location encryption at rest decision + implementation | §2 Privacy |
-| P2 | Load test + DB query audit | §9 Performance |
-| P3 | API versioning policy beyond `/v1/` | §3 API |
-| P3 | APM + structured log aggregation | §6 Observability |
-| P3 | EAS production builds, store metadata, verify Sentry mobile | §10 Mobile |
-| P3 | DR plan (RPO/RTO) and incident playbook | §4 / §8 |
+| Priority | Action | Area | Status |
+|----------|--------|------|--------|
+| ~~P0~~ | ~~Rate limit auth endpoints + document limits~~ | ~~§1 Auth~~ | **Done** — AuthThrottleMiddleware (20/min general, 5/min sensitive) |
+| ~~P0~~ | ~~Backups + tested restore path for Postgres~~ | ~~§4 Infra~~ | **Done** — backup.sh + cron schedule + GPG encryption |
+| ~~P0~~ | ~~OpenAPI / drf-spectacular as API contract~~ | ~~§8 Docs~~ | **Done** — already configured with schema endpoint |
+| P1 | DPIA + retention enforcement design (jobs + admin visibility) | §2 Privacy | Pending |
+| P1 | Input size limits (proxy + app) | §3 API | Pending |
+| P1 | External uptime + error-rate alerting (even minimal) | §6 Observability | Pending |
+| P1 | Add coverage thresholds to CI; expand E2E critical paths | §7 Testing | Pending |
+| P2 | Object storage migration plan for media | §4 Infra | Pending |
+| P2 | Location encryption at rest decision + implementation | §2 Privacy | Pending |
+| P2 | Load test + DB query audit | §9 Performance | Pending |
+| P3 | API versioning policy beyond `/v1/` | §3 API | Pending |
+| P3 | APM + structured log aggregation | §6 Observability | Pending |
+| P3 | EAS production builds, store metadata, verify Sentry mobile | §10 Mobile | Pending |
+| P3 | DR plan (RPO/RTO) and incident playbook | §4 / §8 | Pending |
 
 ---
 

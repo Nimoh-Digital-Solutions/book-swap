@@ -14,5 +14,29 @@ BookSwap is designed to run on **self-hosted Raspberry Pi 5** hardware with **Do
 
 ## Operations
 
-- Database backups should follow your retention and encryption policy; see `backup.sh` for a starting point using `pg_dump`.
+### Automated backups
+
+`backup.sh` runs `pg_dump` for both staging and production databases, compresses with gzip, and optionally encrypts with GPG (AES-256). Old backups beyond `RETENTION_DAYS` (default 30) are pruned automatically.
+
+To automate on the Pi:
+
+```bash
+# Create env file with DB URLs and GPG passphrase
+cat > ~/.backup_env << 'EOF'
+export BOOKSWAP_STAGING_DATABASE_URL="postgresql://..."
+export BOOKSWAP_PRODUCTION_DATABASE_URL="postgresql://..."
+export BACKUP_GPG_PASSPHRASE="your-passphrase"
+EOF
+chmod 600 ~/.backup_env
+
+# Install the cron schedule
+crontab < /home/gnimoh001/apps/bookswap/infra/crontab.example
+```
+
+See `crontab.example` for the schedule (daily at 03:00 UTC + disk usage alert).
+
+### General maintenance
+
 - Review Cloudflare and Docker secrets rotation as part of regular maintenance.
+- Prune unused Docker images periodically: `docker image prune -a`
+- Monitor disk usage: `df -h && docker system df`

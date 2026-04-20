@@ -6,6 +6,7 @@ import {
   Bell,
   ChevronRight,
   Download,
+  Eye,
   Fingerprint,
   Globe,
   Info,
@@ -104,6 +105,7 @@ export function SettingsScreen() {
     tokenStorage.getBiometricEnabled(),
   );
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
+  const [profilePublic, setProfilePublic] = useState(user?.profile_public ?? true);
   const dataExport = useDataExport();
 
   const toggleBiometric = useCallback(
@@ -121,6 +123,24 @@ export function SettingsScreen() {
 
   const setUser = useAuthStore((s) => s.setUser);
   const appearanceMode = useThemeStore((s) => s.mode);
+
+  const toggleProfilePublic = useMutation({
+    mutationFn: async (val: boolean) => {
+      const { data } = await http.patch<User>(API.users.me, {
+        profile_public: val,
+      });
+      return data;
+    },
+    onMutate: (val) => setProfilePublic(val),
+    onSuccess: (data) => setUser(data),
+    onError: (_err, _val, _ctx) => {
+      setProfilePublic(user?.profile_public ?? true);
+      Alert.alert(
+        t("common.error", "Error"),
+        t("settings.profileVisibilityError", "Failed to update profile visibility."),
+      );
+    },
+  });
 
   const RADIUS_OPTIONS = [
     { value: 1000, label: "1 km" },
@@ -277,6 +297,46 @@ export function SettingsScreen() {
             )}
             onPress={() => navigation.navigate("BlockedUsers")}
           />
+        </View>
+
+        {/* ── Privacy & Visibility ── */}
+        <Text style={[s.sectionHeading, { color: c.text.secondary }]}>
+          {t("settings.privacy", "Privacy & Visibility")}
+        </Text>
+        <View style={[s.card, { backgroundColor: cardBg }, cardBorder]}>
+          <View style={s.switchRow}>
+            <View style={s.rowLeft}>
+              <View
+                style={[s.iconCircle, { backgroundColor: iconCircleBg }]}
+              >
+                <Eye
+                  size={20}
+                  color={isDark ? c.auth.golden : c.text.secondary}
+                />
+              </View>
+              <View style={s.rowTextWrap}>
+                <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                  {t("settings.profilePublic", "Public profile")}
+                </Text>
+                <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                  {t(
+                    "settings.profilePublicSubtitle",
+                    "Allow other users to see your profile",
+                  )}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={profilePublic}
+              onValueChange={(val) => toggleProfilePublic.mutate(val)}
+              disabled={toggleProfilePublic.isPending}
+              trackColor={{
+                true: c.auth.golden,
+                false: isDark ? c.auth.cardBorder : c.neutral[200],
+              }}
+              thumbColor="#fff"
+            />
+          </View>
         </View>
 
         {/* ── Location & Search ── */}

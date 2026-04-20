@@ -10,13 +10,13 @@ Before your first production build, verify:
 
 - [ ] App created in App Store Connect with bundle ID `com.gnimoh.bookswap`
 - [ ] App created in Google Play Console with package `com.gnimoh.bookswap`
-- [ ] `eas.json` → `submit.production.ios.ascAppId` replaced with real App Store Connect app ID
-- [ ] `eas.json` → `submit.production.ios.appleTeamId` replaced with real team ID
-- [ ] Google service account JSON stored as EAS secret (`GOOGLE_SERVICE_ACCOUNT_KEY`)
+- [ ] `eas.json` → `submit.production.ios.ascAppId` — set (`6762515297`)
+- [ ] `eas.json` → `submit.production.ios.appleTeamId` — set (`Z68MT647CX`)
+- [ ] Google service account JSON at `mobile/google-service-account.json` (gitignored)
 - [ ] ASC API key `.p8` file stored or EAS credentials configured
-- [ ] Google Sign-In OAuth client IDs created and `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` set as EAS secret
+- [ ] Google Sign-In OAuth client IDs created and set via `eas env:create --environment production`
 - [ ] `mobile/app.json` version number is correct (`1.0.0` for first release)
-- [ ] Privacy policy deployed at https://bookswap.app/privacy
+- [ ] Privacy policy deployed at https://bookswap.app/en/privacy-policy
 
 ---
 
