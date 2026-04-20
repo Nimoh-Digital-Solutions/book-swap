@@ -205,6 +205,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Install shared package dependencies
+        run: npm install
+        working-directory: packages/shared
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
