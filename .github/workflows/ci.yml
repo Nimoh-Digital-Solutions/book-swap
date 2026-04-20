@@ -82,6 +82,7 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
           SECRET_KEY: ci-test-secret-key-not-for-production
+          DATABASE_URL: postgis://test_user:test_password@localhost:5432/bookswap_test
           REDIS_URL: redis://localhost:6379/0
           GDAL_LIBRARY_PATH: ""
           GEOS_LIBRARY_PATH: ""
@@ -91,6 +92,7 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
           SECRET_KEY: ci-test-secret-key-not-for-production
+          DATABASE_URL: postgis://test_user:test_password@localhost:5432/bookswap_test
           CELERY_TASK_ALWAYS_EAGER: "True"
           REDIS_URL: redis://localhost:6379/0
           GDAL_LIBRARY_PATH: ""
