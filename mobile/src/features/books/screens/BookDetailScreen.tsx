@@ -253,7 +253,7 @@ export function BookDetailScreen() {
               {isAvailable && (
                 <View style={[s.availBadge, { backgroundColor: accent }]}>
                   <Text style={s.availBadgeText}>
-                    {t("books.available", "Available")}
+                    {t("books.status.available", "Available")}
                   </Text>
                 </View>
               )}
@@ -291,7 +291,7 @@ export function BookDetailScreen() {
             {isAvailable && (
               <View style={[s.availBadge, { backgroundColor: accent }]}>
                 <Text style={s.availBadgeText}>
-                  {t("books.available", "Available")}
+                  {t("books.status.available", "Available")}
                 </Text>
               </View>
             )}

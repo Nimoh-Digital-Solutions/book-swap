@@ -274,11 +274,13 @@
       "addError": "Échec de l'ajout à la liste.",
       "removeError": "Échec du retrait de la liste."
     },
-    "card": {
-      "by": "par {{author}}",
+    "status": {
       "available": "Disponible",
       "in_exchange": "En échange",
       "returned": "Retourné"
+    },
+    "card": {
+      "by": "par {{author}}"
     },
     "photo": {
       "uploadSuccess": "Photo téléchargée.",

@@ -30,6 +30,7 @@ export function mergePartialUser(partial: ApiUser): User {
     profile_public: partial.profile_public ?? true,
     onboarding_completed: partial.onboarding_completed ?? false,
     email_verified: partial.email_verified ?? false,
+    auth_provider: partial.auth_provider ?? 'email',
     created_at: joinDate,
   };
 }

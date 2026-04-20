@@ -244,7 +244,7 @@ export function EditBookScreen() {
 
         {/* ── Photos ── */}
         <SectionLabel text={t("books.editBook.photosLabel", "Photos")} c={c} />
-        <BookPhotoManager bookId={params.bookId} photos={book?.photos ?? []} />
+        <BookPhotoManager bookId={params.bookId} photos={(book?.photos ?? []).map((p, i) => ({ id: p.id, image: p.image, position: p.order ?? i }))} />
 
         {/* ── Title ── */}
         <SectionLabel text={t("books.addBook.titleLabel", "Title")} required c={c} />

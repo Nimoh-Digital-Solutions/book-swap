@@ -222,6 +222,11 @@
     "statusUnavailable": "Indisponible",
     "markUnavailableA11y": "Marquer comme indisponible",
     "markAvailableA11y": "Marquer comme disponible",
+    "status": {
+      "available": "Disponible",
+      "in_exchange": "En échange",
+      "returned": "Retourné"
+    },
     "filter": {
       "all": "Tous",
       "available": "Disponibles",

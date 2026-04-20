@@ -22,9 +22,9 @@ class ISBNLookupError(Exception):
     """Raised when ISBN lookup fails from all sources."""
 
 
-def _extract_year(date_str: str) -> int | None:
+def _extract_year(date_str: str | Any) -> int | None:
     """Extract a 4-digit year from a date string."""
-    if not date_str:
+    if not isinstance(date_str, str) or not date_str:
         return None
     match = re.search(r"\b(\d{4})\b", date_str)
     return int(match.group(1)) if match else None

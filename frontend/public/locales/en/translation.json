@@ -275,11 +275,13 @@
       "addError": "Failed to add to wishlist.",
       "removeError": "Failed to remove from wishlist."
     },
-    "card": {
-      "by": "by {{author}}",
+    "status": {
       "available": "Available",
       "in_exchange": "In Exchange",
       "returned": "Returned"
+    },
+    "card": {
+      "by": "by {{author}}"
     },
     "photo": {
       "uploadSuccess": "Photo uploaded.",

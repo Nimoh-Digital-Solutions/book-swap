@@ -14,12 +14,6 @@ interface BookCardProps {
 export function BookCard({ book }: BookCardProps): ReactElement {
   const { t } = useTranslation();
 
-  const statusLabels: Record<string, string> = {
-    available: t('books.card.available', 'Available'),
-    in_exchange: t('books.card.in_exchange', 'In Exchange'),
-    returned: t('books.card.returned', 'Returned'),
-  };
-
   return (
     <LocaleLink
       to={`/books/${book.id}`}
@@ -44,7 +38,7 @@ export function BookCard({ book }: BookCardProps): ReactElement {
         {book.status !== 'available' && (
           <div className="absolute top-2 right-2">
             <span className="bg-[#152018]/80 text-[#8C9C92] text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-              {statusLabels[book.status] ?? book.status}
+              {t(`books.status.${book.status}`, book.status)}
             </span>
           </div>
         )}

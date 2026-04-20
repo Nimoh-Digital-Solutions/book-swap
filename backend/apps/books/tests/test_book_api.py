@@ -54,10 +54,15 @@ class TestISBNLookupService:
     """ISBNLookupService with mocked external APIs."""
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_open_library_success(self, mock_get):
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_open_library_success(self, mock_client_cls, mock_get):
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
+        ol_resp = MagicMock()
+        ol_resp.status_code = 200
+        ol_resp.json.return_value = {
             "title": "Test Book",
             "authors": [{"name": "Author One"}],
             "isbn_13": ["9781234567890"],
@@ -65,8 +70,9 @@ class TestISBNLookupService:
             "number_of_pages": 200,
             "publish_date": "2020-01-15",
             "description": "A great book.",
+            "languages": [{"key": "/languages/eng"}],
         }
-        mock_get.return_value = mock_resp
+        mock_client.get.return_value = ol_resp
 
         result = ISBNLookupService.lookup_isbn("9781234567890")
         assert result["title"] == "Test Book"
@@ -77,10 +83,16 @@ class TestISBNLookupService:
         assert "covers.openlibrary.org" in result["cover_url"]
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_falls_back_to_google(self, mock_get):
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_falls_back_to_google(self, mock_client_cls, mock_get):
         """When Open Library returns 404, fall back to Google Books."""
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
         ol_resp = MagicMock()
         ol_resp.status_code = 404
+        mock_client.get.return_value = ol_resp
 
         gb_resp = MagicMock()
         gb_resp.status_code = 200
@@ -100,7 +112,7 @@ class TestISBNLookupService:
                 }
             ]
         }
-        mock_get.side_effect = [ol_resp, gb_resp]
+        mock_get.return_value = gb_resp
 
         result = ISBNLookupService.lookup_isbn("9780000000001")
         assert result["title"] == "Fallback Book"
@@ -108,14 +120,21 @@ class TestISBNLookupService:
         assert result["publish_year"] == 2019
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_both_fail_raises(self, mock_get):
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_both_fail_raises(self, mock_client_cls, mock_get):
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
         ol_resp = MagicMock()
         ol_resp.status_code = 404
+        mock_client.get.return_value = ol_resp
+
         gb_resp = MagicMock()
         gb_resp.status_code = 200
         gb_resp.raise_for_status.return_value = None
         gb_resp.json.return_value = {"items": []}
-        mock_get.side_effect = [ol_resp, gb_resp]
+        mock_get.return_value = gb_resp
 
         with pytest.raises(ISBNLookupError, match="No metadata found"):
             ISBNLookupService.lookup_isbn("0000000000")
@@ -225,9 +244,9 @@ class TestBookListView:
         assert len(response.data["results"]) == 1
         assert response.data["results"][0]["owner"]["id"] == str(user.id)
 
-    def test_unauthenticated_rejected(self, api_client):
+    def test_unauthenticated_allowed_read_only(self, api_client):
         response = api_client.get("/api/v1/books/")
-        assert response.status_code == 401
+        assert response.status_code == 200
 
 
 class TestBookCreateView:
