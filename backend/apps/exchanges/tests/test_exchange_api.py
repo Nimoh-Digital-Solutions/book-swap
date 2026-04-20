@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.books.models import BookStatus
+from apps.books.models import BookStatus, SwapType
 from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import (
     VALID_TRANSITIONS,
@@ -631,6 +631,108 @@ class TestReturnFlow:
             exchange_url(pk=exchange.pk, action="request-return"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Swap type (temporary vs permanent)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TestSwapTypeExchange:
+    def test_exchange_inherits_swap_type_from_requested_book(self):
+        owner = UserFactory(with_location=True, onboarded=True)
+        requester = UserFactory(with_location=True, onboarded=True)
+        requested_book = BookFactory(owner=owner, swap_type=SwapType.PERMANENT)
+        offered_book = BookFactory(owner=requester)
+
+        client = api_client(requester)
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(offered_book.pk),
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["swap_type"] == SwapType.PERMANENT
+
+    def test_create_exchange_with_swap_type_override(self):
+        owner = UserFactory(with_location=True, onboarded=True)
+        requester = UserFactory(with_location=True, onboarded=True)
+        requested_book = BookFactory(owner=owner, swap_type=SwapType.PERMANENT)
+        offered_book = BookFactory(owner=requester)
+
+        client = api_client(requester)
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(offered_book.pk),
+                "swap_type": SwapType.TEMPORARY,
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["swap_type"] == SwapType.TEMPORARY
+
+    def test_request_return_blocked_for_permanent_swap(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.PERMANENT)
+        client = api_client(exchange.requester)
+        response = client.post(
+            exchange_url(pk=exchange.pk, action="request-return"),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "permanent" in response.json()["detail"].lower()
+
+    def test_request_return_works_for_temporary_swap(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.TEMPORARY)
+        assert exchange.swap_type == SwapType.TEMPORARY
+        client = api_client(exchange.owner)
+        response = client.post(
+            exchange_url(pk=exchange.pk, action="request-return"),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == ExchangeStatus.RETURN_REQUESTED
+
+    def test_complete_permanent_swap_transfers_book_ownership(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.PERMANENT)
+        requested = exchange.requested_book
+        offered = exchange.offered_book
+        orig_requested_owner = requested.owner_id
+        orig_offered_owner = offered.owner_id
+        assert orig_requested_owner == exchange.owner_id
+        assert orig_offered_owner == exchange.requester_id
+
+        client = api_client(exchange.requester)
+        response = client.post(exchange_url(pk=exchange.pk, action="complete"))
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == ExchangeStatus.COMPLETED
+
+        requested.refresh_from_db()
+        offered.refresh_from_db()
+        assert requested.owner_id == exchange.requester_id
+        assert offered.owner_id == exchange.owner_id
+        assert requested.status == BookStatus.AVAILABLE
+        assert offered.status == BookStatus.AVAILABLE
+
+    def test_complete_temporary_swap_does_not_transfer_ownership(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.TEMPORARY)
+        requested = exchange.requested_book
+        offered = exchange.offered_book
+        orig_requested_owner = requested.owner_id
+        orig_offered_owner = offered.owner_id
+
+        client = api_client(exchange.owner)
+        response = client.post(exchange_url(pk=exchange.pk, action="complete"))
+        assert response.status_code == status.HTTP_200_OK
+
+        requested.refresh_from_db()
+        offered.refresh_from_db()
+        assert requested.owner_id == orig_requested_owner
+        assert offered.owner_id == orig_offered_owner
+        assert requested.status == BookStatus.AVAILABLE
+        assert offered.status == BookStatus.AVAILABLE
 
 
 # ══════════════════════════════════════════════════════════════════════════════

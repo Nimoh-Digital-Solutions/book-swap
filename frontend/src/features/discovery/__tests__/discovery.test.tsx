@@ -96,7 +96,7 @@ describe('BrowseBookCard', () => {
     const book = makeBrowseBook({ id: 'book_123' });
     renderWithProviders(<BrowseBookCard book={book} />);
     const links = screen.getAllByRole('link');
-    expect(links.some(l => l.getAttribute('href') === '/books/book_123')).toBe(true);
+    expect(links.some(l => l.getAttribute('href') === '/en/books/book_123')).toBe(true);
   });
 
   it('shows owner neighborhood', () => {

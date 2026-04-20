@@ -2,14 +2,16 @@
 
 import io
 import uuid
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from rest_framework.test import APIClient
 
-from apps.books.models import Book, BookStatus, WishlistItem
+from apps.books.models import Book, BookStatus, SwapType, WishlistItem
 from apps.books.services import ISBNLookupError, ISBNLookupService
 from apps.books.tests.factories import (
     BookFactory,
@@ -43,6 +45,24 @@ def _make_image(fmt="JPEG", size=(100, 100), color="red"):
     Image.new("RGB", size, color=color).save(buf, format=fmt)
     buf.seek(0)
     return buf
+
+
+def _jwt_access_token_for_user(user):
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    return str(RefreshToken.for_user(user).access_token)
+
+
+def _jwt_expired_access_token_for_user(user):
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    token = AccessToken.for_user(user)
+    token.set_exp(from_time=timezone.now() - timedelta(days=1))
+    return str(token)
+
+
+def _set_bearer(client, token: str) -> None:
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -249,6 +269,114 @@ class TestBookListView:
         assert response.status_code == 200
 
 
+class TestOptionalJWTAuthenticationBooksListRead:
+    """JWT + anonymous behaviour on ``GET /api/v1/books/``.
+
+    ``BookViewSet`` uses ``perform_authentication`` so invalid Bearer tokens on
+    list/retrieve fall back to anonymous (no 401), matching the UX of
+    :class:`config.authentication.OptionalJWTAuthentication` on public endpoints.
+    """
+
+    def test_unauthenticated_books_list_returns_200_not_401(self, api_client):
+        BookFactory(status=BookStatus.AVAILABLE)
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert len(response.data["results"]) >= 1
+
+    def test_valid_jwt_books_list_returns_200_owner_me_context(self, api_client):
+        owner = UserFactory(is_active=True)
+        BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        response = api_client.get("/api/v1/books/?owner=me")
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["owner"]["id"] == str(owner.id)
+
+    def test_expired_jwt_books_list_returns_200_not_401(self, api_client):
+        user = UserFactory(is_active=True)
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, _jwt_expired_access_token_for_user(user))
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_garbage_jwt_books_list_returns_200_not_401(self, api_client):
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, "not-a-valid-jwt")
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_valid_jwt_books_owner_me_differs_from_unauthenticated(self, api_client):
+        owner = UserFactory(is_active=True)
+        mine = BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        other_book = BookFactory(status=BookStatus.AVAILABLE)
+
+        anon = api_client.get("/api/v1/books/?owner=me")
+        assert anon.status_code == 200
+        # ``owner=me`` is ignored for anonymous users; list is all available books.
+        anon_ids = {row["id"] for row in anon.data["results"]}
+        assert str(mine.id) in anon_ids
+        assert str(other_book.id) in anon_ids
+
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        authed = api_client.get("/api/v1/books/?owner=me")
+        assert authed.status_code == 200
+        assert len(authed.data["results"]) == 1
+        assert authed.data["results"][0]["id"] == str(mine.id)
+
+
+class TestOptionalJWTAuthenticationPublicEndpoints:
+    """``OptionalJWTAuthentication`` on ``nearby-count`` and ``browse`` (not on ``BookViewSet``)."""
+
+    _NEARBY = "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=10000"
+
+    def test_optional_jwt_nearby_count_unauthenticated_returns_200(self, api_client):
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert "count" in response.data
+
+    def test_optional_jwt_nearby_count_valid_jwt_returns_200(self, api_client):
+        user = UserFactory(is_active=True)
+        _set_bearer(api_client, _jwt_access_token_for_user(user))
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert "count" in response.data
+
+    def test_optional_jwt_nearby_count_expired_jwt_returns_200_not_401(self, api_client):
+        user = UserFactory(is_active=True)
+        _set_bearer(api_client, _jwt_expired_access_token_for_user(user))
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_optional_jwt_nearby_count_garbage_jwt_returns_200_not_401(self, api_client):
+        _set_bearer(api_client, "%%%garbage%%%")
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_optional_jwt_browse_authenticated_jwt_excludes_own_listing(self, api_client):
+        """Authenticated browse excludes the caller's own books; anonymous sees them."""
+        owner = UserFactory(is_active=True, with_location=True)
+        mine = BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        lat = owner.location.y
+        lng = owner.location.x
+        browse_url = f"/api/v1/books/browse/?lat={lat}&lng={lng}&radius=50000"
+
+        anon_resp = api_client.get(browse_url)
+        assert anon_resp.status_code == 200
+        anon_ids = {row["id"] for row in anon_resp.data["results"]}
+        assert str(mine.id) in anon_ids
+
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        auth_resp = api_client.get(browse_url)
+        assert auth_resp.status_code == 200
+        auth_ids = {row["id"] for row in auth_resp.data["results"]}
+        assert str(mine.id) not in auth_ids
+
+
 class TestBookCreateView:
     """POST /api/v1/books/ — create a listing."""
 
@@ -296,6 +424,76 @@ class TestBookCreateView:
         }
         response = client.post("/api/v1/books/", data, format="json")
         assert response.status_code == 400
+
+
+class TestBookSwapType:
+    """Create, read, and update swap_type on book listings."""
+
+    def test_create_book_defaults_swap_type_temporary(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Default Swap",
+            "author": "Author",
+            "condition": "good",
+            "language": "en",
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.TEMPORARY
+
+    def test_create_book_with_swap_type_temporary(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Temporary Swap",
+            "author": "Author",
+            "condition": "good",
+            "language": "en",
+            "swap_type": SwapType.TEMPORARY,
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.TEMPORARY
+
+    def test_create_book_with_swap_type_permanent(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Giveaway",
+            "author": "Author",
+            "condition": "like_new",
+            "language": "en",
+            "swap_type": SwapType.PERMANENT,
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.PERMANENT
+
+    def test_list_includes_swap_type(self, auth_client):
+        client, _ = auth_client
+        BookFactory(status=BookStatus.AVAILABLE, swap_type=SwapType.PERMANENT)
+        response = client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert "swap_type" in response.data["results"][0]
+        assert response.data["results"][0]["swap_type"] == SwapType.PERMANENT
+
+    def test_detail_includes_swap_type(self, auth_client):
+        client, _ = auth_client
+        book = BookFactory(status=BookStatus.AVAILABLE, swap_type=SwapType.PERMANENT)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["swap_type"] == SwapType.PERMANENT
+
+    def test_patch_updates_swap_type(self, auth_client):
+        client, user = auth_client
+        book = BookFactory(owner=user, swap_type=SwapType.TEMPORARY)
+        response = client.patch(
+            f"/api/v1/books/{book.id}/",
+            {"swap_type": SwapType.PERMANENT},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["swap_type"] == SwapType.PERMANENT
+        book.refresh_from_db()
+        assert book.swap_type == SwapType.PERMANENT
 
 
 class TestBookDetailView:

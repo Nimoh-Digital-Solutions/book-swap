@@ -3,7 +3,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from apps.books.models import Book, BookStatus
+from apps.books.models import Book, BookStatus, SwapType
 
 from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest
 
@@ -127,6 +127,7 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
     requested_book_id = serializers.UUIDField()
     offered_book_id = serializers.UUIDField()
     message = serializers.CharField(max_length=200, required=False, default="")
+    swap_type = serializers.ChoiceField(choices=SwapType.choices, required=False)
 
     def validate_requested_book_id(self, value):
         try:
@@ -176,13 +177,14 @@ class ExchangeRequestCreateSerializer(serializers.Serializer):
         from django.db import IntegrityError
 
         try:
+            effective_swap_type = validated_data.get("swap_type", self._requested_book.swap_type)
             return ExchangeRequest.objects.create(
                 requester=self.context["request"].user,
                 owner=self._requested_book.owner,
                 requested_book=self._requested_book,
                 offered_book=self._offered_book,
                 message=validated_data.get("message", ""),
-                swap_type=self._requested_book.swap_type,
+                swap_type=effective_swap_type,
             )
         except IntegrityError:
             raise serializers.ValidationError("You already have a pending request for this book.") from None

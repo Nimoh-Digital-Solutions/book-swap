@@ -61,7 +61,7 @@ describe('BookCard', () => {
   it('renders a link to the book detail page', () => {
     renderCard();
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/books/book_001');
+    expect(link).toHaveAttribute('href', '/en/books/book_001');
   });
 
   it('shows status overlay for non-available books', () => {

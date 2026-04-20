@@ -1,8 +1,9 @@
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithProviders } from '@test/renderWithProviders';
 import { useAuthStore } from '../../auth/stores/authStore';
 import { BookDetailPage } from '../pages/BookDetailPage';
 import type { Book } from '../types/book.types';
@@ -58,12 +59,11 @@ const MOCK_BOOK: Book = {
 // ---------------------------------------------------------------------------
 
 function renderPage(bookId = 'book_001') {
-  return render(
-    <MemoryRouter initialEntries={[`/books/${bookId}`]}>
-      <Routes>
-        <Route path="/books/:id" element={<BookDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+  return renderWithProviders(
+    <Routes>
+      <Route path="/:lng/books/:id" element={<BookDetailPage />} />
+    </Routes>,
+    { routerProps: { initialEntries: [`/en/books/${bookId}`] } },
   );
 }
 
