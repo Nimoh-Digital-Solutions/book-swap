@@ -155,7 +155,22 @@
     "heading": "Settings",
     "dangerZone": "Danger Zone",
     "deleteDescription": "Once you delete your account, there is no going back. You will have a 30-day grace period to cancel.",
-    "deleteAccount": "Delete Account"
+    "deleteAccount": "Delete Account",
+    "location": {
+      "heading": "Location",
+      "current": "Current: {{neighborhood}}",
+      "inputLabel": "City, neighborhood, or postcode",
+      "placeholder": "e.g. Amsterdam West, 1054",
+      "setBtn": "Set location",
+      "useGps": "Use GPS",
+      "updated": "Location set to {{neighborhood}}",
+      "updatedGeneric": "Your location has been updated.",
+      "notFound": "Could not find that location. Please check and try again.",
+      "noGps": "Geolocation is not supported by your browser.",
+      "gpsError": "Failed to update location via GPS.",
+      "denied": "Location access denied. Please check your browser settings.",
+      "privacyNote": "Your exact address is never shared — we only use it to calculate distances to available books."
+    }
   },
   "common": {
     "loading": "Loading…",

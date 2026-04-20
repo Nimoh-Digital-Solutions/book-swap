@@ -5,6 +5,7 @@ import { useAppStore } from '@data/useAppStore';
 import { NotificationPreferencesSection } from '@features/notifications';
 import { profileService,useProfile } from '@features/profile';
 import { DeleteAccountDialog } from '@features/profile/components/DeleteAccountDialog';
+import { LocationSection } from '@features/profile/components/LocationSection';
 import { PasswordChangeSection } from '@features/profile/components/PasswordChangeSection/PasswordChangeSection';
 import { PrivacySection } from '@features/profile/components/PrivacySection/PrivacySection';
 import {
@@ -56,6 +57,9 @@ export default function SettingsPage(): ReactElement {
       <h1 className="text-2xl font-bold text-white">
         {t('settings.heading', 'Settings')}
       </h1>
+
+      {/* Location */}
+      <LocationSection />
 
       {/* Notification Preferences */}
       <NotificationPreferencesSection />

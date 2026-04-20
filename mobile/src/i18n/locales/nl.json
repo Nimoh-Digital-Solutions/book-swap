@@ -634,7 +634,14 @@
     "searchRadius": "Zoekradius",
     "searchRadiusSub": "{{km}} km",
     "security": "Beveiliging",
-    "update": "Bijwerken"
+    "update": "Bijwerken",
+    "setManually": "Locatie handmatig instellen",
+    "setManuallySub": "Voer een stad of postcode in",
+    "manualLocationHint": "Voer een stad, buurt of postcode in om je locatie in te stellen zonder GPS.",
+    "manualLocationPlaceholder": "bijv. Amsterdam West, 1054",
+    "manualLocationError": "Kon die locatie niet vinden. Controleer het en probeer opnieuw.",
+    "setLocationBtn": "Locatie instellen",
+    "resetToGps": "Gebruik GPS"
   },
   "blocks": {
     "emptyTitle": "Geen geblokkeerde gebruikers",

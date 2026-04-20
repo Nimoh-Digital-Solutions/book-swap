@@ -634,7 +634,14 @@
     "searchRadius": "Search Radius",
     "searchRadiusSub": "{{km}} km",
     "security": "Security",
-    "update": "Update"
+    "update": "Update",
+    "setManually": "Set location manually",
+    "setManuallySub": "Enter a city or postcode",
+    "manualLocationHint": "Enter a city, neighborhood, or postcode to set your location without using GPS.",
+    "manualLocationPlaceholder": "e.g. Amsterdam West, 1054",
+    "manualLocationError": "Could not find that location. Please check and try again.",
+    "setLocationBtn": "Set location",
+    "resetToGps": "Use GPS instead"
   },
   "blocks": {
     "emptyTitle": "No blocked users",

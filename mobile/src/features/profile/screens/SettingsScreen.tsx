@@ -15,6 +15,7 @@ import {
   MapPin,
   Navigation,
   Radar,
+  Search,
   ShieldOff,
   Sun,
   Trash2,
@@ -24,11 +25,15 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -216,6 +221,45 @@ export function SettingsScreen() {
     }
   }, [setUser, t]);
 
+  const [manualSheetVisible, setManualSheetVisible] = useState(false);
+  const [manualInput, setManualInput] = useState("");
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+
+  const submitManualLocation = useCallback(async () => {
+    const trimmed = manualInput.trim();
+    if (!trimmed) return;
+    setManualSubmitting(true);
+    try {
+      const { data } = await http.post<User>(API.users.meLocation, {
+        postcode: trimmed,
+      });
+      await setUser(data);
+      setManualSheetVisible(false);
+      setManualInput("");
+      Alert.alert(
+        t("settings.locationUpdated", "Location updated"),
+        data.neighborhood
+          ? t("settings.locationUpdatedMsg", "Set to {{neighborhood}}", {
+              neighborhood: data.neighborhood,
+            })
+          : t(
+              "settings.locationUpdatedGeneric",
+              "Your location has been updated.",
+            ),
+      );
+    } catch {
+      Alert.alert(
+        t("common.error", "Error"),
+        t(
+          "settings.manualLocationError",
+          "Could not find that location. Please check and try again.",
+        ),
+      );
+    } finally {
+      setManualSubmitting(false);
+    }
+  }, [manualInput, setUser, t]);
+
   const fullName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(" ") ||
       user.username
@@ -384,6 +428,48 @@ export function SettingsScreen() {
               </Text>
             </Pressable>
           </View>
+
+          {/* Set manually row */}
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
+          <Pressable
+            style={({ pressed }) => [
+              s.row,
+              pressed && {
+                backgroundColor: isDark
+                  ? c.auth.cardBorder + "20"
+                  : c.neutral[50],
+              },
+            ]}
+            onPress={() => setManualSheetVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t(
+              "settings.setManually",
+              "Set location manually",
+            )}
+          >
+            <View style={s.rowLeft}>
+              <View
+                style={[s.iconCircle, { backgroundColor: iconCircleBg }]}
+              >
+                <Search
+                  size={20}
+                  color={isDark ? c.auth.golden : c.text.secondary}
+                />
+              </View>
+              <View style={s.rowTextWrap}>
+                <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                  {t("settings.setManually", "Set location manually")}
+                </Text>
+                <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                  {t(
+                    "settings.setManuallySub",
+                    "Enter a city or postcode",
+                  )}
+                </Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={c.text.placeholder} />
+          </Pressable>
 
           <View style={[s.divider, { backgroundColor: dividerColor }]} />
 
@@ -640,6 +726,105 @@ export function SettingsScreen() {
         visible={deleteSheetVisible}
         onClose={() => setDeleteSheetVisible(false)}
       />
+
+      {/* Manual location bottom sheet */}
+      <Modal
+        visible={manualSheetVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setManualSheetVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={s.sheetOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable
+            style={s.sheetBackdrop}
+            onPress={() => setManualSheetVisible(false)}
+          />
+          <View
+            style={[
+              s.sheetContent,
+              { backgroundColor: isDark ? c.auth.card : c.surface.white },
+            ]}
+          >
+            <View style={s.sheetHandle} />
+            <Text style={[s.sheetTitle, { color: c.text.primary }]}>
+              {t("settings.setManually", "Set location manually")}
+            </Text>
+            <Text style={[s.sheetDesc, { color: c.text.secondary }]}>
+              {t(
+                "settings.manualLocationHint",
+                "Enter a city, neighborhood, or postcode to set your location without using GPS.",
+              )}
+            </Text>
+            <TextInput
+              style={[
+                s.sheetInput,
+                {
+                  color: c.text.primary,
+                  backgroundColor: isDark ? c.auth.bg : c.neutral[50],
+                  borderColor: isDark ? c.auth.cardBorder : c.border.default,
+                },
+              ]}
+              value={manualInput}
+              onChangeText={setManualInput}
+              placeholder={t(
+                "settings.manualLocationPlaceholder",
+                "e.g. Amsterdam West, 1054",
+              )}
+              placeholderTextColor={c.text.placeholder}
+              autoCapitalize="words"
+              returnKeyType="done"
+              onSubmitEditing={submitManualLocation}
+              autoFocus
+            />
+            <Pressable
+              onPress={submitManualLocation}
+              disabled={manualSubmitting || !manualInput.trim()}
+              style={({ pressed }) => [
+                s.sheetBtn,
+                {
+                  backgroundColor: c.auth.golden,
+                  opacity:
+                    manualSubmitting || !manualInput.trim()
+                      ? 0.5
+                      : pressed
+                        ? 0.9
+                        : 1,
+                },
+              ]}
+            >
+              {manualSubmitting ? (
+                <ActivityIndicator size="small" color="#152018" />
+              ) : (
+                <Text style={s.sheetBtnText}>
+                  {t("settings.setLocationBtn", "Set location")}
+                </Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setManualSheetVisible(false);
+                updateLocation();
+              }}
+              style={({ pressed }) => [
+                s.sheetResetLink,
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <Navigation size={14} color={c.text.placeholder} />
+              <Text style={[s.sheetResetText, { color: c.text.placeholder }]}>
+                {t(
+                  "settings.resetToGps",
+                  "Use GPS instead",
+                )}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -780,6 +965,54 @@ const s = StyleSheet.create({
   },
   bottomLinkText: { fontSize: 13, textDecorationLine: "underline" },
   bottomDot: { width: 3, height: 3, borderRadius: 1.5 },
+
+  // Manual location sheet
+  sheetOverlay: { flex: 1, justifyContent: "flex-end" },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  sheetContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: 40,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#555",
+    alignSelf: "center",
+    marginBottom: spacing.lg,
+  },
+  sheetTitle: { fontSize: 20, fontWeight: "700", marginBottom: spacing.xs },
+  sheetDesc: { fontSize: 14, lineHeight: 20, marginBottom: spacing.lg },
+  sheetInput: {
+    fontSize: 15,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: spacing.md,
+  },
+  sheetBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: radius.xl,
+    marginBottom: spacing.md,
+  },
+  sheetBtnText: { color: "#152018", fontWeight: "700", fontSize: 16 },
+  sheetResetLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: spacing.sm,
+  },
+  sheetResetText: { fontSize: 14, fontWeight: "600" },
 
   // Footer
   footer: {

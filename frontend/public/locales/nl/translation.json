@@ -154,7 +154,22 @@
     "heading": "Instellingen",
     "dangerZone": "Gevarenzone",
     "deleteDescription": "Als je je account verwijdert, is er geen weg terug. Je hebt een respijtperiode van 30 dagen om te annuleren.",
-    "deleteAccount": "Account verwijderen"
+    "deleteAccount": "Account verwijderen",
+    "location": {
+      "heading": "Locatie",
+      "current": "Huidig: {{neighborhood}}",
+      "inputLabel": "Stad, buurt of postcode",
+      "placeholder": "bijv. Amsterdam West, 1054",
+      "setBtn": "Locatie instellen",
+      "useGps": "Gebruik GPS",
+      "updated": "Locatie ingesteld op {{neighborhood}}",
+      "updatedGeneric": "Je locatie is bijgewerkt.",
+      "notFound": "Kon die locatie niet vinden. Controleer het en probeer opnieuw.",
+      "noGps": "Geolocatie wordt niet ondersteund door je browser.",
+      "gpsError": "Locatie bijwerken via GPS mislukt.",
+      "denied": "Locatietoegang geweigerd. Controleer je browserinstellingen.",
+      "privacyNote": "Je exacte adres wordt nooit gedeeld — we gebruiken het alleen om afstanden tot beschikbare boeken te berekenen."
+    }
   },
   "common": {
     "loading": "Laden…",

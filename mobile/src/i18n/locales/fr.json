@@ -634,7 +634,14 @@
     "searchRadius": "Rayon de recherche",
     "searchRadiusSub": "{{km}} km",
     "security": "Sécurité",
-    "update": "Mettre à jour"
+    "update": "Mettre à jour",
+    "setManually": "Définir la position manuellement",
+    "setManuallySub": "Entrez une ville ou un code postal",
+    "manualLocationHint": "Entrez une ville, un quartier ou un code postal pour définir votre position sans utiliser le GPS.",
+    "manualLocationPlaceholder": "ex. Paris 11e, 75011",
+    "manualLocationError": "Impossible de trouver cet emplacement. Veuillez vérifier et réessayer.",
+    "setLocationBtn": "Définir la position",
+    "resetToGps": "Utiliser le GPS"
   },
   "blocks": {
     "emptyTitle": "Aucun utilisateur bloqué",
