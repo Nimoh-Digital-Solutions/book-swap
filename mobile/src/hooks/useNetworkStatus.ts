@@ -4,6 +4,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccessToast } from '@/components/Toast';
 import i18n from '@/lib/i18n';
+import { computeIsOffline, netinfoIndicatesOnline } from '@/hooks/networkStatus';
 
 const STALE_QUERY_KEYS = [
   'books', 'myBooks', 'book', 'userBooks', 'recentBooks', 'nearbyCount',
@@ -54,9 +55,7 @@ export function useNetworkStatus() {
     }
 
     const unsubscribe = NetInfo.addEventListener((state) => {
-      const next =
-        state.isConnected === true &&
-        (state.isInternetReachable === true || state.isInternetReachable === null);
+      const next = netinfoIndicatesOnline(state);
       setIsConnected(state.isConnected);
       setIsInternetReachable(state.isInternetReachable);
 
@@ -77,7 +76,7 @@ export function useNetworkStatus() {
     };
   }, [invalidateStale]);
 
-  const offline = isConnected === false || isInternetReachable === false;
+  const offline = computeIsOffline(isConnected, isInternetReachable);
 
   return {
     isConnected,

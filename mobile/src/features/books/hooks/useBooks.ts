@@ -4,6 +4,18 @@ import { API } from '@/configs/apiEndpoints';
 import { showErrorToast } from '@/components/Toast';
 import { useAuthStore } from '@/stores/authStore';
 import type { Book, PaginatedResponse } from '@/types';
+import {
+  createBook as createBookApi,
+  deleteBook as deleteBookApi,
+  fetchBookById,
+  fetchBooks,
+  lookupIsbn as lookupIsbnApi,
+  updateBook as updateBookApi,
+  type CreateBookPayload,
+  type UpdateBookPayload,
+} from '@/features/books/bookApi';
+
+export type { CreateBookPayload, UpdateBookPayload } from '@/features/books/bookApi';
 
 export interface BrowseParams {
   lat?: number;
@@ -66,10 +78,7 @@ export function useRadiusCounts(lat?: number, lng?: number) {
 export function useBookDetail(bookId: string) {
   return useQuery({
     queryKey: ['book', bookId],
-    queryFn: async () => {
-      const { data } = await http.get<Book>(API.books.detail(bookId));
-      return data;
-    },
+    queryFn: () => fetchBookById(bookId),
     enabled: !!bookId,
   });
 }
@@ -78,12 +87,7 @@ export function useMyBooks() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return useQuery({
     queryKey: ['myBooks'],
-    queryFn: async () => {
-      const { data } = await http.get<PaginatedResponse<Book>>(API.books.list, {
-        params: { owner: 'me' },
-      });
-      return data.results;
-    },
+    queryFn: () => fetchBooks('me'),
     enabled: isAuthenticated,
   });
 }
@@ -91,12 +95,7 @@ export function useMyBooks() {
 export function useUserBooks(userId: string) {
   return useQuery({
     queryKey: ['userBooks', userId],
-    queryFn: async () => {
-      const { data } = await http.get<PaginatedResponse<Book>>(API.books.list, {
-        params: { owner: userId },
-      });
-      return data.results;
-    },
+    queryFn: () => fetchBooks(userId),
     enabled: !!userId,
   });
 }
@@ -126,28 +125,10 @@ export function useExternalBookSearch(query: string) {
   });
 }
 
-export interface CreateBookPayload {
-  isbn?: string;
-  title: string;
-  author: string;
-  description?: string;
-  cover_url?: string;
-  condition: 'new' | 'like_new' | 'good' | 'acceptable';
-  genres?: string[];
-  language: 'en' | 'nl' | 'de' | 'fr' | 'es' | 'other';
-  swap_type: 'temporary' | 'permanent';
-  notes?: string;
-  page_count?: number | null;
-  publish_year?: number | null;
-}
-
 export function useCreateBook() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateBookPayload) => {
-      const { data } = await http.post<Book>(API.books.create, payload);
-      return data;
-    },
+    mutationFn: (payload: CreateBookPayload) => createBookApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['browse'] });
@@ -158,25 +139,10 @@ export function useCreateBook() {
   });
 }
 
-export interface UpdateBookPayload {
-  title?: string;
-  author?: string;
-  description?: string;
-  condition?: CreateBookPayload['condition'];
-  genres?: string[];
-  language?: CreateBookPayload['language'];
-  swap_type?: CreateBookPayload['swap_type'];
-  notes?: string;
-  status?: string;
-}
-
 export function useUpdateBook(bookId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: UpdateBookPayload) => {
-      const { data } = await http.patch<Book>(API.books.detail(bookId), payload);
-      return data;
-    },
+    mutationFn: (payload: UpdateBookPayload) => updateBookApi(bookId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
@@ -190,9 +156,7 @@ export function useUpdateBook(bookId: string) {
 export function useDeleteBook() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (bookId: string) => {
-      await http.delete(API.books.detail(bookId));
-    },
+    mutationFn: (bookId: string) => deleteBookApi(bookId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myBooks'] });
       queryClient.invalidateQueries({ queryKey: ['browse'] });
@@ -271,12 +235,7 @@ interface BookPhoto {
 export function useIsbnLookup(isbn: string) {
   return useQuery({
     queryKey: ['isbn', isbn],
-    queryFn: async () => {
-      const { data } = await http.get(API.books.isbnLookup, {
-        params: { isbn },
-      });
-      return data as { title: string; author: string; isbn: string; cover_url?: string };
-    },
+    queryFn: () => lookupIsbnApi(isbn),
     enabled: !!isbn,
   });
 }

@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { API } from '@/configs/apiEndpoints';
 import { http } from '@/services/http';
 import { registerForPushNotifications, sendPushTokenToBackend } from '@/services/pushNotifications';
 
@@ -39,7 +40,7 @@ describe('pushNotifications', () => {
   it('sendPushTokenToBackend sends correct payload', async () => {
     await sendPushTokenToBackend('my-token');
 
-    expect(http.post).toHaveBeenCalledWith('/api/v1/users/me/devices/', {
+    expect(http.post).toHaveBeenCalledWith(API.users.meDevices, {
       push_token: 'my-token',
       platform: expect.any(String),
       device_name: 'Test Phone',

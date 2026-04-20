@@ -19,6 +19,12 @@ jest.mock('@/lib/storage', () => ({
 
 jest.mock('@/lib/queryClient', () => ({ queryClient: { clear: jest.fn() } }));
 
+jest.mock('@/features/auth/api/auth.api', () => ({
+  authApi: {
+    getMe: jest.fn(),
+  },
+}));
+
 jest.mock('@/lib/sentry', () => ({
   setSentryUser: jest.fn(),
   captureException: jest.fn(),
@@ -28,6 +34,7 @@ jest.mock('@/lib/sentry', () => ({
   wrapRootComponent: jest.fn((c: unknown) => c),
 }));
 
+import { authApi } from '@/features/auth/api/auth.api';
 import { tokenStorage, asyncQueryStorage } from '@/lib/storage';
 import { queryClient } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
@@ -61,6 +68,7 @@ function makeUser(overrides: Partial<User> = {}): User {
 describe('useAuthStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(authApi.getMe).mockRejectedValue(new Error('network'));
     useAuthStore.setState({ user: null, isAuthenticated: false, isHydrated: false });
   });
 
@@ -137,6 +145,6 @@ describe('useAuthStore', () => {
     const state = useAuthStore.getState();
     expect(state.isHydrated).toBe(true);
     expect(state.user).toBeNull();
-    expect(state.isAuthenticated).toBe(true);
+    expect(state.isAuthenticated).toBe(false);
   });
 });

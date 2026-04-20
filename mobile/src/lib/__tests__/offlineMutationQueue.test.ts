@@ -50,7 +50,7 @@ describe('offlineMutationQueue', () => {
   it('drainMutationQueue processes and clears successful mutations', async () => {
     enqueueMutation({ endpoint: '/ok', method: 'post', data: { x: 1 } });
     const result = await drainMutationQueue();
-    expect(result).toEqual({ succeeded: 1, failed: 0 });
+    expect(result).toEqual({ succeeded: 1, failed: 0, failedKeys: [] });
     expect(httpRequest).toHaveBeenCalledWith({
       url: '/ok',
       method: 'post',
@@ -66,7 +66,7 @@ describe('offlineMutationQueue', () => {
     enqueueMutation({ endpoint: '/flaky', method: 'post' });
 
     const first = await drainMutationQueue();
-    expect(first).toEqual({ succeeded: 0, failed: 0 });
+    expect(first).toEqual({ succeeded: 0, failed: 0, failedKeys: [] });
     expect(pendingMutationCount()).toBe(1);
 
     const second = await drainMutationQueue();
@@ -81,7 +81,7 @@ describe('offlineMutationQueue', () => {
     enqueueMutation({ endpoint: '/bad', method: 'post' });
 
     const result = await drainMutationQueue();
-    expect(result).toEqual({ succeeded: 0, failed: 1 });
+    expect(result).toEqual({ succeeded: 0, failed: 1, failedKeys: [] });
     expect(pendingMutationCount()).toBe(0);
   });
 

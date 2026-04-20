@@ -6,6 +6,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import {
+  acceptExchange as acceptExchangeApi,
+  confirmSwap as confirmSwapApi,
+  createExchange as createExchangeApi,
+  declineExchange as declineExchangeApi,
+  requestReturn as requestReturnApi,
+} from '@/features/exchanges/exchangeApi';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { enqueueMutation } from '@/lib/offlineMutationQueue';
 import { showInfoToast, showErrorToast } from '@/components/Toast';
@@ -98,11 +105,7 @@ export function useCreateExchange() {
         return { id: `offline-${Date.now()}` } as ExchangeDetail;
       }
 
-      const { data } = await http.post<ExchangeDetail>(
-        API.exchanges.create,
-        payload,
-      );
-      return data;
+      return createExchangeApi(payload);
     },
     onSuccess: (_data, _vars, _ctx) => {
       if (!isOffline) {
@@ -130,10 +133,7 @@ export function useAcceptExchange() {
         return { id: exchangeId } as ExchangeDetail;
       }
 
-      const { data } = await http.post<ExchangeDetail>(
-        API.exchanges.accept(exchangeId),
-      );
-      return data;
+      return acceptExchangeApi(exchangeId);
     },
     onSuccess: (_data, exchangeId) => {
       if (!isOffline) {
@@ -169,11 +169,7 @@ export function useDeclineExchange() {
         return { id: exchangeId } as ExchangeDetail;
       }
 
-      const { data } = await http.post<ExchangeDetail>(
-        API.exchanges.decline(exchangeId),
-        payload,
-      );
-      return data;
+      return declineExchangeApi(exchangeId, payload);
     },
     onSuccess: (_data, { exchangeId }) => {
       if (!isOffline) {
@@ -281,12 +277,7 @@ export function useConfirmSwap() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   return useMutation({
-    mutationFn: async (exchangeId: string) => {
-      const { data } = await http.post<ExchangeDetail>(
-        API.exchanges.confirmSwap(exchangeId),
-      );
-      return data;
-    },
+    mutationFn: (exchangeId: string) => confirmSwapApi(exchangeId),
     onSuccess: (_data, exchangeId) => {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
       qc.invalidateQueries({ queryKey: keys.lists() });
@@ -300,12 +291,7 @@ export function useRequestReturn() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   return useMutation({
-    mutationFn: async (exchangeId: string) => {
-      const { data } = await http.post<ExchangeDetail>(
-        API.exchanges.requestReturn(exchangeId),
-      );
-      return data;
-    },
+    mutationFn: (exchangeId: string) => requestReturnApi(exchangeId),
     onSuccess: (_data, exchangeId) => {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
     },
