@@ -505,8 +505,15 @@
     "useMyLocation": "Use My Location",
     "detectingLocation": "Detecting location...",
     "locationSet": "Location set!",
-    "locationDenied": "Location permission denied",
-    "yourLocation": "Your location"
+    "locationDenied": "Location Access Denied",
+    "locationDeniedMsg": "Please enable location access in your device settings, or enter your postcode manually below.",
+    "yourLocation": "Your location",
+    "subtitle": "This helps us show you the closest available books for swapping.",
+    "postcodeLabel": "City, Neighborhood, or Zip Code",
+    "postcodePlaceholder": "e.g. Amsterdam West, 1054",
+    "gpsError": "Could not detect your location. Try entering your postcode below.",
+    "postcodeError": "Could not find that location. Please check and try again.",
+    "privacyNote": "We only use your location to calculate distances to available books. Your exact address is never shared with other users."
   },
   "profile": {
     "bio": "Bio",

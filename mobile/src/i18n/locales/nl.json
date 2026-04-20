@@ -505,8 +505,15 @@
     "useMyLocation": "Gebruik mijn locatie",
     "detectingLocation": "Locatie detecteren...",
     "locationSet": "Locatie ingesteld!",
-    "locationDenied": "Locatietoestemming geweigerd",
-    "yourLocation": "Jouw locatie"
+    "locationDenied": "Locatietoegang geweigerd",
+    "locationDeniedMsg": "Schakel locatietoegang in via je apparaatinstellingen, of voer hieronder je postcode in.",
+    "yourLocation": "Jouw locatie",
+    "subtitle": "Dit helpt ons om de dichtstbijzijnde beschikbare boeken te tonen voor ruil.",
+    "postcodeLabel": "Stad, buurt of postcode",
+    "postcodePlaceholder": "bijv. Amsterdam West, 1054",
+    "gpsError": "Kon je locatie niet detecteren. Probeer hieronder je postcode in te voeren.",
+    "postcodeError": "Kon die locatie niet vinden. Controleer het en probeer opnieuw.",
+    "privacyNote": "We gebruiken je locatie alleen om afstanden tot beschikbare boeken te berekenen. Je exacte adres wordt nooit gedeeld met andere gebruikers."
   },
   "profile": {
     "bio": "Bio",

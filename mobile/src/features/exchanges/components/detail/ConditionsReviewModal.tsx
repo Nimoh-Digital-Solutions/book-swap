@@ -107,7 +107,7 @@ export function ConditionsReviewModal({ visible, loading, onClose, onAccept }: P
           </Pressable>
 
           <Text style={[s.version, { color: c.text.placeholder }]}>
-            {t('exchanges.conditionsVersion', 'Conditions v1.0')}
+            {t('exchanges.conditionsVersion', { version: '1.0' })}
           </Text>
         </View>
       </View>

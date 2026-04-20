@@ -505,8 +505,15 @@
     "useMyLocation": "Utiliser ma position",
     "detectingLocation": "Détection de la position...",
     "locationSet": "Position définie !",
-    "locationDenied": "Permission de localisation refusée",
-    "yourLocation": "Votre position"
+    "locationDenied": "Accès à la localisation refusé",
+    "locationDeniedMsg": "Veuillez activer l'accès à la localisation dans les paramètres de votre appareil, ou entrez votre code postal ci-dessous.",
+    "yourLocation": "Votre position",
+    "subtitle": "Cela nous aide à vous montrer les livres disponibles les plus proches pour l'échange.",
+    "postcodeLabel": "Ville, quartier ou code postal",
+    "postcodePlaceholder": "ex. Paris 11e, 75011",
+    "gpsError": "Impossible de détecter votre position. Essayez d'entrer votre code postal ci-dessous.",
+    "postcodeError": "Impossible de trouver cet emplacement. Veuillez vérifier et réessayer.",
+    "privacyNote": "Nous utilisons votre position uniquement pour calculer les distances vers les livres disponibles. Votre adresse exacte n'est jamais partagée avec d'autres utilisateurs."
   },
   "profile": {
     "bio": "Bio",

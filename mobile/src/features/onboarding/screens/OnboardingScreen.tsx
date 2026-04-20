@@ -156,10 +156,10 @@ export function OnboardingScreen() {
 
         {/* Header */}
         <Text style={[s.step, { color: c.text.placeholder }]}>
-          {t('onboarding.step', 'STEP 2 OF 2')}
+          {t('onboarding.step', { current: 2, total: 2 })}
         </Text>
         <Text style={[s.title, { color: c.text.primary }]}>
-          {t('onboarding.title', 'Where are you located?')}
+          {t('onboarding.title', 'Welcome to BookSwap')}
         </Text>
         <Text style={[s.subtitle, { color: c.text.secondary }]}>
           {t(
@@ -204,7 +204,7 @@ export function OnboardingScreen() {
                 <ActivityIndicator size="small" color="#152018" />
               ) : (
                 <Text style={s.primaryBtnText}>
-                  {t('onboarding.complete', 'Complete Setup')}
+                  {t('onboarding.complete', 'Get Started')}
                 </Text>
               )}
             </Pressable>
@@ -232,7 +232,7 @@ export function OnboardingScreen() {
               <Text style={s.gpsBtnText}>
                 {gpsLoading
                   ? t('onboarding.detectingLocation', 'Detecting location...')
-                  : t('onboarding.useMyLocation', 'Use my location')}
+                  : t('onboarding.useMyLocation', 'Use My Location')}
               </Text>
             </Pressable>
 
@@ -291,7 +291,7 @@ export function OnboardingScreen() {
                 <ActivityIndicator size="small" color={accent} />
               ) : (
                 <Text style={[s.postcodeBtnText, { color: c.text.primary }]}>
-                  {t('onboarding.setLocation', 'Set location')}
+                  {t('onboarding.setLocation', 'Set Your Location')}
                 </Text>
               )}
             </Pressable>
@@ -333,7 +333,7 @@ export function OnboardingScreen() {
               <ActivityIndicator size="small" color={c.text.placeholder} />
             ) : (
               <Text style={[s.skipText, { color: c.text.placeholder }]}>
-                {t('onboarding.skip', 'Skip for now')}
+                {t('onboarding.skip', 'Skip')}
               </Text>
             )}
           </Pressable>
