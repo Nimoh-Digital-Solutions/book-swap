@@ -37,8 +37,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 LOGGING["handlers"]["console"]["formatter"] = "dev_console"  # type: ignore[index]  # noqa: F405
 
 # Suppress noisy / broken third-party loggers
-LOGGING.setdefault("loggers", {}).update(
-    {  # type: ignore[union-attr]  # noqa: F405
+LOGGING.setdefault("loggers", {}).update(  # noqa: F405
+    {  # type: ignore[union-attr]
         "httpx": {"level": "WARNING", "propagate": False},
         "httpcore": {"level": "WARNING", "propagate": False},
     }
