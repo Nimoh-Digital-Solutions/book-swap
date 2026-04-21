@@ -1,13 +1,75 @@
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { Star } from "lucide-react-native";
 import { useColors } from "@/hooks/useColors";
+import { ANIMATION } from "@/constants/animation";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface Props {
   value: number;
   onChange: (score: number) => void;
   disabled?: boolean;
   size?: number;
+}
+
+function StarButton({
+  star,
+  filled,
+  size,
+  disabled,
+  onSelect,
+  accentColor,
+  emptyColor,
+}: {
+  star: number;
+  filled: boolean;
+  size: number;
+  disabled: boolean;
+  onSelect: (star: number) => void;
+  accentColor: string;
+  emptyColor: string;
+}) {
+  const scale = useSharedValue(1);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const onPressIn = useCallback(() => {
+    if (!disabled) {
+      scale.value = withSpring(1.15, ANIMATION.spring.bounce);
+    }
+  }, [disabled, scale]);
+
+  const onPressOut = useCallback(() => {
+    scale.value = withSpring(1, ANIMATION.spring.snappy);
+  }, [scale]);
+
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityLabel={star === 1 ? "Rate 1 star" : `Rate ${star} stars`}
+      accessibilityState={{ disabled }}
+      onPress={() => !disabled && onSelect(star)}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      hitSlop={6}
+      style={animStyle}
+    >
+      <Star
+        size={size}
+        color={filled ? accentColor : emptyColor}
+        fill={filled ? accentColor : "transparent"}
+        strokeWidth={1.5}
+      />
+    </AnimatedPressable>
+  );
 }
 
 export const StarInput = memo(function StarInput({
@@ -23,27 +85,16 @@ export const StarInput = memo(function StarInput({
   return (
     <View style={s.row}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <Pressable
+        <StarButton
           key={star}
-          accessibilityRole="button"
-          accessibilityLabel={
-            star === 1 ? "Rate 1 star" : `Rate ${star} stars`
-          }
-          accessibilityState={{ disabled }}
-          onPress={() => !disabled && onChange(star)}
-          hitSlop={6}
-          style={({ pressed }) => [
-            s.star,
-            pressed && !disabled && { transform: [{ scale: 1.15 }] },
-          ]}
-        >
-          <Star
-            size={size}
-            color={star <= value ? accent : empty}
-            fill={star <= value ? accent : "transparent"}
-            strokeWidth={1.5}
-          />
-        </Pressable>
+          star={star}
+          filled={star <= value}
+          size={size}
+          disabled={disabled}
+          onSelect={onChange}
+          accentColor={accent}
+          emptyColor={empty}
+        />
       ))}
     </View>
   );
@@ -55,5 +106,4 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  star: {},
 });

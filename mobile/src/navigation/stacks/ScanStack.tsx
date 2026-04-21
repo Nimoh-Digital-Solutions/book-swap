@@ -33,7 +33,7 @@ export function ScanStack() {
       <Stack.Screen
         name="ScanResult"
         component={ScanResultScreen}
-        options={{ ...child, headerTitle: t('navigation.bookFound', 'Book found') }}
+        options={{ ...child, headerTitle: t('navigation.bookFound', 'Book found'), animation: 'fade_from_bottom' }}
       />
       <Stack.Screen
         name="AddBook"

@@ -23,6 +23,7 @@ import {
 import React, { useCallback, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Alert, Dimensions, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 
 import { SkeletonBookDetail } from "@/components/Skeleton";
 import { showErrorToast, showInfoToast } from "@/components/Toast";
@@ -299,15 +300,15 @@ export function BookDetailScreen() {
         )}
 
         {/* ── Title + Author ── */}
-        <View style={s.titleSection}>
+        <Animated.View entering={FadeIn.duration(300)} style={s.titleSection}>
           <Text style={[s.title, { color: c.text.primary }]}>{book.title}</Text>
           <Text style={[s.author, { color: c.text.secondary }]}>
             {book.author}
           </Text>
-        </View>
+        </Animated.View>
 
         {/* ── Meta pills ── */}
-        <View style={s.metaRow}>
+        <Animated.View entering={FadeInUp.duration(250).delay(100)} style={s.metaRow}>
           {genres.length > 0 && (
             <View
               style={[
@@ -349,10 +350,10 @@ export function BookDetailScreen() {
               </Text>
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {/* ── Description ── */}
-        <View style={s.descSection}>
+        <Animated.View entering={FadeInUp.duration(250).delay(200)} style={s.descSection}>
           <View style={s.cardHeader}>
             <BookOpen size={16} color={accent} />
             <Text style={[s.cardLabel, { color: c.text.secondary }]}>
@@ -371,7 +372,7 @@ export function BookDetailScreen() {
               </Text>
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {/* ── Genres (empty state) ── */}
         {genres.length === 0 && (

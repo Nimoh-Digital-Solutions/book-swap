@@ -38,12 +38,12 @@ export function MessagesStack() {
       <Stack.Screen
         name="CounterOffer"
         component={CounterOfferScreen}
-        options={{ ...child, headerTitle: t('navigation.counterOffer', 'Counter Offer') }}
+        options={{ ...child, headerTitle: t('navigation.counterOffer', 'Counter Offer'), animation: 'slide_from_bottom' }}
       />
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, animation: 'slide_from_bottom' }}
       />
       <Stack.Screen
         name="UserProfile"

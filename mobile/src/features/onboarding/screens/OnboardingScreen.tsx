@@ -11,11 +11,14 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Navigation, Info, BookOpen } from 'lucide-react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { ANIMATION } from '@/constants/animation';
 import { spacing, radius } from '@/constants/theme';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
@@ -26,6 +29,7 @@ export function OnboardingScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
+  const insets = useSafeAreaInsets();
   const setUser = useAuthStore((s) => s.setUser);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
@@ -145,32 +149,38 @@ export function OnboardingScreen() {
     >
       <ScrollView
         style={s.root}
-        contentContainerStyle={s.content}
+        contentContainerStyle={[s.content, { paddingTop: insets.top + 20 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View style={[s.logoWrap, { backgroundColor: accent + '18' }]}>
+        <Animated.View entering={FadeIn.duration(400)} style={[s.logoWrap, { backgroundColor: accent + '18' }]}>
           <BookOpen size={32} color={accent} />
-        </View>
+        </Animated.View>
 
         {/* Header */}
-        <Text style={[s.step, { color: c.text.placeholder }]}>
-          {t('onboarding.step', { current: 2, total: 2 })}
-        </Text>
-        <Text style={[s.title, { color: c.text.primary }]}>
-          {t('onboarding.title', 'Welcome to BookSwap')}
-        </Text>
-        <Text style={[s.subtitle, { color: c.text.secondary }]}>
-          {t(
-            'onboarding.subtitle',
-            'This helps us show you the closest available books for swapping.',
-          )}
-        </Text>
+        <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal)}>
+          <Text style={[s.step, { color: c.text.placeholder }]}>
+            {t('onboarding.step', { current: 2, total: 2 })}
+          </Text>
+        </Animated.View>
+        <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal * 2)}>
+          <Text style={[s.title, { color: c.text.primary }]}>
+            {t('onboarding.title', 'Welcome to BookSwap')}
+          </Text>
+        </Animated.View>
+        <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal * 3)}>
+          <Text style={[s.subtitle, { color: c.text.secondary }]}>
+            {t(
+              'onboarding.subtitle',
+              'This helps us show you the closest available books for swapping.',
+            )}
+          </Text>
+        </Animated.View>
 
         {locationSet ? (
           /* ── Location confirmed ── */
-          <View style={s.successSection}>
+          <Animated.View entering={FadeIn.duration(300)} style={s.successSection}>
             <View
               style={[
                 s.successCard,
@@ -208,10 +218,10 @@ export function OnboardingScreen() {
                 </Text>
               )}
             </Pressable>
-          </View>
+          </Animated.View>
         ) : (
           /* ── Location input ── */
-          <>
+          <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal * 4)}>
             {/* GPS button */}
             <Pressable
               onPress={handleGps}
@@ -295,7 +305,7 @@ export function OnboardingScreen() {
                 </Text>
               )}
             </Pressable>
-          </>
+          </Animated.View>
         )}
 
         {/* Error */}
@@ -347,7 +357,6 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   content: {
     paddingHorizontal: spacing.xl,
-    paddingTop: 60,
     paddingBottom: 80,
     alignItems: 'center',
   },

@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -16,11 +17,14 @@ import {
   Bell,
   CheckCheck,
   MessageSquare,
+  RotateCcw,
   Star,
+  XCircle,
 } from "lucide-react-native";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { EmptyState } from "@/components/EmptyState";
+import { ANIMATION } from "@/constants/animation";
 import { radius, spacing } from "@/constants/theme";
 import {
   useNotifications,
@@ -33,10 +37,16 @@ import { timeAgo } from "@/lib/timeAgo";
 
 const ICON_MAP: Record<NotificationType, typeof Bell> = {
   new_request: ArrowLeftRight,
-  request_accepted: ArrowLeftRight,
-  request_declined: ArrowLeftRight,
-  request_expired: ArrowLeftRight,
-  exchange_completed: ArrowLeftRight,
+  request_accepted: CheckCheck,
+  request_declined: XCircle,
+  request_expired: AlertTriangle,
+  request_cancelled: XCircle,
+  counter_proposed: ArrowLeftRight,
+  counter_approved: CheckCheck,
+  swap_confirmed: CheckCheck,
+  exchange_completed: CheckCheck,
+  return_requested: RotateCcw,
+  exchange_returned: RotateCcw,
   new_message: MessageSquare,
   rating_received: Star,
 };
@@ -95,11 +105,13 @@ export function NotificationListScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: Notification }) => {
+    ({ item, index }: { item: Notification; index: number }) => {
       const Icon = ICON_MAP[item.notification_type] ?? Bell;
       const unread = !item.is_read;
+      const staggerDelay = index < 10 ? index * ANIMATION.stagger.fast : 0;
 
       return (
+        <Animated.View entering={FadeInRight.duration(250).delay(staggerDelay)}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${item.title}. ${item.body}. ${unread ? t("notifications.unreadA11y", "Unread") + ". " : ""}${timeAgo(item.created_at)}`}
@@ -137,6 +149,7 @@ export function NotificationListScreen() {
             {timeAgo(item.created_at)}
           </Text>
         </Pressable>
+        </Animated.View>
       );
     },
     [handleTap, cardBg, cardBorder, accent, c, t],

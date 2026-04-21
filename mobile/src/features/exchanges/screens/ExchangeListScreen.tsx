@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AlertTriangle, ArrowLeftRight, Bell, BookOpen, MessageCircle } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FlatList,
@@ -10,9 +10,17 @@ import {
   StyleSheet,
   Text,
   View,
+  type LayoutChangeEvent,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  FadeIn,
+} from 'react-native-reanimated';
 
 import { radius, spacing } from '@/constants/theme';
+import { ANIMATION } from '@/constants/animation';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { useAuthStore } from '@/stores/authStore';
 import { SkeletonCard } from '@/components/Skeleton';
@@ -90,12 +98,52 @@ export function ExchangeListScreen() {
     [all],
   );
 
-  const tabs: { key: Tab; label: string; count: number }[] = [
+  const tabs: { key: Tab; label: string; count: number }[] = useMemo(() => [
     { key: 'chats', label: t('exchanges.chats', 'Chats'), count: totalUnread },
     { key: 'active', label: t('exchanges.active', 'Active'), count: filterByTab(all, 'active').length },
     { key: 'pending', label: t('exchanges.pending', 'Pending'), count: filterByTab(all, 'pending').length },
     { key: 'history', label: t('exchanges.history', 'History'), count: filterByTab(all, 'history').length },
-  ];
+  ], [t, totalUnread, all]);
+
+  const tabIndicatorX = useSharedValue(0);
+  const tabIndicatorW = useSharedValue(0);
+  const tabLayoutsRef = useRef<Map<number, { x: number; width: number }>>(new Map());
+  const hasTabLayout = useRef(false);
+
+  const updateTabIndicator = useCallback((tabIndex: number, animate: boolean) => {
+    const layout = tabLayoutsRef.current.get(tabIndex);
+    if (!layout) return;
+    if (animate) {
+      tabIndicatorX.value = withSpring(layout.x, ANIMATION.spring.default);
+      tabIndicatorW.value = withSpring(layout.width, ANIMATION.spring.default);
+    } else {
+      tabIndicatorX.value = layout.x;
+      tabIndicatorW.value = layout.width;
+    }
+  }, [tabIndicatorX, tabIndicatorW]);
+
+  const activeTabIndex = tabs.findIndex((t) => t.key === activeTab);
+
+  const onTabItemLayout = useCallback((index: number, e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    tabLayoutsRef.current.set(index, { x, width });
+    if (index === activeTabIndex) {
+      const animate = hasTabLayout.current;
+      hasTabLayout.current = true;
+      updateTabIndicator(index, animate);
+    }
+  }, [activeTabIndex, updateTabIndicator]);
+
+  React.useEffect(() => {
+    if (activeTabIndex >= 0) {
+      updateTabIndicator(activeTabIndex, hasTabLayout.current);
+    }
+  }, [activeTabIndex, updateTabIndicator]);
+
+  const tabIndicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tabIndicatorX.value }],
+    width: tabIndicatorW.value,
+  }));
 
   const goToDetail = useCallback(
     (exchangeId: string) => navigation.navigate('ExchangeDetail', { exchangeId }),
@@ -177,7 +225,14 @@ export function ExchangeListScreen() {
         style={s.tabScroll}
         contentContainerStyle={s.tabRow}
       >
-        {tabs.map(({ key, label, count }) => {
+        <Animated.View
+          style={[
+            s.tabIndicator,
+            { backgroundColor: accent + '15', borderColor: accent },
+            tabIndicatorStyle,
+          ]}
+        />
+        {tabs.map(({ key, label, count }, index) => {
           const isActive = activeTab === key;
           const showDot = key === 'chats' && totalUnread > 0 && !isActive;
           return (
@@ -187,13 +242,8 @@ export function ExchangeListScreen() {
               accessibilityLabel={label}
               accessibilityState={{ selected: isActive }}
               onPress={() => setActiveTab(key)}
-              style={[
-                s.tab,
-                {
-                  backgroundColor: isActive ? accent + '15' : 'transparent',
-                  borderColor: isActive ? accent : 'transparent',
-                },
-              ]}
+              onLayout={(e) => onTabItemLayout(index, e)}
+              style={s.tab}
             >
               <Text style={[s.tabLabel, { color: isActive ? accent : c.text.secondary }]}>
                 {label}
@@ -275,6 +325,13 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
+  tabIndicator: {
+    position: 'absolute',
+    top: spacing.md,
+    bottom: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -282,7 +339,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radius.pill,
-    borderWidth: 1,
   },
   tabLabel: { fontSize: 13, fontWeight: '600' },
   tabBadge: {

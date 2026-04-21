@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -27,6 +28,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { Avatar } from '@/components/Avatar';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { ANIMATION } from '@/constants/animation';
 import { spacing, radius } from '@/constants/theme';
 import type { ProfileStackParamList } from '@/navigation/types';
 
@@ -103,7 +105,7 @@ export function MyProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ── */}
-        <View style={s.hero}>
+        <Animated.View entering={FadeInUp.duration(300)} style={s.hero}>
           <View style={s.heroAvatarWrap}>
             <Avatar uri={user.avatar} name={fullName} size={88} borderColor={c.auth.golden} />
           </View>
@@ -115,10 +117,10 @@ export function MyProfileScreen() {
               <Text style={[s.heroLocation, { color: c.text.secondary }]}>{user.neighborhood}</Text>
             </View>
           ) : null}
-        </View>
+        </Animated.View>
 
         {/* ── Stats ── */}
-        <View style={[s.statsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow)} style={[s.statsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <StatItem
             icon={ArrowLeftRight}
             value={String(user.swap_count)}
@@ -136,10 +138,10 @@ export function MyProfileScreen() {
             value={String(user.rating_count)}
             label={t('profile.reviews', 'Reviews')}
           />
-        </View>
+        </Animated.View>
 
         {/* ── Info Cards ── */}
-        <View style={s.infoSection}>
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 2)} style={s.infoSection}>
           <InfoCard
             icon={BookOpen}
             title={t('profile.bio', 'About')}
@@ -155,10 +157,10 @@ export function MyProfileScreen() {
             title={t('profile.memberSince', 'Member Since')}
             content={memberSince}
           />
-        </View>
+        </Animated.View>
 
         {/* ── Quick Actions ── */}
-        <View style={[s.actionsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 3)} style={[s.actionsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('profile.editProfile', 'Edit Profile')}
@@ -257,7 +259,7 @@ export function MyProfileScreen() {
               {t('auth.logout', 'Log Out')}
             </Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

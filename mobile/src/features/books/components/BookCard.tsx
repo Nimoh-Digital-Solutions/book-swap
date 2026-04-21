@@ -1,14 +1,22 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";
 
 import { radius, shadows, spacing } from "@/constants/theme";
+import { ANIMATION } from "@/constants/animation";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { Avatar } from "@/components/Avatar";
 import type { BrowseBook } from "@/features/books/hooks/useBooks";
 
 const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function BookCard({
   book,
@@ -23,18 +31,34 @@ export function BookCard({
   const coverUri = book.cover_url || book.primary_photo;
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
 
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const onPressIn = useCallback(() => {
+    scale.value = withSpring(ANIMATION.scale.pressed, ANIMATION.spring.snappy);
+  }, [scale]);
+
+  const onPressOut = useCallback(() => {
+    scale.value = withSpring(1, ANIMATION.spring.snappy);
+  }, [scale]);
+
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={`${book.title} by ${book.author}`}
       onPress={onPress}
-      style={({ pressed }) => [
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      style={[
         s.bookCard,
         {
           backgroundColor: isDark ? c.auth.card : c.surface.white,
           borderColor: isDark ? c.auth.cardBorder : c.border.default,
-          opacity: pressed ? 0.85 : 1,
         },
+        animatedStyle,
       ]}
     >
       <View style={[s.bookCover, { backgroundColor: coverBg }]}>
@@ -43,6 +67,7 @@ export function BookCard({
             source={{ uri: coverUri }}
             style={s.coverImage}
             contentFit="cover"
+            transition={200}
           />
         ) : (
           <>
@@ -90,7 +115,7 @@ export function BookCard({
           </Text>
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

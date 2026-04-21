@@ -1,11 +1,18 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Bell, ChevronLeft, Home } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 
 import { Avatar } from "@/components/Avatar";
+import { ANIMATION } from "@/constants/animation";
 import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
@@ -57,6 +64,22 @@ export function NotificationBell() {
   const c = useColors();
   const isDark = useIsDark();
   const unread = useUnreadCount();
+  const prevUnread = useRef(unread);
+  const badgeScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (unread > 0 && prevUnread.current === 0) {
+      badgeScale.value = withSequence(
+        withSpring(ANIMATION.scale.badge, ANIMATION.spring.bounce),
+        withSpring(1, ANIMATION.spring.snappy),
+      );
+    }
+    prevUnread.current = unread;
+  }, [unread, badgeScale]);
+
+  const badgeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: badgeScale.value }],
+  }));
 
   const goToNotifications = () => {
     const tabNav = navigation.getParent();
@@ -93,9 +116,9 @@ export function NotificationBell() {
         <Bell size={18} color={isDark ? c.auth.golden : c.text.primary} />
       </View>
       {unread > 0 && (
-        <View style={s.badge}>
+        <Animated.View style={[s.badge, badgeAnimStyle]}>
           <Text style={s.badgeText}>{unread > 9 ? "9+" : unread}</Text>
-        </View>
+        </Animated.View>
       )}
     </Pressable>
   );
@@ -168,6 +191,7 @@ export function useProfileHeaderOptions(): NativeStackNavigationOptions {
     headerStyle: { backgroundColor: isDark ? c.auth.bg : c.neutral[50] },
     headerShadowVisible: false,
     headerTintColor: c.text.primary,
+    headerTitleAlign: "center",
   };
 }
 
@@ -181,6 +205,7 @@ export function useSharedHeaderOptions(): NativeStackNavigationOptions {
     headerStyle: { backgroundColor: isDark ? c.auth.bg : c.neutral[50] },
     headerShadowVisible: false,
     headerTintColor: c.text.primary,
+    headerTitleAlign: "center",
   };
 }
 
@@ -195,6 +220,7 @@ export function useChildHeaderOptions(): NativeStackNavigationOptions {
     headerShadowVisible: false,
     headerTintColor: c.text.primary,
     headerBackVisible: false,
+    headerTitleAlign: "center",
   };
 }
 

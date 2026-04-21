@@ -1,14 +1,22 @@
 import { radius, shadows, spacing } from "@/constants/theme";
+import { ANIMATION } from "@/constants/animation";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
 import type { ExchangeBook, ExchangeListItem } from "@/types";
 import { Image } from "expo-image";
 import { ArrowLeftRight, MessageCircle } from "lucide-react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { ExchangeStatusBadge } from "./ExchangeStatusBadge";
 import { timeAgo } from "@/lib/timeAgo";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
 
@@ -71,18 +79,31 @@ export function ExchangeCard({ exchange, onPress }: Props) {
 
   const a11yLabel = `Exchange with @${otherUser.username}. ${leftBook.title} and ${rightBook.title}. ${exchange.status}.`;
 
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+  const onPressIn = useCallback(() => {
+    scale.value = withSpring(ANIMATION.scale.pressed, ANIMATION.spring.snappy);
+  }, [scale]);
+  const onPressOut = useCallback(() => {
+    scale.value = withSpring(1, ANIMATION.spring.snappy);
+  }, [scale]);
+
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       onPress={onPress}
-      style={({ pressed }) => [
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      style={[
         s.card,
         {
           backgroundColor: isDark ? c.auth.card : c.surface.white,
           borderColor: isDark ? c.auth.cardBorder : c.border.default,
-          opacity: pressed ? 0.85 : 1,
         },
+        animatedStyle,
       ]}
     >
       {/* Status + date row */}
@@ -159,7 +180,7 @@ export function ExchangeCard({ exchange, onPress }: Props) {
           </View>
         )}
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

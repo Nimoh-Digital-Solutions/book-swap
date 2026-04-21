@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { FadeOut, Layout } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { AlertTriangle, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +38,9 @@ function WishlistCard({
   const coverBg = COVER_COLORS[item.id.charCodeAt(0) % COVER_COLORS.length];
 
   return (
-    <View
+    <Animated.View
+      exiting={FadeOut.duration(200)}
+      layout={Layout.springify().damping(18).stiffness(180)}
       accessibilityRole="button"
       accessibilityLabel={`${item.title || 'Untitled'}${item.author ? `, ${item.author}` : ''}`}
       style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
@@ -87,7 +90,7 @@ function WishlistCard({
       >
         <Trash2 size={18} color={c.status.error} />
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 

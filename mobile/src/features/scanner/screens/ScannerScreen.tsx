@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Camera, PenLine, RotateCcw, Search } from 'lucide-react-native';
@@ -12,11 +20,48 @@ import type { ScanStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<ScanStackParamList, 'Scanner'>;
 
+const SCAN_LINE_TRAVEL = 150; // ~frame height minus padding
+
+function ScanLine({ color }: { color: string }) {
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withSequence(
+        withTiming(SCAN_LINE_TRAVEL, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+    );
+  }, [translateY]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View style={[scanLineStyles.line, { backgroundColor: color }, animStyle]} />
+  );
+}
+
+const scanLineStyles = StyleSheet.create({
+  line: {
+    position: 'absolute',
+    left: 4,
+    right: 4,
+    top: 4,
+    height: 2,
+    borderRadius: 1,
+    opacity: 0.8,
+  },
+});
+
 export function ScannerScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
+  const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -88,6 +133,7 @@ export function ScannerScreen() {
 
   return (
     <View style={[s.container, { backgroundColor: isDark ? c.auth.bgDeep : '#000' }]}>
+      {isFocused ? (
       <CameraView
         style={s.camera}
         barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8'] }}
@@ -105,6 +151,7 @@ export function ScannerScreen() {
             <View style={[s.cornerTR, { borderColor: accent }]} />
             <View style={[s.cornerBL, { borderColor: accent }]} />
             <View style={[s.cornerBR, { borderColor: accent }]} />
+            {!scanned && <ScanLine color={accent} />}
           </View>
 
           <Text style={[s.hintSub, { color: isDark ? c.auth.textMuted : 'rgba(255,255,255,0.6)' }]}>
@@ -112,6 +159,9 @@ export function ScannerScreen() {
           </Text>
         </View>
       </CameraView>
+      ) : (
+        <View style={s.camera} />
+      )}
 
       {/* Bottom actions */}
       <View style={s.actionsWrap}>

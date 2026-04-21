@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,7 @@ import { AlertTriangle, Mail, Lock } from 'lucide-react-native';
 import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
 import { spacing, typography, radius } from '@/constants/theme';
+import { ANIMATION } from '@/constants/animation';
 import { showErrorToast } from '@/components/Toast';
 import { deletionStorage } from '@/lib/storage';
 import { useCancelDeletion } from '@/features/profile/hooks/useAccountDeletion';
@@ -127,87 +129,97 @@ export function LoginScreen() {
         </Pressable>
       )}
 
-      <View style={s.hero}>
+      <Animated.View entering={FadeIn.duration(400)} style={s.hero}>
         <AuthLogo size="lg" showName />
         <Text style={[s.subtitle, { color: c.auth.textMuted }]}>
           {t('auth.loginSubtitle')}
         </Text>
-      </View>
+      </Animated.View>
 
       <View style={s.form}>
-        <Controller
-          control={control}
-          name="email_or_username"
-          render={({ field: { onChange, onBlur, value, ref } }) => (
-            <AuthInput
-              ref={ref}
-              icon={Mail}
-              placeholder={t('auth.emailOrUsername')}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.email_or_username?.message}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              textContentType="username"
-              autoComplete="email"
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
-            />
-          )}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 0)}>
+          <Controller
+            control={control}
+            name="email_or_username"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <AuthInput
+                ref={ref}
+                icon={Mail}
+                placeholder={t('auth.emailOrUsername')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.email_or_username?.message}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+              />
+            )}
+          />
+        </Animated.View>
 
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value, ref } }) => (
-            <AuthInput
-              ref={(el) => {
-                if (typeof ref === 'function') ref(el);
-                (passwordRef as React.MutableRefObject<TextInput | null>).current = el;
-              }}
-              icon={Lock}
-              placeholder={t('auth.password')}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.password?.message}
-              secureTextEntry
-              textContentType="password"
-              autoComplete="password"
-              returnKeyType="go"
-              onSubmitEditing={handleSubmit(onSubmit)}
-              rightAction={{
-                label: t('auth.forgotPassword'),
-                onPress: () => nav.navigate('ForgotPassword'),
-              }}
-            />
-          )}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 1)}>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <AuthInput
+                ref={(el) => {
+                  if (typeof ref === 'function') ref(el);
+                  (passwordRef as React.MutableRefObject<TextInput | null>).current = el;
+                }}
+                icon={Lock}
+                placeholder={t('auth.password')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.password?.message}
+                secureTextEntry
+                textContentType="password"
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit(onSubmit)}
+                rightAction={{
+                  label: t('auth.forgotPassword'),
+                  onPress: () => nav.navigate('ForgotPassword'),
+                }}
+              />
+            )}
+          />
+        </Animated.View>
 
-        <AuthButton
-          label={t('auth.login')}
-          onPress={handleSubmit(onSubmit)}
-          loading={login.isPending}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 2)}>
+          <AuthButton
+            label={t('auth.login')}
+            onPress={handleSubmit(onSubmit)}
+            loading={login.isPending}
+          />
+        </Animated.View>
 
-        <SocialAuthSection />
+        <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 3 + 60)}>
+          <SocialAuthSection />
+        </Animated.View>
       </View>
 
-      <Pressable
-        onPress={() => nav.navigate('Register')}
-        style={s.footer}
-        hitSlop={12}
-        accessibilityRole="link"
-        accessibilityLabel={`${t('auth.noAccountPrompt')} ${t('auth.register')}`}
-      >
-        <Text style={[s.footerText, { color: c.auth.textMuted }]}>
-          {t('auth.noAccountPrompt')}{' '}
-          <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
-            {t('auth.register')}
+      <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 4 + 60)}>
+        <Pressable
+          onPress={() => nav.navigate('Register')}
+          style={s.footer}
+          hitSlop={12}
+          accessibilityRole="link"
+          accessibilityLabel={`${t('auth.noAccountPrompt')} ${t('auth.register')}`}
+        >
+          <Text style={[s.footerText, { color: c.auth.textMuted }]}>
+            {t('auth.noAccountPrompt')}{' '}
+            <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
+              {t('auth.register')}
+            </Text>
           </Text>
-        </Text>
-      </Pressable>
+        </Pressable>
+      </Animated.View>
     </AuthScreenWrapper>
   );
 }

@@ -105,7 +105,7 @@ export function ChangePasswordScreen() {
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={["bottom"]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={s.flex}
       >
         <ScrollView

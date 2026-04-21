@@ -13,10 +13,12 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
+import { ANIMATION } from "@/constants/animation";
 import type { HomeStackParamList } from "@/navigation/types";
 import { useCommunityStats, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
 
@@ -153,7 +155,8 @@ export function HomeScreen() {
         }
       >
         {locationDenied && (
-          <View
+          <Animated.View
+            entering={FadeIn.duration(300).delay(100)}
             style={[
               s.locBanner,
               { backgroundColor: cardBg, borderColor: cardBorder },
@@ -182,72 +185,84 @@ export function HomeScreen() {
                 {t("home.openSettings", "Open Settings")}
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         )}
 
-        <HomeNearbyBadge
-          userCount={nearbyData?.user_count}
-          bookCount={nearbyData?.count}
-          city={city}
-          locationDenied={locationDenied}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 0)}>
+          <HomeNearbyBadge
+            userCount={nearbyData?.user_count}
+            bookCount={nearbyData?.count}
+            city={city}
+            locationDenied={locationDenied}
+          />
+        </Animated.View>
 
-        <HomeSearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmit={handleSearch}
-          placeholder={t(
-            "home.searchPlaceholder",
-            "Search by title, author, or ISBN...",
-          )}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 1)}>
+          <HomeSearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmit={handleSearch}
+            placeholder={t(
+              "home.searchPlaceholder",
+              "Search by title, author, or ISBN...",
+            )}
+          />
+        </Animated.View>
 
         {hasQueryError && !locationDenied && (
-          <Pressable onPress={handleRefresh} style={[s.errorHint, { backgroundColor: c.status.error + '14' }]}>
-            <Text style={[s.errorHintText, { color: c.status.error }]}>
-              {t('home.queryError', 'Could not load some data. Tap to retry.')}
-            </Text>
-          </Pressable>
+          <Animated.View entering={FadeIn.duration(200)}>
+            <Pressable onPress={handleRefresh} style={[s.errorHint, { backgroundColor: c.status.error + '14' }]}>
+              <Text style={[s.errorHintText, { color: c.status.error }]}>
+                {t('home.queryError', 'Could not load some data. Tap to retry.')}
+              </Text>
+            </Pressable>
+          </Animated.View>
         )}
 
-        <HomeQuickActions actions={quickActions} />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 2)}>
+          <HomeQuickActions actions={quickActions} />
+        </Animated.View>
 
-        <HomeRecentlyAdded
-          books={recentBooks ?? []}
-          isLoading={booksLoading}
-          locationDenied={locationDenied}
-          onOpenSettings={openLocationSettings}
-          title={t("home.recentlyAdded", "Recently Added")}
-          subtitle={t(
-            "home.freshArrivals",
-            "Fresh arrivals from the community.",
-          )}
-          viewAllLabel={t("home.viewAll", "View all")}
-          onViewAll={goToBrowse}
-          onBookPress={goToBookDetail}
-          onAddBook={goToScan}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 3)}>
+          <HomeRecentlyAdded
+            books={recentBooks ?? []}
+            isLoading={booksLoading}
+            locationDenied={locationDenied}
+            onOpenSettings={openLocationSettings}
+            title={t("home.recentlyAdded", "Recently Added")}
+            subtitle={t(
+              "home.freshArrivals",
+              "Fresh arrivals from the community.",
+            )}
+            viewAllLabel={t("home.viewAll", "View all")}
+            onViewAll={goToBrowse}
+            onBookPress={goToBookDetail}
+            onAddBook={goToScan}
+          />
+        </Animated.View>
 
-        <HomeCommunitySection
-          bookCount={nearbyData?.count}
-          swapsThisWeek={communityData?.swaps_this_week}
-          activityFeed={communityData?.activity_feed}
-          communityLabel={t(
-            "home.liveCommunity",
-            "LIVE COMMUNITY",
-          ).toUpperCase()}
-          communityTitle={t("home.communityTitle", "Your Neighbourhood")}
-          booksAvailableLabel={t(
-            "home.booksAvailable",
-            "BOOKS AVAILABLE",
-          ).toUpperCase()}
-          swapsThisWeekLabel={t(
-            "home.swapsThisWeek",
-            "SWAPS THIS WEEK",
-          ).toUpperCase()}
-          browseMapLabel={t("home.viewFullMap", "Browse Full Map")}
-          onBrowseMap={goToBrowse}
-        />
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 4)}>
+          <HomeCommunitySection
+            bookCount={nearbyData?.count}
+            swapsThisWeek={communityData?.swaps_this_week}
+            activityFeed={communityData?.activity_feed}
+            communityLabel={t(
+              "home.liveCommunity",
+              "LIVE COMMUNITY",
+            ).toUpperCase()}
+            communityTitle={t("home.communityTitle", "Your Neighbourhood")}
+            booksAvailableLabel={t(
+              "home.booksAvailable",
+              "BOOKS AVAILABLE",
+            ).toUpperCase()}
+            swapsThisWeekLabel={t(
+              "home.swapsThisWeek",
+              "SWAPS THIS WEEK",
+            ).toUpperCase()}
+            browseMapLabel={t("home.viewFullMap", "Browse Full Map")}
+            onBrowseMap={goToBrowse}
+          />
+        </Animated.View>
 
         <View style={s.bottomSpacer} />
       </ScrollView>

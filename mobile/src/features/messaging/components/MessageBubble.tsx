@@ -2,6 +2,7 @@ import { Check, CheckCheck, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { SlideInLeft, SlideInRight } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 
 import { radius, spacing } from '@/constants/theme';
@@ -40,8 +41,13 @@ export function MessageBubble({ message, isOwn }: Props) {
 
   const meetup = message.content ? parseMeetup(message.content) : null;
 
+  const entering = isOwn
+    ? SlideInRight.duration(200).springify().damping(18)
+    : SlideInLeft.duration(200).springify().damping(18);
+
   return (
-    <View
+    <Animated.View
+      entering={entering}
       style={[
         s.bubble,
         isOwn
@@ -117,7 +123,7 @@ export function MessageBubble({ message, isOwn }: Props) {
           </View>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

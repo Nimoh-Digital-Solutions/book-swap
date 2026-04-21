@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import ToastMessage from 'react-native-toast-message';
 import type { ToastConfigParams } from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,12 +15,16 @@ interface BannerToastProps {
 
 function BannerToast({ text1, text2, backgroundColor, textColor }: BannerToastProps) {
   return (
-    <View style={[styles.banner, { backgroundColor }]}>
+    <Animated.View
+      entering={FadeInUp.springify().damping(16).stiffness(140)}
+      exiting={FadeOutUp.duration(200)}
+      style={[styles.banner, { backgroundColor }]}
+    >
       {text1 ? <Text style={[styles.title, { color: textColor }]}>{text1}</Text> : null}
       {text2 ? (
         <Text style={[styles.description, { color: `${textColor}CC` }]}>{text2}</Text>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 

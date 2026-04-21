@@ -51,11 +51,11 @@ export function RootNavigator() {
         }}
       >
         {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthStack} />
+          <Stack.Screen name="Auth" component={AuthStack} options={{ animation: 'fade' }} />
         ) : needsOnboarding ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ animation: 'fade_from_bottom' }} />
         ) : (
-          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="Main" component={MainTabs} options={{ animation: 'fade_from_bottom' }} />
         )}
       </Stack.Navigator>
     </ErrorBoundary>

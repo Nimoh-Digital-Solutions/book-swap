@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, Text, ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { typography, spacing, radius } from '@/constants/theme';
 
@@ -67,14 +67,20 @@ export function AuthButton({
 const s = StyleSheet.create({
   btn: {
     borderRadius: radius.lg,
-    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        overflow: 'hidden' as const,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
     minHeight: 54,
     marginBottom: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 5,
   },
   fill: {
     flex: 1,

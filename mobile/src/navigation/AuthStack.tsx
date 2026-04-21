@@ -15,10 +15,10 @@ export function AuthStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="PasswordResetConfirm" component={PasswordResetConfirmScreen} />
-      <Stack.Screen name="EmailVerifyPending" component={EmailVerifyPendingScreen} />
-      <Stack.Screen name="EmailVerifyConfirm" component={EmailVerifyConfirmScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="PasswordResetConfirm" component={PasswordResetConfirmScreen} options={{ animation: 'fade' }} />
+      <Stack.Screen name="EmailVerifyPending" component={EmailVerifyPendingScreen} options={{ animation: 'fade_from_bottom' }} />
+      <Stack.Screen name="EmailVerifyConfirm" component={EmailVerifyConfirmScreen} options={{ animation: 'fade' }} />
     </Stack.Navigator>
   );
 }

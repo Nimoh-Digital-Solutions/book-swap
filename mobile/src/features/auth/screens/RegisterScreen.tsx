@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,7 @@ import { User, AtSign, Mail, Lock, Check, CheckCircle2, XCircle } from 'lucide-r
 import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
 import { spacing, typography, radius } from '@/constants/theme';
+import { ANIMATION } from '@/constants/animation';
 import { showErrorToast, showSuccessToast } from '@/components/Toast';
 import { useCheckUsername } from '@/features/profile/hooks/useProfile';
 
@@ -92,7 +94,7 @@ export function RegisterScreen() {
 
   return (
     <AuthScreenWrapper>
-      <View style={s.hero}>
+      <Animated.View entering={FadeIn.duration(400)} style={s.hero}>
         <AuthLogo size="md" />
         <Text style={[s.title, { color: c.auth.cream }]}>
           {t('auth.createAccount')}
@@ -100,9 +102,9 @@ export function RegisterScreen() {
         <Text style={[s.subtitle, { color: c.auth.textMuted }]}>
           {t('auth.registerSubtitle')}
         </Text>
-      </View>
+      </Animated.View>
 
-      <View style={s.nameRow}>
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 0)} style={s.nameRow}>
         <View style={s.nameCol}>
           <Controller
             control={control}
@@ -147,8 +149,9 @@ export function RegisterScreen() {
             )}
           />
         </View>
-      </View>
+      </Animated.View>
 
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 1)}>
       <Controller
         control={control}
         name="username"
@@ -170,7 +173,9 @@ export function RegisterScreen() {
           />
         )}
       />
+      </Animated.View>
 
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 2)}>
       <Controller
         control={control}
         name="email"
@@ -192,7 +197,9 @@ export function RegisterScreen() {
           />
         )}
       />
+      </Animated.View>
 
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 3)}>
       <Controller
         control={control}
         name="password"
@@ -213,7 +220,9 @@ export function RegisterScreen() {
           />
         )}
       />
+      </Animated.View>
 
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 4)}>
       <Controller
         control={control}
         name="password_confirm"
@@ -234,7 +243,9 @@ export function RegisterScreen() {
           />
         )}
       />
+      </Animated.View>
 
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 5)}>
       <Controller
         control={control}
         name="terms_accepted"
@@ -274,30 +285,37 @@ export function RegisterScreen() {
           </View>
         )}
       />
+      </Animated.View>
 
-      <AuthButton
-        label={t('auth.register')}
-        onPress={handleSubmit(onSubmit)}
-        loading={register.isPending}
-        disabled={usernameTaken}
-      />
+      <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 6)}>
+        <AuthButton
+          label={t('auth.register')}
+          onPress={handleSubmit(onSubmit)}
+          loading={register.isPending}
+          disabled={usernameTaken}
+        />
+      </Animated.View>
 
-      <SocialAuthSection />
+      <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 7 + 60)}>
+        <SocialAuthSection />
+      </Animated.View>
 
-      <Pressable
-        onPress={() => nav.navigate('Login')}
-        style={s.footer}
-        hitSlop={12}
-        accessibilityRole="link"
-        accessibilityLabel={`${t('auth.hasAccountPrompt')} ${t('auth.login')}`}
-      >
-        <Text style={[s.footerText, { color: c.auth.textMuted }]}>
-          {t('auth.hasAccountPrompt')}{' '}
-          <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
-            {t('auth.login')}
+      <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 8 + 60)}>
+        <Pressable
+          onPress={() => nav.navigate('Login')}
+          style={s.footer}
+          hitSlop={12}
+          accessibilityRole="link"
+          accessibilityLabel={`${t('auth.hasAccountPrompt')} ${t('auth.login')}`}
+        >
+          <Text style={[s.footerText, { color: c.auth.textMuted }]}>
+            {t('auth.hasAccountPrompt')}{' '}
+            <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
+              {t('auth.login')}
+            </Text>
           </Text>
-        </Text>
-      </Pressable>
+        </Pressable>
+      </Animated.View>
     </AuthScreenWrapper>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import type { LucideIcon } from "lucide-react-native";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -27,7 +28,7 @@ export function EmptyState({
   const accent = c.auth.golden;
 
   return (
-    <View style={[s.root, compact && s.compact]}>
+    <Animated.View entering={FadeIn.duration(300)} style={[s.root, compact && s.compact]}>
       <View style={[s.iconWrap, { backgroundColor: isDark ? c.auth.card : accent + "14" }]}>
         <Icon size={compact ? 28 : 36} color={accent} />
       </View>
@@ -52,7 +53,7 @@ export function EmptyState({
           <Text style={s.actionText}>{actionLabel}</Text>
         </Pressable>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 

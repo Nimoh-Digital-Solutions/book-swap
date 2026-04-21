@@ -53,7 +53,7 @@ export function HomeStack() {
       <Stack.Screen
         name="RequestSwap"
         component={RequestSwapScreen}
-        options={{ ...child, headerTitle: t('navigation.requestSwap', 'Request Swap') }}
+        options={{ ...child, headerTitle: t('navigation.requestSwap', 'Request Swap'), animation: 'slide_from_bottom' }}
       />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ ...child, headerTitle: t('navigation.profile', 'Profile') }} />
       <Stack.Screen name="UserReviews" component={UserReviewsScreen} options={{ ...child, headerTitle: t('navigation.reviews', 'Reviews') }} />

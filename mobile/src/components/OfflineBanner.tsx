@@ -1,10 +1,16 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useIsServerDegraded } from '@/hooks/useIsServerDegraded';
+import { ANIMATION } from '@/constants/animation';
 
 export function OfflineBanner() {
   const { t } = useTranslation();
@@ -13,23 +19,17 @@ export function OfflineBanner() {
   const { isOffline } = useNetworkStatus();
   const degraded = useIsServerDegraded();
 
-  const slide = useRef(new Animated.Value(0)).current;
-
   const showBanner = isOffline || degraded;
+  const progress = useSharedValue(showBanner ? 1 : 0);
 
   useEffect(() => {
-    Animated.spring(slide, {
-      toValue: showBanner ? 1 : 0,
-      friction: 12,
-      tension: 80,
-      useNativeDriver: true,
-    }).start();
-  }, [showBanner, slide]);
+    progress.value = withSpring(showBanner ? 1 : 0, ANIMATION.spring.default);
+  }, [showBanner, progress]);
 
-  const translateY = slide.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-80, 0],
-  });
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -80 * (1 - progress.value) }],
+    opacity: progress.value,
+  }));
 
   const label = isOffline ? t('network.offline') : t('network.degraded');
 
@@ -38,11 +38,8 @@ export function OfflineBanner() {
       <Animated.View
         style={[
           styles.wrap,
-          {
-            paddingTop: Platform.OS === 'web' ? 8 : insets.top,
-            transform: [{ translateY }],
-            opacity: showBanner ? 1 : 0,
-          },
+          { paddingTop: Platform.OS === 'web' ? 8 : insets.top },
+          animStyle,
         ]}
       >
         <View

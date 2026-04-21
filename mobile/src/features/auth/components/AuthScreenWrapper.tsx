@@ -35,7 +35,7 @@ export function AuthScreenWrapper({
       <SafeAreaView style={s.flex}>
         <OfflineBanner />
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={s.flex}
         >
           {content}
