@@ -616,19 +616,23 @@ class AppleMobileAuthView(APIView):
             return Response({"detail": "Invalid Apple token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         apple_sub = claims.get("sub")
+        # SECURITY (ADV-101): Only trust email from the signed JWT claims.
+        # Never fall back to client-supplied request.data["user"]["email"] —
+        # an attacker could supply a victim's email to hijack their account.
         email = (claims.get("email") or "").lower().strip()
-
-        user_info = request.data.get("user") or {}
-        if not email:
-            email = (user_info.get("email") or "").lower().strip()
-        first_name = user_info.get("first_name", "")
-        last_name = user_info.get("last_name", "")
-
-        if not email:
+        if not email or not claims.get("email_verified", False):
             return Response(
-                {"detail": "Could not determine email from Apple token or user info."},
+                {
+                    "detail": "Apple token must include a verified email. "
+                    "Please revoke BookSwap in Settings > Apple ID > "
+                    "Sign in with Apple and try again."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        user_info = request.data.get("user") or {}
+        first_name = user_info.get("first_name", "")
+        last_name = user_info.get("last_name", "")
 
         try:
             with transaction.atomic():
