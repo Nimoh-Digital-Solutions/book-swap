@@ -44,10 +44,10 @@ BookSwap's authorization model is **generally sound** — exchanges, messages, n
 | ID | Title | Severity | Goal | Layer | Status |
 |----|-------|----------|------|-------|--------|
 | ADV-101 | Apple Sign-In email spoofing → account takeover | 🔴 | G4 | Backend | ✅ Resolved |
-| ADV-201 | Book `status` mass assignment bypasses exchange lifecycle | 🟠 | G2 | Backend | ⬜ PENDING |
-| ADV-202 | `confirm_swap` race condition — no row locking | 🟠 | G2 | Backend | ⬜ PENDING |
-| ADV-203 | Bulk decline of competing requests skips notifications | 🟠 | G3 | Backend | ⬜ PENDING |
-| ADV-301 | WebSocket connection flood — no per-user/IP limit | 🟠 | G8 | Backend | ⬜ PENDING |
+| ADV-201 | Book `status` mass assignment bypasses exchange lifecycle | 🟠 | G2 | Backend | ✅ Resolved |
+| ADV-202 | `confirm_swap` race condition — no row locking | 🟠 | G2 | Backend | ✅ Resolved |
+| ADV-203 | Bulk decline of competing requests skips notifications | 🟠 | G3 | Backend | ✅ Resolved |
+| ADV-301 | WebSocket connection flood — no per-user/IP limit | 🟠 | G8 | Backend | ✅ Resolved |
 | ADV-302 | `chat.typing` / `chat.read` not rate-limited | 🟡 | G8 | Backend | ⬜ PENDING |
 | ADV-303 | Stale `is_read_only` flag on long-lived WS connections | 🟡 | G2 | Backend | ⬜ PENDING |
 | ADV-304 | JWT in WebSocket query string leaks to access logs | 🟡 | G6 | Backend | ⬜ PENDING |
@@ -520,10 +520,10 @@ Work through findings in this order. Complete all critical fixes before any othe
 | ID | Status | Fixed in |
 |----|--------|---------|
 | ADV-101 | ✅ Resolved | b70a3d9 |
-| ADV-201 | ⬜ PENDING | — |
-| ADV-202 | ⬜ PENDING | — |
-| ADV-203 | ⬜ PENDING | — |
-| ADV-301 | ⬜ PENDING | — |
+| ADV-201 | ✅ Resolved | Removed `status` from `BookUpdateSerializer.fields` — status now managed exclusively by exchange lifecycle |
+| ADV-202 | ✅ Resolved | Wrapped `confirm_swap` in `transaction.atomic()` + `select_for_update()` |
+| ADV-203 | ✅ Resolved | Collect auto-declined PKs before bulk `.update()`, dispatch `send_request_declined_notification.delay()` per row |
+| ADV-301 | ✅ Resolved | Per-user WS connection counter in Redis cache (`MAX_WS_CONNECTIONS_PER_USER=10`), enforced in `FirstMessageAuthMixin` |
 | ADV-302 | ⬜ PENDING | — |
 | ADV-303 | ⬜ PENDING | — |
 | ADV-304 | ⬜ PENDING | — |

@@ -1,15 +1,34 @@
 """WebSocket consumer for real-time chat between exchange partners."""
 
 import time
+from urllib.parse import urlparse
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.conf import settings as django_settings
 
 from apps.exchanges.models import ExchangeRequest
 from bookswap.ws_first_msg_auth import FirstMessageAuthMixin
 
 from .models import Message
 from .permissions import CHAT_ELIGIBLE_STATUSES, CHAT_WRITABLE_STATUSES
+
+
+def _absolute_media_url(field):
+    """Return an absolute URL for a FileField, handling both S3 and local storage."""
+    if not field:
+        return None
+    url = field.url
+    if url.startswith(("http://", "https://")):
+        return url
+    frontend_url = getattr(django_settings, "FRONTEND_URL", "").rstrip("/")
+    if frontend_url:
+        parsed = urlparse(frontend_url)
+        base = f"{parsed.scheme}://{parsed.hostname}"
+        if parsed.port and parsed.port not in (80, 443):
+            base += f":{parsed.port}"
+        return f"{base}{url}"
+    return url
 
 
 class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
@@ -72,6 +91,7 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
                 self.group_name,
                 self.channel_name,
             )
+        await super().disconnect(code)
 
     async def receive_json(self, content, **kwargs):
         if not await self.ensure_authenticated(content):
@@ -165,7 +185,7 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
                 "sender": {
                     "id": str(self.user.id),
                     "username": self.user.username,
-                    "avatar": self.user.avatar.url if self.user.avatar else None,
+                    "avatar": _absolute_media_url(self.user.avatar),
                 },
                 "content": message.content,
                 "image": None,

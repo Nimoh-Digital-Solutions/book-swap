@@ -127,7 +127,14 @@ class BookCreateSerializer(serializers.ModelSerializer):
 
 
 class BookUpdateSerializer(serializers.ModelSerializer):
-    """Partial update for a book listing (owner only)."""
+    """Partial update for a book listing (owner only).
+
+    SECURITY (ADV-201): ``status`` is intentionally excluded from writable fields.
+    Book status is managed exclusively by the exchange lifecycle (accept sets
+    ``in_exchange``, complete/return resets to ``available``).  Allowing direct
+    PATCH of status would let an owner break an active exchange by setting
+    their book back to ``available``.
+    """
 
     class Meta:
         model = Book
@@ -143,7 +150,6 @@ class BookUpdateSerializer(serializers.ModelSerializer):
             "notes",
             "page_count",
             "publish_year",
-            "status",
         )
 
     def validate_genres(self, value):

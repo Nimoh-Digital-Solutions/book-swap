@@ -177,21 +177,29 @@ class ExchangeRequestViewSet(
             exchange.offered_book.status = BookStatus.IN_EXCHANGE
             exchange.offered_book.save(update_fields=["status"])
 
-            # Decline all other pending requests involving either book
-            ExchangeRequest.objects.filter(
-                requested_book=exchange.requested_book,
-                status=ExchangeStatus.PENDING,
-            ).exclude(pk=exchange.pk).update(
+            # SECURITY (ADV-203): Collect PKs before bulk update so we can
+            # dispatch decline notifications. QuerySet.update() bypasses
+            # post_save signals, so the signal-based notification path
+            # never fires for these rows.
+            auto_declined_pks = list(
+                ExchangeRequest.objects.filter(
+                    Q(requested_book=exchange.requested_book)
+                    | Q(offered_book=exchange.offered_book),
+                    status=ExchangeStatus.PENDING,
+                )
+                .exclude(pk=exchange.pk)
+                .values_list("pk", flat=True)
+            )
+
+            ExchangeRequest.objects.filter(pk__in=auto_declined_pks).update(
                 status=ExchangeStatus.DECLINED,
                 decline_reason=DeclineReason.RESERVED,
             )
-            ExchangeRequest.objects.filter(
-                offered_book=exchange.offered_book,
-                status=ExchangeStatus.PENDING,
-            ).exclude(pk=exchange.pk).update(
-                status=ExchangeStatus.DECLINED,
-                decline_reason=DeclineReason.RESERVED,
-            )
+
+            from apps.notifications.tasks import send_request_declined_notification
+
+            for declined_pk in auto_declined_pks:
+                send_request_declined_notification.delay(str(declined_pk))
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,
@@ -387,45 +395,53 @@ class ExchangeRequestViewSet(
 
     @action(detail=True, methods=["post"], url_path="confirm-swap")
     def confirm_swap(self, request, pk=None):
-        """Confirm the physical swap happened."""
-        exchange = self.get_object()
-        if exchange.status != ExchangeStatus.ACTIVE:
-            return Response(
-                {"detail": "The exchange must be active to confirm the swap."},
-                status=status.HTTP_400_BAD_REQUEST,
+        """Confirm the physical swap happened.
+
+        SECURITY (ADV-202): Uses ``select_for_update()`` inside
+        ``transaction.atomic()`` to prevent the concurrent-confirmation race
+        where two simultaneous saves could clobber each other's timestamp,
+        leaving the exchange stuck in ACTIVE with a lost confirmation.
+        """
+        with transaction.atomic():
+            exchange = (
+                ExchangeRequest.objects.select_for_update().get(
+                    pk=self.get_object().pk
+                )
             )
-        now = timezone.now()
-        if request.user.pk == exchange.requester_id:
-            if exchange.requester_confirmed_at is not None:
+            if exchange.status != ExchangeStatus.ACTIVE:
                 return Response(
-                    {"detail": "You have already confirmed."},
+                    {"detail": "The exchange must be active to confirm the swap."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            exchange.requester_confirmed_at = now
-        else:
-            if exchange.owner_confirmed_at is not None:
-                return Response(
-                    {"detail": "You have already confirmed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            exchange.owner_confirmed_at = now
+            now = timezone.now()
+            if request.user.pk == exchange.requester_id:
+                if exchange.requester_confirmed_at is not None:
+                    return Response(
+                        {"detail": "You have already confirmed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                exchange.requester_confirmed_at = now
+            else:
+                if exchange.owner_confirmed_at is not None:
+                    return Response(
+                        {"detail": "You have already confirmed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                exchange.owner_confirmed_at = now
 
-        update_fields = ["requester_confirmed_at", "owner_confirmed_at", "updated_at"]
+            if exchange.is_swap_confirmed:
+                exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
+                exchange._confirmed_by_user_id = request.user.pk
 
-        if exchange.is_swap_confirmed:
-            exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
-            update_fields.append("status")
-            exchange._confirmed_by_user_id = request.user.pk
+                from django.contrib.auth import get_user_model
+                from django.db.models import F
 
-            from django.contrib.auth import get_user_model
-            from django.db.models import F
+                UserModel = get_user_model()
+                UserModel.objects.filter(
+                    pk__in=[exchange.requester_id, exchange.owner_id],
+                ).update(swap_count=F("swap_count") + 1)
 
-            UserModel = get_user_model()
-            UserModel.objects.filter(
-                pk__in=[exchange.requester_id, exchange.owner_id],
-            ).update(swap_count=F("swap_count") + 1)
-
-        exchange.save(update_fields=update_fields)
+            exchange.save()
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,

@@ -48,6 +48,7 @@ class NotificationConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
                 getattr(self, "user", "?"),
                 code,
             )
+        await super().disconnect(code)
 
     async def receive_json(self, content, **kwargs):
         if not await self.ensure_authenticated(content):

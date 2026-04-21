@@ -12,7 +12,7 @@ class ExampleConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
             self._ws_accepted = True
 
     async def disconnect(self, code):
-        pass
+        await super().disconnect(code)
 
     async def receive_json(self, content, **kwargs):
         if not await self.ensure_authenticated(content):
