@@ -1,9 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 
+import { renderWithProviders } from '@test/renderWithProviders';
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { renderWithProviders } from '@test/renderWithProviders';
 import { useAuthStore } from '../../auth/stores/authStore';
 import { BookDetailPage } from '../pages/BookDetailPage';
 import type { Book } from '../types/book.types';

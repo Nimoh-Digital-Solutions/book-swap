@@ -6,8 +6,8 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
-from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
 

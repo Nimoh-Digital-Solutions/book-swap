@@ -97,7 +97,7 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
   let retryCount = 0;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let intentionalClose = false;
-  let authenticated = false;
+  let _authenticated = false;
 
   // -- Helpers --------------------------------------------------------------
 
@@ -144,7 +144,7 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
     }
 
     socket = new WebSocket(url);
-    authenticated = false;
+    _authenticated = false;
 
     socket.onopen = (event) => {
       addBreadcrumb('WebSocket connected', 'websocket', { url });
@@ -162,7 +162,7 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
       }
 
       if (message.type === 'auth.success') {
-        authenticated = true;
+        _authenticated = true;
         retryCount = 0;
         return;
       }

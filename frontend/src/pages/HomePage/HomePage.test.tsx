@@ -7,7 +7,6 @@ import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { server } from '../../test/mocks/server';
-
 import HomePage from './HomePage';
 
 function makeWrapper() {

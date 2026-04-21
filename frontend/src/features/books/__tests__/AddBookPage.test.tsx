@@ -1,10 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 
+import { renderWithProviders } from '@test/renderWithProviders';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-
-import { renderWithProviders } from '@test/renderWithProviders';
 
 import { AddBookPage } from '../pages/AddBookPage';
 
