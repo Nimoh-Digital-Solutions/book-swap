@@ -29,3 +29,4 @@ django-storages[boto3]>=1.14
 google-auth>=2.0
 
 exponent-server-sdk>=2.1
+better-profanity

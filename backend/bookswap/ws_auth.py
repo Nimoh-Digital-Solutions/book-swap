@@ -47,6 +47,13 @@ class JwtAuthMiddleware(BaseMiddleware):
         token_list = qs.get("token", [])
 
         if token_list:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "DEPRECATED: WebSocket query-string auth used from %s. "
+                "Migrate to first-message auth to avoid token leakage in logs.",
+                scope.get("client", ("?", 0))[0],
+            )
             user = await get_user_from_token(token_list[0])
             scope["user"] = user if user else AnonymousUser()
         else:

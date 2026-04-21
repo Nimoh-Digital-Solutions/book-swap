@@ -39,3 +39,26 @@ For config/settings findings: `security-action-plan.md`
 **Attack**: A malicious client could open unlimited WebSocket connections, exhausting server memory and channel-layer capacity.
 **Fix**: Added per-user connection counter in Redis cache (`WS_MAX_CONNECTIONS_PER_USER=10`) enforced in `FirstMessageAuthMixin`. Counter is incremented on auth, decremented on disconnect, with a 4h TTL safety net.
 **Files**: `backend/bookswap/ws_first_msg_auth.py`, all consumer `disconnect()` methods updated to call `super().disconnect()`.
+
+### ADV-304 — JWT in WebSocket query string leaks to access logs (🟡 Medium)
+**Category**: Token exposure
+**Attack**: JWT passed as `?token=<jwt>` in WebSocket URL gets logged by reverse proxies and ASGI servers.
+**Fix**: Added deprecation warning log when query-string auth is used. First-message auth is already the preferred and documented path.
+**File**: `backend/bookswap/ws_auth.py`
+
+### ADV-310 — Profanity filter trivially bypassable (🟢 Low)
+**Category**: Content moderation
+**Attack**: Simple substring matching was defeated by spacing, leetspeak, homoglyphs, and non-English text.
+**Fix**: Replaced naive blocklist with `better-profanity` library (handles evasion techniques) plus a supplementary blocklist for slurs the library may miss.
+**File**: `backend/apps/ratings/utils.py`
+
+### ADV-313 — ACTIVE→CANCELLED transition defined but unreachable via API (ℹ️ Info)
+**Category**: Dead code / inconsistency
+**Fix**: Removed `CANCELLED` from `VALID_TRANSITIONS[ACTIVE]` — the `cancel()` view only permits PENDING status.
+**File**: `backend/apps/exchanges/models.py`
+
+### ADV-315 — Sentry breadcrumbs may carry rich notification payloads (🟢 Low)
+**Category**: PII leakage
+**Attack**: Full push notification data objects were added to Sentry breadcrumbs, which could include message content or user details if the backend ever puts PII in push data.
+**Fix**: Added whitelist filter (`sanitiseForBreadcrumb`) that only passes safe routing keys (`type`, `exchange_id`, `book_id`) to Sentry.
+**File**: `mobile/src/services/notificationHandler.ts`

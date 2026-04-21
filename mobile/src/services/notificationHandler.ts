@@ -5,6 +5,18 @@ import { addBreadcrumb } from '@/lib/sentry';
 
 let handlersInitialised = false;
 
+const SAFE_BREADCRUMB_KEYS = new Set(['type', 'exchange_id', 'exchangeId', 'book_id', 'bookId']);
+
+function sanitiseForBreadcrumb(data: Record<string, unknown>): Record<string, unknown> {
+  const safe: Record<string, unknown> = {};
+  for (const key of Object.keys(data)) {
+    if (SAFE_BREADCRUMB_KEYS.has(key)) {
+      safe[key] = data[key];
+    }
+  }
+  return safe;
+}
+
 function navigateFromPayload(data: Record<string, unknown>) {
   const type = String(data.type ?? '');
   const exchangeId =
@@ -77,7 +89,7 @@ export function initNotificationHandlers() {
 
   Notifications.addNotificationReceivedListener((notification) => {
     const data = (notification.request.content.data ?? {}) as Record<string, unknown>;
-    addBreadcrumb('notification', 'foreground', data);
+    addBreadcrumb('notification', 'foreground', sanitiseForBreadcrumb(data));
     const title = notification.request.content.title;
     if (title) {
       showInfoToast(String(title), notification.request.content.body ?? undefined);
@@ -86,7 +98,7 @@ export function initNotificationHandlers() {
 
   Notifications.addNotificationResponseReceivedListener((response) => {
     const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
-    addBreadcrumb('notification', 'response', data);
+    addBreadcrumb('notification', 'response', sanitiseForBreadcrumb(data));
     navigateFromPayload(data);
   });
 

@@ -55,7 +55,6 @@ VALID_TRANSITIONS: dict[str, list[str]] = {
     ],
     ExchangeStatus.ACTIVE: [
         ExchangeStatus.SWAP_CONFIRMED,
-        ExchangeStatus.CANCELLED,
     ],
     ExchangeStatus.SWAP_CONFIRMED: [
         ExchangeStatus.COMPLETED,

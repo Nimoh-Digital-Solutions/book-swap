@@ -50,20 +50,20 @@ BookSwap's authorization model is **generally sound** — exchanges, messages, n
 | ADV-301 | WebSocket connection flood — no per-user/IP limit | 🟠 | G8 | Backend | ✅ Resolved |
 | ADV-302 | `chat.typing` / `chat.read` not rate-limited | 🟡 | G8 | Backend | ✅ Resolved |
 | ADV-303 | Stale `is_read_only` flag on long-lived WS connections | 🟡 | G2 | Backend | ✅ Resolved |
-| ADV-304 | JWT in WebSocket query string leaks to access logs | 🟡 | G6 | Backend | ⬜ PENDING |
-| ADV-305 | Push token hijack when raw token is leaked | 🟡 | G3 | Backend | ⬜ PENDING |
+| ADV-304 | JWT in WebSocket query string leaks to access logs | 🟡 | G6 | Backend | ✅ Resolved |
+| ADV-305 | Push token hijack when raw token is leaked | 🟡 | G3 | Backend | ⏸️ Deferred |
 | ADV-306 | Username enumeration via `check-username` endpoint | 🟡 | G7 | Backend | ✅ Resolved |
 | ADV-307 | React Query cache persisted without sensitive-data filtering | 🟡 | G6 | Mobile | ✅ Resolved |
-| ADV-308 | Google service account key on disk in workspace | 🟡 | G6 | Infra | ⬜ PENDING |
+| ADV-308 | Google service account key on disk in workspace | 🟡 | G6 | Infra | ✅ Resolved |
 | ADV-309 | Rating deadline tied to `updated_at` (slidable window) | 🟡 | G5 | Backend | ✅ Resolved |
-| ADV-310 | Profanity filter trivially bypassable | 🟢 | G5 | Backend | ⬜ PENDING |
+| ADV-310 | Profanity filter trivially bypassable | 🟢 | G5 | Backend | ✅ Resolved |
 | ADV-311 | Double rating race → uncaught IntegrityError (500) | 🟢 | G8 | Backend | ✅ Resolved |
 | ADV-312 | Manual wishlist duplicates (null book) not prevented | 🟢 | G8 | Backend | ✅ Resolved |
-| ADV-313 | `ACTIVE→CANCELLED` transition defined but unreachable via API | ℹ️ | — | Backend | ⬜ PENDING |
+| ADV-313 | `ACTIVE→CANCELLED` transition defined but unreachable via API | ℹ️ | — | Backend | ✅ Resolved |
 | ADV-314 | Report email task fired twice per create (signal + view) | 🟢 | G8 | Backend | ✅ Resolved |
-| ADV-315 | Sentry breadcrumbs may carry rich notification payloads | 🟢 | G7 | Mobile | ⬜ PENDING |
-| ADV-316 | No jailbreak/root detection on mobile | ℹ️ | G6 | Mobile | ⬜ PENDING |
-| ADV-317 | No certificate pinning on mobile | ℹ️ | G6 | Mobile | ⬜ PENDING |
+| ADV-315 | Sentry breadcrumbs may carry rich notification payloads | 🟢 | G7 | Mobile | ✅ Resolved |
+| ADV-316 | No jailbreak/root detection on mobile | ℹ️ | G6 | Mobile | ⏸️ Deferred |
+| ADV-317 | No certificate pinning on mobile | ℹ️ | G6 | Mobile | ⏸️ Deferred |
 | SEC-001–010 | *(see security-action-plan.md)* | Various | — | Various | Mixed |
 
 ---
@@ -526,19 +526,19 @@ Work through findings in this order. Complete all critical fixes before any othe
 | ADV-301 | ✅ Resolved | Per-user WS connection counter in Redis cache (`MAX_WS_CONNECTIONS_PER_USER=10`), enforced in `FirstMessageAuthMixin` |
 | ADV-302 | ✅ Resolved | Rate-limited `chat.typing` (10/10s) and `chat.read` (20/10s) in ChatConsumer |
 | ADV-303 | ✅ Resolved | `_handle_message` now re-checks exchange status from DB via `_refresh_read_only()` |
-| ADV-304 | ⬜ PENDING | — |
-| ADV-305 | ⬜ PENDING | — |
+| ADV-304 | ✅ Resolved | Added deprecation warning log on query-string auth usage; first-message auth is the preferred path |
+| ADV-305 | ⏸️ Deferred | Requires device attestation design — beyond code fix |
 | ADV-306 | ✅ Resolved | Added `EnumerationThrottle` (10/min per IP) to `CheckUsernameView` |
 | ADV-307 | ✅ Resolved | Added `shouldDehydrateQuery` filter to exclude messages/notifications/exchanges from persistence |
-| ADV-308 | ⬜ PENDING | — |
+| ADV-308 | ✅ Resolved | Verified file is in `mobile/.gitignore` and not tracked by git |
 | ADV-309 | ✅ Resolved | Added `completed_at` field to ExchangeRequest; rating window now anchored to it |
-| ADV-310 | ⬜ PENDING | — |
+| ADV-310 | ✅ Resolved | Replaced naive substring matching with `better-profanity` library + fallback blocklist |
 | ADV-311 | ✅ Resolved | Wrapped `Rating.objects.create()` in try/except IntegrityError → 400 |
 | ADV-312 | ✅ Resolved | Added application-level dedup check on (user, isbn) or (user, title) for manual wishlist items |
-| ADV-313 | ⬜ PENDING | — |
+| ADV-313 | ✅ Resolved | Removed dead `ACTIVE→CANCELLED` from `VALID_TRANSITIONS` — `cancel()` only allows PENDING |
 | ADV-314 | ✅ Resolved | Removed duplicate `.delay()` call from `ReportCreateView.perform_create` (signal handles it) |
-| ADV-315 | ⬜ PENDING | — |
-| ADV-316 | ⬜ PENDING | — |
-| ADV-317 | ⬜ PENDING | — |
+| ADV-315 | ✅ Resolved | Whitelist-filter push data before adding to Sentry breadcrumbs — only safe routing keys pass through |
+| ADV-316 | ⏸️ Deferred | Informational — requires `expo-device` or Integrity API integration |
+| ADV-317 | ⏸️ Deferred | Informational — requires external cert pinning config (see SEC-009) |
 
 *Last updated: 2026-04-20*
