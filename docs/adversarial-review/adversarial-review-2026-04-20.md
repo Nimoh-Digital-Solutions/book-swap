@@ -43,7 +43,7 @@ BookSwap's authorization model is **generally sound** — exchanges, messages, n
 
 | ID | Title | Severity | Goal | Layer | Status |
 |----|-------|----------|------|-------|--------|
-| ADV-101 | Apple Sign-In email spoofing → account takeover | 🔴 | G4 | Backend | ⬜ PENDING |
+| ADV-101 | Apple Sign-In email spoofing → account takeover | 🔴 | G4 | Backend | ✅ Resolved |
 | ADV-201 | Book `status` mass assignment bypasses exchange lifecycle | 🟠 | G2 | Backend | ⬜ PENDING |
 | ADV-202 | `confirm_swap` race condition — no row locking | 🟠 | G2 | Backend | ⬜ PENDING |
 | ADV-203 | Bulk decline of competing requests skips notifications | 🟠 | G3 | Backend | ⬜ PENDING |
@@ -71,6 +71,10 @@ BookSwap's authorization model is **generally sound** — exchanges, messages, n
 ## Critical Findings 🔴
 
 ### ADV-101 — Apple Sign-In email spoofing → account takeover
+
+> ✅ **Resolved** in `b70a3d9` on 2026-04-20
+> Fix: Reject Apple tokens lacking verified email in signed JWT claims; never fall back to unsigned client body.
+> Test: `backend/bookswap/tests/test_security_adv101.py`
 
 - **Severity**: 🔴 CRITICAL
 - **Attacker goal**: G4 — Account takeover
@@ -515,7 +519,7 @@ Work through findings in this order. Complete all critical fixes before any othe
 
 | ID | Status | Fixed in |
 |----|--------|---------|
-| ADV-101 | ⬜ PENDING | — |
+| ADV-101 | ✅ Resolved | b70a3d9 |
 | ADV-201 | ⬜ PENDING | — |
 | ADV-202 | ⬜ PENDING | — |
 | ADV-203 | ⬜ PENDING | — |
