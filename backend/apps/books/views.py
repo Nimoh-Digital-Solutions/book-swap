@@ -264,7 +264,7 @@ class WishlistItemViewSet(
     serializer_class = WishlistItemSerializer
 
     def get_queryset(self):
-        qs = WishlistItem.objects.filter(user=self.request.user)
+        qs = WishlistItem.objects.filter(user=self.request.user).select_related("book")
         book_id = self.request.query_params.get("book")
         if book_id:
             qs = qs.filter(book_id=book_id)

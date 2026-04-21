@@ -194,6 +194,22 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         fields = ("id", "book", "book_id", "isbn", "title", "author", "genre", "cover_url", "created_at")
         read_only_fields = ("id", "book_id", "created_at")
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        book = instance.book
+        if book:
+            if not data.get("title"):
+                data["title"] = book.title
+            if not data.get("author"):
+                data["author"] = book.author
+            if not data.get("isbn"):
+                data["isbn"] = book.isbn
+            if not data.get("genre") and book.genres:
+                data["genre"] = book.genres[0]
+            if not data.get("cover_url"):
+                data["cover_url"] = book.cover_url
+        return data
+
     def validate(self, attrs):
         book = attrs.get("book")
         if not book:
@@ -212,6 +228,18 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         book = validated_data.get("book")
         if book and WishlistItem.objects.filter(user=user, book=book).exists():
             raise serializers.ValidationError("This book is already on your wishlist.")
+
+        if book:
+            if not validated_data.get("title"):
+                validated_data["title"] = book.title
+            if not validated_data.get("author"):
+                validated_data["author"] = book.author
+            if not validated_data.get("isbn"):
+                validated_data["isbn"] = book.isbn
+            if not validated_data.get("genre") and book.genres:
+                validated_data["genre"] = book.genres[0]
+            if not validated_data.get("cover_url"):
+                validated_data["cover_url"] = book.cover_url
 
         validated_data["user"] = user
         return super().create(validated_data)
