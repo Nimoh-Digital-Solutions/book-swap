@@ -11,12 +11,8 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 
 logger = logging.getLogger(__name__)
 
-AUTH_THROTTLE_PATHS = re.compile(
-    r"^/api/v1/auth/(register|token/refresh)/$"
-)
-AUTH_SENSITIVE_PATHS = re.compile(
-    r"^/api/v1/auth/password/(reset|change)/$"
-)
+AUTH_THROTTLE_PATHS = re.compile(r"^/api/v1/auth/(register|token/refresh)/$")
+AUTH_SENSITIVE_PATHS = re.compile(r"^/api/v1/auth/password/(reset|change)/$")
 
 
 class AuthThrottleMiddleware:
