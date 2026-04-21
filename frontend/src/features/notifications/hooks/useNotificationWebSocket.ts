@@ -23,6 +23,21 @@ import type {
 } from '../types/notification.types';
 import { notificationKeys } from './notificationKeys';
 
+const EXCHANGE_NOTIFICATION_TYPES = new Set([
+  'new_request',
+  'request_accepted',
+  'request_declined',
+  'request_expired',
+  'request_cancelled',
+  'counter_proposed',
+  'counter_approved',
+  'swap_confirmed',
+  'exchange_completed',
+  'return_requested',
+  'exchange_returned',
+  'new_message',
+]);
+
 // ---------------------------------------------------------------------------
 // Type guard
 // ---------------------------------------------------------------------------
@@ -80,6 +95,10 @@ export function useNotificationWebSocket(
           };
         },
       );
+
+      if (EXCHANGE_NOTIFICATION_TYPES.has(notification.notification_type)) {
+        void qc.invalidateQueries({ queryKey: ['exchanges'] });
+      }
 
       onNewNotification?.(notification);
     },

@@ -415,8 +415,8 @@ class ExchangeRequestViewSet(
         if exchange.is_swap_confirmed:
             exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
             update_fields.append("status")
+            exchange._confirmed_by_user_id = request.user.pk
 
-            # Increment swap_count for both users
             from django.contrib.auth import get_user_model
             from django.db.models import F
 
@@ -446,7 +446,6 @@ class ExchangeRequestViewSet(
         exchange.save(update_fields=["status", "updated_at"])
 
         if exchange.swap_type == SwapType.PERMANENT:
-            # Transfer ownership: each party keeps the other's book
             exchange.requested_book.owner = exchange.requester
             exchange.requested_book.status = BookStatus.AVAILABLE
             exchange.requested_book.save(update_fields=["owner", "status"])
@@ -458,10 +457,6 @@ class ExchangeRequestViewSet(
             exchange.requested_book.save(update_fields=["status"])
             exchange.offered_book.status = BookStatus.AVAILABLE
             exchange.offered_book.save(update_fields=["status"])
-
-        from apps.notifications.tasks import send_exchange_completed_notification
-
-        send_exchange_completed_notification.delay(str(exchange.pk))
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,
@@ -487,6 +482,7 @@ class ExchangeRequestViewSet(
             )
         exchange.transition_to(ExchangeStatus.RETURN_REQUESTED)
         exchange.return_requested_at = timezone.now()
+        exchange._return_requested_by_user_id = request.user.pk
         exchange.save(update_fields=["status", "return_requested_at", "updated_at"])
 
         serializer = ExchangeRequestDetailSerializer(

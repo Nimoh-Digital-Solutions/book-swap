@@ -14,23 +14,27 @@ logger = logging.getLogger(__name__)
 def expire_stale_requests():
     """Expire pending exchange requests older than 14 days.
 
-    Runs daily via Celery Beat. Sets status → 'expired' and records
-    the expiry timestamp.
+    Runs daily via Celery Beat. Iterates per-instance so post_save
+    signals fire and notifications are dispatched automatically.
     """
     from .models import ExchangeRequest, ExchangeStatus
 
     cutoff = timezone.now() - timedelta(days=14)
-    expired = ExchangeRequest.objects.filter(
-        status=ExchangeStatus.PENDING,
-        created_at__lte=cutoff,
-    ).update(
-        status=ExchangeStatus.EXPIRED,
-        expired_at=timezone.now(),
+    now = timezone.now()
+    stale = list(
+        ExchangeRequest.objects.filter(
+            status=ExchangeStatus.PENDING,
+            created_at__lte=cutoff,
+        )
     )
+    for exchange in stale:
+        exchange.status = ExchangeStatus.EXPIRED
+        exchange.expired_at = now
+        exchange.save(update_fields=["status", "expired_at", "updated_at"])
 
-    if expired:
-        logger.info("Expired %d stale exchange requests.", expired)
-    return expired
+    if stale:
+        logger.info("Expired %d stale exchange requests.", len(stale))
+    return len(stale)
 
 
 @shared_task(name="exchanges.expire_stale_conditions")

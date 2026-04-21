@@ -7,7 +7,13 @@ const EXCHANGE_NOTIFICATION_TYPES = new Set([
   'request_accepted',
   'request_declined',
   'request_expired',
+  'request_cancelled',
+  'counter_proposed',
+  'counter_approved',
+  'swap_confirmed',
   'exchange_completed',
+  'return_requested',
+  'exchange_returned',
   'new_message',
 ]);
 

@@ -315,6 +315,203 @@ def send_exchange_completed_notification(exchange_id: str) -> None:
     logger.info("exchange_completed notifications sent (exchange %s).", exchange_id)
 
 
+@shared_task(name="notifications.send_swap_confirmed")
+def send_swap_confirmed_notification(exchange_id: str, confirmed_by_user_id: str = "") -> None:
+    """Notify the other party (or both for auto-confirm) when the swap is confirmed."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_swap_confirmed: exchange %s not found.", exchange_id)
+        return
+
+    book_title = exchange.requested_book.title
+    link = f"/exchanges/{exchange_id}/"
+
+    if confirmed_by_user_id and str(exchange.requester_id) == confirmed_by_user_id:
+        recipients = [exchange.owner]
+    elif confirmed_by_user_id and str(exchange.owner_id) == confirmed_by_user_id:
+        recipients = [exchange.requester]
+    else:
+        recipients = [exchange.requester, exchange.owner]
+
+    for recipient in recipients:
+        notif = _create_notification(
+            user=recipient,
+            notification_type=NotificationType.SWAP_CONFIRMED,
+            title="Swap confirmed!",
+            body=f'The physical swap for "{book_title}" has been confirmed by both parties.',
+            link=link,
+        )
+        _push_to_ws(str(recipient.pk), _notification_payload(notif))
+        _push_to_devices(recipient, notif.title, notif.body, {"type": "swap_confirmed", "exchange_id": exchange_id})
+        _maybe_send_email(
+            user=recipient,
+            subject="BookSwap: Swap confirmed!",
+            body_text=(
+                f"Hi {recipient.username},\n\n"
+                f'Great news! The physical swap for "{book_title}" has been confirmed.\n\n'
+                f"View the exchange: {_frontend_url()}{link}"
+            ),
+            prefs_field="email_exchange_completed",
+        )
+    logger.info("swap_confirmed notification(s) sent (exchange %s).", exchange_id)
+
+
+@shared_task(name="notifications.send_request_expired")
+def send_request_expired_notification(exchange_id: str) -> None:
+    """Notify both parties when an exchange request expires."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_request_expired: exchange %s not found.", exchange_id)
+        return
+
+    book_title = exchange.requested_book.title
+    link = "/discover/"
+
+    for recipient in (exchange.requester, exchange.owner):
+        notif = _create_notification(
+            user=recipient,
+            notification_type=NotificationType.REQUEST_EXPIRED,
+            title="Swap request expired",
+            body=f'The swap request for "{book_title}" has expired.',
+            link=link,
+        )
+        _push_to_ws(str(recipient.pk), _notification_payload(notif))
+        _push_to_devices(recipient, notif.title, notif.body, {"type": "request_expired", "exchange_id": exchange_id})
+    logger.info("request_expired notifications sent (exchange %s).", exchange_id)
+
+
+@shared_task(name="notifications.send_request_cancelled")
+def send_request_cancelled_notification(exchange_id: str) -> None:
+    """Notify the book owner when the requester cancels their request."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_request_cancelled: exchange %s not found.", exchange_id)
+        return
+
+    recipient = exchange.owner
+    requester_name = exchange.requester.username
+    book_title = exchange.requested_book.title
+    link = f"/exchanges/{exchange_id}/"
+
+    notif = _create_notification(
+        user=recipient,
+        notification_type=NotificationType.REQUEST_CANCELLED,
+        title="Swap request cancelled",
+        body=f'{requester_name} cancelled their swap request for "{book_title}".',
+        link=link,
+    )
+    _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "request_cancelled", "exchange_id": exchange_id})
+    logger.info("request_cancelled notification → user %s (exchange %s).", recipient.pk, exchange_id)
+
+
+@shared_task(name="notifications.send_return_requested")
+def send_return_requested_notification(exchange_id: str, requested_by_user_id: str) -> None:
+    """Notify the other party when a book return is requested."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_return_requested: exchange %s not found.", exchange_id)
+        return
+
+    if str(exchange.requester_id) == requested_by_user_id:
+        recipient = exchange.owner
+    else:
+        recipient = exchange.requester
+
+    book_title = exchange.requested_book.title
+    link = f"/exchanges/{exchange_id}/"
+
+    notif = _create_notification(
+        user=recipient,
+        notification_type=NotificationType.RETURN_REQUESTED,
+        title="Return requested",
+        body=f'A return has been requested for the exchange of "{book_title}".',
+        link=link,
+    )
+    _push_to_ws(str(recipient.pk), _notification_payload(notif))
+    _push_to_devices(recipient, notif.title, notif.body, {"type": "return_requested", "exchange_id": exchange_id})
+    _maybe_send_email(
+        user=recipient,
+        subject="BookSwap: Return requested",
+        body_text=(
+            f"Hi {recipient.username},\n\n"
+            f'A return has been requested for the exchange of "{book_title}".\n\n'
+            f"View the exchange: {_frontend_url()}{link}"
+        ),
+        prefs_field="email_exchange_completed",
+    )
+    logger.info("return_requested notification → user %s (exchange %s).", recipient.pk, exchange_id)
+
+
+@shared_task(name="notifications.send_exchange_returned")
+def send_exchange_returned_notification(exchange_id: str) -> None:
+    """Notify both parties when books have been returned."""
+    from apps.exchanges.models import ExchangeRequest
+
+    from .models import NotificationType
+
+    try:
+        exchange = ExchangeRequest.objects.select_related(
+            "requester",
+            "owner",
+            "requested_book",
+        ).get(pk=exchange_id)
+    except ExchangeRequest.DoesNotExist:
+        logger.warning("send_exchange_returned: exchange %s not found.", exchange_id)
+        return
+
+    book_title = exchange.requested_book.title
+    link = f"/exchanges/{exchange_id}/"
+
+    for recipient in (exchange.requester, exchange.owner):
+        notif = _create_notification(
+            user=recipient,
+            notification_type=NotificationType.EXCHANGE_RETURNED,
+            title="Books returned!",
+            body=f'The books from the exchange of "{book_title}" have been returned.',
+            link=link,
+        )
+        _push_to_ws(str(recipient.pk), _notification_payload(notif))
+        _push_to_devices(recipient, notif.title, notif.body, {"type": "exchange_returned", "exchange_id": exchange_id})
+    logger.info("exchange_returned notifications sent (exchange %s).", exchange_id)
+
+
 @shared_task(name="notifications.send_counter_proposed")
 def send_counter_proposed_notification(exchange_id: str, counter_by_user_id: str) -> None:
     """Notify the other party when a counter-offer is proposed."""
