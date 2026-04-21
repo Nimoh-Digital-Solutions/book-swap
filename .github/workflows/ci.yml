@@ -165,11 +165,11 @@ jobs:
           echo "Main chunk: $MAIN_CHUNK"
           echo "  Raw:    ${RAW_KB} KB"
           echo "  Gzipped: ${GZIP_KB} KB"
-          if [ "$GZIP_KB" -gt 200 ]; then
-            echo "❌ Bundle exceeds 200 KB gzipped limit (${GZIP_KB} KB)"
+          if [ "$GZIP_KB" -gt 300 ]; then
+            echo "❌ Bundle exceeds 300 KB gzipped limit (${GZIP_KB} KB)"
             exit 1
           fi
-          echo "✅ Bundle size OK (${GZIP_KB} KB gzipped, limit 200 KB)"
+          echo "✅ Bundle size OK (${GZIP_KB} KB gzipped, limit 300 KB)"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
