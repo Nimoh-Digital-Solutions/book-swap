@@ -235,6 +235,19 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         if book and WishlistItem.objects.filter(user=user, book=book).exists():
             raise serializers.ValidationError("This book is already on your wishlist.")
 
+        if not book:
+            isbn = validated_data.get("isbn", "").strip()
+            title = validated_data.get("title", "").strip()
+            dup_qs = WishlistItem.objects.filter(user=user, book__isnull=True)
+            if isbn:
+                dup_qs = dup_qs.filter(isbn=isbn)
+            elif title:
+                dup_qs = dup_qs.filter(title__iexact=title)
+            else:
+                dup_qs = WishlistItem.objects.none()
+            if dup_qs.exists():
+                raise serializers.ValidationError("A matching wishlist entry already exists.")
+
         if book:
             if not validated_data.get("title"):
                 validated_data["title"] = book.title

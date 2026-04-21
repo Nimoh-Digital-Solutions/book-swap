@@ -19,7 +19,9 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 REST_FRAMEWORK.update(  # type: ignore[name-defined]  # noqa: F405
     {
         "DEFAULT_THROTTLE_CLASSES": [],
-        "DEFAULT_THROTTLE_RATES": {},
+        "DEFAULT_THROTTLE_RATES": {
+            "enumeration": "1000/minute",
+        },
     }
 )
 

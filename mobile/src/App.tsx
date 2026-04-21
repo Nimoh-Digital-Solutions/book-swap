@@ -83,6 +83,13 @@ function App() {
               persister: queryPersister,
               maxAge: 24 * 60 * 60 * 1000,
               buster: CACHE_BUSTER,
+              dehydrateOptions: {
+                shouldDehydrateQuery: (query) => {
+                  const key = query.queryKey[0] as string;
+                  const sensitive = ['messages', 'notifications', 'exchanges'];
+                  return query.state.status === 'success' && !sensitive.includes(key);
+                },
+              },
             }}
           >
             <NavigationContainer

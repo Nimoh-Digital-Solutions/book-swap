@@ -114,10 +114,7 @@ class ReportCreateView(generics.CreateAPIView):
     serializer_class = ReportCreateSerializer
 
     def perform_create(self, serializer):
-        report = serializer.save()
-        from .tasks import send_report_notification_email
-
-        send_report_notification_email.delay(str(report.pk))
+        serializer.save()
 
 
 class ReportAdminListView(generics.ListAPIView):

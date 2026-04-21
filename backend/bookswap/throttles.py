@@ -1,4 +1,4 @@
-"""Custom DRF throttle classes for BookSwap authentication endpoints."""
+"""Custom DRF throttle classes for BookSwap endpoints."""
 
 from rest_framework.throttling import SimpleRateThrottle
 
@@ -25,6 +25,22 @@ class AuthSensitiveRateThrottle(SimpleRateThrottle):
     """
 
     scope = "auth_sensitive"
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": self.get_ident(request),
+        }
+
+
+class EnumerationThrottle(SimpleRateThrottle):
+    """Throttle for endpoints that could leak user existence info.
+
+    SECURITY (ADV-306): Limits check-username and similar lookup endpoints
+    to prevent automated username/email enumeration by unauthenticated callers.
+    """
+
+    scope = "enumeration"
 
     def get_cache_key(self, request, view):
         return self.cache_format % {

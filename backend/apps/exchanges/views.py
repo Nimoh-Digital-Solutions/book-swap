@@ -183,8 +183,7 @@ class ExchangeRequestViewSet(
             # never fires for these rows.
             auto_declined_pks = list(
                 ExchangeRequest.objects.filter(
-                    Q(requested_book=exchange.requested_book)
-                    | Q(offered_book=exchange.offered_book),
+                    Q(requested_book=exchange.requested_book) | Q(offered_book=exchange.offered_book),
                     status=ExchangeStatus.PENDING,
                 )
                 .exclude(pk=exchange.pk)
@@ -403,11 +402,7 @@ class ExchangeRequestViewSet(
         leaving the exchange stuck in ACTIVE with a lost confirmation.
         """
         with transaction.atomic():
-            exchange = (
-                ExchangeRequest.objects.select_for_update().get(
-                    pk=self.get_object().pk
-                )
-            )
+            exchange = ExchangeRequest.objects.select_for_update().get(pk=self.get_object().pk)
             if exchange.status != ExchangeStatus.ACTIVE:
                 return Response(
                     {"detail": "The exchange must be active to confirm the swap."},

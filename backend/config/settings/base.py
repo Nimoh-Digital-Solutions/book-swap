@@ -221,6 +221,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"].update(
         "user": "1000/hour",
         "auth": "20/minute",
         "auth_sensitive": "5/minute",
+        "enumeration": "10/minute",
     }
 )
 

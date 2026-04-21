@@ -67,7 +67,8 @@ class ExchangeRatingViewSet(GenericViewSet):
             .first()
         )
 
-        deadline = exchange.updated_at + timedelta(days=RATING_WINDOW_DAYS)
+        anchor = exchange.completed_at or exchange.updated_at
+        deadline = anchor + timedelta(days=RATING_WINDOW_DAYS)
         can_rate = exchange.status in RATABLE_STATUSES and my_rating is None and timezone.now() <= deadline
 
         data = {

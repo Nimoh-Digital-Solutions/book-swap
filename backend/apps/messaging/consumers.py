@@ -40,6 +40,10 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
 
     RATE_LIMIT_MAX = 5
     RATE_LIMIT_WINDOW = 10
+    TYPING_RATE_LIMIT_MAX = 10
+    TYPING_RATE_LIMIT_WINDOW = 10
+    READ_RATE_LIMIT_MAX = 20
+    READ_RATE_LIMIT_WINDOW = 10
     INVALID_MSG_LIMIT = 5
     INVALID_MSG_WINDOW = 30
 
@@ -49,6 +53,8 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         self.exchange_id = self.scope["url_route"]["kwargs"]["exchange_id"]
         self.group_name = f"chat_{self.exchange_id}"
         self.send_timestamps: list[float] = []
+        self.typing_timestamps: list[float] = []
+        self.read_timestamps: list[float] = []
         self.invalid_msg_timestamps: list[float] = []
 
         exchange = await self._get_exchange()
@@ -125,7 +131,7 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
     # ── Message handlers ──────────────────────────────────────────────
 
     async def _handle_message(self, content):
-        if self.is_read_only:
+        if await self._refresh_read_only():
             await self.send_json(
                 {
                     "type": "chat.error",
@@ -198,6 +204,12 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         if self.is_read_only:
             return
 
+        now = time.monotonic()
+        self.typing_timestamps = [ts for ts in self.typing_timestamps if now - ts < self.TYPING_RATE_LIMIT_WINDOW]
+        if len(self.typing_timestamps) >= self.TYPING_RATE_LIMIT_MAX:
+            return  # silently drop — no error to avoid amplifying traffic
+        self.typing_timestamps.append(now)
+
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -211,6 +223,12 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         message_id = content.get("message_id")
         if not message_id:
             return
+
+        now = time.monotonic()
+        self.read_timestamps = [ts for ts in self.read_timestamps if now - ts < self.READ_RATE_LIMIT_WINDOW]
+        if len(self.read_timestamps) >= self.READ_RATE_LIMIT_MAX:
+            return  # silently drop
+        self.read_timestamps.append(now)
 
         read_at = await self._mark_message_read(message_id)
         if read_at:
@@ -267,6 +285,17 @@ class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
         )
 
     # ── Database helpers ──────────────────────────────────────────────
+
+    @database_sync_to_async
+    def _refresh_read_only(self) -> bool:
+        """Re-check exchange status from DB and update the cached flag.
+
+        SECURITY (ADV-303): Prevents sending messages after the exchange
+        transitions to a read-only status while the WS is still open.
+        """
+        current_status = ExchangeRequest.objects.filter(pk=self.exchange_id).values_list("status", flat=True).first()
+        self.is_read_only = current_status not in CHAT_WRITABLE_STATUSES
+        return self.is_read_only
 
     @database_sync_to_async
     def _get_exchange(self):

@@ -30,6 +30,7 @@ from .serializers import (
     UserPublicSerializer,
     UserUpdateSerializer,
 )
+from .throttles import EnumerationThrottle
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -93,9 +94,13 @@ class OnboardingCompleteView(APIView):
 
 
 class CheckUsernameView(APIView):
-    """GET /users/check-username/?q=<name> — check username availability."""
+    """GET /users/check-username/?q=<name> — check username availability.
+
+    SECURITY (ADV-306): Rate-limited to prevent automated username enumeration.
+    """
 
     permission_classes = (AllowAny,)
+    throttle_classes: ClassVar = [EnumerationThrottle]
 
     def get(self, request):
         serializer = CheckUsernameSerializer(data=request.query_params)

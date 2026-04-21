@@ -166,6 +166,13 @@ class ExchangeRequest(TimeStampedModel):
     # Auto-expiry tracking
     expired_at = models.DateTimeField(null=True, blank=True)
 
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp when the exchange first entered a ratable state "
+        "(completed/returned). Anchors the 30-day rating window.",
+    )
+
     class Meta:
         ordering = ["-created_at"]  # noqa: RUF012
         constraints = [  # noqa: RUF012
@@ -209,11 +216,17 @@ class ExchangeRequest(TimeStampedModel):
     def can_transition_to(self, new_status: str) -> bool:
         return new_status in VALID_TRANSITIONS.get(self.status, [])
 
+    COMPLETED_STATUSES = frozenset({ExchangeStatus.COMPLETED, ExchangeStatus.RETURNED})
+
     def transition_to(self, new_status: str) -> None:
         """Transition to *new_status*, raising ValueError on invalid transition."""
         if not self.can_transition_to(new_status):
             raise ValueError(f"Cannot transition from {self.status!r} to {new_status!r}.")
         self.status = new_status
+        if new_status in self.COMPLETED_STATUSES and self.completed_at is None:
+            from django.utils import timezone
+
+            self.completed_at = timezone.now()
 
 
 class ConditionsAcceptance(TimeStampedModel):

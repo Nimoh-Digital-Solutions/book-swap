@@ -62,7 +62,8 @@ class RatingCreateSerializer(serializers.Serializer):
                 {"exchange": "Ratings are only allowed for completed or returned exchanges."},
             )
 
-        deadline = exchange.updated_at + timedelta(days=RATING_WINDOW_DAYS)
+        anchor = exchange.completed_at or exchange.updated_at
+        deadline = anchor + timedelta(days=RATING_WINDOW_DAYS)
         if timezone.now() > deadline:
             raise serializers.ValidationError(
                 {"exchange": "The 30-day rating window has expired."},
@@ -77,6 +78,8 @@ class RatingCreateSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
+        from django.db import IntegrityError
+
         exchange = self.context["exchange"]
         rater = self.context["request"].user
 
@@ -84,14 +87,19 @@ class RatingCreateSerializer(serializers.Serializer):
 
         is_flagged = is_profane(validated_data.get("comment", ""))
 
-        return Rating.objects.create(
-            exchange=exchange,
-            rater=rater,
-            rated_id=rated_id,
-            score=validated_data["score"],
-            comment=validated_data.get("comment", ""),
-            is_flagged=is_flagged,
-        )
+        try:
+            return Rating.objects.create(
+                exchange=exchange,
+                rater=rater,
+                rated_id=rated_id,
+                score=validated_data["score"],
+                comment=validated_data.get("comment", ""),
+                is_flagged=is_flagged,
+            )
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {"exchange": "You have already rated this exchange."},
+            ) from None
 
 
 class ExchangeRatingStatusSerializer(serializers.Serializer):
