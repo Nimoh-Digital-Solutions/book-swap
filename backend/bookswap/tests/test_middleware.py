@@ -20,6 +20,13 @@ NIMOH_BASE_CSP = (
     "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
     "font-src 'self'; connect-src 'self'"
 )
+# Simulates the production enforced CSP where nimoh_base replaces
+# 'unsafe-inline' with a nonce for style-src (the actual trigger).
+NIMOH_BASE_CSP_PROD = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    "style-src 'self' 'nonce-abc123'; img-src 'self' data: blob:; "
+    "font-src 'self'; connect-src 'self'"
+)
 NIMOH_BASE_CSP_RO = (
     "default-src 'none'; script-src 'self' 'nonce-abc123'; "
     "style-src 'self'; img-src 'self' data:; font-src 'self'; "
@@ -51,8 +58,8 @@ def rf():
     return RequestFactory()
 
 
-class TestReportOnlyAdminRelaxation:
-    """The Report-Only CSP must be relaxed for Django admin pages."""
+class TestAdminCspRelaxation:
+    """Both enforced and report-only CSP must be relaxed for Django admin."""
 
     def test_admin_report_only_gets_unsafe_inline_style(self, make_middleware, rf):
         mw = make_middleware()
@@ -77,6 +84,34 @@ class TestReportOnlyAdminRelaxation:
         response = mw(rf.get("/api/v1/books/"))
         csp_ro = response["Content-Security-Policy-Report-Only"]
         assert csp_ro == NIMOH_BASE_CSP_RO
+
+    def test_admin_enforced_csp_gets_unsafe_inline_style(self, make_middleware, rf):
+        """Production enforced CSP uses a nonce for style-src; admin needs unsafe-inline."""
+        mw = make_middleware(csp=NIMOH_BASE_CSP_PROD)
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp = response["Content-Security-Policy"]
+        assert "'unsafe-inline'" in self._extract_directive(csp, "style-src")
+
+    def test_admin_enforced_csp_preserves_existing_unsafe_inline(self, make_middleware, rf):
+        """Dev CSP already has unsafe-inline in style-src — no duplicate."""
+        mw = make_middleware()
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp = response["Content-Security-Policy"]
+        style_src = self._extract_directive(csp, "style-src")
+        assert style_src.count("'unsafe-inline'") == 1
+
+    def test_non_admin_enforced_csp_unchanged(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/api/v1/books/"))
+        assert response["Content-Security-Policy"] == NIMOH_BASE_CSP
+
+    @staticmethod
+    def _extract_directive(csp: str, directive: str) -> str:
+        for part in csp.split(";"):
+            part = part.strip()
+            if part.startswith(directive):
+                return part
+        return ""
 
 
 class TestFrontendOriginConnect:
@@ -105,7 +140,7 @@ class TestFrontendOriginConnect:
 
 
 class TestEnforcedCspPassthrough:
-    """The enforced CSP is set by nimoh_base; we should not overwrite it."""
+    """The enforced CSP is set by nimoh_base; non-admin paths are untouched."""
 
     def test_enforced_csp_preserved_for_non_admin(self, make_middleware, rf):
         mw = make_middleware()

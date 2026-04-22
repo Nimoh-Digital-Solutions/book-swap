@@ -69,9 +69,9 @@ class BookSwapSecurityHeadersMiddleware:
     AFTER it in the response phase (Django processes responses bottom-to-top).
 
     Responsibilities:
-    - Relax the CSP Report-Only header for Django admin pages (nimoh_base's
-      report-only policy is strict and doesn't include admin-specific
-      adjustments, causing false-positive violations for inline styles).
+    - Relax both the enforced and report-only CSP for Django admin pages
+      (nimoh_base doesn't add 'unsafe-inline' to style-src for admin,
+      causing style-src-attr violations from Django admin's inline styles).
     - Append the frontend origin to connect-src in both CSP headers.
     """
 
@@ -88,39 +88,44 @@ class BookSwapSecurityHeadersMiddleware:
         is_admin = request.path.startswith("/admin/")
 
         if is_admin:
-            self._relax_report_only_for_admin(response)
+            self._relax_csp_for_admin(response)
 
         if self._frontend_origin:
             self._append_frontend_origin(response)
 
-    def _relax_report_only_for_admin(self, response: HttpResponse) -> None:
-        """Add 'unsafe-inline' to style-src and script-src in the Report-Only
-        CSP for admin pages so Django admin's inline styles and scripts don't
-        flood CSP violation logs."""
-        header = "Content-Security-Policy-Report-Only"
-        csp_ro = response.get(header)
-        if not csp_ro:
-            return
+    def _relax_csp_for_admin(self, response: HttpResponse) -> None:
+        """Relax both the enforced and report-only CSP for Django admin pages.
 
-        directives = self._parse_csp(csp_ro)
+        nimoh_base's SecurityHeadersMiddleware adds 'unsafe-inline' + 'unsafe-eval'
+        to script-src for /admin/ but doesn't do the same for style-src.  In
+        production the base middleware replaces 'unsafe-inline' with a nonce in
+        style-src, which breaks Django admin's inline style="" attributes
+        (violates style-src-attr → style-src).
+        """
+        for header in ("Content-Security-Policy", "Content-Security-Policy-Report-Only"):
+            csp = response.get(header)
+            if not csp:
+                continue
 
-        style_src = directives.get("style-src", "'self'")
-        if "'unsafe-inline'" not in style_src:
-            directives["style-src"] = f"{style_src} 'unsafe-inline'"
+            directives = self._parse_csp(csp)
 
-        script_src = directives.get("script-src", "'self'")
-        if "'unsafe-inline'" not in script_src:
-            directives["script-src"] = f"{script_src} 'unsafe-inline'"
-        if "'unsafe-eval'" not in script_src:
-            directives["script-src"] = f"{directives['script-src']} 'unsafe-eval'"
+            style_src = directives.get("style-src", "'self'")
+            if "'unsafe-inline'" not in style_src:
+                directives["style-src"] = f"{style_src} 'unsafe-inline'"
 
-        nonce_entries = [s for s in directives.get("script-src", "").split() if s.startswith("'nonce-")]
-        if nonce_entries:
-            directives["script-src"] = " ".join(
-                s for s in directives["script-src"].split() if not s.startswith("'nonce-")
-            )
+            script_src = directives.get("script-src", "'self'")
+            if "'unsafe-inline'" not in script_src:
+                directives["script-src"] = f"{script_src} 'unsafe-inline'"
+            if "'unsafe-eval'" not in script_src:
+                directives["script-src"] = f"{directives['script-src']} 'unsafe-eval'"
 
-        response[header] = "; ".join(f"{k} {v}" for k, v in directives.items())
+            nonce_entries = [s for s in directives.get("script-src", "").split() if s.startswith("'nonce-")]
+            if nonce_entries:
+                directives["script-src"] = " ".join(
+                    s for s in directives["script-src"].split() if not s.startswith("'nonce-")
+                )
+
+            response[header] = "; ".join(f"{k} {v}" for k, v in directives.items())
 
     def _append_frontend_origin(self, response: HttpResponse) -> None:
         """Add the frontend origin to connect-src so the SPA can reach the API."""
