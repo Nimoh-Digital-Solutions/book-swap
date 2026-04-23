@@ -137,11 +137,14 @@ class AccountDeletionRequestView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # Generate a signed cancellation token valid for 30 days
         cancel_token = signing.dumps(
             {"user_id": str(request.user.pk), "action": "cancel_deletion"},
             salt="account-deletion-cancel",
         )
+
+        from apps.notifications.tasks import send_account_deletion_email
+
+        send_account_deletion_email.delay(str(request.user.pk), cancel_token)
 
         return Response(
             {

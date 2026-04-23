@@ -1,0 +1,12 @@
+# Flow 5: Navigate to profile and settings
+appId: com.bookswap.mobile
+---
+- launchApp
+- tapOn: "Profile"
+- assertVisible: "Settings"
+  optional: true
+- tapOn: "Settings"
+- assertVisible: "Appearance"
+  optional: true
+- back
+- back

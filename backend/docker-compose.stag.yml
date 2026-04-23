@@ -23,6 +23,8 @@ services:
       REDIS_URL: redis://redis_shared:6379/11
       CELERY_BROKER_URL: redis://redis_shared:6379/12
       CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: staging
       PORT: "8110"
     volumes:
       - /mnt/media/bookswap-staging:/app/mediafiles
@@ -62,6 +64,8 @@ services:
       REDIS_URL: redis://redis_shared:6379/11
       CELERY_BROKER_URL: redis://redis_shared:6379/12
       CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: staging
     volumes:
       - /mnt/media/bookswap-staging:/app/mediafiles
     networks:
@@ -98,6 +102,8 @@ services:
       REDIS_URL: redis://redis_shared:6379/11
       CELERY_BROKER_URL: redis://redis_shared:6379/12
       CELERY_RESULT_BACKEND: redis://redis_shared:6379/13
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: staging
     networks:
       - bs_network_staging
       - shared

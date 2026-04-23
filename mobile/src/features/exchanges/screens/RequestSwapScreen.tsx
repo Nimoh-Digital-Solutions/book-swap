@@ -3,6 +3,7 @@ import {
   useRoute,
   type RouteProp,
 } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Image } from "expo-image";
 import { AlertTriangle, BookOpen, Check, MessageSquare, Send } from "lucide-react-native";
 import React, { useState } from "react";
@@ -36,7 +37,7 @@ export function RequestSwapScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<BrowseStackParamList, "RequestSwap">>();
   const { params } = useRoute<Route>();
 
   const { data: myBooks, isLoading: loadingBooks, isError: booksError, refetch: refetchBooks } = useMyBooks();
@@ -82,13 +83,15 @@ export function RequestSwapScreen() {
             [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
           );
         },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
+          const ax = err as { response?: { data?: Record<string, string | string[]> } };
+          const d = ax?.response?.data;
           const detail =
-            err?.response?.data?.detail ??
-            err?.response?.data?.requested_book_id?.[0] ??
-            err?.response?.data?.offered_book_id?.[0] ??
+            (typeof d?.detail === "string" ? d.detail : undefined) ??
+            (Array.isArray(d?.requested_book_id) ? d?.requested_book_id[0] : undefined) ??
+            (Array.isArray(d?.offered_book_id) ? d?.offered_book_id[0] : undefined) ??
             t("common.error", "Something went wrong");
-          Alert.alert(t("common.error", "Error"), detail);
+          Alert.alert(t("common.error", "Error"), String(detail));
         },
       },
     );
@@ -277,6 +280,8 @@ export function RequestSwapScreen() {
           columnWrapperStyle={s.gridRow}
           contentContainerStyle={s.gridContent}
           showsVerticalScrollIndicator={false}
+          windowSize={5}
+          maxToRenderPerBatch={8}
           keyboardShouldPersistTaps="handled"
           ListHeaderComponent={listHeader}
           ListFooterComponent={listFooter}

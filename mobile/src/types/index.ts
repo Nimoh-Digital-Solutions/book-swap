@@ -87,7 +87,9 @@ export interface Book {
   swap_type: SwapType;
   cover_url?: string | null;
   primary_photo?: string | null;
+  primary_thumbnail?: string | null;
   photos: BookPhoto[];
+  notes?: string | null;
   is_available: boolean;
   created_at: string;
   updated_at: string;

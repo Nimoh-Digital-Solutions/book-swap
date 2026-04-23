@@ -3,6 +3,7 @@
     "loading": "Laden...",
     "success": "Gelukt",
     "error": "Er is iets misgegaan",
+    "networkError": "Verbinding mislukt. Controleer je internet en probeer opnieuw.",
     "retry": "Opnieuw proberen",
     "cancel": "Annuleren",
     "save": "Opslaan",
@@ -18,7 +19,8 @@
     "saving": "Opslaan...",
     "ok": "OK",
     "close": "Sluiten",
-    "unknownUser": "Onbekend"
+    "unknownUser": "Onbekend",
+    "appLogo": "BookSwap logo"
   },
   "errors": {
     "websocketExhausted": "Kan niet opnieuw verbinden. Trek om te vernieuwen of heropen de app."
@@ -128,8 +130,26 @@
     "exchanges": "Ruilen",
     "profile": "Profiel"
   },
+  "time": {
+    "justNow": "zojuist",
+    "minutesAgo": "{{count}}min geleden",
+    "hoursAgo": "{{count}}u geleden",
+    "yesterday": "gisteren",
+    "daysAgo": "{{count}}d geleden",
+    "weeksAgo": "{{count}}w geleden",
+    "monthsAgo": "{{count}}mnd geleden",
+    "yearsAgo": "{{count}}j geleden"
+  },
   "books": {
     "available": "Beschikbaar",
+    "createError": "Boek aanmaken mislukt",
+    "updateError": "Boek bijwerken mislukt",
+    "deleteError": "Boek verwijderen mislukt",
+    "photoUploadError": "Foto uploaden mislukt",
+    "photoDeleteError": "Foto verwijderen mislukt",
+    "photoReorderError": "Foto's herordenen mislukt",
+    "bookCardA11y": "{{title}} door {{author}}",
+    "untitled": "Zonder titel",
     "description": "Beschrijving",
     "genresHeading": "Genres",
     "genres": {
@@ -196,7 +216,13 @@
       "submitting": "Toevoegen...",
       "successTitle": "Boek toegevoegd",
       "successMsg": "Je boek is gepubliceerd!",
-      "errorMsg": "Toevoegen mislukt. Probeer het opnieuw."
+      "errorMsg": "Toevoegen mislukt. Probeer het opnieuw.",
+      "validation": {
+        "titleRequired": "Titel is verplicht",
+        "authorRequired": "Auteur is verplicht",
+        "conditionRequired": "Selecteer een staat",
+        "languageRequired": "Selecteer een taal"
+      }
     },
     "swapTypes": {
       "temporary": "Tijdelijk (met retour)",
@@ -295,6 +321,7 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "cardA11y": "Ruil met @{{user}}. {{left}} en {{right}}. {{status}}.",
     "chats": "Berichten",
     "noChats": "Nog geen gesprekken",
     "noChatsHint": "Start een ruil en chat met je ruilpartner.",
@@ -466,6 +493,7 @@
     "typing": "aan het typen...",
     "attachImage": "Afbeelding bijvoegen",
     "meetupProposal": "Ontmoetingsvoorstel",
+    "imageUnavailable": "Afbeelding niet beschikbaar",
     "loadFailedTitle": "Kan berichten niet laden",
     "loadFailedBody": "Controleer je verbinding en probeer opnieuw.",
     "sendFailed": "Bericht kon niet worden verzonden. Probeer opnieuw."
@@ -584,6 +612,8 @@
     "submitFailed": "Versturen mislukt. Probeer het opnieuw.",
     "submitted": "Beoordeling verstuurd",
     "thankYou": "Bedankt voor je feedback!",
+    "rate1Star": "Geef 1 ster",
+    "rateStars": "Geef {{count}} sterren",
     "loadFailed": "Kan beoordelingsstatus niet laden.",
     "retry": "Opnieuw proberen"
   },
@@ -614,6 +644,8 @@
     "privacy": "Privacy en zichtbaarheid",
     "profilePublic": "Openbaar profiel",
     "profilePublicSubtitle": "Andere gebruikers toestaan je profiel te bekijken",
+    "analyticsOptOut": "Analyses uitschakelen",
+    "analyticsOptOutSubtitle": "Anonieme gebruiksanalyses uitschakelen",
     "profileVisibilityError": "Kan de zichtbaarheid van het profiel niet bijwerken.",
     "currentLocation": "Huidige locatie",
     "deleteAccount": "Account verwijderen",

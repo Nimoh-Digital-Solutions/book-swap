@@ -122,6 +122,8 @@ export function ScannerScreen() {
         <Pressable
           style={({ pressed }) => [s.grantBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
           onPress={requestPermission}
+          accessibilityRole="button"
+          accessibilityLabel={t('scanner.accessibility.grantPermission', 'Grant camera permission')}
         >
           <Text style={s.grantBtnText}>
             {t('scanner.grantPermission', 'Grant Permission')}
@@ -169,6 +171,8 @@ export function ScannerScreen() {
           <Pressable
             style={({ pressed }) => [s.actionBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
             onPress={() => setScanned(false)}
+            accessibilityRole="button"
+            accessibilityLabel={t('scanner.accessibility.scanAgain', 'Scan again')}
           >
             <RotateCcw size={18} color="#fff" />
             <Text style={s.actionBtnText}>{t('common.retry', 'Scan Again')}</Text>
@@ -181,6 +185,8 @@ export function ScannerScreen() {
             { backgroundColor: cardBg, borderColor: cardBorder, opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => navigation.navigate('BookSearch')}
+          accessibilityRole="button"
+          accessibilityLabel={t('scanner.accessibility.searchByTitle', 'Search by title')}
         >
           <Search size={18} color={accent} />
           <Text style={[s.manualBtnText, { color: c.text.primary }]}>
@@ -194,6 +200,8 @@ export function ScannerScreen() {
             { backgroundColor: cardBg, borderColor: cardBorder, opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => navigation.navigate('AddBook', {})}
+          accessibilityRole="button"
+          accessibilityLabel={t('scanner.accessibility.addManually', 'Add book manually')}
         >
           <PenLine size={18} color={accent} />
           <Text style={[s.manualBtnText, { color: c.text.primary }]}>

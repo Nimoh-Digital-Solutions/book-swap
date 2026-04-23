@@ -1,5 +1,6 @@
 import { Search } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, TextInput, View } from "react-native";
 
 import { radius, shadows, spacing } from "@/constants/theme";
@@ -18,6 +19,7 @@ export function HomeSearchBar({
   onSubmit,
   placeholder,
 }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
 
@@ -33,6 +35,8 @@ export function HomeSearchBar({
     >
       <Search size={20} color={c.text.subtle} />
       <TextInput
+        accessibilityRole="search"
+        accessibilityLabel={t("home.search", "Search books")}
         style={[s.input, { color: c.text.primary }]}
         placeholder={placeholder}
         placeholderTextColor={c.text.placeholder}

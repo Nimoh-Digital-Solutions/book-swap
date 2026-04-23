@@ -28,6 +28,7 @@ export interface ExchangeBook {
   cover_url: string;
   condition: string;
   primary_photo: string | null;
+  primary_thumbnail: string | null;
 }
 
 export interface ConditionsAcceptanceItem {

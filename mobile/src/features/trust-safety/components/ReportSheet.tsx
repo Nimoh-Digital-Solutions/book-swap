@@ -88,7 +88,7 @@ export function ReportSheet({
           );
         },
         onError: (err) => {
-          const is403 = (err as any)?.response?.status === 403;
+          const is403 = (err as { response?: { status?: number } })?.response?.status === 403;
           const message = is403
             ? t('report.emailNotVerified', 'You need to verify your email before reporting.')
             : t('report.errorMessage', 'Something went wrong. Please try again.');

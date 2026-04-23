@@ -155,8 +155,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            # Override nimoh_base email templates here, e.g.:
-            # BASE_DIR / 'templates',
+            _PROJECT_ROOT / "templates",
         ],
         "APP_DIRS": True,
         "OPTIONS": {

@@ -1,0 +1,26 @@
+{% load i18n %}{% trans "Verify Your Email Address" %} — BookSwap
+
+{% blocktrans with name=user.get_full_name|default:user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% trans "Welcome to BookSwap! To complete your registration and start discovering books in your community, please verify your email address." %}
+
+{% trans "Verification Link:" %}
+{{ verification_url }}
+
+{% trans "Once verified, you'll be able to:" %}
+- {% trans "List your books for swapping" %}
+- {% trans "Browse and discover books near you" %}
+- {% trans "Connect with readers in your community" %}
+
+{% trans "SECURITY NOTICE:" %}
+{% blocktrans with hours=token_expiry_hours|default:"24" %}- This link expires in {{ hours }} hours{% endblocktrans %}
+- {% trans "If you did not create an account, please ignore this email" %}
+- {% trans "Never share this link with anyone" %}
+
+{% trans "Happy swapping!" %}
+{% trans "The BookSwap Team" %}
+
+---
+{% trans "This email was sent to" %} {{ user.email }}
+© {% now "Y" %} BookSwap. {% trans "All rights reserved." %}
+{% trans "Contact:" %} info@bookswap.com

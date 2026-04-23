@@ -277,6 +277,8 @@ export function UserProfileScreen() {
               s.actionRow,
               pressed && { opacity: 0.7 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.public.a11y.viewReviews', 'View reviews')}
           >
             <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
               <MessageSquareQuote size={18} color={accent} />
@@ -321,6 +323,12 @@ export function UserProfileScreen() {
               s.actionRow,
               { opacity: isBlocked ? 0.45 : pressed ? 0.7 : 1 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isBlocked
+                ? t('profile.public.a11y.userBlocked', 'User blocked')
+                : t('profile.public.a11y.blockUser', 'Block user')
+            }
           >
             <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
               <ShieldAlert size={18} color={accent} />
@@ -343,6 +351,8 @@ export function UserProfileScreen() {
               s.actionRow,
               { opacity: pressed ? 0.7 : 1 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('profile.public.a11y.reportUser', 'Report user')}
           >
             <View style={[s.actionIcon, { backgroundColor: accent + '18' }]}>
               <Flag size={18} color={accent} />

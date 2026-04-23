@@ -53,6 +53,11 @@ interface BookOwner {
   avg_rating: string;
 }
 
+interface BookDetailData {
+  owner: BookOwner | string;
+  [key: string]: unknown;
+}
+
 export function BookDetailScreen() {
   const { t } = useTranslation();
   const c = useColors();
@@ -121,7 +126,8 @@ export function BookDetailScreen() {
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const accent = c.auth.golden;
 
-  const ownBookDetected = !isLoading && rawBook && (rawBook as any).owner?.id === currentUserId;
+  const detail = rawBook as unknown as BookDetailData | undefined;
+  const ownBookDetected = !isLoading && detail && typeof detail.owner === 'object' && detail.owner?.id === currentUserId;
   useLayoutEffect(() => {
     if (!ownBookDetected) return;
     navigation.setOptions({
@@ -154,8 +160,7 @@ export function BookDetailScreen() {
 
   const handleStatusToggle = useCallback(() => {
     if (!rawBook || updateBook.isPending) return;
-    const book = rawBook as any;
-    const newStatus = book.status === "available" ? "returned" : "available";
+    const newStatus = rawBook.status === "available" ? "returned" : "available";
     updateBook.mutate(
       { status: newStatus },
       {
@@ -197,9 +202,9 @@ export function BookDetailScreen() {
     );
   }
 
-  const book = rawBook as any;
+  const book = rawBook as unknown as BookDetailData & typeof rawBook;
   const owner: BookOwner | null =
-    typeof book.owner === "object" && book.owner !== null ? book.owner : null;
+    typeof book.owner === "object" && book.owner !== null ? (book.owner as BookOwner) : null;
   const ownerName = owner?.username ?? t("common.unknownUser", "Unknown");
 
   const photoUris: string[] = [];
@@ -608,7 +613,7 @@ interface ExchangeAwareCtaProps {
   accent: string;
   cardBorder: string;
   isDark: boolean;
-  colors: any;
+  colors: ReturnType<typeof useColors>;
 }
 
 function ExchangeAwareCta({

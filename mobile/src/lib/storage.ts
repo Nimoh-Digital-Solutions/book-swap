@@ -47,6 +47,8 @@ const kv = {
 const Keys = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
+  PUSH_TOKEN: 'push_token',
+  USER_JSON: 'bookswap_user_json_secure',
   BIOMETRIC_ENABLED: 'biometric_enabled',
   ADD_BOOK_PREFERENCE: 'add_book_preference',
   DELETION_CANCEL_TOKEN: 'deletion_cancel_token',
@@ -65,10 +67,19 @@ export const tokenStorage = {
     kv.remove(Keys.ACCESS_TOKEN);
     kv.remove(Keys.REFRESH_TOKEN);
   },
+  getPushToken: (): string | null => kv.get(Keys.PUSH_TOKEN),
+  setPushToken: (token: string) => kv.set(Keys.PUSH_TOKEN, token),
+  clearPushToken: () => kv.remove(Keys.PUSH_TOKEN),
   getBiometricEnabled: (): boolean => kv.get(Keys.BIOMETRIC_ENABLED) === 'true',
   setBiometricEnabled: (value: boolean) => {
     kv.set(Keys.BIOMETRIC_ENABLED, String(value));
   },
+};
+
+export const secureUserStorage = {
+  get: (): string | null => kv.get(Keys.USER_JSON),
+  set: (value: string) => kv.set(Keys.USER_JSON, value),
+  remove: () => kv.remove(Keys.USER_JSON),
 };
 
 export const deletionStorage = {

@@ -252,29 +252,40 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: yarn
-          cache-dependency-path: mobile/yarn.lock
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Install shared package dependencies
-        run: npm install
+        run: npm ci
         working-directory: packages/shared
 
       - name: Audit JS dependencies
-        run: yarn audit --groups dependencies --level high || true
+        run: npm audit --omit=dev --audit-level=high || true
         continue-on-error: true
 
       - name: Type-check
-        run: yarn type-check
+        run: npm run type-check
 
       - name: Lint
-        run: yarn lint
-        continue-on-error: true
+        run: npm run lint
+
+      - name: Check version sync (app.json ↔ package.json)
+        run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "app.json version:     $APP_VERSION"
+          echo "package.json version: $PKG_VERSION"
+          if [ "$APP_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Version mismatch! app.json ($APP_VERSION) ≠ package.json ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "✅ Versions match: $APP_VERSION"
 
       - name: Tests
-        run: yarn test --ci --forceExit
+        run: npm test -- --ci --forceExit
 
   # ── Container Image Scanning ─────────────────────────────────────────────
   container-scan:

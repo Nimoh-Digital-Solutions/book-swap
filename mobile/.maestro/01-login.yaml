@@ -1,0 +1,15 @@
+# Flow 1: Login with email
+appId: com.bookswap.mobile
+---
+- launchApp
+- assertVisible: "Log In"
+- tapOn:
+    id: "email-input"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "password-input"
+- inputText: ${PASSWORD}
+- tapOn: "Log In"
+- assertVisible:
+    text: "Home"
+    optional: true

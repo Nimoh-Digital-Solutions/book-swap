@@ -78,11 +78,12 @@ class MessageViewSet(GenericViewSet):
             )
 
         queryset = self.get_queryset()
+        ctx = {"request": request}
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = MessageSerializer(page, many=True)
+            serializer = MessageSerializer(page, many=True, context=ctx)
             return self.get_paginated_response(serializer.data)
-        serializer = MessageSerializer(queryset, many=True)
+        serializer = MessageSerializer(queryset, many=True, context=ctx)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -111,9 +112,30 @@ class MessageViewSet(GenericViewSet):
         self._broadcast_to_ws_group(message)
 
         return Response(
-            MessageSerializer(message).data,
+            MessageSerializer(message, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @staticmethod
+    def _absolute_media_url(field):
+        """Return an absolute URL for a FileField, handling both S3 and local storage."""
+        if not field:
+            return None
+        url = field.url
+        if url.startswith(("http://", "https://")):
+            return url
+        from django.conf import settings as _s
+
+        frontend_url = getattr(_s, "FRONTEND_URL", "").rstrip("/")
+        if frontend_url:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(frontend_url)
+            base = f"{parsed.scheme}://{parsed.hostname}"
+            if parsed.port and parsed.port not in (80, 443):
+                base += f":{parsed.port}"
+            return f"{base}{url}"
+        return url
 
     @staticmethod
     def _broadcast_to_ws_group(message):
@@ -129,6 +151,8 @@ class MessageViewSet(GenericViewSet):
         sender = message.sender
         import logging
 
+        abs_url = MessageViewSet._absolute_media_url
+
         try:
             async_to_sync(channel_layer.group_send)(
                 group_name,
@@ -139,10 +163,10 @@ class MessageViewSet(GenericViewSet):
                     "sender": {
                         "id": str(sender.id),
                         "username": sender.username,
-                        "avatar": sender.avatar.url if sender.avatar else None,
+                        "avatar": abs_url(sender.avatar),
                     },
                     "content": message.content,
-                    "image": message.image.url if message.image else None,
+                    "image": abs_url(message.image),
                     "read_at": None,
                     "created_at": message.created_at.isoformat(),
                 },

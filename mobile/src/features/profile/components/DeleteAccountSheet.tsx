@@ -76,7 +76,12 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
       onRequestClose={resetAndClose}
     >
       <View style={s.backdrop}>
-        <Pressable style={s.backdropTap} onPress={resetAndClose} />
+        <Pressable
+          style={s.backdropTap}
+          onPress={resetAndClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('accountDeletion.a11y.dismissSheet', 'Dismiss delete account')}
+        />
         <View style={[s.sheet, { backgroundColor: sheetBg }]}>
           <View style={[s.handle, { backgroundColor: handleBg }]} />
 
@@ -88,7 +93,13 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
                 {t('accountDeletion.title', 'Delete Account')}
               </Text>
             </View>
-            <Pressable onPress={resetAndClose} hitSlop={12} style={s.closeBtn}>
+            <Pressable
+              onPress={resetAndClose}
+              hitSlop={12}
+              style={s.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
+            >
               <X size={20} color={c.text.secondary} />
             </Pressable>
           </View>
@@ -149,6 +160,7 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
                 autoComplete="password"
                 returnKeyType="done"
                 onSubmitEditing={handleConfirm}
+                accessibilityLabel={t('accountDeletion.a11y.confirmPassword', 'Confirm your password')}
               />
             </>
           )}
@@ -164,6 +176,8 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
                 s.cancelBtn,
                 { borderColor: cardBorder, opacity: pressed ? 0.7 : 1 },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.cancel', 'Cancel')}
             >
               <Text style={[s.cancelText, { color: c.text.secondary }]}>
                 {t('common.cancel', 'Cancel')}
@@ -180,6 +194,8 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
                   opacity: (!isSocialOnly && !password.trim()) || pressed || deleteAccount.isPending ? 0.6 : 1,
                 },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('accountDeletion.a11y.confirmDelete', 'Delete my account')}
             >
               {deleteAccount.isPending ? (
                 <ActivityIndicator size="small" color="#fff" />

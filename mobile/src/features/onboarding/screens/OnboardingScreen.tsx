@@ -202,6 +202,8 @@ export function OnboardingScreen() {
             <Pressable
               onPress={handleComplete}
               disabled={isBusy}
+              accessibilityRole="button"
+              accessibilityLabel={t('onboarding.complete', 'Get Started')}
               style={({ pressed }) => [
                 s.primaryBtn,
                 {
@@ -226,6 +228,12 @@ export function OnboardingScreen() {
             <Pressable
               onPress={handleGps}
               disabled={isBusy}
+              accessibilityRole="button"
+              accessibilityLabel={
+                gpsLoading
+                  ? t('onboarding.detectingLocation', 'Detecting location...')
+                  : t('onboarding.useMyLocation', 'Use My Location')
+              }
               style={({ pressed }) => [
                 s.gpsBtn,
                 {
@@ -273,6 +281,10 @@ export function OnboardingScreen() {
                 style={[s.input, { color: c.text.primary }]}
                 value={postcode}
                 onChangeText={setPostcode}
+                accessibilityLabel={t(
+                  'onboarding.postcodeLabel',
+                  'City, Neighborhood, or Zip Code',
+                )}
                 placeholder={t(
                   'onboarding.postcodePlaceholder',
                   'e.g. Amsterdam West, 1054',
@@ -287,6 +299,8 @@ export function OnboardingScreen() {
             <Pressable
               onPress={handlePostcodeSubmit}
               disabled={isBusy || !postcode.trim()}
+              accessibilityRole="button"
+              accessibilityLabel={t('onboarding.setLocation', 'Set Your Location')}
               style={({ pressed }) => [
                 s.postcodeBtn,
                 {
@@ -334,6 +348,8 @@ export function OnboardingScreen() {
           <Pressable
             onPress={handleSkip}
             disabled={isBusy}
+            accessibilityRole="button"
+            accessibilityLabel={t('onboarding.skip', 'Skip')}
             style={({ pressed }) => [
               s.skipBtn,
               { opacity: isBusy ? 0.4 : pressed ? 0.7 : 1 },

@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Plus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -69,9 +69,10 @@ export function AddWishlistSheet({ open, onClose, prefill }: Props) {
           t('books.wishlist.addedMsg', "We'll let you know when a matching book becomes available."),
         );
       },
-      onError: (err: any) => {
-        const detail = err?.response?.data?.detail
-          ?? err?.response?.data?.non_field_errors?.[0]
+      onError: (err: unknown) => {
+        const ax = err as { response?: { data?: { detail?: string; non_field_errors?: string[] } } };
+        const detail = ax?.response?.data?.detail
+          ?? ax?.response?.data?.non_field_errors?.[0]
           ?? t('books.wishlist.addError', 'Failed to add to wishlist.');
         Alert.alert(t('common.error', 'Error'), String(detail));
       },
@@ -79,7 +80,7 @@ export function AddWishlistSheet({ open, onClose, prefill }: Props) {
   }, [canSubmit, title, author, isbn, genre, prefill, addItem, resetForm, onClose, t]);
 
   const renderBackdrop = useCallback(
-    (props: any) => (
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}

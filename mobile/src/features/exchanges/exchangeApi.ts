@@ -45,6 +45,15 @@ export async function confirmSwap(
   return data;
 }
 
+export async function completeExchange(
+  exchangeId: string,
+): Promise<ExchangeDetail> {
+  const { data } = await http.post<ExchangeDetail>(
+    API.exchanges.complete(exchangeId),
+  );
+  return data;
+}
+
 export async function requestReturn(
   exchangeId: string,
 ): Promise<ExchangeDetail> {

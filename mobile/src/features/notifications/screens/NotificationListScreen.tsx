@@ -196,6 +196,9 @@ export function NotificationListScreen() {
         onRefresh={refetch}
         refreshing={isRefetching}
         ListHeaderComponent={ListHeader}
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        removeClippedSubviews
         ListEmptyComponent={
           isError ? (
             <EmptyState

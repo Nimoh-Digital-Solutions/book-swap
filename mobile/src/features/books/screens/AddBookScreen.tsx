@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -15,13 +15,17 @@ import { Image } from "expo-image";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { BookOpen, Check } from "lucide-react-native";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius } from "@/constants/theme";
 import { useCreateBook, type CreateBookPayload } from "@/features/books/hooks/useBooks";
 import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "@/features/books/constants";
-import type { ScanStackParamList } from "@/navigation/types";
+import type { ScanStackParamList, MainTabNavigationProp } from "@/navigation/types";
 
 type Route = RouteProp<ScanStackParamList, "AddBook">;
 type Nav = NativeStackNavigationProp<ScanStackParamList, "AddBook">;
@@ -63,6 +67,25 @@ function resolveLanguage(raw?: string): CreateBookPayload["language"] | null {
   return LANG_CODE_MAP[key] ?? "other";
 }
 
+function createAddBookSchema(t: TFunction) {
+  return z.object({
+    title: z.string().min(1, t("books.addBook.validation.titleRequired", "Title is required")).max(200),
+    author: z.string().min(1, t("books.addBook.validation.authorRequired", "Author is required")).max(200),
+    description: z.string().max(2000),
+    condition: z.enum(["new", "like_new", "good", "acceptable"], {
+      message: t("books.addBook.validation.conditionRequired", "Select a condition"),
+    }),
+    language: z.enum(["en", "nl", "de", "fr", "es", "other"], {
+      message: t("books.addBook.validation.languageRequired", "Select a language"),
+    }),
+    swap_type: z.enum(["temporary", "permanent"]),
+    genres: z.array(z.string()).max(MAX_GENRES),
+    notes: z.string().max(200),
+  });
+}
+
+type AddBookFormValues = z.infer<ReturnType<typeof createAddBookSchema>>;
+
 export function AddBookScreen() {
   const { t } = useTranslation();
   const c = useColors();
@@ -70,6 +93,7 @@ export function AddBookScreen() {
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const createBook = useCreateBook();
+  const schema = useMemo(() => createAddBookSchema(t), [t]);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -78,45 +102,54 @@ export function AddBookScreen() {
   const inputBg = isDark ? c.auth.card : c.surface.white;
   const inputBorder = isDark ? c.auth.cardBorder : c.border.default;
 
-  const [title, setTitle] = useState(params?.title ?? "");
-  const [author, setAuthor] = useState(params?.author ?? "");
-  const [description, setDescription] = useState(params?.description ?? "");
-  const [condition, setCondition] = useState<CreateBookPayload["condition"] | null>(null);
-  const [language, setLanguage] = useState<CreateBookPayload["language"] | null>(
-    resolveLanguage(params?.language),
-  );
-  const [swapType, setSwapType] = useState<CreateBookPayload["swap_type"]>("temporary");
-  const [genres, setGenres] = useState<string[]>([]);
-  const [notes, setNotes] = useState("");
-
   const coverUrl = params?.cover_url;
   const isbn = params?.isbn;
 
-  const canSubmit = useMemo(
-    () => title.trim().length > 0 && author.trim().length > 0 && condition !== null && language !== null,
-    [title, author, condition, language],
-  );
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<AddBookFormValues>({
+    resolver: zodResolver(schema),
+    mode: "onChange",
+    defaultValues: {
+      title: params?.title ?? "",
+      author: params?.author ?? "",
+      description: params?.description ?? "",
+      condition: undefined,
+      language: resolveLanguage(params?.language) ?? undefined,
+      swap_type: "temporary",
+      genres: [],
+      notes: "",
+    },
+  });
+
+  const genresValue = watch("genres") ?? [];
 
   const toggleGenre = (g: string) => {
-    setGenres((prev) =>
-      prev.includes(g) ? prev.filter((x) => x !== g) : prev.length < MAX_GENRES ? [...prev, g] : prev,
-    );
+    const current = genresValue;
+    const updated = current.includes(g)
+      ? current.filter((x) => x !== g)
+      : current.length < MAX_GENRES
+        ? [...current, g]
+        : current;
+    setValue("genres", updated, { shouldValidate: true });
   };
 
-  const handleSubmit = () => {
-    if (!canSubmit || !condition || !language) return;
-
+  const onSubmit = (values: AddBookFormValues) => {
     const payload: CreateBookPayload = {
-      title: title.trim(),
-      author: author.trim(),
-      condition,
-      language,
-      swap_type: swapType,
+      title: values.title.trim(),
+      author: values.author.trim(),
+      condition: values.condition,
+      language: values.language,
+      swap_type: values.swap_type,
       ...(isbn && { isbn }),
-      ...(description.trim() && { description: description.trim() }),
+      ...(values.description?.trim() && { description: values.description.trim() }),
       ...(coverUrl && { cover_url: coverUrl }),
-      ...(genres.length > 0 && { genres }),
-      ...(notes.trim() && { notes: notes.trim() }),
+      ...(values.genres.length > 0 && { genres: values.genres }),
+      ...(values.notes?.trim() && { notes: values.notes.trim() }),
       ...(params?.page_count && { page_count: params.page_count }),
       ...(params?.publish_year && { publish_year: params.publish_year }),
     };
@@ -125,20 +158,16 @@ export function AddBookScreen() {
       onSuccess: (data) => {
         const goToMyBooks = () => {
           navigation.popToTop();
-          const tabNav = navigation.getParent();
-          if (tabNav) {
-            (tabNav as any).navigate("ProfileTab", { screen: "MyBooks" });
-          }
+          const tabNav = navigation.getParent<MainTabNavigationProp>();
+          tabNav?.navigate("ProfileTab", { screen: "MyBooks" });
         };
         const goToPhotos = () => {
           navigation.popToTop();
-          const tabNav = navigation.getParent();
-          if (tabNav) {
-            (tabNav as any).navigate("ProfileTab", {
-              screen: "EditBook",
-              params: { bookId: data.id },
-            });
-          }
+          const tabNav = navigation.getParent<MainTabNavigationProp>();
+          tabNav?.navigate("ProfileTab", {
+            screen: "EditBook",
+            params: { bookId: data.id },
+          });
         };
 
         Alert.alert(
@@ -202,151 +231,213 @@ export function AddBookScreen() {
 
         {/* ── Title ── */}
         <SectionLabel text={t("books.addBook.titleLabel", "Title")} required c={c} />
-        <TextInput
-          style={[s.input, { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary }]}
-          value={title}
-          onChangeText={setTitle}
-          placeholder={t("books.addBook.titlePlaceholder", "e.g. The Great Gatsby")}
-          placeholderTextColor={c.text.placeholder}
+        <Controller
+          control={control}
+          name="title"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[s.input, { backgroundColor: inputBg, borderColor: errors.title ? c.status.error : inputBorder, color: c.text.primary }]}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder={t("books.addBook.titlePlaceholder", "e.g. The Great Gatsby")}
+              placeholderTextColor={c.text.placeholder}
+              accessibilityLabel={t("books.addBook.accessibility.titleInput", "Book title")}
+            />
+          )}
         />
+        {errors.title && <Text style={[s.errorText, { color: c.status.error }]}>{errors.title.message}</Text>}
 
         {/* ── Author ── */}
         <SectionLabel text={t("books.addBook.authorLabel", "Author")} required c={c} />
-        <TextInput
-          style={[s.input, { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary }]}
-          value={author}
-          onChangeText={setAuthor}
-          placeholder={t("books.addBook.authorPlaceholder", "e.g. F. Scott Fitzgerald")}
-          placeholderTextColor={c.text.placeholder}
+        <Controller
+          control={control}
+          name="author"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[s.input, { backgroundColor: inputBg, borderColor: errors.author ? c.status.error : inputBorder, color: c.text.primary }]}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder={t("books.addBook.authorPlaceholder", "e.g. F. Scott Fitzgerald")}
+              placeholderTextColor={c.text.placeholder}
+              accessibilityLabel={t("books.addBook.accessibility.authorInput", "Author name")}
+            />
+          )}
         />
+        {errors.author && <Text style={[s.errorText, { color: c.status.error }]}>{errors.author.message}</Text>}
 
         {/* ── Description ── */}
         <SectionLabel text={t("books.addBook.descriptionLabel", "Description")} c={c} />
-        <TextInput
-          style={[
-            s.input,
-            s.multiline,
-            { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
-          ]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder={t("books.addBook.descriptionPlaceholder", "Brief description...")}
-          placeholderTextColor={c.text.placeholder}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
+        <Controller
+          control={control}
+          name="description"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[
+                s.input,
+                s.multiline,
+                { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
+              ]}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder={t("books.addBook.descriptionPlaceholder", "Brief description...")}
+              placeholderTextColor={c.text.placeholder}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              accessibilityLabel={t("books.addBook.accessibility.descriptionInput", "Book description")}
+            />
+          )}
         />
 
         {/* ── Condition ── */}
         <SectionLabel text={t("books.addBook.conditionLabel", "Condition")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {CONDITIONS.map((item) => {
-              const selected = condition === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setCondition(item.key)}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      s.chipText,
-                      { color: selected ? "#152018" : c.text.secondary },
-                    ]}
-                  >
-                    {t(`books.conditions.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <Controller
+          control={control}
+          name="condition"
+          render={({ field: { onChange, value } }) => (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
+              <View style={s.chipRow}>
+                {CONDITIONS.map((item) => {
+                  const selected = value === item.key;
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => onChange(item.key)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("books.addBook.accessibility.selectCondition", "Select condition: {{label}}", {
+                        label: t(`books.conditions.${item.key}`, item.label),
+                      })}
+                      style={[
+                        s.chip,
+                        {
+                          backgroundColor: selected ? accent : cardBg,
+                          borderColor: selected ? accent : cardBorder,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          s.chipText,
+                          { color: selected ? "#152018" : c.text.secondary },
+                        ]}
+                      >
+                        {t(`books.conditions.${item.key}`, item.label)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
+        />
+        {errors.condition && <Text style={[s.errorText, { color: c.status.error }]}>{errors.condition.message}</Text>}
 
         {/* ── Language ── */}
         <SectionLabel text={t("books.addBook.languageLabel", "Language")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {LANGUAGES.map((item) => {
-              const selected = language === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setLanguage(item.key)}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      s.chipText,
-                      { color: selected ? "#152018" : c.text.secondary },
-                    ]}
-                  >
-                    {t(`books.languages.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <Controller
+          control={control}
+          name="language"
+          render={({ field: { onChange, value } }) => (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
+              <View style={s.chipRow}>
+                {LANGUAGES.map((item) => {
+                  const selected = value === item.key;
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => onChange(item.key)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("books.addBook.accessibility.selectLanguage", "Select language: {{label}}", {
+                        label: t(`books.languages.${item.key}`, item.label),
+                      })}
+                      style={[
+                        s.chip,
+                        {
+                          backgroundColor: selected ? accent : cardBg,
+                          borderColor: selected ? accent : cardBorder,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          s.chipText,
+                          { color: selected ? "#152018" : c.text.secondary },
+                        ]}
+                      >
+                        {t(`books.languages.${item.key}`, item.label)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
+        />
+        {errors.language && <Text style={[s.errorText, { color: c.status.error }]}>{errors.language.message}</Text>}
 
         {/* ── Swap Type ── */}
         <SectionLabel text={t("books.addBook.swapTypeLabel", "Swap Type")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {SWAP_TYPES.map((item) => {
-              const selected = swapType === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setSwapType(item.key)}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      s.chipText,
-                      { color: selected ? "#152018" : c.text.secondary },
-                    ]}
-                  >
-                    {t(`books.swapTypes.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <Controller
+          control={control}
+          name="swap_type"
+          render={({ field: { onChange, value } }) => (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
+              <View style={s.chipRow}>
+                {SWAP_TYPES.map((item) => {
+                  const selected = value === item.key;
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => onChange(item.key)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("books.addBook.accessibility.selectSwapType", "Select swap type: {{label}}", {
+                        label: t(`books.swapTypes.${item.key}`, item.label),
+                      })}
+                      style={[
+                        s.chip,
+                        {
+                          backgroundColor: selected ? accent : cardBg,
+                          borderColor: selected ? accent : cardBorder,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          s.chipText,
+                          { color: selected ? "#152018" : c.text.secondary },
+                        ]}
+                      >
+                        {t(`books.swapTypes.${item.key}`, item.label)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
+        />
 
         {/* ── Genres ── */}
         <SectionLabel
-          text={`${t("books.addBook.genresLabel", "Genres")} (${genres.length}/${MAX_GENRES})`}
+          text={`${t("books.addBook.genresLabel", "Genres")} (${genresValue.length}/${MAX_GENRES})`}
           c={c}
         />
         <View style={s.genreGrid}>
           {GENRE_VALUES.map((g) => {
-            const selected = genres.includes(g);
-            const disabled = !selected && genres.length >= MAX_GENRES;
+            const selected = genresValue.includes(g);
+            const disabled = !selected && genresValue.length >= MAX_GENRES;
             const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
             return (
               <Pressable
                 key={g}
                 onPress={() => !disabled && toggleGenre(g)}
+                accessibilityRole="button"
+                accessibilityLabel={t("books.addBook.accessibility.toggleGenre", "Toggle genre: {{genre}}", {
+                  genre: t(`books.genres.${slug}`, g),
+                })}
                 style={[
                   s.genreChip,
                   {
@@ -372,31 +463,41 @@ export function AddBookScreen() {
 
         {/* ── Notes ── */}
         <SectionLabel text={t("books.addBook.notesLabel", "Notes for swappers")} c={c} />
-        <TextInput
-          style={[
-            s.input,
-            s.multiline,
-            { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
-          ]}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder={t("books.addBook.notesPlaceholder", "Any notes for potential swappers...")}
-          placeholderTextColor={c.text.placeholder}
-          multiline
-          numberOfLines={2}
-          textAlignVertical="top"
-          maxLength={200}
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[
+                s.input,
+                s.multiline,
+                { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
+              ]}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder={t("books.addBook.notesPlaceholder", "Any notes for potential swappers...")}
+              placeholderTextColor={c.text.placeholder}
+              multiline
+              numberOfLines={2}
+              textAlignVertical="top"
+              maxLength={200}
+              accessibilityLabel={t("books.addBook.accessibility.notesInput", "Notes for swappers")}
+            />
+          )}
         />
 
         {/* ── Submit ── */}
         <Pressable
-          onPress={handleSubmit}
-          disabled={!canSubmit || createBook.isPending}
+          onPress={handleSubmit(onSubmit)}
+          disabled={!isValid || createBook.isPending}
+          accessibilityRole="button"
+          accessibilityLabel={t("books.addBook.accessibility.listBook", "List book")}
           style={({ pressed }) => [
             s.submitBtn,
             {
               backgroundColor: accent,
-              opacity: !canSubmit ? 0.5 : pressed ? 0.9 : 1,
+              opacity: !isValid ? 0.5 : pressed ? 0.9 : 1,
             },
           ]}
         >
@@ -484,6 +585,7 @@ const s = StyleSheet.create({
     paddingTop: 12,
   },
 
+  errorText: { fontSize: 12, marginTop: 4 },
   chipScroll: { marginTop: 4 },
   chipRow: {
     flexDirection: "row",

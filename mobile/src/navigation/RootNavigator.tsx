@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useColors } from '@/hooks/useColors';
 import { useDeletionCancelDeepLink } from '@/hooks/useDeletionCancelDeepLink';
 import { useOfflineMutationDrain } from '@/hooks/useOfflineMutationQueue';
+import { hydrateOfflineQueue } from '@/lib/offlineMutationQueue';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -29,7 +30,7 @@ export function RootNavigator() {
   useOfflineMutationDrain();
 
   useEffect(() => {
-    void hydrate();
+    void hydrateOfflineQueue().then(() => hydrate());
   }, [hydrate]);
 
   useEffect(() => {

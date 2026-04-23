@@ -1,0 +1,10 @@
+# Flow 2: Browse books from home screen
+appId: com.bookswap.mobile
+---
+- launchApp
+- assertVisible: "Recently Added"
+  optional: true
+- tapOn: "Browse"
+- assertVisible: "Map"
+  optional: true
+- back

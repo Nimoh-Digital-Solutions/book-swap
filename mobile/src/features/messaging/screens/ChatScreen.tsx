@@ -16,6 +16,7 @@ import { MessageCircle } from 'lucide-react-native';
 
 import { spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { hapticImpact } from '@/lib/haptics';
 import type { MessagesStackParamList } from '@/navigation/types';
 import type { Message } from '@/types';
 
@@ -107,6 +108,7 @@ export function ChatScreen() {
 
   const handleSend = useCallback(
     (content: string, imageUri?: string) => {
+      void hapticImpact('light');
       requireVerified(() => {
         sendMutation.mutate(
           { exchangeId: params.exchangeId, content: content || undefined, imageUri },
@@ -190,6 +192,8 @@ export function ChatScreen() {
                 opacity: isFetching || pressed ? 0.85 : 1,
               },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.retry', 'Retry')}
           >
             {isFetching ? (
               <ActivityIndicator color="#fff" />
@@ -251,6 +255,9 @@ export function ChatScreen() {
                 contentOffset.y + layoutMeasurement.height >= contentSize.height - 80;
             }}
             scrollEventThrottle={100}
+            windowSize={7}
+            maxToRenderPerBatch={15}
+            removeClippedSubviews
           />
         )}
 

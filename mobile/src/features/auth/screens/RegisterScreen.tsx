@@ -43,6 +43,7 @@ export function RegisterScreen() {
     control,
     handleSubmit,
     watch,
+    setError,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(schema),
@@ -79,17 +80,32 @@ export function RegisterScreen() {
         onError: (err) => {
           const ax = err as { response?: { data?: Record<string, unknown> } };
           const raw = ax.response?.data;
-          const msg =
-            typeof raw?.detail === 'string'
+          if (!raw) { showErrorToast(t('common.error')); return; }
+
+          const fieldKeys = Object.keys(raw).filter(
+            (k) => k !== 'detail' && k !== 'non_field_errors',
+          ) as (keyof RegisterInput)[];
+
+          if (fieldKeys.length > 0) {
+            for (const key of fieldKeys) {
+              const val = raw[key];
+              const msg = Array.isArray(val) ? val.join('. ') : String(val ?? '');
+              if (msg) setError(key, { message: msg });
+            }
+            return;
+          }
+
+          const detail =
+            typeof raw.detail === 'string'
               ? raw.detail
-              : raw
-                ? Object.values(raw).flat().join('. ')
+              : Array.isArray(raw.non_field_errors)
+                ? (raw.non_field_errors as string[]).join('. ')
                 : t('common.error');
-          showErrorToast(String(msg));
+          setError('root', { message: detail });
         },
       });
     },
-    [register, nav, t],
+    [register, nav, t, setError],
   );
 
   return (
@@ -287,6 +303,14 @@ export function RegisterScreen() {
       />
       </Animated.View>
 
+      {errors.root?.message && (
+        <View style={[s.rootError, { backgroundColor: c.status.error + '14', borderColor: c.status.error + '40' }]}>
+          <Text style={[s.rootErrorText, { color: c.status.error }]}>
+            {errors.root.message}
+          </Text>
+        </View>
+      )}
+
       <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 6)}>
         <AuthButton
           label={t('auth.register')}
@@ -377,5 +401,19 @@ const s = StyleSheet.create({
   },
   footerText: {
     ...typography.body,
+  },
+  rootError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  rootErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
   },
 });

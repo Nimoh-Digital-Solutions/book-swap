@@ -76,6 +76,7 @@ export function HomeCommunitySection({
   browseMapLabel,
   onBrowseMap,
 }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
 
@@ -128,6 +129,8 @@ export function HomeCommunitySection({
       )}
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("home.viewFullMap", "Browse Full Map")}
         style={({ pressed }) => [s.mapCta, { backgroundColor: ctaBg, borderWidth: isDark ? 0 : 1, borderColor: statBorder, opacity: pressed ? 0.9 : 1 }]}
         onPress={onBrowseMap}
       >

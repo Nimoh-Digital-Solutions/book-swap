@@ -90,10 +90,42 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 jest.mock('react-native-reanimated', () => {
-  const actual = jest.requireActual('react-native-reanimated/mock');
+  const { View } = require('react-native');
   return {
-    ...actual,
+    __esModule: true,
+    default: {
+      createAnimatedComponent: (component: any) => component,
+      View,
+      Text: View,
+      Image: View,
+      ScrollView: View,
+      FlatList: View,
+    },
+    useSharedValue: jest.fn((init: any) => ({ value: init })),
+    useAnimatedStyle: jest.fn(() => ({})),
+    withSpring: jest.fn((val: any) => val),
+    withTiming: jest.fn((val: any) => val),
+    withDelay: jest.fn((_delay: any, val: any) => val),
+    withSequence: jest.fn((...args: any[]) => args[args.length - 1]),
     useReducedMotion: jest.fn(() => false),
+    FadeIn: { duration: jest.fn().mockReturnThis() },
+    FadeOut: { duration: jest.fn().mockReturnThis() },
+    FadeInDown: { duration: jest.fn().mockReturnThis(), delay: jest.fn().mockReturnThis(), springify: jest.fn().mockReturnThis() },
+    FadeInUp: { duration: jest.fn().mockReturnThis(), delay: jest.fn().mockReturnThis(), springify: jest.fn().mockReturnThis() },
+    FadeOutUp: { duration: jest.fn().mockReturnThis() },
+    SlideInRight: { duration: jest.fn().mockReturnThis(), springify: jest.fn().mockReturnThis() },
+    SlideOutLeft: { duration: jest.fn().mockReturnThis() },
+    ZoomIn: { duration: jest.fn().mockReturnThis() },
+    Layout: { springify: jest.fn().mockReturnThis(), duration: jest.fn().mockReturnThis() },
+    LinearTransition: { springify: jest.fn().mockReturnThis(), duration: jest.fn().mockReturnThis() },
+    Easing: { bezier: jest.fn() },
+    createAnimatedComponent: (component: any) => component,
+    useAnimatedRef: jest.fn(() => ({ current: null })),
+    measure: jest.fn(),
+    runOnJS: jest.fn((fn: any) => fn),
+    runOnUI: jest.fn((fn: any) => fn),
+    interpolate: jest.fn(),
+    Extrapolation: { CLAMP: 'clamp' },
   };
 });
 

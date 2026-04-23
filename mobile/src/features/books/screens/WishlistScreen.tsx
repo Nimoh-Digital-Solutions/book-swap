@@ -29,6 +29,7 @@ function WishlistCard({
   item: WishlistItem;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const accent = c.auth.golden;
@@ -42,7 +43,7 @@ function WishlistCard({
       exiting={FadeOut.duration(200)}
       layout={Layout.springify().damping(18).stiffness(180)}
       accessibilityRole="button"
-      accessibilityLabel={`${item.title || 'Untitled'}${item.author ? `, ${item.author}` : ''}`}
+      accessibilityLabel={`${item.title || t('books.untitled', 'Untitled')}${item.author ? `, ${item.author}` : ''}`}
       style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
     >
       <View style={[s.coverWrap, { backgroundColor: coverBg }]}>
@@ -62,7 +63,7 @@ function WishlistCard({
 
       <View style={s.cardBody}>
         <Text style={[s.cardTitle, { color: c.text.primary }]} numberOfLines={2}>
-          {item.title || 'Untitled'}
+          {item.title || t('books.untitled', 'Untitled')}
         </Text>
         {!!item.author && (
           <Text style={[s.cardAuthor, { color: c.text.secondary }]} numberOfLines={1}>
@@ -181,6 +182,9 @@ export function WishlistScreen() {
           showsVerticalScrollIndicator={false}
           onRefresh={refetch}
           refreshing={isRefetching}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
         />
       )}
 

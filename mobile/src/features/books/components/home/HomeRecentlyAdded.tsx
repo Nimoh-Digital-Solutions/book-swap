@@ -54,7 +54,13 @@ export function HomeRecentlyAdded({
           </Text>
         </View>
         {visible.length > 0 && (
-          <Pressable onPress={onViewAll} hitSlop={8} style={s.viewAllBtn}>
+          <Pressable
+            onPress={onViewAll}
+            hitSlop={8}
+            style={s.viewAllBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("home.viewAll", "View all")}
+          >
             <Text style={[s.viewAllText, { color: c.auth.golden }]}>
               {viewAllLabel}
             </Text>

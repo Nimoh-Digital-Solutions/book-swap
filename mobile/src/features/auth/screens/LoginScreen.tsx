@@ -50,6 +50,7 @@ export function LoginScreen() {
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(schema),
@@ -60,16 +61,34 @@ export function LoginScreen() {
     (data: LoginInput) => {
       login.mutate(data, {
         onError: (err) => {
-          const ax = err as { response?: { data?: { detail?: string; message?: string } } };
-          const msg =
-            ax.response?.data?.detail ??
-            ax.response?.data?.message ??
-            t('common.error');
-          showErrorToast(String(msg));
+          const ax = err as { response?: { data?: Record<string, unknown> } };
+          const raw = ax.response?.data;
+          if (!raw) { showErrorToast(t('common.error')); return; }
+
+          const fieldKeys = Object.keys(raw).filter(
+            (k) => k !== 'detail' && k !== 'non_field_errors',
+          ) as (keyof LoginInput)[];
+
+          if (fieldKeys.length > 0) {
+            for (const key of fieldKeys) {
+              const val = raw[key];
+              const msg = Array.isArray(val) ? val.join('. ') : String(val ?? '');
+              if (msg) setError(key, { message: msg });
+            }
+            return;
+          }
+
+          const detail =
+            typeof raw.detail === 'string'
+              ? raw.detail
+              : Array.isArray(raw.non_field_errors)
+                ? (raw.non_field_errors as string[]).join('. ')
+                : t('common.error');
+          setError('root', { message: detail });
         },
       });
     },
-    [login, t],
+    [login, t, setError],
   );
 
   const handleCancelDeletion = useCallback(() => {
@@ -191,6 +210,15 @@ export function LoginScreen() {
           />
         </Animated.View>
 
+        {errors.root?.message && (
+          <View style={[s.rootError, { backgroundColor: c.status.error + '14', borderColor: c.status.error + '40' }]}>
+            <AlertTriangle size={14} color={c.status.error} />
+            <Text style={[s.rootErrorText, { color: c.status.error }]}>
+              {errors.root.message}
+            </Text>
+          </View>
+        )}
+
         <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 2)}>
           <AuthButton
             label={t('auth.login')}
@@ -259,4 +287,18 @@ const s = StyleSheet.create({
   deletionBannerText: { flex: 1 },
   deletionBannerTitle: { fontSize: 13, fontWeight: '700' },
   deletionBannerSub: { fontSize: 12, marginTop: 2 },
+  rootError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  rootErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+  },
 });

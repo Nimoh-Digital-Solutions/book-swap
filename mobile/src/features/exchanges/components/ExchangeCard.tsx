@@ -15,6 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { ExchangeStatusBadge } from "./ExchangeStatusBadge";
 import { timeAgo } from "@/lib/timeAgo";
+import { hapticImpact } from "@/lib/haptics";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -27,7 +28,7 @@ interface Props {
 
 function BookThumb({ book, label }: { book: ExchangeBook; label: string }) {
   const c = useColors();
-  const coverUri = book.cover_url || book.primary_photo;
+  const coverUri = book.primary_thumbnail || book.cover_url || book.primary_photo;
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
 
   return (
@@ -61,7 +62,7 @@ function BookThumb({ book, label }: { book: ExchangeBook; label: string }) {
   );
 }
 
-export function ExchangeCard({ exchange, onPress }: Props) {
+export const ExchangeCard = React.memo(function ExchangeCard({ exchange, onPress }: Props) {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
@@ -77,7 +78,12 @@ export function ExchangeCard({ exchange, onPress }: Props) {
     ? t("exchanges.roleOwner", "Owner")
     : t("exchanges.roleRequester", "Requester");
 
-  const a11yLabel = `Exchange with @${otherUser.username}. ${leftBook.title} and ${rightBook.title}. ${exchange.status}.`;
+  const a11yLabel = t('exchanges.cardA11y', 'Exchange with @{{user}}. {{left}} and {{right}}. {{status}}.', {
+    user: otherUser.username,
+    left: leftBook.title,
+    right: rightBook.title,
+    status: exchange.status,
+  });
 
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -90,11 +96,16 @@ export function ExchangeCard({ exchange, onPress }: Props) {
     scale.value = withSpring(1, ANIMATION.spring.snappy);
   }, [scale]);
 
+  const handlePress = useCallback(() => {
+    void hapticImpact('light');
+    onPress();
+  }, [onPress]);
+
   return (
     <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
-      onPress={onPress}
+      onPress={handlePress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       style={[
@@ -182,7 +193,12 @@ export function ExchangeCard({ exchange, onPress }: Props) {
       </View>
     </AnimatedPressable>
   );
-}
+}, (prev, next) =>
+  prev.exchange.id === next.exchange.id &&
+  prev.exchange.status === next.exchange.status &&
+  prev.exchange.unread_count === next.exchange.unread_count &&
+  prev.exchange.last_message_preview === next.exchange.last_message_preview
+);
 
 const s = StyleSheet.create({
   card: {

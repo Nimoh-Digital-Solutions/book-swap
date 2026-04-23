@@ -59,13 +59,17 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
         }
         void (async () => {
           if (unmounted) return;
-          const enabled = tokenStorage.getBiometricEnabled();
-          if (enabled && useAuthStore.getState().isAuthenticated) {
-            setLocked(true);
-            const result = await authenticate();
-            if (unmounted) return;
-            lastAuthAt.current = Date.now();
-            if (result.success) setLocked(false);
+          try {
+            const enabled = tokenStorage.getBiometricEnabled();
+            if (enabled && useAuthStore.getState().isAuthenticated) {
+              setLocked(true);
+              const result = await authenticate();
+              if (unmounted) return;
+              lastAuthAt.current = Date.now();
+              if (result.success) setLocked(false);
+            }
+          } catch {
+            if (!unmounted) setLocked(false);
           }
         })();
       }

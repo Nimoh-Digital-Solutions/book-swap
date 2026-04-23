@@ -48,7 +48,12 @@ export function ConditionsReviewModal({ visible, loading, onClose, onAccept }: P
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.backdrop}>
-        <Pressable style={s.backdropTap} onPress={onClose} />
+        <Pressable
+          style={s.backdropTap}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('exchanges.a11y.dismissConditionsModal', 'Dismiss')}
+        />
         <View style={[s.sheet, { backgroundColor: sheetBg }]}>
           <View style={[s.handle, { backgroundColor: handleBg }]} />
 
@@ -59,7 +64,13 @@ export function ConditionsReviewModal({ visible, loading, onClose, onAccept }: P
                 {t('exchanges.reviewConditions', 'Exchange Conditions')}
               </Text>
             </View>
-            <Pressable onPress={onClose} hitSlop={12} style={s.closeBtn}>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              style={s.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
+            >
               <X size={20} color={c.text.secondary} />
             </Pressable>
           </View>
@@ -93,6 +104,8 @@ export function ConditionsReviewModal({ visible, loading, onClose, onAccept }: P
             ]}
             onPress={onAccept}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.iAcceptConditions', 'I Accept')}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />

@@ -177,6 +177,8 @@ export function NotificationPreferencesScreen() {
                     onValueChange={(value) =>
                       patch.mutate({ [row.key]: value })
                     }
+                    accessibilityRole="switch"
+                    accessibilityLabel={t(row.labelKey, row.fallback)}
                     trackColor={{
                       true: accent,
                       false: isDark ? c.auth.cardBorder : c.neutral[200],

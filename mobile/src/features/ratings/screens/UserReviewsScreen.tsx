@@ -116,6 +116,11 @@ export function UserReviewsScreen() {
         renderItem={renderItem}
         contentContainerStyle={s.list}
         showsVerticalScrollIndicator={false}
+        windowSize={5}
+        maxToRenderPerBatch={8}
+        removeClippedSubviews
+        onRefresh={refetch}
+        refreshing={false}
         ListHeaderComponent={
           <Text style={[s.count, { color: c.text.secondary }]}>
             {t('reviews.count', '{{count}} review(s)', { count: ratings.length })}

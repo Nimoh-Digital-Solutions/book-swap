@@ -6,8 +6,10 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Star } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { ANIMATION } from "@/constants/animation";
+import { hapticSelection } from "@/lib/haptics";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -35,6 +37,7 @@ function StarButton({
   accentColor: string;
   emptyColor: string;
 }) {
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -54,9 +57,9 @@ function StarButton({
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel={star === 1 ? "Rate 1 star" : `Rate ${star} stars`}
+      accessibilityLabel={star === 1 ? t('ratings.rate1Star', 'Rate 1 star') : t('ratings.rateStars', 'Rate {{count}} stars', { count: star })}
       accessibilityState={{ disabled }}
-      onPress={() => !disabled && onSelect(star)}
+      onPress={() => { if (!disabled) { void hapticSelection(); onSelect(star); } }}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       hitSlop={6}

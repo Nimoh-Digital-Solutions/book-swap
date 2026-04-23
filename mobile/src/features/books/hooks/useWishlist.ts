@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { showErrorToast } from '@/components/Toast';
 import type { WishlistItem, CreateWishlistPayload, PaginatedResponse } from '@/types';
 import {
@@ -30,6 +31,7 @@ export function useBookWishlistStatus(bookId: string) {
 
 export function useAddWishlistItem() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation<WishlistItem, Error, CreateWishlistPayload>({
     mutationFn: (payload) => addWishlistItemApi(payload),
@@ -39,12 +41,13 @@ export function useAddWishlistItem() {
         queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.book) });
       }
     },
-    onError: () => showErrorToast('Failed to add to wishlist'),
+    onError: () => showErrorToast(t('books.wishlist.addError', 'Failed to add to wishlist')),
   });
 }
 
 export function useRemoveWishlistItem() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation<void, Error, { id: string; bookId?: string }>({
     mutationFn: ({ id }) => removeWishlistItemApi(id),
@@ -54,6 +57,6 @@ export function useRemoveWishlistItem() {
         queryClient.invalidateQueries({ queryKey: wishlistKeys.byBook(variables.bookId) });
       }
     },
-    onError: () => showErrorToast('Failed to remove from wishlist'),
+    onError: () => showErrorToast(t('books.wishlist.removeError', 'Failed to remove from wishlist')),
   });
 }

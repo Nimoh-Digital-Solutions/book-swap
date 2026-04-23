@@ -85,6 +85,8 @@ export function DetailRating({ exchangeId }: Props) {
         <Pressable
           onPress={() => refetch()}
           disabled={isFetching}
+          accessibilityRole="button"
+          accessibilityLabel={t("ratings.retry", "Retry")}
           style={({ pressed }) => [
             s.retryBtn,
             { borderColor: accent, opacity: pressed || isFetching ? 0.7 : 1 },
@@ -182,6 +184,10 @@ export function DetailRating({ exchangeId }: Props) {
             borderColor: cardBorder,
           },
         ]}
+        accessibilityLabel={t(
+          "ratings.a11y.commentField",
+          "Optional rating comment",
+        )}
         placeholder={t(
           "ratings.commentPlaceholder",
           "Leave an optional comment (max 300 characters)…",
@@ -201,6 +207,8 @@ export function DetailRating({ exchangeId }: Props) {
       <Pressable
         onPress={handleSubmit}
         disabled={score === 0 || submitMutation.isPending}
+        accessibilityRole="button"
+        accessibilityLabel={t("ratings.submitButton", "Submit Rating")}
         style={({ pressed }) => [
           s.submitBtn,
           {

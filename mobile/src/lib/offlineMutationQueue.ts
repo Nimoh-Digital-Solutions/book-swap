@@ -116,8 +116,8 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
           queryClient.invalidateQueries({ queryKey: [key] });
         }
       }
-    } catch (error: any) {
-      const status = error?.response?.status;
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
       if (status && status >= 400 && status < 500 && status !== 429) {
         failed++;
         if (mutation.invalidateKeys) failedKeys.push(...mutation.invalidateKeys);

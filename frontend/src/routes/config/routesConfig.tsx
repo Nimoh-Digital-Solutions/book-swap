@@ -87,9 +87,19 @@ const IncomingRequestsPage = lazy(() =>
   import('@features/exchanges').then(m => ({ default: m.IncomingRequestsPage }))
 );
 
+const BrowseLandingPage = lazy(() => import('@pages/BrowsePage/BrowsePage'));
+
+const MapPage = lazy(() => import('@pages/MapPage/MapPage'));
+
+const HowItWorksPage = lazy(() => import('@pages/HowItWorksPage/HowItWorksPage'));
+
+const CommunityPage = lazy(() => import('@pages/CommunityPage/CommunityPage'));
+
 const PrivacyPolicyPage = lazy(() => import('@pages/PrivacyPolicyPage/PrivacyPolicyPage'));
 
 const TermsOfServicePage = lazy(() => import('@pages/TermsOfServicePage/TermsOfServicePage'));
+
+const AccountDeletionPage = lazy(() => import('@pages/AccountDeletionPage/AccountDeletionPage'));
 
 const NotificationUnsubscribePage = lazy(() =>
   import('@features/notifications').then(m => ({ default: m.UnsubscribePage }))
@@ -214,8 +224,24 @@ export const routes: RouteObject[] = [
               ]
             : []),
           {
+            path: rel(PATHS.BROWSE),
+            element: <LazyPage component={BrowseLandingPage} />,
+          },
+          {
+            path: rel(PATHS.HOW_IT_WORKS),
+            element: <LazyPage component={HowItWorksPage} />,
+          },
+          {
+            path: rel(PATHS.COMMUNITY),
+            element: <LazyPage component={CommunityPage} />,
+          },
+          {
             path: rel(PATHS.CATALOGUE),
             element: <LazyPage component={BrowsePage} />,
+          },
+          {
+            path: rel(PATHS.MAP),
+            element: <LazyPage component={MapPage} />,
           },
           {
             path: rel(PATHS.SETTINGS),
@@ -268,6 +294,10 @@ export const routes: RouteObject[] = [
           {
             path: rel(PATHS.TERMS_OF_SERVICE),
             element: <LazyPage component={TermsOfServicePage} />,
+          },
+          {
+            path: rel(PATHS.ACCOUNT_DELETION),
+            element: <LazyPage component={AccountDeletionPage} />,
           },
           {
             path: rel(PATHS.NOTIFICATION_UNSUBSCRIBE),

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import { showErrorToast } from '@/components/Toast';
@@ -127,6 +128,7 @@ export function useExternalBookSearch(query: string) {
 
 export function useCreateBook() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (payload: CreateBookPayload) => createBookApi(payload),
     onSuccess: () => {
@@ -135,12 +137,13 @@ export function useCreateBook() {
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
       queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
-    onError: () => showErrorToast('Failed to create book'),
+    onError: () => showErrorToast(t('books.createError', 'Failed to create book')),
   });
 }
 
 export function useUpdateBook(bookId: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (payload: UpdateBookPayload) => updateBookApi(bookId, payload),
     onSuccess: () => {
@@ -149,12 +152,13 @@ export function useUpdateBook(bookId: string) {
       queryClient.invalidateQueries({ queryKey: ['browse'] });
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
     },
-    onError: () => showErrorToast('Failed to update book'),
+    onError: () => showErrorToast(t('books.updateError', 'Failed to update book')),
   });
 }
 
 export function useDeleteBook() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (bookId: string) => deleteBookApi(bookId),
     onSuccess: () => {
@@ -163,12 +167,13 @@ export function useDeleteBook() {
       queryClient.invalidateQueries({ queryKey: ['recentBooks'] });
       queryClient.invalidateQueries({ queryKey: ['nearbyCount'] });
     },
-    onError: () => showErrorToast('Failed to delete book'),
+    onError: () => showErrorToast(t('books.deleteError', 'Failed to delete book')),
   });
 }
 
 export function useUploadBookPhoto(bookId: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation<BookPhoto, Error, string>({
     mutationFn: async (imageUri: string) => {
       const formData = new FormData();
@@ -191,12 +196,13 @@ export function useUploadBookPhoto(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
-    onError: () => showErrorToast('Failed to upload photo'),
+    onError: () => showErrorToast(t('books.photoUploadError', 'Failed to upload photo')),
   });
 }
 
 export function useDeleteBookPhoto(bookId: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation<void, Error, string>({
     mutationFn: async (photoId: string) => {
       await http.delete(API.books.photoDetail(bookId, photoId));
@@ -204,12 +210,13 @@ export function useDeleteBookPhoto(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
-    onError: () => showErrorToast('Failed to delete photo'),
+    onError: () => showErrorToast(t('books.photoDeleteError', 'Failed to delete photo')),
   });
 }
 
 export function useReorderBookPhotos(bookId: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation<BookPhoto[], Error, string[]>({
     mutationFn: async (photoIds: string[]) => {
       const { data } = await http.patch<BookPhoto[]>(
@@ -221,7 +228,7 @@ export function useReorderBookPhotos(bookId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
     },
-    onError: () => showErrorToast('Failed to reorder photos'),
+    onError: () => showErrorToast(t('books.photoReorderError', 'Failed to reorder photos')),
   });
 }
 
@@ -263,8 +270,10 @@ export interface BrowseBook {
   language: string;
   status: string;
   primary_photo: string | null;
+  primary_thumbnail: string | null;
   owner: BrowseBookOwner;
   distance: number | null;
+  location?: { type: string; coordinates: [number, number] } | null;
   created_at: string;
 }
 

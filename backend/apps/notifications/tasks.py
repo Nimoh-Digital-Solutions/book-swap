@@ -94,10 +94,20 @@ def _create_notification(user, notification_type: str, title: str, body: str, li
     )
 
 
-def _maybe_send_email(user, subject: str, body_text: str, prefs_field: str) -> None:
-    """Send a transactional email if the user has opted in for that type."""
+def _maybe_send_email(
+    user,
+    subject: str,
+    body_text: str,
+    prefs_field: str,
+    *,
+    cta_url: str = "",
+    cta_text: str = "",
+    body_html: str = "",
+) -> None:
+    """Send a branded HTML + plain-text email if the user has opted in."""
     from django.conf import settings
-    from django.core.mail import send_mail
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
 
     from .models import NotificationPreferences
 
@@ -106,17 +116,33 @@ def _maybe_send_email(user, subject: str, body_text: str, prefs_field: str) -> N
         logger.debug("Email suppressed for %s (user %s opted out).", prefs_field, user.pk)
         return
 
-    unsub_url = f"{_frontend_url()}/notifications/unsubscribe/{prefs.unsubscribe_token}"
-    full_body = f"{body_text}\n\n---\nManage your email preferences: {unsub_url}"
+    fe_url = _frontend_url()
+    unsub_url = f"{fe_url}/notifications/unsubscribe/{prefs.unsubscribe_token}"
+    plain_body = f"{body_text}\n\n---\nManage your email preferences: {unsub_url}"
+
+    html_body = render_to_string(
+        "emails/notifications/notification.html",
+        {
+            "subject": subject,
+            "recipient_name": user.get_full_name() or user.username,
+            "body_text": body_text,
+            "body_html": body_html or body_text,
+            "cta_url": cta_url,
+            "cta_text": cta_text,
+            "unsubscribe_url": unsub_url,
+            "frontend_url": fe_url,
+        },
+    )
 
     try:
-        send_mail(
+        msg = EmailMultiAlternatives(
             subject=subject,
-            message=full_body,
+            body=plain_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            fail_silently=False,
+            to=[user.email],
         )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
         logger.info("Notification email (%s) sent to %s.", prefs_field, user.email)
     except Exception as exc:
         logger.warning("Email send failed (%s → %s): %s", prefs_field, user.email, exc)
@@ -179,6 +205,9 @@ def send_new_request_notification(exchange_id: str) -> None:
             f"View the request: {_frontend_url()}{link}"
         ),
         prefs_field="email_new_request",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Request",
+        body_html=f'{requester_name} has sent you a swap request for "<strong>{book_title}</strong>".',
     )
     logger.info("new_request notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -223,6 +252,9 @@ def send_request_accepted_notification(exchange_id: str) -> None:
             f"Continue the exchange: {_frontend_url()}{link}"
         ),
         prefs_field="email_request_accepted",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="Continue Exchange",
+        body_html=f'Great news! {owner_name} has accepted your swap request for "<strong>{book_title}</strong>".',
     )
     logger.info("request_accepted notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -267,6 +299,9 @@ def send_request_declined_notification(exchange_id: str) -> None:
             f"Discover more books: {_frontend_url()}{link}"
         ),
         prefs_field="email_request_declined",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="Discover More Books",
+        body_html=f'Unfortunately, {owner_name} has declined your swap request for "<strong>{book_title}</strong>". Don\'t worry — there are plenty more books to discover!',
     )
     logger.info("request_declined notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -311,6 +346,9 @@ def send_exchange_completed_notification(exchange_id: str) -> None:
                 f"View the exchange: {_frontend_url()}{link}"
             ),
             prefs_field="email_exchange_completed",
+            cta_url=f"{_frontend_url()}{link}",
+            cta_text="Leave a Rating",
+            body_html=f'Your exchange for "<strong>{book_title}</strong>" is now complete. Share your experience by leaving a rating!',
         )
     logger.info("exchange_completed notifications sent (exchange %s).", exchange_id)
 
@@ -361,6 +399,9 @@ def send_swap_confirmed_notification(exchange_id: str, confirmed_by_user_id: str
                 f"View the exchange: {_frontend_url()}{link}"
             ),
             prefs_field="email_exchange_completed",
+            cta_url=f"{_frontend_url()}{link}",
+            cta_text="View Exchange",
+            body_html=f'Great news! The physical swap for "<strong>{book_title}</strong>" has been confirmed by both parties.',
         )
     logger.info("swap_confirmed notification(s) sent (exchange %s).", exchange_id)
 
@@ -395,6 +436,19 @@ def send_request_expired_notification(exchange_id: str) -> None:
         )
         _push_to_ws(str(recipient.pk), _notification_payload(notif))
         _push_to_devices(recipient, notif.title, notif.body, {"type": "request_expired", "exchange_id": exchange_id})
+        _maybe_send_email(
+            user=recipient,
+            subject="BookSwap: Swap request expired",
+            body_text=(
+                f"Hi {recipient.username},\n\n"
+                f'The swap request for "{book_title}" has expired because it wasn\'t responded to in time.\n\n'
+                f"Discover more books: {_frontend_url()}{link}"
+            ),
+            prefs_field="email_new_request",
+            cta_url=f"{_frontend_url()}{link}",
+            cta_text="Discover More Books",
+            body_html=f'The swap request for "<strong>{book_title}</strong>" has expired because it wasn\'t responded to in time.',
+        )
     logger.info("request_expired notifications sent (exchange %s).", exchange_id)
 
 
@@ -429,6 +483,19 @@ def send_request_cancelled_notification(exchange_id: str) -> None:
     )
     _push_to_ws(str(recipient.pk), _notification_payload(notif))
     _push_to_devices(recipient, notif.title, notif.body, {"type": "request_cancelled", "exchange_id": exchange_id})
+    _maybe_send_email(
+        user=recipient,
+        subject="BookSwap: Swap request cancelled",
+        body_text=(
+            f"Hi {recipient.username},\n\n"
+            f'{requester_name} cancelled their swap request for "{book_title}".\n\n'
+            f"View the exchange: {_frontend_url()}{link}"
+        ),
+        prefs_field="email_new_request",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Details",
+        body_html=f'{requester_name} cancelled their swap request for "<strong>{book_title}</strong>".',
+    )
     logger.info("request_cancelled notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
 
@@ -475,6 +542,9 @@ def send_return_requested_notification(exchange_id: str, requested_by_user_id: s
             f"View the exchange: {_frontend_url()}{link}"
         ),
         prefs_field="email_exchange_completed",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Exchange",
+        body_html=f'A return has been requested for the exchange of "<strong>{book_title}</strong>".',
     )
     logger.info("return_requested notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -509,6 +579,19 @@ def send_exchange_returned_notification(exchange_id: str) -> None:
         )
         _push_to_ws(str(recipient.pk), _notification_payload(notif))
         _push_to_devices(recipient, notif.title, notif.body, {"type": "exchange_returned", "exchange_id": exchange_id})
+        _maybe_send_email(
+            user=recipient,
+            subject="BookSwap: Books have been returned",
+            body_text=(
+                f"Hi {recipient.username},\n\n"
+                f'The books from the exchange of "{book_title}" have been returned successfully.\n\n'
+                f"View the exchange: {_frontend_url()}{link}"
+            ),
+            prefs_field="email_exchange_completed",
+            cta_url=f"{_frontend_url()}{link}",
+            cta_text="View Exchange",
+            body_html=f'The books from the exchange of "<strong>{book_title}</strong>" have been returned successfully.',
+        )
     logger.info("exchange_returned notifications sent (exchange %s).", exchange_id)
 
 
@@ -558,6 +641,9 @@ def send_counter_proposed_notification(exchange_id: str, counter_by_user_id: str
             f"Review the counter-offer: {_frontend_url()}{link}"
         ),
         prefs_field="email_new_request",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="Review Counter-Offer",
+        body_html=f'{proposer.username} has proposed a different book for your exchange: "<strong>{book_title}</strong>".',
     )
     logger.info("counter_proposed notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -607,6 +693,9 @@ def send_counter_approved_notification(exchange_id: str, approved_by_user_id: st
             f"View the exchange: {_frontend_url()}{link}"
         ),
         prefs_field="email_request_accepted",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Exchange",
+        body_html=f'{approver_name} has approved your counter-offer for the exchange of "<strong>{book_title}</strong>".',
     )
     logger.info("counter_approved notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -686,6 +775,9 @@ def send_new_message_notification(exchange_id: str, recipient_user_id: str) -> N
             f"View the conversation: {_frontend_url()}{link}"
         ),
         prefs_field="email_new_message",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Conversation",
+        body_html=f'{sender.username} sent you a message about "<strong>{book_title}</strong>".',
     )
     logger.info("new_message notification → user %s (exchange %s).", recipient_user_id, exchange_id)
 
@@ -724,12 +816,117 @@ def send_rating_received_notification(rating_id: str) -> None:
     _push_to_devices(recipient, notif.title, notif.body, {"type": "rating_received"})
     _maybe_send_email(
         user=recipient,
-        subject=f"BookSwap: {rater_name} left you a {score}★ rating",
+        subject=f"BookSwap: {rater_name} left you a {score}\u2605 rating",
         body_text=(
             f"Hi {recipient.username},\n\n"
             f"{rater_name} has rated your exchange {score} out of 5.\n\n"
             f"View your profile: {_frontend_url()}{link}"
         ),
         prefs_field="email_rating_received",
+        cta_url=f"{_frontend_url()}{link}",
+        cta_text="View Your Profile",
+        body_html=f'{rater_name} has rated your exchange <strong>{score} out of 5</strong>.',
     )
     logger.info("rating_received notification → user %s (rating %s).", recipient.pk, rating_id)
+
+
+# ---------------------------------------------------------------------------
+# Account deletion task
+# ---------------------------------------------------------------------------
+
+
+@shared_task(name="notifications.send_account_deletion_email")
+def send_account_deletion_email(user_id: str, cancel_token: str) -> None:
+    """Send a confirmation email when account deletion is requested."""
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        logger.warning("send_account_deletion_email: user %s not found.", user_id)
+        return
+
+    fe_url = _frontend_url()
+    cancel_url = f"{fe_url}/account/cancel-deletion?token={cancel_token}"
+
+    _send_direct_email(
+        user=user,
+        subject="BookSwap: Your account is scheduled for deletion",
+        body_text=(
+            f"Hi {user.username},\n\n"
+            "We received your request to delete your BookSwap account. "
+            "Your account has been deactivated and will be permanently deleted in 30 days.\n\n"
+            "During this period, you can cancel the deletion by visiting:\n"
+            f"{cancel_url}\n\n"
+            "What will be deleted:\n"
+            "- Your profile information (name, email, location)\n"
+            "- All your book listings\n"
+            "- Exchange history and messages\n"
+            "- Ratings and reviews\n"
+            "- Push notification tokens and preferences\n\n"
+            "If you did not request this, please cancel immediately using the link above "
+            "and change your password.\n\n"
+            "The BookSwap Team"
+        ),
+        cta_url=cancel_url,
+        cta_text="Cancel Deletion",
+        body_html=(
+            "We received your request to delete your BookSwap account. "
+            "Your account has been deactivated and will be <strong>permanently deleted in 30 days</strong>."
+            "<br><br>"
+            "During this period, you can cancel the deletion at any time."
+            '<br><br><strong style="color:#1a2f23;">What will be deleted:</strong>'
+            '<br>&#8226; Your profile information (name, email, location)'
+            "<br>&#8226; All your book listings"
+            "<br>&#8226; Exchange history and messages"
+            "<br>&#8226; Ratings and reviews"
+            "<br>&#8226; Push notification tokens and preferences"
+            "<br><br>"
+            '<span style="color:#c0392b;">If you did not request this, please cancel immediately '
+            "and change your password.</span>"
+        ),
+    )
+    logger.info("Account deletion confirmation email sent to user %s.", user_id)
+
+
+def _send_direct_email(
+    user,
+    subject: str,
+    body_text: str,
+    *,
+    cta_url: str = "",
+    cta_text: str = "",
+    body_html: str = "",
+) -> None:
+    """Send a branded email directly (no preference check — always sent)."""
+    from django.conf import settings
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+
+    fe_url = _frontend_url()
+    html_body = render_to_string(
+        "emails/notifications/notification.html",
+        {
+            "subject": subject,
+            "recipient_name": user.get_full_name() or user.username,
+            "body_text": body_text,
+            "body_html": body_html or body_text,
+            "cta_url": cta_url,
+            "cta_text": cta_text,
+            "frontend_url": fe_url,
+        },
+    )
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=body_text,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
+        logger.info("Direct email sent to %s: %s", user.email, subject)
+    except Exception as exc:
+        logger.warning("Direct email send failed (%s): %s", user.email, exc)

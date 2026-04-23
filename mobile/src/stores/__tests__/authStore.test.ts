@@ -7,14 +7,19 @@ jest.mock('@/lib/storage', () => ({
     getRefresh: jest.fn(() => null),
     setTokens: jest.fn(),
     clearAll: jest.fn(),
+    clearPushToken: jest.fn(),
     getBiometricEnabled: jest.fn(() => false),
     setBiometricEnabled: jest.fn(),
   },
-  asyncQueryStorage: {
-    getItem: jest.fn(async () => null),
-    setItem: jest.fn(async () => {}),
-    removeItem: jest.fn(async () => {}),
+  secureUserStorage: {
+    get: jest.fn(() => null),
+    set: jest.fn(),
+    remove: jest.fn(),
   },
+}));
+
+jest.mock('@/lib/offlineMutationQueue', () => ({
+  clearMutationQueue: jest.fn(),
 }));
 
 jest.mock('@/lib/queryClient', () => ({ queryClient: { clear: jest.fn() } }));
@@ -35,7 +40,8 @@ jest.mock('@/lib/sentry', () => ({
 }));
 
 import { authApi } from '@/features/auth/api/auth.api';
-import { tokenStorage, asyncQueryStorage } from '@/lib/storage';
+import { tokenStorage, secureUserStorage } from '@/lib/storage';
+import { clearMutationQueue } from '@/lib/offlineMutationQueue';
 import { queryClient } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 
@@ -84,7 +90,7 @@ describe('useAuthStore', () => {
     await useAuthStore.getState().setAuth(user, 'access-xyz', 'refresh-xyz');
 
     expect(tokenStorage.setTokens).toHaveBeenCalledWith('access-xyz', 'refresh-xyz');
-    expect(asyncQueryStorage.setItem).toHaveBeenCalledWith('bookswap_user_json', JSON.stringify(user));
+    expect(secureUserStorage.set).toHaveBeenCalledWith(JSON.stringify(user));
     expect(setSentryUser).toHaveBeenCalledWith(user.id);
 
     const state = useAuthStore.getState();
@@ -98,7 +104,10 @@ describe('useAuthStore', () => {
     await useAuthStore.getState().logout();
 
     expect(tokenStorage.clearAll).toHaveBeenCalled();
-    expect(asyncQueryStorage.removeItem).toHaveBeenCalledWith('bookswap_user_json');
+    expect(tokenStorage.clearPushToken).toHaveBeenCalled();
+    expect(tokenStorage.setBiometricEnabled).toHaveBeenCalledWith(false);
+    expect(secureUserStorage.remove).toHaveBeenCalled();
+    expect(clearMutationQueue).toHaveBeenCalled();
     expect(queryClient.clear).toHaveBeenCalled();
     expect(setSentryUser).toHaveBeenCalledWith(null);
 
@@ -111,7 +120,7 @@ describe('useAuthStore', () => {
     const user = makeUser();
     jest.mocked(tokenStorage.getAccess).mockReturnValue('acc');
     jest.mocked(tokenStorage.getRefresh).mockReturnValue('ref');
-    jest.mocked(asyncQueryStorage.getItem).mockResolvedValue(JSON.stringify(user));
+    jest.mocked(secureUserStorage.get).mockReturnValue(JSON.stringify(user));
 
     await useAuthStore.getState().hydrate();
 
@@ -125,7 +134,7 @@ describe('useAuthStore', () => {
   it('hydrate with no tokens stays unauthenticated', async () => {
     jest.mocked(tokenStorage.getAccess).mockReturnValue(null);
     jest.mocked(tokenStorage.getRefresh).mockReturnValue(null);
-    jest.mocked(asyncQueryStorage.getItem).mockResolvedValue(null);
+    jest.mocked(secureUserStorage.get).mockReturnValue(null);
 
     await useAuthStore.getState().hydrate();
 
@@ -138,7 +147,7 @@ describe('useAuthStore', () => {
   it('hydrate with corrupt user JSON still sets isHydrated', async () => {
     jest.mocked(tokenStorage.getAccess).mockReturnValue('acc');
     jest.mocked(tokenStorage.getRefresh).mockReturnValue('ref');
-    jest.mocked(asyncQueryStorage.getItem).mockResolvedValue('not-valid-json{');
+    jest.mocked(secureUserStorage.get).mockReturnValue('not-valid-json{');
 
     await useAuthStore.getState().hydrate();
 

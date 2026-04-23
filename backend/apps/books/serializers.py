@@ -22,8 +22,8 @@ class BookOwnerSerializer(serializers.ModelSerializer):
 class BookPhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookPhoto
-        fields = ("id", "image", "position", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = ("id", "image", "thumbnail", "position", "created_at")
+        read_only_fields = ("id", "thumbnail", "created_at")
 
 
 class BookListSerializer(serializers.ModelSerializer):
@@ -31,6 +31,7 @@ class BookListSerializer(serializers.ModelSerializer):
 
     owner = BookOwnerSerializer(read_only=True)
     primary_photo = serializers.SerializerMethodField()
+    primary_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -44,19 +45,34 @@ class BookListSerializer(serializers.ModelSerializer):
             "status",
             "swap_type",
             "primary_photo",
+            "primary_thumbnail",
             "owner",
             "created_at",
         )
         read_only_fields = fields
 
+    def _get_first_photo(self, obj):
+        if not hasattr(obj, "_prefetched_first_photo"):
+            obj._prefetched_first_photo = obj.photos.first()
+        return obj._prefetched_first_photo
+
+    def _build_url(self, field) -> str | None:
+        if not field:
+            return None
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(field.url)
+        return field.url
+
     def get_primary_photo(self, obj) -> str | None:
-        first = obj.photos.first()
-        if first and first.image:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(first.image.url)
-            return first.image.url
-        return None
+        first = self._get_first_photo(obj)
+        return self._build_url(first.image) if first else None
+
+    def get_primary_thumbnail(self, obj) -> str | None:
+        first = self._get_first_photo(obj)
+        if first and first.thumbnail:
+            return self._build_url(first.thumbnail)
+        return self.get_primary_photo(obj)
 
 
 class BookSerializer(serializers.ModelSerializer):

@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import { radius, spacing } from "@/constants/theme";
@@ -11,12 +12,15 @@ interface Props {
 }
 
 export function DetailChatCTA({ label, onPress }: Props) {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = c.auth.golden;
 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={t("exchanges.a11y.openChat", label)}
       style={({ pressed }) => [
         s.btn,
         { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },

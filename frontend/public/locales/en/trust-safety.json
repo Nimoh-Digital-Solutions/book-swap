@@ -66,5 +66,30 @@
   "terms": {
     "title": "Terms of Service",
     "lastUpdated": "Last updated: {{date}}"
+  },
+  "accountDeletion": {
+    "title": "Account & Data Deletion",
+    "intro": "BookSwap respects your right to control your personal data. You can request full deletion of your account and all associated data at any time.",
+    "howTitle": "How to Delete Your Account",
+    "inAppTitle": "Option 1: In-app (recommended)",
+    "step1": "Open BookSwap and log in to your account.",
+    "step2": "Go to Settings.",
+    "step3": "Scroll to the bottom and tap \"Delete Account\".",
+    "step4": "Confirm with your password.",
+    "emailTitle": "Option 2: By email",
+    "emailInstructions": "If you can no longer access your account, send an email to",
+    "emailDetails": "with the subject \"Account Deletion Request\" and the email address associated with your account. We will process your request within 30 days.",
+    "whatDeletedTitle": "What Gets Deleted",
+    "deleted1": "Your profile information (name, email, location)",
+    "deleted2": "All your book listings",
+    "deleted3": "Exchange history and messages",
+    "deleted4": "Ratings and reviews",
+    "deleted5": "Push notification tokens and preferences",
+    "timelineTitle": "Deletion Timeline",
+    "timeline": "Once you request deletion, your account is immediately deactivated. All personal data is permanently and irreversibly removed within 30 days. During this grace period, you can cancel the deletion by logging in and tapping the cancellation banner.",
+    "contactTitle": "Questions?",
+    "contact": "For questions about data deletion, contact us at",
+    "seeAlso": "See also our",
+    "privacyLink": "Privacy Policy"
   }
 }

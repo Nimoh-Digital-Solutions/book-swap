@@ -10,20 +10,37 @@ export const Footer = ({ className }: { className?: string | undefined }): React
 
   return (
     <footer
-      className={`border-t border-[#28382D] py-8 text-center text-[#5A6A60] text-sm font-medium ${className ?? ''}`}
+      className={`border-t border-[#28382D] py-6 px-4 text-[#5A6A60] text-sm font-medium ${className ?? ''}`}
     >
-      <p>
-        &copy; {currentYear} {t('app.name', 'BookSwap')}.{' '}
-        {t('footer.tagline', 'Built for readers.')}
-      </p>
-      <nav className="mt-3 flex justify-center gap-4" aria-label={t('footer.legal', 'Legal')}>
-        <LocaleLink to={PATHS.PRIVACY_POLICY} className="hover:text-[#8C9C92] transition-colors">
-          {t('footer.privacy', 'Privacy Policy')}
-        </LocaleLink>
-        <LocaleLink to={PATHS.TERMS_OF_SERVICE} className="hover:text-[#8C9C92] transition-colors">
-          {t('footer.terms', 'Terms of Service')}
-        </LocaleLink>
-      </nav>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <p className="whitespace-nowrap">
+          &copy; {currentYear} {t('app.name', 'BookSwap')}.{' '}
+          {t('footer.tagline', 'Built for readers.')}{' '}
+          <span className="text-[#485A4E]">
+            by{' '}
+            <a
+              href="https://nimoh-ict.nl"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#8C9C92] transition-colors underline"
+            >
+              Nimoh Digital Solutions
+            </a>
+          </span>
+        </p>
+        <span className="hidden sm:inline text-[#28382D]" aria-hidden="true">|</span>
+        <nav className="flex items-center gap-4" aria-label={t('footer.legal', 'Legal')}>
+          <LocaleLink to={PATHS.PRIVACY_POLICY} className="hover:text-[#8C9C92] transition-colors">
+            {t('footer.privacy', 'Privacy Policy')}
+          </LocaleLink>
+          <LocaleLink to={PATHS.TERMS_OF_SERVICE} className="hover:text-[#8C9C92] transition-colors">
+            {t('footer.terms', 'Terms of Service')}
+          </LocaleLink>
+          <LocaleLink to={PATHS.ACCOUNT_DELETION} className="hover:text-[#8C9C92] transition-colors">
+            {t('footer.accountDeletion', 'Delete Account')}
+          </LocaleLink>
+        </nav>
+      </div>
     </footer>
   );
 };

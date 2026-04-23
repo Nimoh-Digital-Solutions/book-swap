@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
+import { tokenStorage } from '@/lib/storage';
 
 /** Foreground / tap behaviour is registered in `initNotificationHandlers` (`@/services/notificationHandler`). */
 
@@ -39,4 +40,12 @@ export async function sendPushTokenToBackend(token: string): Promise<void> {
     platform: Platform.OS,
     device_name: Device.deviceName ?? 'Unknown',
   });
+  tokenStorage.setPushToken(token);
+}
+
+export async function removePushTokenFromBackend(): Promise<void> {
+  const token = tokenStorage.getPushToken();
+  if (!token) return;
+  await http.delete(API.users.meDevices, { data: { push_token: token } });
+  tokenStorage.clearPushToken();
 }

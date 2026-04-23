@@ -165,7 +165,7 @@ export function ExchangeListScreen() {
   );
 
   const goToIncoming = useCallback(
-    () => navigation.navigate('IncomingRequests' as any),
+    () => navigation.navigate('IncomingRequests'),
     [navigation],
   );
 
@@ -293,6 +293,9 @@ export function ExchangeListScreen() {
           showsVerticalScrollIndicator={false}
           onRefresh={refetch}
           refreshing={isRefetching}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
           ListFooterComponent={<View style={{ height: 20 }} />}
         />
       )}

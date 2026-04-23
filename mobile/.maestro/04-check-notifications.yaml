@@ -1,0 +1,10 @@
+# Flow 4: Navigate to notifications
+appId: com.bookswap.mobile
+---
+- launchApp
+- tapOn:
+    id: "notification-bell"
+    optional: true
+- assertVisible: "Notifications"
+  optional: true
+- back

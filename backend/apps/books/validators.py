@@ -13,6 +13,7 @@ ALLOWED_MAGIC_BYTES = {
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_OUTPUT_SIZE = 1 * 1024 * 1024  # 1 MB
 MAX_DIMENSION = 1200  # px longest edge
+THUMB_DIMENSION = 300  # px longest edge for list thumbnails
 
 
 def validate_book_photo(uploaded_file) -> SimpleUploadedFile:
@@ -75,6 +76,29 @@ def validate_book_photo(uploaded_file) -> SimpleUploadedFile:
     buf.seek(0)
     return SimpleUploadedFile(
         name="photo.jpg",
+        content=buf.read(),
+        content_type="image/jpeg",
+    )
+
+
+def generate_thumbnail(processed_file) -> SimpleUploadedFile:
+    """Generate a small thumbnail (300px) from an already-validated photo."""
+    processed_file.seek(0)
+    img = Image.open(processed_file)
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+
+    w, h = img.size
+    longest = max(w, h)
+    if longest > THUMB_DIMENSION:
+        ratio = THUMB_DIMENSION / longest
+        img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=70, optimize=True)
+    buf.seek(0)
+    return SimpleUploadedFile(
+        name="thumb.jpg",
         content=buf.read(),
         content_type="image/jpeg",
     )

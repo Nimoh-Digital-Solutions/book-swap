@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { navigationRef } from '@/navigation/navigationRef';
 import { showInfoToast } from '@/components/Toast';
-import { addBreadcrumb } from '@/lib/sentry';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 let handlersInitialised = false;
 
@@ -88,23 +88,37 @@ export function initNotificationHandlers() {
   });
 
   Notifications.addNotificationReceivedListener((notification) => {
-    const data = (notification.request.content.data ?? {}) as Record<string, unknown>;
-    addBreadcrumb('notification', 'foreground', sanitiseForBreadcrumb(data));
-    const title = notification.request.content.title;
-    if (title) {
-      showInfoToast(String(title), notification.request.content.body ?? undefined);
+    try {
+      const data = (notification.request.content.data ?? {}) as Record<string, unknown>;
+      addBreadcrumb('notification', 'foreground', sanitiseForBreadcrumb(data));
+      const title = notification.request.content.title;
+      if (title) {
+        showInfoToast(String(title), notification.request.content.body ?? undefined);
+      }
+    } catch (err) {
+      captureException(err, { context: 'notification_received_listener' });
     }
   });
 
   Notifications.addNotificationResponseReceivedListener((response) => {
-    const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
-    addBreadcrumb('notification', 'response', sanitiseForBreadcrumb(data));
-    navigateFromPayload(data);
+    try {
+      const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
+      addBreadcrumb('notification', 'response', sanitiseForBreadcrumb(data));
+      navigateFromPayload(data);
+    } catch (err) {
+      captureException(err, { context: 'notification_response_listener' });
+    }
   });
 
   void Notifications.getLastNotificationResponseAsync().then((response) => {
-    if (!response) return;
-    const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
-    navigateFromPayload(data);
+    try {
+      if (!response) return;
+      const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
+      navigateFromPayload(data);
+    } catch (err) {
+      captureException(err, { context: 'cold_start_notification' });
+    }
+  }).catch((err) => {
+    captureException(err, { context: 'getLastNotificationResponseAsync' });
   });
 }

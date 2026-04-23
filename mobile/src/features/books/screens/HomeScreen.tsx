@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
 import { ANIMATION } from "@/constants/animation";
-import type { HomeStackParamList } from "@/navigation/types";
+import type { HomeStackParamList, MainTabNavigationProp } from "@/navigation/types";
 import { useCommunityStats, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
 
 import { HomeCommunitySection } from "../components/home/HomeCommunitySection";
@@ -67,22 +67,23 @@ export function HomeScreen() {
     Linking.openSettings();
   }, []);
 
+  const locationResolving = !coords && !locationDenied;
   const { data: nearbyData, isError: nearbyError } = useNearbyCount(coords?.lat, coords?.lng, preferredRadius);
   const { data: recentBooks, isLoading: booksLoading, isError: booksError } = useRecentBooks(coords?.lat, coords?.lng, preferredRadius);
   const { data: communityData, isError: communityError } = useCommunityStats(coords?.lat, coords?.lng, preferredRadius);
   const hasQueryError = nearbyError || booksError || communityError;
 
-  const tabNav = navigation.getParent();
+  const tabNav = navigation.getParent<MainTabNavigationProp>();
   const goToBrowse = useCallback(
-    () => (tabNav as any)?.navigate("BrowseTab"),
+    () => tabNav?.navigate("BrowseTab"),
     [tabNav],
   );
   const goToScan = useCallback(
-    () => (tabNav as any)?.navigate("ScanTab"),
+    () => tabNav?.navigate("ScanTab"),
     [tabNav],
   );
   const goToMyBooks = useCallback(
-    () => (tabNav as any)?.navigate("ProfileTab", { screen: "MyBooks" }),
+    () => tabNav?.navigate("ProfileTab", { screen: "MyBooks" }),
     [tabNav],
   );
 
@@ -115,8 +116,8 @@ export function HomeScreen() {
 
   const handleSearch = useCallback(() => {
     if (!searchQuery.trim()) return;
-    const tabNav = navigation.getParent();
-    (tabNav as any)?.navigate("BrowseTab", {
+    const tabNavLocal = navigation.getParent<MainTabNavigationProp>();
+    tabNavLocal?.navigate("BrowseTab", {
       screen: "BrowseMap",
       params: { initialSearch: searchQuery.trim() },
     });
@@ -176,6 +177,8 @@ export function HomeScreen() {
             </Text>
             <Pressable
               onPress={openLocationSettings}
+              accessibilityRole="button"
+              accessibilityLabel={t("home.openSettings", "Open Settings")}
               style={({ pressed }) => [
                 s.locBannerBtn,
                 { backgroundColor: c.auth.golden, opacity: pressed ? 0.9 : 1 },
@@ -211,7 +214,15 @@ export function HomeScreen() {
 
         {hasQueryError && !locationDenied && (
           <Animated.View entering={FadeIn.duration(200)}>
-            <Pressable onPress={handleRefresh} style={[s.errorHint, { backgroundColor: c.status.error + '14' }]}>
+            <Pressable
+              onPress={handleRefresh}
+              accessibilityRole="button"
+              accessibilityLabel={t(
+                "home.queryError",
+                "Could not load some data. Tap to retry.",
+              )}
+              style={[s.errorHint, { backgroundColor: c.status.error + '14' }]}
+            >
               <Text style={[s.errorHintText, { color: c.status.error }]}>
                 {t('home.queryError', 'Could not load some data. Tap to retry.')}
               </Text>
@@ -226,7 +237,7 @@ export function HomeScreen() {
         <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 3)}>
           <HomeRecentlyAdded
             books={recentBooks ?? []}
-            isLoading={booksLoading}
+            isLoading={booksLoading || locationResolving}
             locationDenied={locationDenied}
             onOpenSettings={openLocationSettings}
             title={t("home.recentlyAdded", "Recently Added")}

@@ -207,6 +207,9 @@ export function IncomingRequestsScreen() {
           renderItem={renderItem}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
           onRefresh={refetch}
           refreshing={isRefetching}
           ListFooterComponent={<View style={{ height: 20 }} />}

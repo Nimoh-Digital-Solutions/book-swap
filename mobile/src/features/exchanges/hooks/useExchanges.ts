@@ -8,6 +8,7 @@ import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import {
   acceptExchange as acceptExchangeApi,
+  completeExchange as completeExchangeApi,
   confirmSwap as confirmSwapApi,
   createExchange as createExchangeApi,
   declineExchange as declineExchangeApi,
@@ -278,6 +279,20 @@ export function useConfirmSwap() {
   const { t } = useTranslation();
   return useMutation({
     mutationFn: (exchangeId: string) => confirmSwapApi(exchangeId),
+    onSuccess: (_data, exchangeId) => {
+      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+      qc.invalidateQueries({ queryKey: keys.lists() });
+      qc.invalidateQueries({ queryKey: ['myBooks'] });
+    },
+    onError: () => showErrorToast(t('common.error', 'Something went wrong')),
+  });
+}
+
+export function useCompleteExchange() {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (exchangeId: string) => completeExchangeApi(exchangeId),
     onSuccess: (_data, exchangeId) => {
       qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
       qc.invalidateQueries({ queryKey: keys.lists() });

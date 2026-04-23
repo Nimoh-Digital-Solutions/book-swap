@@ -6,6 +6,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { enqueueMutation } from '@/lib/offlineMutationQueue';
 import { useAuthStore } from '@/stores/authStore';
 import { showInfoToast } from '@/components/Toast';
+import { resolveMediaUrl } from '@/lib/resolveMediaUrl';
 import type { Message, User } from '@/types';
 
 interface MessagesResponse {
@@ -26,7 +27,9 @@ export function useMessages(exchangeId: string) {
     },
     enabled: !!exchangeId,
     select: (serverMessages) =>
-      serverMessages.filter((m) => !m.id.startsWith('offline-')),
+      serverMessages
+        .filter((m) => !m.id.startsWith('offline-'))
+        .map((m) => (m.image ? { ...m, image: resolveMediaUrl(m.image) } : m)),
   });
 }
 
@@ -74,7 +77,7 @@ export function useSendMessage() {
         const filename = imageUri.split('/').pop() ?? 'photo.jpg';
         const ext = filename.split('.').pop()?.toLowerCase();
         const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-        form.append('image', { uri: imageUri, name: filename, type: mimeType } as any);
+        form.append('image', { uri: imageUri, name: filename, type: mimeType } as unknown as Blob);
         const { data } = await http.post<Message>(endpoint, form, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });

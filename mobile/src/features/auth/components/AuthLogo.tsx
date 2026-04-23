@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { spacing, radius } from '@/constants/theme';
 import { useColors } from '@/hooks/useColors';
 
@@ -14,6 +15,7 @@ const dims = { sm: 56, md: 80, lg: 104 } as const;
 
 export function AuthLogo({ size = 'md', showName = false }: AuthLogoProps) {
   const c = useColors();
+  const { t } = useTranslation();
   const d = dims[size];
 
   return (
@@ -33,7 +35,7 @@ export function AuthLogo({ size = 'md', showName = false }: AuthLogoProps) {
           source={logoSource}
           style={{ width: d, height: d, borderRadius: radius.xl }}
           resizeMode="contain"
-          accessibilityLabel="BookSwap logo"
+          accessibilityLabel={t('common.appLogo', 'BookSwap logo')}
         />
       </View>
       {showName && (

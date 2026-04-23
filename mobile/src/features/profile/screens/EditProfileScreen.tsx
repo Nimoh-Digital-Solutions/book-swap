@@ -11,9 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { AxiosError } from 'axios';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useForm, Controller } from 'react-hook-form';
@@ -32,6 +34,7 @@ import { spacing, radius } from '@/constants/theme';
 import { useUpdateProfile } from '@/features/profile/hooks/useProfile';
 import { GenrePickerSheet } from '@/features/profile/components/GenrePickerSheet';
 import { GENRE_VALUE_TO_I18N_KEY, type GenreValue } from '@/features/books/constants';
+import type { ProfileStackParamList } from '@/navigation/types';
 
 // ── Schema ───────────────────────────────────────────────────────────
 
@@ -69,7 +72,7 @@ export function EditProfileScreen() {
   const profileEditSchema = useMemo(() => createProfileEditSchema(t), [t]);
   const c = useColors();
   const isDark = useIsDark();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>>();
   const user = useAuthStore((s) => s.user);
   const updateProfile = useUpdateProfile();
 
@@ -96,6 +99,7 @@ export function EditProfileScreen() {
     control,
     handleSubmit,
     watch,
+    setError,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(profileEditSchema),
@@ -226,7 +230,24 @@ export function EditProfileScreen() {
             [{ text: t('common.ok', 'OK'), onPress: () => navigation.goBack() }],
           );
         },
-        onError: () => {
+        onError: (err) => {
+          const axiosErr = err as AxiosError<Record<string, string | string[]>>;
+          const fieldErrors = axiosErr.response?.data;
+          if (fieldErrors && typeof fieldErrors === 'object') {
+            const fieldKeys: (keyof FormValues)[] = [
+              'first_name', 'last_name', 'bio',
+              'preferred_genres', 'preferred_language', 'preferred_radius',
+            ];
+            let mapped = false;
+            for (const key of fieldKeys) {
+              const msg = fieldErrors[key];
+              if (msg) {
+                setError(key, { message: Array.isArray(msg) ? msg[0] : String(msg) });
+                mapped = true;
+              }
+            }
+            if (mapped) return;
+          }
           Alert.alert(
             t('common.error', 'Error'),
             t('profile.edit.errorMsg', 'Failed to update profile. Please try again.'),
@@ -250,7 +271,12 @@ export function EditProfileScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Avatar ── */}
-        <Pressable onPress={pickAvatar} style={s.avatarSection}>
+        <Pressable
+          onPress={pickAvatar}
+          style={s.avatarSection}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.edit.a11y.changePhoto', 'Change profile photo')}
+        >
           <View style={s.avatarWrap}>
             {displayAvatar ? (
               <Image
@@ -283,6 +309,7 @@ export function EditProfileScreen() {
             value={user?.username ?? ''}
             editable={false}
             selectTextOnFocus={false}
+            accessibilityLabel={t('profile.edit.a11y.username', 'Username')}
           />
         </View>
         <Text style={[s.hintText, { color: c.text.subtle }]}>
@@ -312,6 +339,7 @@ export function EditProfileScreen() {
               onChangeText={onChange}
               onBlur={onBlur}
               placeholderTextColor={c.text.placeholder}
+              accessibilityLabel={t('profile.edit.a11y.firstName', 'First name')}
             />
           )}
         />
@@ -344,6 +372,7 @@ export function EditProfileScreen() {
               onChangeText={onChange}
               onBlur={onBlur}
               placeholderTextColor={c.text.placeholder}
+              accessibilityLabel={t('profile.edit.a11y.lastName', 'Last name')}
             />
           )}
         />
@@ -381,6 +410,7 @@ export function EditProfileScreen() {
               numberOfLines={3}
               textAlignVertical="top"
               maxLength={300}
+              accessibilityLabel={t('profile.edit.a11y.bio', 'Bio')}
             />
           )}
         />
@@ -409,6 +439,8 @@ export function EditProfileScreen() {
                     borderColor: cardBorder,
                   },
                 ]}
+                accessibilityRole="button"
+                accessibilityLabel={t('profile.edit.a11y.selectGenres', 'Select preferred genres')}
               >
                 <Text
                   style={[
@@ -497,6 +529,10 @@ export function EditProfileScreen() {
                           borderColor: selected ? accent : cardBorder,
                         },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('profile.edit.a11y.languageOption', 'Preferred language: {{label}}', {
+                        label,
+                      })}
                     >
                       <Text
                         style={[
@@ -544,6 +580,10 @@ export function EditProfileScreen() {
                           borderColor: selected ? accent : cardBorder,
                         },
                       ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('profile.edit.a11y.radiusOption', 'Search radius: {{distance}}', {
+                        distance: label,
+                      })}
                     >
                       <Text
                         style={[
@@ -572,6 +612,12 @@ export function EditProfileScreen() {
               opacity: !hasChanges ? 0.5 : pressed ? 0.9 : 1,
             },
           ]}
+          accessibilityRole="button"
+          accessibilityLabel={
+            updateProfile.isPending
+              ? t('profile.edit.a11y.saving', 'Saving profile changes')
+              : t('profile.edit.a11y.save', 'Save profile changes')
+          }
         >
           {updateProfile.isPending ? (
             <ActivityIndicator size="small" color="#152018" />

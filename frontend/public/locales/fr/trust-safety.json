@@ -66,5 +66,30 @@
   "terms": {
     "title": "Conditions d'utilisation",
     "lastUpdated": "Dernière mise à jour : {{date}}"
+  },
+  "accountDeletion": {
+    "title": "Suppression du compte et des données",
+    "intro": "BookSwap respecte votre droit de contrôler vos données personnelles. Vous pouvez demander la suppression complète de votre compte et de toutes les données associées à tout moment.",
+    "howTitle": "Comment supprimer votre compte",
+    "inAppTitle": "Option 1 : Dans l'application (recommandé)",
+    "step1": "Ouvrez BookSwap et connectez-vous à votre compte.",
+    "step2": "Accédez aux Paramètres.",
+    "step3": "Faites défiler vers le bas et appuyez sur « Supprimer le compte ».",
+    "step4": "Confirmez avec votre mot de passe.",
+    "emailTitle": "Option 2 : Par e-mail",
+    "emailInstructions": "Si vous ne pouvez plus accéder à votre compte, envoyez un e-mail à",
+    "emailDetails": "avec le sujet « Demande de suppression de compte » et l'adresse e-mail associée à votre compte. Nous traiterons votre demande dans les 30 jours.",
+    "whatDeletedTitle": "Ce qui est supprimé",
+    "deleted1": "Vos informations de profil (nom, e-mail, localisation)",
+    "deleted2": "Toutes vos annonces de livres",
+    "deleted3": "Historique des échanges et messages",
+    "deleted4": "Notes et avis",
+    "deleted5": "Jetons de notifications push et préférences",
+    "timelineTitle": "Délai de suppression",
+    "timeline": "Une fois la suppression demandée, votre compte est immédiatement désactivé. Toutes les données personnelles sont supprimées de manière permanente et irréversible dans les 30 jours. Pendant cette période, vous pouvez annuler la suppression en vous connectant et en appuyant sur la bannière d'annulation.",
+    "contactTitle": "Questions ?",
+    "contact": "Pour toute question sur la suppression des données, contactez-nous à",
+    "seeAlso": "Voir aussi notre",
+    "privacyLink": "Politique de confidentialité"
   }
 }

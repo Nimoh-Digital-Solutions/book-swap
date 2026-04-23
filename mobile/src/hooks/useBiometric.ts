@@ -20,12 +20,16 @@ export function useBiometric() {
   }, []);
 
   const authenticate = useCallback(async () => {
-    const LocalAuth: LocalAuthModule = await import('expo-local-authentication');
-    return LocalAuth.authenticateAsync({
-      promptMessage: i18n.t('auth.biometricPrompt'),
-      cancelLabel: i18n.t('common.cancel'),
-      disableDeviceFallback: false,
-    });
+    try {
+      const LocalAuth: LocalAuthModule = await import('expo-local-authentication');
+      return await LocalAuth.authenticateAsync({
+        promptMessage: i18n.t('auth.biometricPrompt'),
+        cancelLabel: i18n.t('common.cancel'),
+        disableDeviceFallback: false,
+      });
+    } catch {
+      return { success: false, error: 'unknown' as const, warning: undefined };
+    }
   }, []);
 
   return { isBiometricAvailable, authenticate };

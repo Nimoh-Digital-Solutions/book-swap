@@ -1,5 +1,10 @@
 """Production settings — always ensure secrets come from environment variables."""
 
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+
 from nimoh_base.conf import NimohBaseSettings
 
 from config.settings.base import *  # noqa: F403
@@ -43,3 +48,19 @@ LOGGING.setdefault("loggers", {}).update(  # noqa: F405
         "httpcore": {"level": "WARNING", "propagate": False},
     }
 )
+
+# ── Sentry ─────────────────────────────────────────────────────────────────
+_SENTRY_DSN = env("SENTRY_DSN", default="")
+if _SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        environment=env("SENTRY_ENVIRONMENT", default="production"),
+        release=env("APP_VERSION", default="1.0.0"),
+        traces_sample_rate=0.2,
+        send_default_pii=False,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            LoggingIntegration(level=None, event_level="ERROR"),
+        ],
+    )

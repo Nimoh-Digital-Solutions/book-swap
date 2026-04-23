@@ -1,0 +1,5 @@
+# Maestro E2E configuration for BookSwap Mobile
+# Requires: maestro CLI installed (https://maestro.mobile.dev)
+# Run: maestro test .maestro/
+
+appId: com.bookswap.mobile

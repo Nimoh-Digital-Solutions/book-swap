@@ -89,4 +89,8 @@ export interface BrowseFilters {
   ordering?: BrowseOrdering | undefined;
   page_size?: number | undefined;
   page?: number | undefined;
+  /** Fallback latitude for unauthenticated users (backend uses profile location if authed). */
+  lat?: number | undefined;
+  /** Fallback longitude for unauthenticated users (backend uses profile location if authed). */
+  lng?: number | undefined;
 }

@@ -66,5 +66,30 @@
   "terms": {
     "title": "Servicevoorwaarden",
     "lastUpdated": "Laatst bijgewerkt: {{date}}"
+  },
+  "accountDeletion": {
+    "title": "Account- & gegevensverwijdering",
+    "intro": "BookSwap respecteert je recht om controle te hebben over je persoonlijke gegevens. Je kunt op elk moment volledige verwijdering van je account en alle bijbehorende gegevens aanvragen.",
+    "howTitle": "Hoe verwijder je je account",
+    "inAppTitle": "Optie 1: In de app (aanbevolen)",
+    "step1": "Open BookSwap en log in op je account.",
+    "step2": "Ga naar Instellingen.",
+    "step3": "Scroll naar beneden en tik op \"Account verwijderen\".",
+    "step4": "Bevestig met je wachtwoord.",
+    "emailTitle": "Optie 2: Per e-mail",
+    "emailInstructions": "Als je geen toegang meer hebt tot je account, stuur dan een e-mail naar",
+    "emailDetails": "met als onderwerp \"Account verwijderen\" en het e-mailadres dat bij je account hoort. We verwerken je verzoek binnen 30 dagen.",
+    "whatDeletedTitle": "Wat wordt verwijderd",
+    "deleted1": "Je profielgegevens (naam, e-mail, locatie)",
+    "deleted2": "Al je boekadvertenties",
+    "deleted3": "Ruilgeschiedenis en berichten",
+    "deleted4": "Beoordelingen en recensies",
+    "deleted5": "Push-notificatietokens en voorkeuren",
+    "timelineTitle": "Verwijderingstermijn",
+    "timeline": "Na je verwijderingsverzoek wordt je account direct gedeactiveerd. Alle persoonlijke gegevens worden binnen 30 dagen permanent en onomkeerbaar verwijderd. Tijdens deze periode kun je de verwijdering annuleren door in te loggen en op de annuleringsbanner te tikken.",
+    "contactTitle": "Vragen?",
+    "contact": "Neem voor vragen over gegevensverwijdering contact met ons op via",
+    "seeAlso": "Zie ook ons",
+    "privacyLink": "Privacybeleid"
   }
 }

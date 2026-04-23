@@ -48,13 +48,19 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={s.overlay} onPress={onClose}>
+      <Pressable
+        style={s.overlay}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={t('profile.edit.a11y.dismissGenrePicker', 'Dismiss genre picker')}
+      >
         <Pressable
           style={[
             s.sheet,
             { backgroundColor: bg, paddingBottom: insets.bottom || spacing.md },
           ]}
           onPress={() => {}}
+          accessibilityRole="text"
         >
           <View style={s.handleWrap}>
             <View style={[s.handle, { backgroundColor: cardBorder }]} />
@@ -68,7 +74,12 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
               <Text style={[s.counter, { color: c.text.secondary }]}>
                 {value.length}/{MAX_GENRES}
               </Text>
-              <Pressable onPress={onClose} hitSlop={12}>
+              <Pressable
+                onPress={onClose}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close', 'Close')}
+              >
                 <X size={20} color={c.text.secondary} />
               </Pressable>
             </View>
@@ -95,6 +106,8 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
                       opacity: disabled ? 0.4 : pressed ? 0.8 : 1,
                     },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(`books.genres.${slug}`, genre)}
                 >
                   <Text
                     style={[
@@ -121,6 +134,8 @@ export function GenrePickerSheet({ value, onChange, open, onClose }: Props) {
                 s.doneBtn,
                 { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.done', 'Done')}
             >
               <Text style={s.doneBtnText}>
                 {t('common.done', 'Done')}

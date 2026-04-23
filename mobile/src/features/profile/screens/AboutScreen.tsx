@@ -16,7 +16,7 @@ import { radius, spacing } from "@/constants/theme";
 import { useColors, useIsDark } from "@/hooks/useColors";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
-const SUPPORT_EMAIL = "support@bookswap.app";
+const SUPPORT_EMAIL = "admin@nimoh-ict.nl";
 const PRIVACY_URL = "https://bookswap.app/en/privacy-policy";
 const TERMS_URL = "https://bookswap.app/en/terms-of-service";
 
@@ -126,7 +126,11 @@ export function AboutScreen() {
             {t("about.madeWith", "Made with love for book lovers")}
           </Text>
         </View>
-        <Text style={[s.footerBrand, { color: c.neutral[400] }]}>BookSwap</Text>
+        <Pressable onPress={() => Linking.openURL("https://nimoh-ict.nl")}>
+          <Text style={[s.footerBrand, { color: c.neutral[400] }]}>
+            by Nimoh Digital Solutions
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

@@ -11,6 +11,7 @@ import { Image } from "expo-image";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { ANIMATION } from "@/constants/animation";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { hapticImpact } from "@/lib/haptics";
 import { Avatar } from "@/components/Avatar";
 import type { BrowseBook } from "@/features/books/hooks/useBooks";
 
@@ -18,7 +19,7 @@ const COVER_COLORS = ["#2D5F3F", "#3B4F7A", "#6B3A5E", "#7A5C2E", "#2B4E5F"];
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function BookCard({
+export const BookCard = React.memo(function BookCard({
   book,
   onPress,
 }: {
@@ -28,7 +29,7 @@ export function BookCard({
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const coverUri = book.cover_url || book.primary_photo;
+  const coverUri = book.primary_thumbnail || book.cover_url || book.primary_photo;
   const coverBg = COVER_COLORS[book.id.charCodeAt(0) % COVER_COLORS.length];
 
   const scale = useSharedValue(1);
@@ -45,11 +46,16 @@ export function BookCard({
     scale.value = withSpring(1, ANIMATION.spring.snappy);
   }, [scale]);
 
+  const handlePress = useCallback(() => {
+    void hapticImpact('light');
+    onPress?.();
+  }, [onPress]);
+
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel={`${book.title} by ${book.author}`}
-      onPress={onPress}
+      accessibilityLabel={t('books.bookCardA11y', '{{title}} by {{author}}', { title: book.title, author: book.author })}
+      onPress={handlePress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       style={[
@@ -117,7 +123,7 @@ export function BookCard({
       </View>
     </AnimatedPressable>
   );
-}
+}, (prev, next) => prev.book.id === next.book.id && prev.book.status === next.book.status);
 
 const s = StyleSheet.create({
   bookCard: {

@@ -26,20 +26,35 @@ class ExchangeBookSerializer(serializers.ModelSerializer):
     """Compact book info nested inside exchange responses."""
 
     primary_photo = serializers.SerializerMethodField()
+    primary_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
-        fields = ("id", "title", "author", "cover_url", "condition", "primary_photo")
+        fields = ("id", "title", "author", "cover_url", "condition", "primary_photo", "primary_thumbnail")
         read_only_fields = fields
 
+    def _get_first_photo(self, obj):
+        if not hasattr(obj, "_prefetched_first_photo"):
+            obj._prefetched_first_photo = obj.photos.first()
+        return obj._prefetched_first_photo
+
+    def _build_url(self, field) -> str | None:
+        if not field:
+            return None
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(field.url)
+        return field.url
+
     def get_primary_photo(self, obj) -> str | None:
-        first = obj.photos.first()
-        if first and first.image:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(first.image.url)
-            return first.image.url
-        return None
+        first = self._get_first_photo(obj)
+        return self._build_url(first.image) if first else None
+
+    def get_primary_thumbnail(self, obj) -> str | None:
+        first = self._get_first_photo(obj)
+        if first and first.thumbnail:
+            return self._build_url(first.thumbnail)
+        return self.get_primary_photo(obj)
 
 
 # ── List / Detail serializers ─────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { queryClient, queryPersister, CACHE_BUSTER } from '@/lib/queryClient';
 import { initSentry, reactNavigationIntegration, wrapRootComponent } from '@/lib/sentry';
+import { initAnalytics } from '@/lib/analytics';
 import '@/lib/i18n';
 import { RootNavigator, navigationRef, linking } from '@/navigation';
 import { ToastRoot } from '@/components/Toast';
@@ -16,6 +17,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { WebSocketGate } from '@/services/WebSocketGate';
 import { BiometricGate } from '@/services/BiometricGate';
+import { IdleTimeoutGate, recordInteraction } from '@/services/IdleTimeoutGate';
 import { ThemeGate } from '@/services/ThemeGate';
 import { initNotificationHandlers } from '@/services/notificationHandler';
 import { useThemeStore } from '@/stores/themeStore';
@@ -31,6 +33,7 @@ if ((TextInput as { defaultProps?: { maxFontSizeMultiplier?: number } }).default
   1.5;
 
 initSentry();
+initAnalytics();
 
 function LoadingFallback() {
   return (
@@ -75,7 +78,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={styles.root}>
+        <GestureHandlerRootView style={styles.root} onTouchStart={recordInteraction}>
         <SafeAreaProvider>
           <PersistQueryClientProvider
             client={queryClient}
@@ -104,6 +107,7 @@ function App() {
               <StatusBar style={isDark ? 'light' : 'dark'} />
               <ThemeGate />
               <OfflineBanner />
+              <IdleTimeoutGate />
               <BiometricGate>
                 <WebSocketGate />
                 <RootNavigator />

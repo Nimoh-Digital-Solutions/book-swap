@@ -108,6 +108,8 @@ export function ScanResultScreen() {
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.retryLookup", "Retry book lookup")}
         >
           <Text style={s.primaryBtnText}>
             {t("common.retry", "Retry")}
@@ -119,6 +121,8 @@ export function ScanResultScreen() {
             { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
           ]}
           onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.addManually", "Add book manually")}
         >
           <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
             {t("scanner.addManually", "Add manually")}
@@ -155,6 +159,8 @@ export function ScanResultScreen() {
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={() => navigation.navigate("BookSearch")}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.searchByTitle", "Search by title")}
         >
           <Search size={18} color="#fff" />
           <Text style={s.primaryBtnText}>
@@ -167,6 +173,8 @@ export function ScanResultScreen() {
             { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
           ]}
           onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.addManually", "Add book manually")}
         >
           <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
             {t("scanner.addManually", "Add manually")}
@@ -266,6 +274,8 @@ export function ScanResultScreen() {
             publish_year: displayData.publish_year,
           })
         }
+        accessibilityRole="button"
+        accessibilityLabel={t("scanner.accessibility.addThisBook", "Add this book")}
       >
         <Text style={s.primaryBtnText}>
           {t("scanner.addThisBook", "Add this book")}
@@ -278,6 +288,8 @@ export function ScanResultScreen() {
           { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
         ]}
         onPress={() => navigation.navigate("AddBook", { isbn: displayData.isbn })}
+        accessibilityRole="button"
+        accessibilityLabel={t("scanner.accessibility.editDetailsBeforeAdd", "Edit details before adding")}
       >
         <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
           {t("scanner.editDetails", "Edit details before adding")}

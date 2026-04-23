@@ -113,6 +113,7 @@ class BookPhoto(TimeStampedModel):
         related_name="photos",
     )
     image = models.ImageField(upload_to="book_photos/")
+    thumbnail = models.ImageField(upload_to="book_thumbs/", blank=True)
     position = models.PositiveSmallIntegerField(
         default=0,
         help_text="Display order. 0 = primary thumbnail.",

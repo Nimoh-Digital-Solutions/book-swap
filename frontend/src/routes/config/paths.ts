@@ -24,14 +24,17 @@ export const PATHS = {
   ADD_BOOK: '/books/add',
   BOOK_DETAIL: '/books/:id',
   EDIT_BOOK: '/books/:id/edit',
+  BROWSE: '/browse',
   CATALOGUE: '/catalogue',
+  MAP: '/map',
   EXCHANGES: '/exchanges',
   EXCHANGE_DETAIL: '/exchanges/:id',
   INCOMING_REQUESTS: '/exchanges/incoming',
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_OF_SERVICE: '/terms-of-service',
-  HOW_IT_WORKS: '/#how-it-works',
-  COMMUNITY: '/#community',
+  ACCOUNT_DELETION: '/account-deletion',
+  HOW_IT_WORKS: '/how-it-works',
+  COMMUNITY: '/community',
   NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
   EMAIL_VERIFY_PENDING: '/auth/email/verify-pending',
   EMAIL_VERIFY_CONFIRM: '/auth/email/verify',
@@ -96,9 +99,17 @@ export const routeMetadata = {
     title: 'Settings',
     description: 'Account settings',
   },
+  [PATHS.BROWSE]: {
+    title: 'Browse',
+    description: 'Discover books available for swapping in your community',
+  },
   [PATHS.CATALOGUE]: {
     title: 'Catalogue',
     description: 'Browse all available books in your community',
+  },
+  [PATHS.MAP]: {
+    title: 'Explore Map',
+    description: 'See all available books on the map near you',
   },
   [PATHS.MY_SHELF]: {
     title: 'My Shelf',
@@ -135,6 +146,18 @@ export const routeMetadata = {
   [PATHS.TERMS_OF_SERVICE]: {
     title: 'Terms of Service',
     description: 'Rules and conditions for using BookSwap',
+  },
+  [PATHS.ACCOUNT_DELETION]: {
+    title: 'Account & Data Deletion',
+    description: 'How to delete your BookSwap account and personal data',
+  },
+  [PATHS.HOW_IT_WORKS]: {
+    title: 'How it Works',
+    description: 'Your complete guide to swapping books on BookSwap',
+  },
+  [PATHS.COMMUNITY]: {
+    title: 'Community',
+    description: 'Meet the BookSwap community and see what\'s happening near you',
   },
   [PATHS.EMAIL_VERIFY_PENDING]: {
     title: 'Verify Your Email',

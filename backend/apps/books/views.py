@@ -33,7 +33,7 @@ from .serializers import (
     WishlistItemSerializer,
 )
 from .services import ISBNLookupError, ISBNLookupService
-from .validators import validate_book_photo
+from .validators import generate_thumbnail, validate_book_photo
 
 
 def _get_blocked_user_ids(user):
@@ -170,8 +170,9 @@ class BookPhotoViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         processed = validate_book_photo(uploaded)
+        thumb = generate_thumbnail(processed)
         position = book.photos.count()
-        photo = BookPhoto.objects.create(book=book, image=processed, position=position)
+        photo = BookPhoto.objects.create(book=book, image=processed, thumbnail=thumb, position=position)
         return Response(
             BookPhotoSerializer(photo, context={"request": request}).data,
             status=status.HTTP_201_CREATED,

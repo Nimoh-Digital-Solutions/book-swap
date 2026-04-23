@@ -102,7 +102,7 @@ class WebSocketManager {
         }
 
         if (type === 'auth.failed' || type === 'auth.required') {
-          addBreadcrumb('websocket', 'auth failed — attempting token refresh', { reason: (data as any).reason });
+          addBreadcrumb('websocket', 'auth failed — attempting token refresh', { reason: (data as { reason?: string }).reason });
           this.attemptTokenRefreshAndReconnect();
           return;
         }

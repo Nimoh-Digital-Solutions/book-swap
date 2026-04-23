@@ -10,9 +10,9 @@ import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyPlaceholder } from '@components/common';
+import { useAuth } from '@features/auth';
 import { useProfile } from '@features/profile';
-import { Loader2 } from 'lucide-react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
@@ -45,7 +45,8 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 
 export function BrowsePage(): ReactElement {
   const { t } = useTranslation();
-  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { isAuthenticated } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile(isAuthenticated);
   const { filters, setFilters, clearFilters } = useBrowseFilters();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -118,7 +119,7 @@ export function BrowsePage(): ReactElement {
   // Profile loading
   // ---------------------------------------------------------------------------
 
-  if (profileLoading) {
+  if (isAuthenticated && profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />

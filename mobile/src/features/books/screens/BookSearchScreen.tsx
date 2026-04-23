@@ -221,6 +221,9 @@ export function BookSearchScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
         />
       )}
     </View>

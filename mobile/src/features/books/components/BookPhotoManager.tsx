@@ -202,6 +202,10 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
           <Pressable
             onLongPress={drag}
             disabled={isActive}
+            accessibilityRole="button"
+            accessibilityLabel={t('books.photo.accessibility.photoReorder', 'Book photo {{position}}, long press to reorder', {
+              position: idx + 1,
+            })}
             style={[
               s.photoItem,
               {
@@ -226,6 +230,8 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
             )}
             <Pressable
               onPress={() => handleDelete(item.id)}
+              accessibilityRole="button"
+              accessibilityLabel={t('books.photo.accessibility.removePhoto', 'Remove photo')}
               style={s.deleteBtn}
               hitSlop={8}
             >
@@ -266,6 +272,8 @@ export function BookPhotoManager({ bookId, photos }: BookPhotoManagerProps) {
           <Pressable
             onPress={showPicker}
             disabled={upload.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={t('books.photo.accessibility.addPhoto', 'Add photo')}
             style={({ pressed }) => [
               s.addBtn,
               {

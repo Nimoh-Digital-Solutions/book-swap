@@ -87,12 +87,13 @@ export function ChangePasswordScreen() {
         );
         logout.mutate();
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
+        const ax = err as { response?: { data?: Record<string, string[]> & { detail?: string } } };
         const detail =
-          err?.response?.data?.old_password?.[0] ??
-          err?.response?.data?.new_password1?.[0] ??
-          err?.response?.data?.new_password2?.[0] ??
-          err?.response?.data?.detail ??
+          ax?.response?.data?.old_password?.[0] ??
+          ax?.response?.data?.new_password1?.[0] ??
+          ax?.response?.data?.new_password2?.[0] ??
+          ax?.response?.data?.detail ??
           t(
             "changePassword.error",
             "Failed to change password. Check your current password and try again.",

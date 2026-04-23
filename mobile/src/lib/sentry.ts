@@ -1,9 +1,12 @@
 import * as Sentry from '@sentry/react-native';
 import type { ComponentType } from 'react';
 import Constants from 'expo-constants';
+import { env } from '@/configs/env';
 
 const DSN =
   Constants.expoConfig?.extra?.sentryDsn ?? process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
+const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
+const UPDATE_ID = Constants.expoConfig?.extra?.eas?.updateId;
 
 let initialised = false;
 
@@ -21,6 +24,9 @@ export function initSentry() {
   if (initialised || !DSN) return;
   Sentry.init({
     dsn: DSN,
+    environment: env.environment,
+    release: `com.gnimoh.bookswap@${APP_VERSION}`,
+    dist: UPDATE_ID ?? APP_VERSION,
     debug: __DEV__,
     sendDefaultPii: false,
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
@@ -50,13 +56,29 @@ export function setSentryUser(id: string | null) {
   Sentry.setUser(id ? { id } : null);
 }
 
+const SENSITIVE_KEYS = /token|password|secret|credential|authorization|cookie|session_id|api_key/i;
+
+function scrubExtras(raw: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (SENSITIVE_KEYS.test(key)) {
+      cleaned[key] = '[Filtered]';
+    } else if (typeof value === 'string' && value.length > 512) {
+      cleaned[key] = value.slice(0, 512) + '…[truncated]';
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+}
+
 export function captureException(error: unknown, context?: Record<string, unknown>) {
   if (!initialised) {
     if (__DEV__) console.error('[Sentry-stub]', error, context);
     return;
   }
   Sentry.withScope((scope) => {
-    if (context) scope.setExtras(context);
+    if (context) scope.setExtras(scrubExtras(context));
     Sentry.captureException(error);
   });
 }

@@ -59,7 +59,12 @@ export function DeclineReasonSheet({ visible, loading, onClose, onDecline }: Pro
       onRequestClose={resetAndClose}
     >
       <View style={s.backdrop}>
-        <Pressable style={s.backdropTap} onPress={resetAndClose} />
+        <Pressable
+          style={s.backdropTap}
+          onPress={resetAndClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('exchanges.a11y.dismissDeclineSheet', 'Dismiss')}
+        />
         <View style={[s.sheet, { backgroundColor: sheetBg }]}>
           <View style={[s.handle, { backgroundColor: handleBg }]} />
 
@@ -70,7 +75,13 @@ export function DeclineReasonSheet({ visible, loading, onClose, onDecline }: Pro
                 {t('exchanges.declineTitle', 'Decline Request')}
               </Text>
             </View>
-            <Pressable onPress={resetAndClose} hitSlop={12} style={s.closeBtn}>
+            <Pressable
+              onPress={resetAndClose}
+              hitSlop={12}
+              style={s.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
+            >
               <X size={20} color={c.text.secondary} />
             </Pressable>
           </View>
@@ -86,6 +97,8 @@ export function DeclineReasonSheet({ visible, loading, onClose, onDecline }: Pro
                 <Pressable
                   key={reason}
                   onPress={() => setSelected(isSelected ? null : reason)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(`exchanges.declineReasons.${reason}`, reason)}
                   style={[
                     s.reasonRow,
                     {
@@ -128,6 +141,8 @@ export function DeclineReasonSheet({ visible, loading, onClose, onDecline }: Pro
             ]}
             onPress={handleDecline}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={t('exchanges.decline', 'Decline')}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />

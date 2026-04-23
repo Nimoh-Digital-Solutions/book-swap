@@ -84,9 +84,6 @@ export function EditBookScreen() {
   const [notes, setNotes] = useState("");
   const [hydrated, setHydrated] = useState(false);
 
-  // The Book type is incomplete — API returns genres, notes, cover_url as extra fields
-  const bookAny = book as any;
-
   useEffect(() => {
     if (book && !hydrated) {
       setTitle(book.title ?? "");
@@ -95,19 +92,19 @@ export function EditBookScreen() {
       setCondition(book.condition as CreateBookPayload["condition"] ?? null);
       setLanguage(book.language as CreateBookPayload["language"] ?? null);
       setSwapType((book.swap_type as CreateBookPayload["swap_type"]) ?? "temporary");
-      setNotes(bookAny?.notes ?? "");
+      setNotes(book.notes ?? "");
 
-      const bookGenres: string[] = Array.isArray(bookAny?.genres)
-        ? bookAny.genres
-        : bookAny?.genre
-          ? [bookAny.genre]
+      const bookGenres: string[] = Array.isArray(book.genres)
+        ? book.genres
+        : book.genre
+          ? [book.genre]
           : [];
       setGenres(bookGenres);
       setHydrated(true);
     }
-  }, [book, hydrated, bookAny]);
+  }, [book, hydrated]);
 
-  const coverUrl: string | undefined = bookAny?.cover_url || book?.photos?.[0]?.image;
+  const coverUrl: string | undefined = book?.cover_url || book?.photos?.[0]?.image;
   const isbn: string | undefined = book?.isbn;
 
   const canSubmit = useMemo(
@@ -254,6 +251,7 @@ export function EditBookScreen() {
           onChangeText={setTitle}
           placeholder={t("books.addBook.titlePlaceholder", "e.g. The Great Gatsby")}
           placeholderTextColor={c.text.placeholder}
+          accessibilityLabel={t("books.addBook.accessibility.titleInput", "Book title")}
         />
 
         {/* ── Author ── */}
@@ -264,6 +262,7 @@ export function EditBookScreen() {
           onChangeText={setAuthor}
           placeholder={t("books.addBook.authorPlaceholder", "e.g. F. Scott Fitzgerald")}
           placeholderTextColor={c.text.placeholder}
+          accessibilityLabel={t("books.addBook.accessibility.authorInput", "Author name")}
         />
 
         {/* ── Description ── */}
@@ -281,6 +280,7 @@ export function EditBookScreen() {
           multiline
           numberOfLines={3}
           textAlignVertical="top"
+          accessibilityLabel={t("books.addBook.accessibility.descriptionInput", "Book description")}
         />
 
         {/* ── Condition ── */}
@@ -293,6 +293,10 @@ export function EditBookScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setCondition(item.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("books.addBook.accessibility.selectCondition", "Select condition: {{label}}", {
+                    label: t(`books.conditions.${item.key}`, item.label),
+                  })}
                   style={[
                     s.chip,
                     {
@@ -322,6 +326,10 @@ export function EditBookScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setLanguage(item.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("books.addBook.accessibility.selectLanguage", "Select language: {{label}}", {
+                    label: t(`books.languages.${item.key}`, item.label),
+                  })}
                   style={[
                     s.chip,
                     {
@@ -351,6 +359,10 @@ export function EditBookScreen() {
                 <Pressable
                   key={item.key}
                   onPress={() => setSwapType(item.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("books.addBook.accessibility.selectSwapType", "Select swap type: {{label}}", {
+                    label: t(`books.swapTypes.${item.key}`, item.label),
+                  })}
                   style={[
                     s.chip,
                     {
@@ -384,6 +396,10 @@ export function EditBookScreen() {
               <Pressable
                 key={g}
                 onPress={() => !disabled && toggleGenre(g)}
+                accessibilityRole="button"
+                accessibilityLabel={t("books.addBook.accessibility.toggleGenre", "Toggle genre: {{genre}}", {
+                  genre: t(`books.genres.${slug}`, g),
+                })}
                 style={[
                   s.genreChip,
                   {
@@ -420,12 +436,15 @@ export function EditBookScreen() {
           numberOfLines={2}
           textAlignVertical="top"
           maxLength={200}
+          accessibilityLabel={t("books.addBook.accessibility.notesInput", "Notes for swappers")}
         />
 
         {/* ── Save ── */}
         <Pressable
           onPress={handleSave}
           disabled={!canSubmit || updateBook.isPending}
+          accessibilityRole="button"
+          accessibilityLabel={t("books.editBook.accessibility.saveChanges", "Save changes")}
           style={({ pressed }) => [
             s.saveBtn,
             {
@@ -460,6 +479,8 @@ export function EditBookScreen() {
           <Pressable
             onPress={handleDelete}
             disabled={deleteBook.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={t("books.editBook.accessibility.deleteBook", "Delete book")}
             style={({ pressed }) => [
               s.deleteBtn,
               {

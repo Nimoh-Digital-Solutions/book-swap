@@ -30,3 +30,5 @@ google-auth>=2.0
 
 exponent-server-sdk>=2.1
 better-profanity
+
+sentry-sdk>=2.0

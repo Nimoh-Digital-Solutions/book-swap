@@ -16,6 +16,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors } from '@/hooks/useColors';
+import { hapticNotification } from '@/lib/haptics';
 import type { MessagesStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/stores/authStore';
 import type { DeclineReason, ExchangeDetail } from '@/types';
@@ -24,6 +25,7 @@ import {
   useAcceptExchange,
   useApproveCounter,
   useCancelExchange,
+  useCompleteExchange,
   useConfirmReturn,
   useConfirmSwap,
   useDeclineExchange,
@@ -32,7 +34,7 @@ import {
 import { ConditionsReviewModal } from './ConditionsReviewModal';
 import { DeclineReasonSheet } from './DeclineReasonSheet';
 
-function InfoRow({ icon: Icon, text, color }: { icon: any; text: string; color: string }) {
+function InfoRow({ icon: Icon, text, color }: { icon: React.ComponentType<{ size?: number; color?: string }>; text: string; color: string }) {
   return (
     <View style={s.infoRow}>
       <Icon size={16} color={color} />
@@ -64,10 +66,12 @@ export function DetailActions({ exchange }: Props) {
   const approveCounter = useApproveCounter();
   const acceptConditions = useAcceptConditions();
   const confirmSwap = useConfirmSwap();
+  const completeExchange = useCompleteExchange();
   const requestReturn = useRequestReturn();
   const confirmReturn = useConfirmReturn();
 
   const doConfirm = (title: string, msg: string, onConfirm: () => void, destructive = false) => {
+    void hapticNotification(destructive ? 'warning' : 'success');
     Alert.alert(title, msg, [
       { text: t('common.cancel', 'Cancel'), style: 'cancel' },
       { text: t('common.confirm', 'Confirm'), style: destructive ? 'destructive' : 'default', onPress: onConfirm },
@@ -355,11 +359,26 @@ export function DetailActions({ exchange }: Props) {
       <View style={s.wrap}>
         <InfoRow icon={CheckCircle} text={t('exchanges.swapComplete', 'Swap confirmed by both parties!')} color={accent} />
         {isPermanent ? (
-          <InfoRow
-            icon={ArrowLeftRight}
-            text={t('exchanges.permanentSwapNote', 'This is a permanent swap — no return needed.')}
-            color={c.text.secondary}
-          />
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('exchanges.completeExchange', 'Complete Exchange')}
+              style={({ pressed }) => [s.primaryBtn, { backgroundColor: accent, opacity: pressed ? 0.9 : 1 }]}
+              onPress={() => doConfirm(
+                t('exchanges.completeTitle', 'Complete Exchange?'),
+                t('exchanges.completeMsg', 'This will finalize the exchange and transfer book ownership permanently.'),
+                () => completeExchange.mutate(exchange.id),
+              )}
+            >
+              <CheckCircle size={16} color="#fff" />
+              <Text style={s.primaryBtnText}>{t('exchanges.completeExchange', 'Complete Exchange')}</Text>
+            </Pressable>
+            <InfoRow
+              icon={ArrowLeftRight}
+              text={t('exchanges.permanentSwapNote', 'This is a permanent swap — no return needed.')}
+              color={c.text.secondary}
+            />
+          </>
         ) : (
           <Pressable
             accessibilityRole="button"

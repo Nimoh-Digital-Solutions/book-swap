@@ -89,6 +89,10 @@ http.interceptors.response.use(
       showGlobalErrorToast('common.error');
       return Promise.reject(error);
     }
+    if (!error.response && error.code !== 'ERR_CANCELED') {
+      showGlobalErrorToast('common.networkError');
+      return Promise.reject(error);
+    }
     const status = error.response?.status;
     // 429 retry
     if (status === 429) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { wsManager } from '@/services/websocket';
 import { useAuthStore } from '@/stores/authStore';
+import { resolveMediaUrl } from '@/lib/resolveMediaUrl';
 import type { Message } from '@/types';
 
 const TYPING_TIMEOUT_MS = 3_000;
@@ -29,7 +30,7 @@ function wsPayloadToMessage(p: WsMessagePayload): Message {
     exchange: p.exchange,
     sender: p.sender as Message['sender'],
     content: p.content,
-    image: p.image,
+    image: resolveMediaUrl(p.image),
     read_at: p.read_at,
     created_at: p.created_at,
   };
@@ -58,8 +59,16 @@ export function useChatWebSocket({ exchangeId, enabled = true }: Options) {
 
     const unsubs: (() => void)[] = [];
 
+    let wasConnected = false;
+
     unsubs.push(
-      wsManager.on('__connected__', () => setIsConnected(true)),
+      wsManager.on('__connected__', () => {
+        setIsConnected(true);
+        if (wasConnected) {
+          qc.invalidateQueries({ queryKey: ['messages', exchangeId] });
+        }
+        wasConnected = true;
+      }),
     );
     unsubs.push(
       wsManager.on('__disconnected__', () => setIsConnected(false)),

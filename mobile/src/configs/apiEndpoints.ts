@@ -72,6 +72,7 @@ export const API = {
     acceptConditions: (id: string) => `${EXCHANGES}/${id}/accept-conditions/`,
     conditions: (id: string) => `${EXCHANGES}/${id}/conditions/`,
     confirmSwap: (id: string) => `${EXCHANGES}/${id}/confirm-swap/`,
+    complete: (id: string) => `${EXCHANGES}/${id}/complete/`,
     requestReturn: (id: string) => `${EXCHANGES}/${id}/request-return/`,
     confirmReturn: (id: string) => `${EXCHANGES}/${id}/confirm-return/`,
     incoming: `${EXCHANGES}/incoming/`,

@@ -34,7 +34,7 @@ import { prefsStorage, type AddBookPreference } from "@/lib/storage";
 import { useEmailVerificationGate } from "@/hooks/useEmailVerificationGate";
 import { useMyBooks, useDeleteBook } from "@/features/books/hooks/useBooks";
 import type { Book } from "@/types";
-import type { ProfileStackParamList } from "@/navigation/types";
+import type { ProfileStackParamList, MainTabNavigationProp } from "@/navigation/types";
 
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "MyBooks">;
 type StatusFilter = "all" | "available" | "in_exchange" | "returned";
@@ -74,16 +74,16 @@ export function MyBooksScreen() {
     const all = books ?? [];
     return {
       all: all.length,
-      available: all.filter((b: any) => (b.status ?? "available") === "available").length,
-      in_exchange: all.filter((b: any) => (b.status ?? "available") === "in_exchange").length,
-      returned: all.filter((b: any) => (b.status ?? "available") === "returned").length,
+      available: all.filter((b) => (b.status ?? "available") === "available").length,
+      in_exchange: all.filter((b) => (b.status ?? "available") === "in_exchange").length,
+      returned: all.filter((b) => (b.status ?? "available") === "returned").length,
     };
   }, [books]);
 
   const filtered = useMemo(() => {
     let list = books ?? [];
     if (statusFilter !== "all") {
-      list = list.filter((b: any) => (b.status ?? "available") === statusFilter);
+      list = list.filter((b) => (b.status ?? "available") === statusFilter);
     }
     if (search.trim()) {
       const q = search.toLowerCase().trim();
@@ -124,8 +124,8 @@ export function MyBooksScreen() {
   const navigateToChoice = useCallback(
     (choice: AddBookPreference) => {
       if (choice === "scan") {
-        const tabNav = navigation.getParent();
-        (tabNav as any)?.navigate("ScanTab");
+        const tabNav = navigation.getParent<MainTabNavigationProp>();
+        tabNav?.navigate("ScanTab");
       } else {
         navigation.navigate("AddBook");
       }
@@ -161,7 +161,7 @@ export function MyBooksScreen() {
   const renderBook = useCallback(
     ({ item }: { item: Book }) => {
       const statusKey = item.status ?? "available";
-      const coverUri = item.cover_url || item.primary_photo || item.photos?.[0]?.image;
+      const coverUri = item.primary_thumbnail || item.cover_url || item.primary_photo || item.photos?.[0]?.image;
       const condition = item.condition;
 
       return (
@@ -396,6 +396,9 @@ export function MyBooksScreen() {
         showsVerticalScrollIndicator={false}
         onRefresh={refetch}
         refreshing={isRefetching}
+        windowSize={5}
+        maxToRenderPerBatch={8}
+        removeClippedSubviews
         ListEmptyComponent={
           search.trim() || statusFilter !== "all" ? (
             <EmptyState

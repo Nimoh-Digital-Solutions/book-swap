@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, MapPin } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +9,7 @@ import { Image } from 'expo-image';
 
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
+import type { MessagesStackParamList } from '@/navigation/types';
 
 interface Props {
   partnerName: string;
@@ -25,7 +27,7 @@ export function ChatHeader({
   showMeetupButton = true,
 }: Props) {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<MessagesStackParamList, 'Chat'>>();
   const c = useColors();
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
@@ -41,6 +43,8 @@ export function ChatHeader({
           onPress={() => navigation.goBack()}
           hitSlop={12}
           style={s.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back', 'Back')}
         >
           <ChevronLeft size={22} color={c.text.primary} />
           <Text style={[s.backText, { color: c.text.primary }]}>
@@ -84,6 +88,8 @@ export function ChatHeader({
               s.meetupBtn,
               { backgroundColor: isDark ? c.auth.card : c.neutral[100], opacity: pressed ? 0.8 : 1 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('messaging.suggestMeetup', 'Suggest Meetup')}
           >
             <MapPin size={13} color={accent} />
             <Text style={[s.meetupText, { color: isDark ? c.auth.textSage : c.text.secondary }]}>

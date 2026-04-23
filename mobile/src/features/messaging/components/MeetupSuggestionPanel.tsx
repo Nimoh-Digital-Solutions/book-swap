@@ -43,7 +43,12 @@ export function MeetupSuggestionPanel({ visible, locations, isLoading, onSelect,
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.backdrop}>
-        <Pressable style={s.backdropTap} onPress={onClose} />
+        <Pressable
+          style={s.backdropTap}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('messaging.closeMeetupSheet', 'Close meetup suggestions')}
+        />
         <View style={[s.sheet, { backgroundColor: sheetBg }]}>
           <View style={[s.handle, { backgroundColor: handleBg }]} />
 
@@ -54,7 +59,12 @@ export function MeetupSuggestionPanel({ visible, locations, isLoading, onSelect,
                 {t('messaging.meetupTitle', 'Suggest Meetup')}
               </Text>
             </View>
-            <Pressable onPress={onClose} hitSlop={12}>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close', 'Close')}
+            >
               <X size={20} color={c.text.secondary} />
             </Pressable>
           </View>
@@ -78,6 +88,11 @@ export function MeetupSuggestionPanel({ visible, locations, isLoading, onSelect,
                     s.card,
                     { backgroundColor: cardBg, borderColor: cardBorder, opacity: pressed ? 0.85 : 1 },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('messaging.selectMeetupLocation', {
+                    defaultValue: 'Select {{name}}',
+                    name: loc.name,
+                  })}
                 >
                   <View style={[s.iconWrap, { backgroundColor: isDark ? c.auth.cardBorder : c.neutral[200] }]}>
                     <Icon size={18} color={accent} />

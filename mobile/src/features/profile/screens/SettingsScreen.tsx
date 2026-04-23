@@ -44,6 +44,7 @@ import { radius, spacing } from "@/constants/theme";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { useBiometric } from "@/hooks/useBiometric";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { optIn, optOut, isOptedOut } from "@/lib/analytics";
 import { tokenStorage } from "@/lib/storage";
 import { markBiometricAuthCompleted } from "@/services/BiometricGate";
 import { http } from "@/services/http";
@@ -111,6 +112,7 @@ export function SettingsScreen() {
   );
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
   const [profilePublic, setProfilePublic] = useState(user?.profile_public ?? true);
+  const [analyticsOptedOut, setAnalyticsOptedOut] = useState(isOptedOut());
   const dataExport = useDataExport();
 
   const toggleBiometric = useCallback(
@@ -125,6 +127,16 @@ export function SettingsScreen() {
     },
     [authenticate],
   );
+
+  const toggleAnalytics = useCallback((val: boolean) => {
+    if (val) {
+      optOut();
+      setAnalyticsOptedOut(true);
+    } else {
+      optIn();
+      setAnalyticsOptedOut(false);
+    }
+  }, []);
 
   const setUser = useAuthStore((s) => s.setUser);
   const appearanceMode = useThemeStore((s) => s.mode);
@@ -374,6 +386,39 @@ export function SettingsScreen() {
               value={profilePublic}
               onValueChange={(val) => toggleProfilePublic.mutate(val)}
               disabled={toggleProfilePublic.isPending}
+              trackColor={{
+                true: c.auth.golden,
+                false: isDark ? c.auth.cardBorder : c.neutral[200],
+              }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={[s.divider, { backgroundColor: dividerColor }]} />
+          <View style={s.switchRow}>
+            <View style={s.rowLeft}>
+              <View
+                style={[s.iconCircle, { backgroundColor: iconCircleBg }]}
+              >
+                <Radar
+                  size={20}
+                  color={isDark ? c.auth.golden : c.text.secondary}
+                />
+              </View>
+              <View style={s.rowTextWrap}>
+                <Text style={[s.rowTitle, { color: c.text.primary }]}>
+                  {t("settings.analyticsOptOut", "Opt out of analytics")}
+                </Text>
+                <Text style={[s.rowSubtitle, { color: c.text.secondary }]}>
+                  {t(
+                    "settings.analyticsOptOutSubtitle",
+                    "Disable anonymous usage analytics",
+                  )}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={analyticsOptedOut}
+              onValueChange={toggleAnalytics}
               trackColor={{
                 true: c.auth.golden,
                 false: isDark ? c.auth.cardBorder : c.neutral[200],

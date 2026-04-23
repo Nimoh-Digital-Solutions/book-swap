@@ -1,4 +1,4 @@
-import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { NavigatorScreenParams, NavigationProp } from '@react-navigation/native';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -10,11 +10,11 @@ export type AuthStackParamList = {
 };
 
 export type MainTabParamList = {
-  HomeTab: undefined;
-  BrowseTab: undefined;
-  ScanTab: undefined;
-  MessagesTab: undefined;
-  ProfileTab: undefined;
+  HomeTab: NavigatorScreenParams<HomeStackParamList> | undefined;
+  BrowseTab: NavigatorScreenParams<BrowseStackParamList> | undefined;
+  ScanTab: NavigatorScreenParams<ScanStackParamList> | undefined;
+  MessagesTab: NavigatorScreenParams<MessagesStackParamList> | undefined;
+  ProfileTab: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 export type HomeStackParamList = {
@@ -99,6 +99,8 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: NavigatorScreenParams<MainTabParamList>;
 };
+
+export type MainTabNavigationProp = NavigationProp<MainTabParamList>;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

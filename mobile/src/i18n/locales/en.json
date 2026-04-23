@@ -3,6 +3,7 @@
     "loading": "Loading...",
     "success": "Success",
     "error": "Something went wrong",
+    "networkError": "Connection failed. Check your internet and try again.",
     "retry": "Retry",
     "cancel": "Cancel",
     "save": "Save",
@@ -18,7 +19,8 @@
     "saving": "Saving...",
     "close": "Close",
     "ok": "OK",
-    "unknownUser": "Unknown"
+    "unknownUser": "Unknown",
+    "appLogo": "BookSwap logo"
   },
   "errors": {
     "websocketExhausted": "Could not reconnect. Pull to refresh or reopen the app to restore live updates."
@@ -128,8 +130,26 @@
     "exchanges": "Exchanges",
     "profile": "Profile"
   },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "yesterday",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "monthsAgo": "{{count}}mo ago",
+    "yearsAgo": "{{count}}y ago"
+  },
   "books": {
     "available": "Available",
+    "createError": "Failed to create book",
+    "updateError": "Failed to update book",
+    "deleteError": "Failed to delete book",
+    "photoUploadError": "Failed to upload photo",
+    "photoDeleteError": "Failed to delete photo",
+    "photoReorderError": "Failed to reorder photos",
+    "bookCardA11y": "{{title}} by {{author}}",
+    "untitled": "Untitled",
     "description": "Description",
     "genresHeading": "Genres",
     "genres": {
@@ -196,7 +216,13 @@
       "submitting": "Adding...",
       "successTitle": "Book Added",
       "successMsg": "Your book has been listed!",
-      "errorMsg": "Failed to add book. Please try again."
+      "errorMsg": "Failed to add book. Please try again.",
+      "validation": {
+        "titleRequired": "Title is required",
+        "authorRequired": "Author is required",
+        "conditionRequired": "Select a condition",
+        "languageRequired": "Select a language"
+      }
     },
     "swapTypes": {
       "temporary": "Temporary (with return)",
@@ -295,6 +321,7 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "cardA11y": "Exchange with @{{user}}. {{left}} and {{right}}. {{status}}.",
     "chats": "Chats",
     "noChats": "No conversations yet",
     "noChatsHint": "Start a swap and chat with your exchange partner.",
@@ -468,7 +495,8 @@
     "loadFailedBody": "Check your connection and try again.",
     "sendFailed": "Message could not be sent. Try again.",
     "attachImage": "Attach image",
-    "meetupProposal": "Meetup suggestion"
+    "meetupProposal": "Meetup suggestion",
+    "imageUnavailable": "Image unavailable"
   },
   "notifications": {
     "title": "Notifications",
@@ -575,6 +603,8 @@
     }
   },
   "ratings": {
+    "rate1Star": "Rate 1 star",
+    "rateStars": "Rate {{count}} stars",
     "loadFailed": "Could not load rating status.",
     "retry": "Retry",
     "error": "Failed to submit rating",
@@ -614,6 +644,8 @@
     "privacy": "Privacy & Visibility",
     "profilePublic": "Public profile",
     "profilePublicSubtitle": "Allow other users to see your profile",
+    "analyticsOptOut": "Opt out of analytics",
+    "analyticsOptOutSubtitle": "Disable anonymous usage analytics",
     "profileVisibilityError": "Failed to update profile visibility.",
     "currentLocation": "Current Location",
     "deleteAccount": "Delete Account",

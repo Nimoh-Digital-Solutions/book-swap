@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import type { User } from '@/types';
-import { tokenStorage, asyncQueryStorage } from '@/lib/storage';
+import { tokenStorage, secureUserStorage } from '@/lib/storage';
+import { clearMutationQueue } from '@/lib/offlineMutationQueue';
 import { queryClient } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { authApi } from '@/features/auth/api/auth.api';
-
-const USER_JSON_KEY = 'bookswap_user_json';
 
 interface AuthState {
   user: User | null;
@@ -26,20 +25,23 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   setAuth: async (user, accessToken, refreshToken) => {
     tokenStorage.setTokens(accessToken, refreshToken);
-    await asyncQueryStorage.setItem(USER_JSON_KEY, JSON.stringify(user));
+    secureUserStorage.set(JSON.stringify(user));
     setSentryUser(user.id);
     set({ user, isAuthenticated: true });
   },
 
   setUser: async (user) => {
     setSentryUser(user.id);
-    await asyncQueryStorage.setItem(USER_JSON_KEY, JSON.stringify(user));
+    secureUserStorage.set(JSON.stringify(user));
     set({ user });
   },
 
   logout: async () => {
     tokenStorage.clearAll();
-    await asyncQueryStorage.removeItem(USER_JSON_KEY);
+    tokenStorage.clearPushToken();
+    tokenStorage.setBiometricEnabled(false);
+    secureUserStorage.remove();
+    clearMutationQueue();
     queryClient.clear();
     setSentryUser(null);
     set({ user: null, isAuthenticated: false });
@@ -55,7 +57,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     try {
       const access = tokenStorage.getAccess();
       const refresh = tokenStorage.getRefresh();
-      const userJson = await asyncQueryStorage.getItem(USER_JSON_KEY);
+      const userJson = secureUserStorage.get();
       let user: User | null = null;
       if (userJson) {
         try {
@@ -70,11 +72,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         try {
           user = await authApi.getMe();
           if (user) {
-            await asyncQueryStorage.setItem(USER_JSON_KEY, JSON.stringify(user));
+            secureUserStorage.set(JSON.stringify(user));
           }
         } catch {
           tokenStorage.clearAll();
-          await asyncQueryStorage.removeItem(USER_JSON_KEY);
+          secureUserStorage.remove();
           setSentryUser(null);
           set({ user: null, isAuthenticated: false, isHydrated: true });
           return;

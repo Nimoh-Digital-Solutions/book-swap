@@ -44,10 +44,11 @@ import type { BrowseStackParamList } from "@/navigation/types";
 let MapView: typeof import("react-native-maps").default | null = null;
 let MapMarker: typeof import("react-native-maps").MapMarker | null = null;
 let MapCircle: typeof import("react-native-maps").Circle | null = null;
-let PROVIDER_DEFAULT: any = null;
-let PROVIDER_GOOGLE: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic require() for optional native maps
+let PROVIDER_DEFAULT: any = null; // eslint-disable-line
+let PROVIDER_GOOGLE: any = null; // eslint-disable-line
 let mapsAvailable = false;
-let SuperclusterClass: any = null;
+let SuperclusterClass: any = null; // eslint-disable-line
 
 try {
   const maps = require("react-native-maps");
@@ -183,15 +184,15 @@ export function BrowseMapScreen() {
     });
 
     const points: BookPoint[] = books
-      .filter((b) => (b as any).location?.coordinates)
+      .filter((b) => b.location?.coordinates)
       .map((b) => ({
         type: "Feature" as const,
         properties: { bookId: b.id },
         geometry: {
           type: "Point" as const,
           coordinates: [
-            (b as any).location.coordinates[0],
-            (b as any).location.coordinates[1],
+            b.location!.coordinates[0],
+            b.location!.coordinates[1],
           ],
         },
       }));
@@ -659,11 +660,12 @@ export function BrowseMapScreen() {
           const isCluster =
             "cluster" in feature.properties &&
             feature.properties.cluster;
+          const props = feature.properties;
           const key = isCluster
-            ? `cluster-${(feature.properties as any).cluster_id}`
-            : `book-${(feature.properties as any).bookId}`;
-          const count = isCluster
-            ? (feature.properties as any).point_count
+            ? `cluster-${'cluster_id' in props ? props.cluster_id : ''}`
+            : `book-${'bookId' in props ? props.bookId : ''}`;
+          const count = isCluster && 'point_count' in props
+            ? props.point_count
             : undefined;
 
           return MapMarker ? (
@@ -674,10 +676,8 @@ export function BrowseMapScreen() {
               onPress={() => {
                 if (isCluster) {
                   handleClusterPress(feature);
-                } else {
-                  handleBookPress(
-                    (feature.properties as any).bookId,
-                  );
+                } else if ('bookId' in props) {
+                  handleBookPress(props.bookId);
                 }
               }}
             >

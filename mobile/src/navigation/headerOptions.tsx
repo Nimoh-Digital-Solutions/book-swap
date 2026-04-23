@@ -1,5 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/navigation/types";
 import { Bell, ChevronLeft, Home } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -126,7 +127,7 @@ export function NotificationBell() {
 
 export function HeaderBackButton() {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const c = useColors();
   const isDark = useIsDark();
 

@@ -3,6 +3,7 @@
     "loading": "Chargement...",
     "success": "Succès",
     "error": "Une erreur est survenue",
+    "networkError": "Connexion échouée. Vérifiez votre connexion internet et réessayez.",
     "retry": "Réessayer",
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -18,7 +19,8 @@
     "saving": "Enregistrement...",
     "ok": "OK",
     "close": "Fermer",
-    "unknownUser": "Inconnu"
+    "unknownUser": "Inconnu",
+    "appLogo": "Logo BookSwap"
   },
   "errors": {
     "websocketExhausted": "Impossible de se reconnecter. Tirez pour rafraîchir ou rouvrez l'application."
@@ -128,8 +130,26 @@
     "exchanges": "Échanges",
     "profile": "Profil"
   },
+  "time": {
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{count}}min",
+    "hoursAgo": "il y a {{count}}h",
+    "yesterday": "hier",
+    "daysAgo": "il y a {{count}}j",
+    "weeksAgo": "il y a {{count}}sem",
+    "monthsAgo": "il y a {{count}}mois",
+    "yearsAgo": "il y a {{count}}an"
+  },
   "books": {
     "available": "Disponible",
+    "createError": "Échec de la création du livre",
+    "updateError": "Échec de la mise à jour du livre",
+    "deleteError": "Échec de la suppression du livre",
+    "photoUploadError": "Échec du téléchargement de la photo",
+    "photoDeleteError": "Échec de la suppression de la photo",
+    "photoReorderError": "Échec de la réorganisation des photos",
+    "bookCardA11y": "{{title}} par {{author}}",
+    "untitled": "Sans titre",
     "description": "Description",
     "genresHeading": "Genres",
     "genres": {
@@ -196,7 +216,13 @@
       "submitting": "Ajout en cours...",
       "successTitle": "Livre ajouté",
       "successMsg": "Votre livre a été publié !",
-      "errorMsg": "Échec de l'ajout. Veuillez réessayer."
+      "errorMsg": "Échec de l'ajout. Veuillez réessayer.",
+      "validation": {
+        "titleRequired": "Le titre est requis",
+        "authorRequired": "L'auteur est requis",
+        "conditionRequired": "Sélectionnez un état",
+        "languageRequired": "Sélectionnez une langue"
+      }
     },
     "swapTypes": {
       "temporary": "Temporaire (avec retour)",
@@ -295,6 +321,7 @@
     "distanceKm": "{{count}} km"
   },
   "exchanges": {
+    "cardA11y": "Échange avec @{{user}}. {{left}} et {{right}}. {{status}}.",
     "chats": "Messages",
     "noChats": "Pas encore de conversations",
     "noChatsHint": "Commencez un échange et discutez avec votre partenaire.",
@@ -466,6 +493,7 @@
     "typing": "écrit...",
     "attachImage": "Joindre une image",
     "meetupProposal": "Suggestion de lieu de rencontre",
+    "imageUnavailable": "Image indisponible",
     "loadFailedTitle": "Impossible de charger les messages",
     "loadFailedBody": "Vérifiez votre connexion et réessayez.",
     "sendFailed": "Le message n'a pas pu être envoyé. Réessayez."
@@ -584,6 +612,8 @@
     "submitFailed": "Échec de l'envoi. Veuillez réessayer.",
     "submitted": "Note envoyée",
     "thankYou": "Merci pour votre retour !",
+    "rate1Star": "Donner 1 étoile",
+    "rateStars": "Donner {{count}} étoiles",
     "loadFailed": "Impossible de charger le statut de la note.",
     "retry": "Réessayer"
   },
@@ -614,6 +644,8 @@
     "privacy": "Confidentialité et visibilité",
     "profilePublic": "Profil public",
     "profilePublicSubtitle": "Permettre aux autres utilisateurs de voir votre profil",
+    "analyticsOptOut": "Désactiver les analyses",
+    "analyticsOptOutSubtitle": "Désactiver les analyses d'utilisation anonymes",
     "profileVisibilityError": "Impossible de mettre à jour la visibilité du profil.",
     "currentLocation": "Position actuelle",
     "deleteAccount": "Supprimer le compte",
