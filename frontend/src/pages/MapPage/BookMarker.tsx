@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
@@ -12,6 +12,7 @@ export interface BookMarkerProps {
   position: google.maps.LatLngLiteral;
   isSelected: boolean;
   onSelect: (key: string | null) => void;
+  selectedBookId?: string | null;
 }
 
 export function BookMarker({
@@ -20,8 +21,16 @@ export function BookMarker({
   position,
   isSelected,
   onSelect,
+  selectedBookId,
 }: BookMarkerProps) {
   const { t } = useTranslation();
+
+  const orderedBooks = useMemo(() => {
+    if (!selectedBookId) return books;
+    const idx = books.findIndex((b) => b.id === selectedBookId);
+    if (idx <= 0) return books;
+    return [books[idx]!, ...books.slice(0, idx), ...books.slice(idx + 1)];
+  }, [books, selectedBookId]);
 
   const handleClick = useCallback(() => {
     onSelect(isSelected ? null : locationKey);
@@ -106,7 +115,7 @@ export function BookMarker({
 
             {/* Book list */}
             <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-              {books.slice(0, 5).map((book, i) => (
+              {orderedBooks.slice(0, 5).map((book, i) => (
                 <LocaleLink
                   key={book.id}
                   to={`/books/${book.id}`}

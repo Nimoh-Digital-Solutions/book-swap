@@ -274,6 +274,7 @@ export default function MapPage(): ReactElement {
                 position={{ lat: loc.latitude, lng: loc.longitude }}
                 isSelected={selectedKey === key}
                 onSelect={setSelectedKey}
+                selectedBookId={selectedBookId}
               />
             );
           })}
