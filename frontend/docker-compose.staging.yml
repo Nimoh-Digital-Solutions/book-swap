@@ -10,6 +10,8 @@ services:
         VITE_API_URL: https://api-stag.book-swaps.com
         VITE_APP_TITLE: BookSwap
         VITE_SENTRY_ENVIRONMENT: staging
+        VITE_SITE_URL: https://stag.book-swaps.com
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
     container_name: bs_frontend_staging
     restart: unless-stopped
     ports:
