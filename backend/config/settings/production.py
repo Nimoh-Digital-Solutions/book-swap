@@ -1,13 +1,33 @@
 """Production settings — always ensure secrets come from environment variables."""
 
+import os
+
 import sentry_sdk
+from django.core.exceptions import ImproperlyConfigured
 from nimoh_base.conf import NimohBaseSettings
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from config.settings.base import *  # noqa: F403
-from config.settings.base import env
+from config.settings.base import DEV_INSECURE_SECRET_KEY, env
+
+# ── Fail-fast on missing / insecure prod secrets (AUD-B-801, AUD-B-802) ──────
+# A misconfigured production deployment must crash immediately rather than
+# silently fall back to the dev SECRET_KEY or the local Postgres URL embedded
+# in ``base.py``. Both are convenient defaults for local dev; both are a
+# critical security failure if they ever leak into a real deployment.
+if SECRET_KEY in ("", DEV_INSECURE_SECRET_KEY):  # noqa: F405
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set to a unique production value via the SECRET_KEY env "
+        "var. The dev fallback is not allowed in production."
+    )
+
+if not os.environ.get("DATABASE_URL", "").strip():
+    raise ImproperlyConfigured(
+        "DATABASE_URL must be set in production via the DATABASE_URL env var. The "
+        "dev Postgres fallback in base.py is not allowed in production."
+    )
 
 DEBUG = False
 

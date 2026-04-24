@@ -143,9 +143,11 @@ def _maybe_send_email(
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=False)
-        logger.info("Notification email (%s) sent to %s.", prefs_field, user.email)
+        # AUD-B-603: log user PK rather than the raw email address; the user
+        # record is enough to correlate but doesn't leak PII into central logs.
+        logger.info("Notification email (%s) sent to user %s.", prefs_field, user.pk)
     except Exception as exc:
-        logger.warning("Email send failed (%s → %s): %s", prefs_field, user.email, exc)
+        logger.warning("Email send failed (%s → user %s): %s", prefs_field, user.pk, exc)
 
 
 def _notification_payload(notification) -> dict:
@@ -944,6 +946,7 @@ def _send_direct_email(
         )
         msg.attach_alternative(html_body, "text/html")
         msg.send(fail_silently=False)
-        logger.info("Direct email sent to %s: %s", user.email, subject)
+        # AUD-B-603: log user PK rather than raw email (see also above).
+        logger.info("Direct email sent to user %s: %s", user.pk, subject)
     except Exception as exc:
-        logger.warning("Direct email send failed (%s): %s", user.email, exc)
+        logger.warning("Direct email send failed (user %s): %s", user.pk, exc)

@@ -19,12 +19,16 @@ from nimoh_base.conf.social import (
 )
 
 # ── Environment variables ─────────────────────────────────────────────────────
+# Dev-only sentinel — production fails fast if SECRET_KEY equals this value
+# (see ``config.settings.production``). Never use this in production.
+DEV_INSECURE_SECRET_KEY = "django-insecure-bookswap-dev-only-DO-NOT-USE-IN-PROD"
+
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     DATABASE_URL=(str, ""),
     REDIS_URL=(str, "redis://localhost:6379/0"),
-    SECRET_KEY=(str, "IG)x_Jcqvsm^0&CCb=NK^oADJII186)0pSZ&=BhWn98XR$O&t_"),
+    SECRET_KEY=(str, DEV_INSECURE_SECRET_KEY),
 )
 
 # Resolve project root (two levels up from config/settings/) and load .env

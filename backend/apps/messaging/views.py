@@ -13,6 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
 from apps.trust_safety.services import get_blocked_user_ids
+from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import MeetupLocation, Message
@@ -38,6 +39,7 @@ class MessageViewSet(GenericViewSet):
     """
 
     permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]  # noqa: RUF012
+    pagination_class = DefaultPagination
 
     def initial(self, request, *args, **kwargs):
         """Resolve the exchange before permission checks."""

@@ -4,6 +4,7 @@ from rest_framework import generics, mixins, status, viewsets
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import Block, Report
@@ -31,6 +32,7 @@ class BlockViewSet(
 
     permission_classes = (IsAuthenticated,)
     serializer_class = BlockSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         return Block.objects.filter(blocker=self.request.user).select_related("blocked_user")
@@ -122,6 +124,7 @@ class ReportAdminListView(generics.ListAPIView):
 
     permission_classes = (IsAdminUser,)
     serializer_class = ReportListSerializer
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         qs = Report.objects.select_related("reporter", "reported_user").order_by("-created_at")

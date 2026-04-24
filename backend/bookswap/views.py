@@ -1,5 +1,6 @@
 """bookswap views — user profile, location, onboarding, account, and login endpoints."""
 
+import hashlib
 import logging
 from typing import ClassVar
 
@@ -36,6 +37,19 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
+def _hash_login_input(value: str) -> str:
+    """Return a stable, short hash of a login identifier for log correlation.
+
+    Used to keep failed-login traces correlatable across log lines without
+    leaking the raw email or username into central log aggregators / Sentry
+    breadcrumbs (see AUD-B-604).
+    """
+
+    if not value:
+        return "<empty>"
+    return hashlib.sha256(value.lower().encode("utf-8")).hexdigest()[:12]
+
+
 class UserMeView(APIView):
     """GET/PATCH the authenticated user's own profile."""
 
@@ -63,7 +77,9 @@ class UserDetailView(generics.RetrieveAPIView):
         from apps.trust_safety.services import get_blocked_user_ids
 
         blocked_ids = get_blocked_user_ids(self.request.user)
-        return User.objects.filter(is_active=True).exclude(pk__in=blocked_ids)
+        # SECURITY (AUD-B-601): respect ``profile_public`` — users who opted out
+        # of public discovery must 404 rather than expose their profile data.
+        return User.objects.filter(is_active=True, profile_public=True).exclude(pk__in=blocked_ids)
 
 
 class SetLocationView(APIView):
@@ -395,7 +411,17 @@ def login_view(request):
         return response
 
     except Exception as e:
-        logger.error("Login failed", extra={"email_or_username": email_or_username, "error": str(e)})
+        # AUD-B-604: never log raw email_or_username to the structured logger
+        # (it ends up in central log aggregators / Sentry breadcrumbs). Hash
+        # the input so support can still correlate failed-login bursts without
+        # leaking PII.
+        logger.error(
+            "Login failed",
+            extra={
+                "login_id_hash": _hash_login_input(email_or_username),
+                "error": str(e),
+            },
+        )
         AuditLog.log_event(
             event_type="login_failure",
             description="Login failed with unexpected error",

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from apps.books.models import BookStatus, SwapType
 from apps.messaging.models import Message
+from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import (
@@ -60,6 +61,7 @@ class ExchangeRequestViewSet(
     """
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         from apps.trust_safety.services import get_blocked_user_ids
@@ -95,6 +97,10 @@ class ExchangeRequestViewSet(
                 last_message_at=Max("messages__created_at"),
                 last_message_preview=Substr(last_msg_preview, 1, 80),
             )
+            # Explicit ordering keeps pagination deterministic — Django's
+            # ``.annotate()`` stripping ``Meta.ordering`` would otherwise raise
+            # ``UnorderedObjectListWarning`` and risk duplicates across pages.
+            .order_by("-created_at")
         )
 
     def get_serializer_class(self):
