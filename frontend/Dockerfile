@@ -51,6 +51,11 @@ RUN yarn build
 # To update: docker pull nginxinc/nginx-unprivileged:alpine && docker inspect nginxinc/nginx-unprivileged:alpine --format='{{index .RepoDigests 0}}'
 FROM nginxinc/nginx-unprivileged:alpine@sha256:07ac04b4a727a38e7360f3bd8bbe49a7433a8e2a3259dd403d2c982e5f4c7a1c
 
+# Pull latest security patches (fixes CVE-2026-31789 in libcrypto3/libssl3)
+USER root
+RUN apk upgrade --no-cache
+USER nginx
+
 # Copy custom nginx configuration (as a template — envsubst replaces ${CSP_CONNECT_SRC})
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 

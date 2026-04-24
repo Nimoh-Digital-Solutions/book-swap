@@ -158,12 +158,18 @@ jobs:
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL_STAGING }}
           EXPO_PUBLIC_ENV: staging
+          CI: "1"
         run: |
+          ARCH=$(uname -m)
+          if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "amd64" ]; then
+            echo "⚠️  Skipping mobile OTA — hermesc requires x86_64 (current: $ARCH)"
+            echo "   Run 'npx eas-cli update --branch staging' from an x86_64 machine instead."
+            exit 0
+          fi
           npx eas-cli update \
             --branch staging \
             --message "deploy: staging $(date -u +'%Y-%m-%d %H:%M') — ${GITHUB_SHA::8}" \
-            --no-bytecode \
-            --non-interactive
+            --no-bytecode
 
       # ── Health checks ─────────────────────────────────────────────────────────
       - name: Health check — backend
