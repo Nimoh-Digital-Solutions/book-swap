@@ -9,10 +9,11 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { EmptyPlaceholder } from '@components/common';
+import { BrandedLoader, EmptyPlaceholder } from '@components/common';
 import { useAuth } from '@features/auth';
 import { useProfile } from '@features/profile';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useUserCity } from '@hooks';
+import { AlertTriangle } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
@@ -48,15 +49,22 @@ export function BrowsePage(): ReactElement {
   const { isAuthenticated } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(isAuthenticated);
   const { filters, setFilters, clearFilters } = useBrowseFilters();
+  const { lat, lng } = useUserCity();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<BrowseBook | null>(null);
 
-  const activeRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
+  const hasExplicitRadius = filters.radius != null;
+  const baseRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
+  const activeRadius = filters.search && !hasExplicitRadius ? 50_000 : baseRadius;
+
+  const locationParams = !isAuthenticated && lat != null && lng != null
+    ? { lat, lng }
+    : {};
 
   const { data, isLoading, isError } = useBrowseBooks(
-    { ...filters, radius: activeRadius, page: currentPage, page_size: PAGE_SIZE },
+    { ...filters, ...locationParams, radius: activeRadius, page: currentPage, page_size: PAGE_SIZE },
   );
 
   const books = data?.results ?? [];
@@ -121,8 +129,8 @@ export function BrowsePage(): ReactElement {
 
   if (isAuthenticated && profileLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <BrandedLoader size="lg" label={t('common.loading', 'Loading…')} fillParent={false} />
       </div>
     );
   }

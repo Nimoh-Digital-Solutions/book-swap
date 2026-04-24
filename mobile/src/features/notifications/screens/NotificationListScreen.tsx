@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -24,6 +23,7 @@ import {
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { EmptyState } from "@/components/EmptyState";
+import { BrandedLoader } from "@/components/BrandedLoader";
 import { ANIMATION } from "@/constants/animation";
 import { radius, spacing } from "@/constants/theme";
 import {
@@ -180,7 +180,7 @@ export function NotificationListScreen() {
   if (isLoading) {
     return (
       <View style={[s.center, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
+        <BrandedLoader size="lg" />
       </View>
     );
   }

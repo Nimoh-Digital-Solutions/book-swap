@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   Pressable,
   ScrollView,
 } from "react-native";
@@ -18,6 +17,7 @@ import { http } from "@/services/http";
 import { API } from "@/configs/apiEndpoints";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius } from "@/constants/theme";
+import { BrandedLoader } from "@/components/BrandedLoader";
 import type { ScanStackParamList } from "@/navigation/types";
 
 type Route = RouteProp<ScanStackParamList, "ScanResult">;
@@ -74,10 +74,11 @@ export function ScanResultScreen() {
   if (isLoading && !hasPrefilledMetadata) {
     return (
       <View style={[s.centered, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
-        <Text style={[s.loadingTitle, { color: c.text.primary }]}>
-          {t("scanner.lookingUp", "Looking up your book...")}
-        </Text>
+        <BrandedLoader
+          size="lg"
+          fill={false}
+          label={t("scanner.lookingUp", "Looking up your book...")}
+        />
         <Text style={[s.loadingSub, { color: c.text.secondary }]}>
           ISBN {params.isbn}
         </Text>

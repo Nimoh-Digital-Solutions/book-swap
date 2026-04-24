@@ -1,0 +1,129 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #8c9c92;
+  width: 100%;
+}
+
+.fill {
+  height: 100%;
+  min-height: 200px;
+}
+
+.backdrop {
+  background-color: rgba(15, 26, 20, 0.85);
+  backdrop-filter: blur(2px);
+}
+
+.logoWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  animation: logo-pulse 1.6s ease-in-out infinite;
+}
+
+.ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #e4b643;
+  border-right-color: rgba(228, 182, 67, 0.4);
+  animation: ring-spin 1s linear infinite;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #8c9c92;
+  text-align: center;
+  max-width: 18rem;
+}
+
+/* Sizes ─────────────────────────────────────────────────────────── */
+
+.sm {
+  .logo {
+    width: 28px;
+    height: 28px;
+  }
+  .ring {
+    inset: -6px;
+    border-width: 1.5px;
+  }
+  .label {
+    font-size: 0.75rem;
+  }
+  gap: 0.625rem;
+}
+
+.md {
+  .logo {
+    width: 40px;
+    height: 40px;
+  }
+  .ring {
+    inset: -8px;
+    border-width: 2px;
+  }
+}
+
+.lg {
+  .logo {
+    width: 56px;
+    height: 56px;
+  }
+  .ring {
+    inset: -12px;
+    border-width: 2.5px;
+  }
+  .label {
+    font-size: 1rem;
+  }
+  gap: 1.25rem;
+}
+
+/* Animations ─────────────────────────────────────────────────────── */
+
+@keyframes ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .logo {
+    animation: none;
+  }
+  .ring {
+    border-top-color: #e4b643;
+    border-right-color: #e4b643;
+    border-bottom-color: rgba(228, 182, 67, 0.3);
+    border-left-color: rgba(228, 182, 67, 0.3);
+  }
+}

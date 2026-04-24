@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
@@ -15,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/EmptyState";
+import { BrandedLoader } from "@/components/BrandedLoader";
 import { radius, spacing } from "@/constants/theme";
 import { useBlocks, useUnblockUser } from "../hooks/useBlocks";
 import type { Block } from "@/types";
@@ -29,7 +29,6 @@ export function BlockedUsersScreen() {
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
-  const accent = c.auth.golden;
 
   const confirmUnblock = useCallback(
     (block: Block) => {
@@ -117,7 +116,7 @@ export function BlockedUsersScreen() {
   if (isLoading) {
     return (
       <View style={[s.center, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
+        <BrandedLoader size="lg" />
       </View>
     );
   }

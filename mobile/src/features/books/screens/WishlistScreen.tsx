@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import Animated, { FadeOut, Layout } from 'react-native-reanimated';
 import { Image } from 'expo-image';
@@ -14,6 +13,7 @@ import { AlertTriangle, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/EmptyState';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius, shadows } from '@/constants/theme';
 import { useWishlist, useRemoveWishlistItem } from '@/features/books/hooks/useWishlist';
@@ -138,12 +138,8 @@ export function WishlistScreen() {
 
   if (isLoading) {
     return (
-      <View style={[s.root, { backgroundColor: bg }]}>
-        <ActivityIndicator
-          size="large"
-          color={accent}
-          style={{ marginTop: 80 }}
-        />
+      <View style={[s.root, { backgroundColor: bg, alignItems: 'center', paddingTop: 80 }]}>
+        <BrandedLoader size="lg" fill={false} />
       </View>
     );
   }

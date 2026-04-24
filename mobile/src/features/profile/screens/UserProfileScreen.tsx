@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -27,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import { usePublicProfile } from '@/features/profile/hooks/usePublicProfile';
@@ -144,7 +144,7 @@ export function UserProfileScreen() {
   if (isLoading) {
     return (
       <View style={[s.root, s.center, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
+        <BrandedLoader size="lg" />
       </View>
     );
   }

@@ -2,7 +2,7 @@ import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { EmptyPlaceholder } from '@components/common';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
@@ -21,7 +21,6 @@ import {
   Edit2,
   Hash,
   Layers,
-  Loader2,
   ShieldCheck,
   Star,
   User,
@@ -53,8 +52,8 @@ export function BookDetailPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading" className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" aria-hidden="true" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <BrandedLoader size="lg" label={t('books.detail.loading', 'Loading book…')} fillParent={false} />
       </div>
     );
   }

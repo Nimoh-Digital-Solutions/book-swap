@@ -28,6 +28,7 @@ import {
 } from "@/features/books/hooks/useBooks";
 import { BookPhotoManager } from "@/features/books/components/BookPhotoManager";
 import { EmptyState } from "@/components/EmptyState";
+import { BrandedLoader } from "@/components/BrandedLoader";
 import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "@/features/books/constants";
 import type { ProfileStackParamList } from "@/navigation/types";
 
@@ -204,7 +205,7 @@ export function EditBookScreen() {
   if (bookLoading || !hydrated) {
     return (
       <View style={[s.center, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
+        <BrandedLoader size="lg" />
       </View>
     );
   }

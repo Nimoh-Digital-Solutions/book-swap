@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { registerRootComponent } from 'expo';
-import { View, ActivityIndicator, StyleSheet, Text, TextInput } from 'react-native';
+import { View, StyleSheet, Text, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { RootNavigator, navigationRef, linking } from '@/navigation';
 import { ToastRoot } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { WebSocketGate } from '@/services/WebSocketGate';
 import { BiometricGate } from '@/services/BiometricGate';
 import { IdleTimeoutGate, recordInteraction } from '@/services/IdleTimeoutGate';
@@ -38,7 +39,7 @@ initAnalytics();
 function LoadingFallback() {
   return (
     <View style={styles.fallback}>
-      <ActivityIndicator size="large" color="#fff" />
+      <BrandedLoader size="lg" />
     </View>
   );
 }
@@ -125,5 +126,5 @@ registerRootComponent(wrapRootComponent(App));
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  fallback: { flex: 1, backgroundColor: '#2563EB', justifyContent: 'center', alignItems: 'center' },
+  fallback: { flex: 1, backgroundColor: '#142219', justifyContent: 'center', alignItems: 'center' },
 });

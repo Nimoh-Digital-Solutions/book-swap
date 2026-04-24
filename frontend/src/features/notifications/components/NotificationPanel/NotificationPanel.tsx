@@ -7,6 +7,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BrandedLoader } from '@components';
 import type { Notification } from '@features/notifications';
 import {
   useMarkAllNotificationsRead,
@@ -134,8 +135,8 @@ export function NotificationPanel({ onClose: _onClose }: NotificationPanelProps)
 
       {/* Body */}
       {isLoading ? (
-        <div className="px-4 py-6 text-center text-sm text-[#8C9C92]">
-          Loading…
+        <div className="px-4 py-8">
+          <BrandedLoader size="sm" label={t('bell.loading', 'Loading…')} fillParent={false} />
         </div>
       ) : notifications.length === 0 ? (
         <div className="px-4 py-6 text-center text-sm text-[#8C9C92]">

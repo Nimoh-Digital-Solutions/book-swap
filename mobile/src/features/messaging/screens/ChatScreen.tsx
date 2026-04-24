@@ -33,6 +33,7 @@ import { useMeetupSuggestions } from '../hooks/useMeetupSuggestions';
 import { useAuthStore } from '@/stores/authStore';
 import { useExchangeDetail } from '@/features/exchanges/hooks/useExchanges';
 import { showErrorToast } from '@/components/Toast';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { useEmailVerificationGate } from '@/hooks/useEmailVerificationGate';
 
 type Route = RouteProp<MessagesStackParamList, 'Chat'>;
@@ -159,7 +160,7 @@ export function ChatScreen() {
           showMeetupButton={false}
         />
         <View style={s.loadingCenter}>
-          <ActivityIndicator size="large" color={c.auth.golden} />
+          <BrandedLoader size="lg" fill={false} />
         </View>
       </View>
     );

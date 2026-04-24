@@ -1,7 +1,7 @@
 import { type ReactElement, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useMapBooks, useRadiusCounts } from '@features/discovery';
 import type {
@@ -15,6 +15,7 @@ import {
   Circle,
   Map as GoogleMap,
   Marker,
+  useApiIsLoaded,
 } from '@vis.gl/react-google-maps';
 import { ArrowLeft, MapPin } from 'lucide-react';
 
@@ -231,6 +232,9 @@ export default function MapPage(): ReactElement {
           hasActiveFilters={hasActiveFilters}
         />
 
+        {/* Loading overlay while Google Maps script + initial book data load */}
+        <MapLoadingOverlay isDataLoading={isLoading} hasBooks={books.length > 0} />
+
         {/* Full-screen map */}
         <GoogleMap
           defaultCenter={center}
@@ -285,5 +289,45 @@ export default function MapPage(): ReactElement {
         </GoogleMap>
       </APIProvider>
     </main>
+  );
+}
+
+/**
+ * Branded overlay shown while the Google Maps script is initialising or while
+ * the first batch of book markers is loading. Sits inside `APIProvider` so it
+ * can read API readiness via `useApiIsLoaded`.
+ */
+function MapLoadingOverlay({
+  isDataLoading,
+  hasBooks,
+}: {
+  isDataLoading: boolean;
+  hasBooks: boolean;
+}): ReactElement | null {
+  const { t } = useTranslation();
+  const apiLoaded = useApiIsLoaded();
+
+  // Only show on the initial load:
+  //  - Maps API not yet ready, OR
+  //  - data is loading and we have no markers to render yet.
+  const visible = !apiLoaded || (isDataLoading && !hasBooks);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center bg-[#0f1a14]/95 pointer-events-none"
+      aria-hidden={!visible}
+    >
+      <BrandedLoader
+        size="lg"
+        label={
+          !apiLoaded
+            ? t('map.loading.tiles', 'Loading map…')
+            : t('map.loading.books', 'Finding books near you…')
+        }
+        fillParent={false}
+      />
+    </div>
   );
 }

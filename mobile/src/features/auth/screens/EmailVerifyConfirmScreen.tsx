@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,8 @@ import { CheckCircle, AlertCircle } from 'lucide-react-native';
 import type { AuthStackParamList } from '@/navigation/types';
 import { useColors } from '@/hooks/useColors';
 import { spacing, typography } from '@/constants/theme';
+
+import { BrandedLoader } from '@/components/BrandedLoader';
 
 import { authApi } from '../api/auth.api';
 import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
@@ -63,7 +65,7 @@ export function EmailVerifyConfirmScreen() {
       <View style={s.container}>
         {state === 'loading' && (
           <>
-            <ActivityIndicator size="large" color={c.auth.golden} />
+            <BrandedLoader size="lg" fill={false} />
             <Text style={[s.title, { color: c.auth.cream }]}>
               {t('auth.emailVerify.verifying', 'Verifying your email...')}
             </Text>

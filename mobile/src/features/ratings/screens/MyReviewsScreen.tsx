@@ -4,8 +4,8 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUserRatings } from '@/features/ratings/hooks/useRatings';
 import { RatingCard } from '@/features/ratings/components/RatingCard';
 import { EmptyState } from '@/components/EmptyState';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import type { Rating } from '@/types';
@@ -71,7 +72,7 @@ export function MyReviewsScreen() {
     return (
       <SafeAreaView style={[s.safe, { backgroundColor: bg }]} edges={['bottom']}>
         <View style={s.center}>
-          <ActivityIndicator size="large" color={accent} />
+          <BrandedLoader size="lg" />
         </View>
       </SafeAreaView>
     );

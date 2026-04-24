@@ -1,11 +1,13 @@
 import { type ReactElement, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BrandedLoader } from '@components';
 import {
   APIProvider,
   InfoWindow,
   Map as GoogleMap,
   Marker,
+  useApiIsLoaded,
 } from '@vis.gl/react-google-maps';
 
 import type { BrowseBook } from '../../types/discovery.types';
@@ -44,6 +46,7 @@ interface MapViewProps {
   books: BrowseBook[];
   userLocation: { latitude: number; longitude: number };
   radiusMetres: number;
+  isLoading?: boolean;
 }
 
 interface BookMarkerProps {
@@ -72,7 +75,12 @@ function BookMarker({ locationKey, books, position, isSelected, onSelect }: Book
   );
 }
 
-export function MapView({ books, userLocation, radiusMetres }: MapViewProps): ReactElement {
+export function MapView({
+  books,
+  userLocation,
+  radiusMetres,
+  isLoading = false,
+}: MapViewProps): ReactElement {
   const { t } = useTranslation();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -110,7 +118,8 @@ export function MapView({ books, userLocation, radiusMetres }: MapViewProps): Re
 
   return (
     <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-      <div className="w-full h-[500px] lg:h-[600px] rounded-2xl border border-[#28382D] overflow-hidden">
+      <div className="relative w-full h-[500px] lg:h-[600px] rounded-2xl border border-[#28382D] overflow-hidden">
+        <MiniMapLoadingOverlay isDataLoading={isLoading} hasBooks={books.length > 0} />
         <GoogleMap
           defaultCenter={center}
           defaultZoom={zoom}
@@ -154,5 +163,36 @@ export function MapView({ books, userLocation, radiusMetres }: MapViewProps): Re
         </GoogleMap>
       </div>
     </APIProvider>
+  );
+}
+
+function MiniMapLoadingOverlay({
+  isDataLoading,
+  hasBooks,
+}: {
+  isDataLoading: boolean;
+  hasBooks: boolean;
+}): ReactElement | null {
+  const { t } = useTranslation();
+  const apiLoaded = useApiIsLoaded();
+  const visible = !apiLoaded || (isDataLoading && !hasBooks);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="absolute inset-0 z-20 flex items-center justify-center bg-[#0f1a14]/95 pointer-events-none"
+      aria-hidden={!visible}
+    >
+      <BrandedLoader
+        size="md"
+        label={
+          !apiLoaded
+            ? t('discovery.map.loadingMap', 'Loading map…')
+            : t('discovery.map.loadingBooks', 'Finding books near you…')
+        }
+        fillParent={false}
+      />
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import {
   Switch,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,6 +21,7 @@ import {
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
 import { EmptyState } from '@/components/EmptyState';
+import { BrandedLoader } from '@/components/BrandedLoader';
 import type { NotificationPreferences } from '@/types';
 import {
   useNotificationPreferences,
@@ -105,7 +105,7 @@ export function NotificationPreferencesScreen() {
   if (isLoading) {
     return (
       <View style={[s.root, s.center, { backgroundColor: bg }]}>
-        <ActivityIndicator size="large" color={accent} />
+        <BrandedLoader size="lg" />
       </View>
     );
   }

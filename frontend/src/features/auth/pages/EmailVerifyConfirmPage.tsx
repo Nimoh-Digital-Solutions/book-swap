@@ -1,9 +1,9 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 import { authService } from '../services/auth.service';
 
@@ -56,10 +56,7 @@ export function EmailVerifyConfirmPage(): ReactElement {
       <div className="text-center max-w-md space-y-6">
         {state === 'loading' && (
           <>
-            <Loader2
-              className="w-12 h-12 text-[#E4B643] mx-auto animate-spin"
-              aria-hidden="true"
-            />
+            <BrandedLoader size="lg" fillParent={false} />
             <h1 className="text-2xl font-bold text-white">
               Verifying your email…
             </h1>

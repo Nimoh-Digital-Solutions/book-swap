@@ -47,7 +47,7 @@ export default function BrowsePage(): ReactElement {
   });
   const filteredBooks = recentBooks?.results ?? [];
   const hasLocation = lat != null && lng != null;
-  const { data: mapData } = useMapBooks(
+  const { data: mapData, isLoading: mapLoading } = useMapBooks(
     { radius: DEFAULT_RADIUS, lat: lat ?? undefined, lng: lng ?? undefined },
     hasLocation,
   );
@@ -301,6 +301,7 @@ export default function BrowsePage(): ReactElement {
                   books={mapData?.results ?? []}
                   userLocation={{ latitude: lat!, longitude: lng! }}
                   radiusMetres={DEFAULT_RADIUS}
+                  isLoading={mapLoading}
                 />
               ) : (
                 <div className="w-full h-full min-h-[400px] bg-[#152018] flex flex-col items-center justify-center text-center p-8">

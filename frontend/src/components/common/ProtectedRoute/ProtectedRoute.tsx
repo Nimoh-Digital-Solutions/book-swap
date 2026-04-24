@@ -1,6 +1,8 @@
 import { type ReactElement,type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 
+import { BrandedLoader } from '@components/common/BrandedLoader';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { PATHS } from '@routes/config/paths';
 
@@ -32,9 +34,14 @@ const ProtectedRoute = ({
   const isLoading = useAuthStore(s => s.isLoading);
   const location = useLocation();
   const { lng = 'en' } = useParams<{ lng: string }>();
+  const { t } = useTranslation();
 
   if (isLoading) {
-    return <div aria-busy="true" aria-live="polite">Loading…</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] bg-[#152018]">
+        <BrandedLoader size="lg" label={t('common.loading', 'Loading…')} fillParent={false} />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
