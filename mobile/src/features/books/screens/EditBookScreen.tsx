@@ -1,62 +1,47 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AlertTriangle, Save, Trash2 } from "lucide-react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Alert,
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { Image } from "expo-image";
-import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useTranslation } from "react-i18next";
-import { AlertTriangle, Check, Save, Trash2 } from "lucide-react-native";
 
+import { BrandedLoader } from "@/components/BrandedLoader";
+import { EmptyState } from "@/components/EmptyState";
 import { useColors, useIsDark } from "@/hooks/useColors";
-import { spacing, radius } from "@/constants/theme";
+
+import {
+  CONDITIONS,
+  ChipPicker,
+  CoverHeader,
+  GenreGrid,
+  LANGUAGES,
+  MAX_GENRES,
+  SWAP_TYPES,
+  SectionLabel,
+  bookFormStyles as s,
+} from "@/features/books/components/book-form";
+import { BookPhotoManager } from "@/features/books/components/BookPhotoManager";
 import {
   useBookDetail,
-  useUpdateBook,
   useDeleteBook,
-  type UpdateBookPayload,
+  useUpdateBook,
   type CreateBookPayload,
+  type UpdateBookPayload,
 } from "@/features/books/hooks/useBooks";
-import { BookPhotoManager } from "@/features/books/components/BookPhotoManager";
-import { EmptyState } from "@/components/EmptyState";
-import { BrandedLoader } from "@/components/BrandedLoader";
-import { GENRE_VALUES, GENRE_VALUE_TO_I18N_KEY, type GenreValue } from "@/features/books/constants";
 import type { ProfileStackParamList } from "@/navigation/types";
 
 type Route = RouteProp<ProfileStackParamList, "EditBook">;
 type Nav = NativeStackNavigationProp<ProfileStackParamList, "EditBook">;
-
-const CONDITIONS: { key: CreateBookPayload["condition"]; label: string }[] = [
-  { key: "new", label: "New" },
-  { key: "like_new", label: "Like New" },
-  { key: "good", label: "Good" },
-  { key: "acceptable", label: "Acceptable" },
-];
-
-const LANGUAGES: { key: CreateBookPayload["language"]; label: string }[] = [
-  { key: "en", label: "English" },
-  { key: "nl", label: "Dutch" },
-  { key: "de", label: "German" },
-  { key: "fr", label: "French" },
-  { key: "es", label: "Spanish" },
-  { key: "other", label: "Other" },
-];
-
-const SWAP_TYPES: { key: CreateBookPayload["swap_type"]; label: string }[] = [
-  { key: "temporary", label: "Temporary (with return)" },
-  { key: "permanent", label: "Permanent (keep)" },
-];
-
-const MAX_GENRES = 3;
 
 export function EditBookScreen() {
   const { t } = useTranslation();
@@ -64,7 +49,12 @@ export function EditBookScreen() {
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
   const navigation = useNavigation<Nav>();
-  const { data: book, isLoading: bookLoading, isError: bookError, refetch } = useBookDetail(params.bookId);
+  const {
+    data: book,
+    isLoading: bookLoading,
+    isError: bookError,
+    refetch,
+  } = useBookDetail(params.bookId);
   const updateBook = useUpdateBook(params.bookId);
   const deleteBook = useDeleteBook();
 
@@ -78,9 +68,14 @@ export function EditBookScreen() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
-  const [condition, setCondition] = useState<CreateBookPayload["condition"] | null>(null);
-  const [language, setLanguage] = useState<CreateBookPayload["language"] | null>(null);
-  const [swapType, setSwapType] = useState<CreateBookPayload["swap_type"]>("temporary");
+  const [condition, setCondition] = useState<
+    CreateBookPayload["condition"] | null
+  >(null);
+  const [language, setLanguage] = useState<
+    CreateBookPayload["language"] | null
+  >(null);
+  const [swapType, setSwapType] =
+    useState<CreateBookPayload["swap_type"]>("temporary");
   const [genres, setGenres] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [hydrated, setHydrated] = useState(false);
@@ -90,9 +85,11 @@ export function EditBookScreen() {
       setTitle(book.title ?? "");
       setAuthor(book.author ?? "");
       setDescription(book.description ?? "");
-      setCondition(book.condition as CreateBookPayload["condition"] ?? null);
-      setLanguage(book.language as CreateBookPayload["language"] ?? null);
-      setSwapType((book.swap_type as CreateBookPayload["swap_type"]) ?? "temporary");
+      setCondition((book.condition as CreateBookPayload["condition"]) ?? null);
+      setLanguage((book.language as CreateBookPayload["language"]) ?? null);
+      setSwapType(
+        (book.swap_type as CreateBookPayload["swap_type"]) ?? "temporary",
+      );
       setNotes(book.notes ?? "");
 
       const bookGenres: string[] = Array.isArray(book.genres)
@@ -105,7 +102,8 @@ export function EditBookScreen() {
     }
   }, [book, hydrated]);
 
-  const coverUrl: string | undefined = book?.cover_url || book?.photos?.[0]?.image;
+  const coverUrl: string | undefined =
+    book?.cover_url || book?.photos?.[0]?.image;
   const isbn: string | undefined = book?.isbn;
 
   const canSubmit = useMemo(
@@ -117,7 +115,7 @@ export function EditBookScreen() {
     [title, author, condition, language],
   );
 
-  const toggleGenre = (g: string) => {
+  const toggleGenre = useCallback((g: string) => {
     setGenres((prev) =>
       prev.includes(g)
         ? prev.filter((x) => x !== g)
@@ -125,7 +123,32 @@ export function EditBookScreen() {
           ? [...prev, g]
           : prev,
     );
-  };
+  }, []);
+
+  const conditionOptions = useMemo(
+    () =>
+      CONDITIONS.map((item) => ({
+        key: item.key,
+        label: t(`books.conditions.${item.key}`, item.label),
+      })),
+    [t],
+  );
+  const languageOptions = useMemo(
+    () =>
+      LANGUAGES.map((item) => ({
+        key: item.key,
+        label: t(`books.languages.${item.key}`, item.label),
+      })),
+    [t],
+  );
+  const swapTypeOptions = useMemo(
+    () =>
+      SWAP_TYPES.map((item) => ({
+        key: item.key,
+        label: t(`books.swapTypes.${item.key}`, item.label),
+      })),
+    [t],
+  );
 
   const handleSave = () => {
     if (!canSubmit || !condition || !language) return;
@@ -146,13 +169,21 @@ export function EditBookScreen() {
         Alert.alert(
           t("books.editBook.successTitle", "Book updated!"),
           t("books.editBook.successMsg", "Your changes have been saved."),
-          [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
+          [
+            {
+              text: t("common.ok", "OK"),
+              onPress: () => navigation.goBack(),
+            },
+          ],
         );
       },
       onError: () => {
         Alert.alert(
           t("common.error", "Error"),
-          t("books.editBook.errorMsg", "Failed to save changes. Please try again."),
+          t(
+            "books.editBook.errorMsg",
+            "Failed to save changes. Please try again.",
+          ),
         );
       },
     });
@@ -194,7 +225,10 @@ export function EditBookScreen() {
         <EmptyState
           icon={AlertTriangle}
           title={t("books.editBook.loadError", "Couldn't load book")}
-          subtitle={t("books.editBook.loadErrorHint", "Check your connection and try again.")}
+          subtitle={t(
+            "books.editBook.loadErrorHint",
+            "Check your connection and try again.",
+          )}
           actionLabel={t("common.retry", "Retry")}
           onAction={() => refetch()}
         />
@@ -221,233 +255,212 @@ export function EditBookScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Cover preview */}
-        {coverUrl ? (
-          <View style={[s.coverWrap, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <Image
-              source={{ uri: coverUrl }}
-              style={s.cover}
-              contentFit="cover"
-              transition={200}
-            />
-          </View>
-        ) : null}
+        <CoverHeader
+          coverUrl={coverUrl}
+          isbn={isbn}
+          cardBg={cardBg}
+          cardBorder={cardBorder}
+        />
 
-        {/* ISBN badge */}
-        {isbn ? (
-          <View style={[s.isbnBadge, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <Text style={[s.isbnText, { color: c.text.secondary }]}>ISBN {isbn}</Text>
-          </View>
-        ) : null}
+        <SectionLabel text={t("books.editBook.photosLabel", "Photos")} />
+        <BookPhotoManager
+          bookId={params.bookId}
+          photos={(book?.photos ?? []).map((p, i) => ({
+            id: p.id,
+            image: p.image,
+            position: p.order ?? i,
+          }))}
+        />
 
-        {/* ── Photos ── */}
-        <SectionLabel text={t("books.editBook.photosLabel", "Photos")} c={c} />
-        <BookPhotoManager bookId={params.bookId} photos={(book?.photos ?? []).map((p, i) => ({ id: p.id, image: p.image, position: p.order ?? i }))} />
-
-        {/* ── Title ── */}
-        <SectionLabel text={t("books.addBook.titleLabel", "Title")} required c={c} />
+        <SectionLabel text={t("books.addBook.titleLabel", "Title")} required />
         <TextInput
-          style={[s.input, { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary }]}
+          style={[
+            s.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: c.text.primary,
+            },
+          ]}
           value={title}
           onChangeText={setTitle}
-          placeholder={t("books.addBook.titlePlaceholder", "e.g. The Great Gatsby")}
+          placeholder={t(
+            "books.addBook.titlePlaceholder",
+            "e.g. The Great Gatsby",
+          )}
           placeholderTextColor={c.text.placeholder}
-          accessibilityLabel={t("books.addBook.accessibility.titleInput", "Book title")}
+          accessibilityLabel={t(
+            "books.addBook.accessibility.titleInput",
+            "Book title",
+          )}
         />
 
-        {/* ── Author ── */}
-        <SectionLabel text={t("books.addBook.authorLabel", "Author")} required c={c} />
+        <SectionLabel
+          text={t("books.addBook.authorLabel", "Author")}
+          required
+        />
         <TextInput
-          style={[s.input, { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary }]}
+          style={[
+            s.input,
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: c.text.primary,
+            },
+          ]}
           value={author}
           onChangeText={setAuthor}
-          placeholder={t("books.addBook.authorPlaceholder", "e.g. F. Scott Fitzgerald")}
+          placeholder={t(
+            "books.addBook.authorPlaceholder",
+            "e.g. F. Scott Fitzgerald",
+          )}
           placeholderTextColor={c.text.placeholder}
-          accessibilityLabel={t("books.addBook.accessibility.authorInput", "Author name")}
+          accessibilityLabel={t(
+            "books.addBook.accessibility.authorInput",
+            "Author name",
+          )}
         />
 
-        {/* ── Description ── */}
-        <SectionLabel text={t("books.addBook.descriptionLabel", "Description")} c={c} />
+        <SectionLabel
+          text={t("books.addBook.descriptionLabel", "Description")}
+        />
         <TextInput
           style={[
             s.input,
             s.multiline,
-            { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: c.text.primary,
+            },
           ]}
           value={description}
           onChangeText={setDescription}
-          placeholder={t("books.addBook.descriptionPlaceholder", "Brief description...")}
+          placeholder={t(
+            "books.addBook.descriptionPlaceholder",
+            "Brief description...",
+          )}
           placeholderTextColor={c.text.placeholder}
           multiline
           numberOfLines={3}
           textAlignVertical="top"
-          accessibilityLabel={t("books.addBook.accessibility.descriptionInput", "Book description")}
+          accessibilityLabel={t(
+            "books.addBook.accessibility.descriptionInput",
+            "Book description",
+          )}
         />
 
-        {/* ── Condition ── */}
-        <SectionLabel text={t("books.addBook.conditionLabel", "Condition")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {CONDITIONS.map((item) => {
-              const selected = condition === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setCondition(item.key)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("books.addBook.accessibility.selectCondition", "Select condition: {{label}}", {
-                    label: t(`books.conditions.${item.key}`, item.label),
-                  })}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[s.chipText, { color: selected ? "#152018" : c.text.secondary }]}
-                  >
-                    {t(`books.conditions.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <SectionLabel
+          text={t("books.addBook.conditionLabel", "Condition")}
+          required
+        />
+        <ChipPicker
+          options={conditionOptions}
+          value={condition}
+          onChange={setCondition}
+          cardBg={cardBg}
+          cardBorder={cardBorder}
+          accent={accent}
+          accessibilityLabelFor={(opt) =>
+            t(
+              "books.addBook.accessibility.selectCondition",
+              "Select condition: {{label}}",
+              { label: opt.label },
+            )
+          }
+        />
 
-        {/* ── Language ── */}
-        <SectionLabel text={t("books.addBook.languageLabel", "Language")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {LANGUAGES.map((item) => {
-              const selected = language === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setLanguage(item.key)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("books.addBook.accessibility.selectLanguage", "Select language: {{label}}", {
-                    label: t(`books.languages.${item.key}`, item.label),
-                  })}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[s.chipText, { color: selected ? "#152018" : c.text.secondary }]}
-                  >
-                    {t(`books.languages.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <SectionLabel
+          text={t("books.addBook.languageLabel", "Language")}
+          required
+        />
+        <ChipPicker
+          options={languageOptions}
+          value={language}
+          onChange={setLanguage}
+          cardBg={cardBg}
+          cardBorder={cardBorder}
+          accent={accent}
+          accessibilityLabelFor={(opt) =>
+            t(
+              "books.addBook.accessibility.selectLanguage",
+              "Select language: {{label}}",
+              { label: opt.label },
+            )
+          }
+        />
 
-        {/* ── Swap Type ── */}
-        <SectionLabel text={t("books.addBook.swapTypeLabel", "Swap Type")} required c={c} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
-          <View style={s.chipRow}>
-            {SWAP_TYPES.map((item) => {
-              const selected = swapType === item.key;
-              return (
-                <Pressable
-                  key={item.key}
-                  onPress={() => setSwapType(item.key)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("books.addBook.accessibility.selectSwapType", "Select swap type: {{label}}", {
-                    label: t(`books.swapTypes.${item.key}`, item.label),
-                  })}
-                  style={[
-                    s.chip,
-                    {
-                      backgroundColor: selected ? accent : cardBg,
-                      borderColor: selected ? accent : cardBorder,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[s.chipText, { color: selected ? "#152018" : c.text.secondary }]}
-                  >
-                    {t(`books.swapTypes.${item.key}`, item.label)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <SectionLabel
+          text={t("books.addBook.swapTypeLabel", "Swap Type")}
+          required
+        />
+        <ChipPicker
+          options={swapTypeOptions}
+          value={swapType}
+          onChange={setSwapType}
+          cardBg={cardBg}
+          cardBorder={cardBorder}
+          accent={accent}
+          accessibilityLabelFor={(opt) =>
+            t(
+              "books.addBook.accessibility.selectSwapType",
+              "Select swap type: {{label}}",
+              { label: opt.label },
+            )
+          }
+        />
 
-        {/* ── Genres ── */}
         <SectionLabel
           text={`${t("books.addBook.genresLabel", "Genres")} (${genres.length}/${MAX_GENRES})`}
-          c={c}
         />
-        <View style={s.genreGrid}>
-          {GENRE_VALUES.map((g) => {
-            const selected = genres.includes(g);
-            const disabled = !selected && genres.length >= MAX_GENRES;
-            const slug = GENRE_VALUE_TO_I18N_KEY[g as GenreValue];
-            return (
-              <Pressable
-                key={g}
-                onPress={() => !disabled && toggleGenre(g)}
-                accessibilityRole="button"
-                accessibilityLabel={t("books.addBook.accessibility.toggleGenre", "Toggle genre: {{genre}}", {
-                  genre: t(`books.genres.${slug}`, g),
-                })}
-                style={[
-                  s.genreChip,
-                  {
-                    backgroundColor: selected ? accent : cardBg,
-                    borderColor: selected ? accent : cardBorder,
-                    opacity: disabled ? 0.4 : 1,
-                  },
-                ]}
-              >
-                {selected && <Check size={12} color="#152018" strokeWidth={3} />}
-                <Text
-                  style={[s.genreChipText, { color: selected ? "#152018" : c.text.secondary }]}
-                >
-                  {t(`books.genres.${slug}`, g)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <GenreGrid
+          selected={genres}
+          onToggle={toggleGenre}
+          cardBg={cardBg}
+          cardBorder={cardBorder}
+          accent={accent}
+        />
 
-        {/* ── Notes ── */}
-        <SectionLabel text={t("books.addBook.notesLabel", "Notes for swappers")} c={c} />
+        <SectionLabel
+          text={t("books.addBook.notesLabel", "Notes for swappers")}
+        />
         <TextInput
           style={[
             s.input,
             s.multiline,
-            { backgroundColor: inputBg, borderColor: inputBorder, color: c.text.primary },
+            {
+              backgroundColor: inputBg,
+              borderColor: inputBorder,
+              color: c.text.primary,
+            },
           ]}
           value={notes}
           onChangeText={setNotes}
-          placeholder={t("books.addBook.notesPlaceholder", "Any notes for potential swappers...")}
+          placeholder={t(
+            "books.addBook.notesPlaceholder",
+            "Any notes for potential swappers...",
+          )}
           placeholderTextColor={c.text.placeholder}
           multiline
           numberOfLines={2}
           textAlignVertical="top"
           maxLength={200}
-          accessibilityLabel={t("books.addBook.accessibility.notesInput", "Notes for swappers")}
+          accessibilityLabel={t(
+            "books.addBook.accessibility.notesInput",
+            "Notes for swappers",
+          )}
         />
 
-        {/* ── Save ── */}
         <Pressable
           onPress={handleSave}
           disabled={!canSubmit || updateBook.isPending}
           accessibilityRole="button"
-          accessibilityLabel={t("books.editBook.accessibility.saveChanges", "Save changes")}
+          accessibilityLabel={t(
+            "books.editBook.accessibility.saveChanges",
+            "Save changes",
+          )}
           style={({ pressed }) => [
-            s.saveBtn,
+            s.primaryBtn,
             {
               backgroundColor: accent,
               opacity: !canSubmit ? 0.5 : pressed ? 0.9 : 1,
@@ -459,14 +472,13 @@ export function EditBookScreen() {
           ) : (
             <Save size={18} color="#152018" />
           )}
-          <Text style={s.saveBtnText}>
+          <Text style={s.primaryBtnText}>
             {updateBook.isPending
               ? t("books.editBook.saving", "Saving...")
               : t("books.editBook.save", "Save Changes")}
           </Text>
         </Pressable>
 
-        {/* ── Danger Zone ── */}
         <View style={[s.dangerZone, { borderColor: c.status.error + "40" }]}>
           <Text style={[s.dangerTitle, { color: c.status.error }]}>
             {t("books.editBook.dangerZone", "Danger Zone")}
@@ -481,7 +493,10 @@ export function EditBookScreen() {
             onPress={handleDelete}
             disabled={deleteBook.isPending}
             accessibilityRole="button"
-            accessibilityLabel={t("books.editBook.accessibility.deleteBook", "Delete book")}
+            accessibilityLabel={t(
+              "books.editBook.accessibility.deleteBook",
+              "Delete book",
+            )}
             style={({ pressed }) => [
               s.deleteBtn,
               {
@@ -504,143 +519,3 @@ export function EditBookScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-function SectionLabel({
-  text,
-  required,
-  c,
-}: {
-  text: string;
-  required?: boolean;
-  c: ReturnType<typeof useColors>;
-}) {
-  return (
-    <View style={s.labelRow}>
-      <Text style={[s.label, { color: c.text.primary }]}>{text}</Text>
-      {required && <Text style={[s.required, { color: c.auth.golden }]}>*</Text>}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
-  root: { flex: 1 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: 140,
-  },
-
-  coverWrap: {
-    width: 120,
-    height: 170,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    overflow: "hidden",
-    alignSelf: "center",
-    marginBottom: spacing.md,
-  },
-  cover: { width: "100%", height: "100%" },
-
-  isbnBadge: {
-    alignSelf: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    marginBottom: spacing.lg,
-  },
-  isbnText: { fontSize: 12, fontWeight: "500" },
-
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  label: { fontSize: 14, fontWeight: "600" },
-  required: { fontSize: 14, fontWeight: "700" },
-
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-  },
-  multiline: {
-    minHeight: 72,
-    paddingTop: 12,
-  },
-
-  chipScroll: { marginTop: 4 },
-  chipRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    paddingVertical: 4,
-  },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  chipText: { fontSize: 13, fontWeight: "600" },
-
-  genreGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: 4,
-  },
-  genreChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  genreChipText: { fontSize: 12, fontWeight: "600" },
-
-  saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 16,
-    borderRadius: radius.xl,
-    marginTop: spacing.xl,
-  },
-  saveBtnText: { color: "#152018", fontWeight: "700", fontSize: 16 },
-
-  dangerZone: {
-    marginTop: spacing.xl + 8,
-    padding: spacing.md,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderStyle: "dashed",
-  },
-  dangerTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  dangerDesc: {
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: spacing.md,
-  },
-  deleteBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 12,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-  },
-  deleteBtnText: { fontSize: 14, fontWeight: "700" },
-});
