@@ -7,5 +7,5 @@ export * from './OptimizedImage';
 export * from './PrefetchLink';
 export * from './ProtectedRoute';
 export * from './PwaUpdateBanner';
-export { SEOHead } from './SEOHead/SEOHead';
 export type { SEOHeadProps } from './SEOHead/SEOHead';
+export { SEOHead } from './SEOHead/SEOHead';

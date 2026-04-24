@@ -123,7 +123,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.4",
     "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.1.0",
     "@types/supercluster": "^7.1.3",

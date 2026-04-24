@@ -43,10 +43,10 @@ describe('Header', () => {
     expect(screen.getByText(/sign in/i)).toBeInTheDocument();
   });
 
-  it('renders the Browse link pointing to catalogue', () => {
+  it('renders the Browse link pointing to browse page', () => {
     renderHeader();
     const browseLink = screen.getByText('Browse');
-    expect(browseLink.closest('a')).toHaveAttribute('href', '/en/catalogue');
+    expect(browseLink.closest('a')).toHaveAttribute('href', '/en/browse');
   });
 
   it('has no a11y violations', async () => {

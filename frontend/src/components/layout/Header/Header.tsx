@@ -31,7 +31,7 @@ function LanguageToggle(): ReactElement {
   const cycleLanguage = () => {
     const rest =
       location.pathname.replace(new RegExp(`^/${currentLang}`), "") || "/";
-    navigate(`/${nextLang}${rest}${location.search}${location.hash}`, {
+    void navigate(`/${nextLang}${rest}${location.search}${location.hash}`, {
       replace: true,
     });
   };
