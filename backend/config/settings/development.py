@@ -1,7 +1,7 @@
 """Development settings — never use in production."""
 
 from config.settings.base import *  # noqa: F403
-from config.settings.base import env, REST_FRAMEWORK
+from config.settings.base import REST_FRAMEWORK, env
 
 DEBUG = True
 

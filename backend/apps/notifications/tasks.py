@@ -301,7 +301,10 @@ def send_request_declined_notification(exchange_id: str) -> None:
         prefs_field="email_request_declined",
         cta_url=f"{_frontend_url()}{link}",
         cta_text="Discover More Books",
-        body_html=f'Unfortunately, {owner_name} has declined your swap request for "<strong>{book_title}</strong>". Don\'t worry — there are plenty more books to discover!',
+        body_html=(
+            f"Unfortunately, {owner_name} has declined your swap request for "
+            f'"<strong>{book_title}</strong>". Don\'t worry — there are plenty more books to discover!'
+        ),
     )
     logger.info("request_declined notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -348,7 +351,10 @@ def send_exchange_completed_notification(exchange_id: str) -> None:
             prefs_field="email_exchange_completed",
             cta_url=f"{_frontend_url()}{link}",
             cta_text="Leave a Rating",
-            body_html=f'Your exchange for "<strong>{book_title}</strong>" is now complete. Share your experience by leaving a rating!',
+            body_html=(
+                f'Your exchange for "<strong>{book_title}</strong>" is now complete. '
+                f"Share your experience by leaving a rating!"
+            ),
         )
     logger.info("exchange_completed notifications sent (exchange %s).", exchange_id)
 
@@ -401,7 +407,9 @@ def send_swap_confirmed_notification(exchange_id: str, confirmed_by_user_id: str
             prefs_field="email_exchange_completed",
             cta_url=f"{_frontend_url()}{link}",
             cta_text="View Exchange",
-            body_html=f'Great news! The physical swap for "<strong>{book_title}</strong>" has been confirmed by both parties.',
+            body_html=(
+                f'Great news! The physical swap for "<strong>{book_title}</strong>" has been confirmed by both parties.'
+            ),
         )
     logger.info("swap_confirmed notification(s) sent (exchange %s).", exchange_id)
 
@@ -447,7 +455,10 @@ def send_request_expired_notification(exchange_id: str) -> None:
             prefs_field="email_new_request",
             cta_url=f"{_frontend_url()}{link}",
             cta_text="Discover More Books",
-            body_html=f'The swap request for "<strong>{book_title}</strong>" has expired because it wasn\'t responded to in time.',
+            body_html=(
+                f'The swap request for "<strong>{book_title}</strong>" has expired '
+                f"because it wasn't responded to in time."
+            ),
         )
     logger.info("request_expired notifications sent (exchange %s).", exchange_id)
 
@@ -590,7 +601,9 @@ def send_exchange_returned_notification(exchange_id: str) -> None:
             prefs_field="email_exchange_completed",
             cta_url=f"{_frontend_url()}{link}",
             cta_text="View Exchange",
-            body_html=f'The books from the exchange of "<strong>{book_title}</strong>" have been returned successfully.',
+            body_html=(
+                f'The books from the exchange of "<strong>{book_title}</strong>" have been returned successfully.'
+            ),
         )
     logger.info("exchange_returned notifications sent (exchange %s).", exchange_id)
 
@@ -643,7 +656,9 @@ def send_counter_proposed_notification(exchange_id: str, counter_by_user_id: str
         prefs_field="email_new_request",
         cta_url=f"{_frontend_url()}{link}",
         cta_text="Review Counter-Offer",
-        body_html=f'{proposer.username} has proposed a different book for your exchange: "<strong>{book_title}</strong>".',
+        body_html=(
+            f'{proposer.username} has proposed a different book for your exchange: "<strong>{book_title}</strong>".'
+        ),
     )
     logger.info("counter_proposed notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -695,7 +710,9 @@ def send_counter_approved_notification(exchange_id: str, approved_by_user_id: st
         prefs_field="email_request_accepted",
         cta_url=f"{_frontend_url()}{link}",
         cta_text="View Exchange",
-        body_html=f'{approver_name} has approved your counter-offer for the exchange of "<strong>{book_title}</strong>".',
+        body_html=(
+            f'{approver_name} has approved your counter-offer for the exchange of "<strong>{book_title}</strong>".'
+        ),
     )
     logger.info("counter_approved notification → user %s (exchange %s).", recipient.pk, exchange_id)
 
@@ -825,7 +842,7 @@ def send_rating_received_notification(rating_id: str) -> None:
         prefs_field="email_rating_received",
         cta_url=f"{_frontend_url()}{link}",
         cta_text="View Your Profile",
-        body_html=f'{rater_name} has rated your exchange <strong>{score} out of 5</strong>.',
+        body_html=f"{rater_name} has rated your exchange <strong>{score} out of 5</strong>.",
     )
     logger.info("rating_received notification → user %s (rating %s).", recipient.pk, rating_id)
 
@@ -877,7 +894,7 @@ def send_account_deletion_email(user_id: str, cancel_token: str) -> None:
             "<br><br>"
             "During this period, you can cancel the deletion at any time."
             '<br><br><strong style="color:#1a2f23;">What will be deleted:</strong>'
-            '<br>&#8226; Your profile information (name, email, location)'
+            "<br>&#8226; Your profile information (name, email, location)"
             "<br>&#8226; All your book listings"
             "<br>&#8226; Exchange history and messages"
             "<br>&#8226; Ratings and reviews"

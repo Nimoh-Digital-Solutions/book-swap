@@ -19,14 +19,13 @@ def book_og_view(request, pk):
     """Return minimal HTML with OG meta for a single book."""
     try:
         book = (
-            Book.objects
-            .filter(status=BookStatus.AVAILABLE)
+            Book.objects.filter(status=BookStatus.AVAILABLE)
             .select_related("owner")
             .prefetch_related("photos")
             .get(pk=pk)
         )
-    except Book.DoesNotExist:
-        raise Http404
+    except Book.DoesNotExist as exc:
+        raise Http404 from exc
 
     photo = book.photos.first()
     image_url = request.build_absolute_uri(photo.image.url) if photo else book.cover_url
