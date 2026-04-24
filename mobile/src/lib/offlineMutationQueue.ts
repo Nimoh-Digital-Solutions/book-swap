@@ -46,11 +46,31 @@ export async function hydrateOfflineQueue(): Promise<void> {
   _asyncCacheLoaded = true;
 }
 
+/**
+ * AUD-M-103: minimal image-attachment descriptor so multipart sends can be
+ * queued. We only persist the local file URI + filename + mime; the actual
+ * FormData is reconstructed at drain time. This keeps the queue payload
+ * JSON-serialisable and avoids re-encoding bytes into AsyncStorage / MMKV.
+ *
+ * Note: the local URI must still be valid when the queue drains. For the
+ * camera roll on iOS/Android this is true within the same install — once
+ * the user reinstalls the app the URI is invalid; we accept that trade-off
+ * because the queue is also subject to ``MAX_AGE_MS`` (24h) anyway.
+ */
+export interface QueuedImageAttachment {
+  field: string;          // form field name (e.g. 'image')
+  uri: string;            // local file:// URI
+  filename: string;
+  mimeType: string;
+}
+
 export interface QueuedMutation {
   id: string;
   endpoint: string;
   method: 'post' | 'put' | 'patch' | 'delete';
   data?: unknown;
+  /** Optional list of image attachments — when set, the request is sent as multipart/form-data. */
+  attachments?: QueuedImageAttachment[];
   invalidateKeys?: string[];
   createdAt: number;
   retries: number;
@@ -104,11 +124,38 @@ export async function drainMutationQueue(): Promise<{ succeeded: number; failed:
 
   for (const mutation of queue) {
     try {
-      await http.request({
-        url: mutation.endpoint,
-        method: mutation.method,
-        data: mutation.data,
-      });
+      if (mutation.attachments?.length) {
+        // AUD-M-103: rebuild FormData from the persisted descriptor.
+        // We append the regular ``data`` fields first, then each image
+        // as { uri, name, type } — the same shape the live send hooks use.
+        const form = new FormData();
+        if (mutation.data && typeof mutation.data === 'object') {
+          for (const [key, value] of Object.entries(
+            mutation.data as Record<string, unknown>,
+          )) {
+            if (value === undefined || value === null) continue;
+            form.append(key, String(value));
+          }
+        }
+        for (const a of mutation.attachments) {
+          form.append(
+            a.field,
+            { uri: a.uri, name: a.filename, type: a.mimeType } as unknown as Blob,
+          );
+        }
+        await http.request({
+          url: mutation.endpoint,
+          method: mutation.method,
+          data: form,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        await http.request({
+          url: mutation.endpoint,
+          method: mutation.method,
+          data: mutation.data,
+        });
+      }
       succeeded++;
 
       if (mutation.invalidateKeys?.length) {

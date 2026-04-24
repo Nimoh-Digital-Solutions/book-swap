@@ -19,11 +19,14 @@ const Stack = createNativeStackNavigator<HomeStackParamList>();
 function HomeHeaderTitle() {
   const user = useAuthStore((s) => s.user);
   const c = useColors();
+  const { t } = useTranslation();
   const name = user?.first_name || user?.username || '';
 
   return (
     <Text style={[s.title, { color: c.text.primary }]} numberOfLines={1}>
-      Hi, {name}
+      {name
+        ? t('home.greeting', 'Hi, {{name}}', { name })
+        : t('home.greetingDefault', 'Welcome back!')}
     </Text>
   );
 }

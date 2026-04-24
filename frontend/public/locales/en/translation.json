@@ -58,7 +58,9 @@
     },
     "recentlyAdded": {
       "title": "Recently Added",
-      "viewAll": "View all →"
+      "viewAll": "View all →",
+      "errorTitle": "Couldn't load books",
+      "errorBody": "Something went wrong while fetching the latest books. Please try again."
     },
     "howItWorks": {
       "title": "How It Works",

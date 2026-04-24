@@ -85,4 +85,23 @@ describe('HomePage', () => {
     renderPage();
     expect(screen.getByText(/create free account/i)).toBeInTheDocument();
   });
+
+  // AUD-W-201: explicit error UI when the books query fails so users get
+  // feedback instead of an empty grid.
+  it('shows an error banner with retry when /books/ fails', async () => {
+    server.use(
+      http.get('*/api/v1/books/', () =>
+        HttpResponse.json({ detail: 'boom' }, { status: 500 }),
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/couldn't load books/i)).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole('button', { name: /retry/i }),
+    ).toBeInTheDocument();
+  });
 });

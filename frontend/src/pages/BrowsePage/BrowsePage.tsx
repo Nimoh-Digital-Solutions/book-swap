@@ -10,7 +10,7 @@ import { MapView, useMapBooks, useNearbyCount } from '@features/discovery';
 import { useUserCity } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { BookOpen, MapPin, Search } from 'lucide-react';
+import { AlertTriangle, BookOpen, MapPin, RefreshCw, Search } from 'lucide-react';
 
 const DEFAULT_RADIUS = 10_000;
 
@@ -40,14 +40,24 @@ export default function BrowsePage(): ReactElement {
   const activeGenreFilter = activeGenres.size > 0
     ? [...activeGenres].join(',')
     : undefined;
-  const { data: recentBooks, isLoading: recentLoading } = useBooks({
+  const {
+    data: recentBooks,
+    isLoading: recentLoading,
+    isError: recentError,
+    refetch: refetchRecent,
+  } = useBooks({
     page_size: 12,
     ordering: '-created_at',
     ...(activeGenreFilter && { genre: activeGenreFilter }),
   });
   const filteredBooks = recentBooks?.results ?? [];
   const hasLocation = lat != null && lng != null;
-  const { data: mapData, isLoading: mapLoading } = useMapBooks(
+  const {
+    data: mapData,
+    isLoading: mapLoading,
+    isError: mapError,
+    refetch: refetchMap,
+  } = useMapBooks(
     { radius: DEFAULT_RADIUS, lat: lat ?? undefined, lng: lng ?? undefined },
     hasLocation,
   );
@@ -175,7 +185,35 @@ export default function BrowsePage(): ReactElement {
           )}
         </div>
 
-        {recentLoading ? (
+        {recentError ? (
+          /* AUD-W-202: explicit error UI for the books grid so a failed
+             /books/ call doesn't silently render an empty state that
+             reads like "no books exist". */
+          <div className="bg-[#1A251D] border border-[#28382D] rounded-3xl p-12 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 mb-5">
+              <AlertTriangle className="w-6 h-6 text-red-400" aria-hidden="true" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              {t('browse.recent.errorTitle', "Couldn't load books")}
+            </h3>
+            <p className="text-[#5A6A60] mb-5 max-w-sm mx-auto">
+              {t(
+                'browse.recent.errorBody',
+                'Something went wrong while fetching books. Check your connection and try again.',
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                void refetchRecent();
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] font-bold text-sm transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
+              {t('common.retry', 'Retry')}
+            </button>
+          </div>
+        ) : recentLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
@@ -297,12 +335,42 @@ export default function BrowsePage(): ReactElement {
 
             <div className="flex-1 min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border border-[#28382D]">
               {hasLocation ? (
-                <MapView
-                  books={mapData?.results ?? []}
-                  userLocation={{ latitude: lat!, longitude: lng! }}
-                  radiusMetres={DEFAULT_RADIUS}
-                  isLoading={mapLoading}
-                />
+                mapError ? (
+                  /* AUD-W-202: map-data fetch error gets its own UI instead
+                     of leaving the map skeleton spinning forever. */
+                  <div className="w-full h-full min-h-[400px] bg-[#152018] flex flex-col items-center justify-center text-center p-8">
+                    <AlertTriangle
+                      className="w-10 h-10 text-red-400 mb-4"
+                      aria-hidden="true"
+                    />
+                    <p className="text-white font-semibold mb-2">
+                      {t('browse.location.errorTitle', "Couldn't load the map")}
+                    </p>
+                    <p className="text-[#5A6A60] text-sm max-w-xs mb-5">
+                      {t(
+                        'browse.location.errorBody',
+                        'Check your connection and try again.',
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void refetchMap();
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] font-bold text-xs transition-colors"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                      {t('common.retry', 'Retry')}
+                    </button>
+                  </div>
+                ) : (
+                  <MapView
+                    books={mapData?.results ?? []}
+                    userLocation={{ latitude: lat!, longitude: lng! }}
+                    radiusMetres={DEFAULT_RADIUS}
+                    isLoading={mapLoading}
+                  />
+                )
               ) : (
                 <div className="w-full h-full min-h-[400px] bg-[#152018] flex flex-col items-center justify-center text-center p-8">
                   <MapPin className="w-10 h-10 text-[#28382D] mb-4" aria-hidden="true" />

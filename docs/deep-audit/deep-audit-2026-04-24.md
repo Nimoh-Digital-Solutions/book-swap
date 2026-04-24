@@ -106,11 +106,11 @@
 
 | ID | Sev | File | Issue → Fix |
 |---|---|---|---|
-| AUD-B-701 | High | `bookswap/views.py` `SetLocationView` + `services.NominatimGeocodingService` | Up to 2 synchronous httpx calls in request thread → Celery + tight timeouts + circuit breaker. |
-| AUD-B-702 | High | `apps/books/views.py` `ISBNLookupView` / `ExternalSearchView` | Synchronous external HTTP in-view → queue or rate-limit + cache. |
+| AUD-B-701 | High | `bookswap/views.py` `SetLocationView` + `services.NominatimGeocodingService` | ✅ DONE (Sprint 3) — tight timeouts (3s forward / 2s reverse), 30d / 24h cache via `bookswap.external_http.cached_call`, and a cache-backed circuit breaker (5 fails → 60s open). |
+| AUD-B-702 | High | `apps/books/views.py` `ISBNLookupView` / `ExternalSearchView` | ✅ DONE (Sprint 3) — 5s timeout, separate Open Library / Google Books circuit breakers, ISBN cached 7d (negative 6h), search cached 1h. |
 | AUD-B-703 | Med | `apps/books/views.py` `BookPhotoViewSet.create` | Pillow resize in-request → optional Celery for large media policies. |
-| AUD-B-704 | Med | `bookswap/views.py` `DataExportView` 223–228 + `services.build_data_export` | Serial ORM pulls for all user data → background job + download link. |
-| AUD-B-705 | Med | `apps/books/views.py` `CommunityStatsView` | Multiple `count()` + `[:15]` queries per call → cache. |
+| AUD-B-704 | Med | `bookswap/views.py` `DataExportView` 223–228 + `services.build_data_export` | ✅ DONE (Sprint 3) — POST/GET enqueues `bookswap.send_data_export_email` Celery task; endpoint now returns 202 immediately and the JSON ships as an email attachment. Web + mobile clients updated. |
+| AUD-B-705 | Med | `apps/books/views.py` `CommunityStatsView` | ✅ DONE (Sprint 3) — payload cached 5 min per (lat 2dp, lng 2dp, 1km-radius bucket); invalid input still rejected before any cache lookup. |
 | AUD-B-706 | Low | `apps/exchanges/views.py` `get_queryset` 64–98 | Heavy annotations in list view → list/detail serializer split. |
 | AUD-B-707 | Low | `apps/books/views.py` 153–161 | `Book.objects.get(pk=…)` without `select_related`; `book.photos.count()` extra COUNT. |
 
@@ -341,17 +341,17 @@
 13. AUD-B-603 / AUD-B-604 — Stop logging email addresses at INFO/ERROR.
 
 **Sprint 3 — async hot paths (3–5 days)**
-14. AUD-B-701 — Move `SetLocationView` Nominatim calls to Celery (or behind tight timeout + cache + circuit breaker).
-15. AUD-B-702 — Same for `ISBNLookupView`, `ExternalSearchView`.
-16. AUD-B-704 — Background-job the `DataExportView`.
-17. AUD-B-705 — Cache `CommunityStatsView`.
+14. AUD-B-701 — ✅ DONE — Tight timeout + cache + circuit breaker for `SetLocationView` / Nominatim.
+15. AUD-B-702 — ✅ DONE — Same for `ISBNLookupView`, `ExternalSearchView`.
+16. AUD-B-704 — ✅ DONE — `DataExportView` now enqueues a Celery job and emails the JSON.
+17. AUD-B-705 — ✅ DONE — `CommunityStatsView` cached per (lat, lng, radius) bucket.
 
 **Sprint 4 — mobile offline gaps & UX consistency (3–5 days)**
-18. AUD-M-102 — Extend offline queue to counter / approve / accept-conditions / confirm-swap.
-19. AUD-M-103 — Queue image messages.
-20. AUD-M-203 — `BrandedLoader` migration sweep on the remaining screens.
-21. AUD-M-201 — Translate `"Hi, {name}"` header.
-22. AUD-W-201, AUD-W-202 — Add `isError` UI to `HomePage` + `BrowsePage` landing.
+18. AUD-M-102 — ✅ DONE — `useCounterExchange`, `useApproveCounter`, `useAcceptConditions`, `useConfirmSwap` now mirror the offline-queue pattern used by create/accept/decline/cancel.
+19. AUD-M-103 — ✅ DONE — Offline queue grew a `QueuedImageAttachment` descriptor; `useSendMessage` queues image-bearing messages and the drainer rebuilds `FormData` at send time.
+20. AUD-M-203 — ✅ DONE — Section-level loader in `MeetupSuggestionPanel` migrated to `BrandedLoader`. Remaining `ActivityIndicator` instances are inline button spinners (small, in-Pressable, action-state) where `BrandedLoader` would be visually wrong.
+21. AUD-M-201 — ✅ DONE — `HomeStack` header title now uses `t('home.greeting', { name })` with a fallback to `home.greetingDefault`.
+22. AUD-W-201, AUD-W-202 — ✅ DONE — `HomePage` and `BrowsePage` now render explicit error banners with retry buttons when `useBooks` / `useMapBooks` fail instead of leaving sections blank.
 
 **Sprint 5 — refactors & shared package (1–2 weeks, can parallelise)**
 23. AUD-X-001 — Migrate web to `@shared/*` (start with types).

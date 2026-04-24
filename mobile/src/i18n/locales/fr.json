@@ -482,6 +482,7 @@
     "connecting": "Connexion...",
     "meetupSuggestion": "Suggérer un lieu de rencontre",
     "meetupTitle": "Rendez-vous",
+    "meetupLoading": "Recherche de lieux…",
     "noMeetups": "Aucun rendez-vous pour le moment",
     "noMessages": "Aucun message pour le moment",
     "noMessagesHint": "Démarrez une conversation depuis un échange",
@@ -764,12 +765,13 @@
     "passwordsMismatch": "Les mots de passe ne correspondent pas"
   },
   "dataExport": {
-    "button": "Télécharger mes données",
-    "subtitle": "Exporter toutes vos données personnelles en JSON",
-    "loading": "Préparation de l'export...",
+    "button": "Recevoir mes données par e-mail",
+    "subtitle": "Nous vous enverrons une copie JSON de vos données personnelles par e-mail",
+    "loading": "Envoi…",
+    "success": "Votre export de données vous sera envoyé par e-mail sous peu.",
     "shareTitle": "Export de données BookSwap",
     "savedLocally": "Données exportées et sauvegardées sur votre appareil.",
-    "error": "Échec de l'export. Veuillez réessayer."
+    "error": "Échec de la demande d'export. Veuillez réessayer."
   },
   "errorBoundary": {
     "message": "Une erreur inattendue s'est produite. Vous pouvez réessayer."

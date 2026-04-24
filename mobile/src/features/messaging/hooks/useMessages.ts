@@ -49,11 +49,30 @@ export function useSendMessage() {
     mutationFn: async ({ exchangeId, content, imageUri }: SendMessagePayload) => {
       const endpoint = API.messaging.messages(exchangeId);
 
-      if (isOffline && content) {
+      if (isOffline) {
+        // AUD-M-103: queue both text-only AND image messages while offline.
+        // Image attachments go through the queue's multipart support
+        // (offlineMutationQueue.QueuedImageAttachment) so the file is
+        // re-uploaded when connectivity returns.
+        const attachments = imageUri
+          ? [
+              {
+                field: 'image',
+                uri: imageUri,
+                filename: imageUri.split('/').pop() ?? 'photo.jpg',
+                mimeType:
+                  imageUri.split('.').pop()?.toLowerCase() === 'png'
+                    ? 'image/png'
+                    : 'image/jpeg',
+              },
+            ]
+          : undefined;
+
         enqueueMutation({
           endpoint,
           method: 'post',
-          data: { content },
+          data: content ? { content } : undefined,
+          attachments,
           invalidateKeys: ['messages'],
         });
 
@@ -62,7 +81,9 @@ export function useSendMessage() {
           exchange: exchangeId,
           sender: (user ?? { id: '', username: '' }) as User,
           content: content ?? '',
-          image: null,
+          // Show the local image immediately in the chat — once the queue
+          // drains the server response replaces this entry on next refetch.
+          image: imageUri ?? null,
           read_at: null,
           created_at: new Date().toISOString(),
         };

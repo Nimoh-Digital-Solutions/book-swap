@@ -94,4 +94,93 @@ describe('offlineMutationQueue', () => {
     await drainMutationQueue();
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['books'] });
   });
+
+  // ── AUD-M-103: multipart / image-attachment queueing ─────────────────────
+  describe('image attachments (AUD-M-103)', () => {
+    it('persists attachments and rebuilds FormData on drain', async () => {
+      enqueueMutation({
+        endpoint: '/messages',
+        method: 'post',
+        data: { content: 'See you there' },
+        attachments: [
+          {
+            field: 'image',
+            uri: 'file:///tmp/photo.jpg',
+            filename: 'photo.jpg',
+            mimeType: 'image/jpeg',
+          },
+        ],
+        invalidateKeys: ['messages'],
+      });
+
+      const result = await drainMutationQueue();
+      expect(result.succeeded).toBe(1);
+      expect(httpRequest).toHaveBeenCalledTimes(1);
+
+      const call = httpRequest.mock.calls[0]?.[0] as {
+        url: string;
+        method: string;
+        data: FormData;
+        headers: Record<string, string>;
+      };
+      expect(call.url).toBe('/messages');
+      expect(call.method).toBe('post');
+      expect(call.headers['Content-Type']).toBe('multipart/form-data');
+      // Sanity-check the FormData was assembled. React Native's polyfill
+      // exposes _parts; jsdom's exposes get(). Try both.
+      const form = call.data as FormData & { _parts?: unknown[] };
+      const hasParts = Array.isArray(form._parts) && form._parts.length >= 2;
+      const hasContent =
+        typeof form.get === 'function' &&
+        (form.get('content') === 'See you there' || hasParts);
+      expect(hasParts || hasContent).toBe(true);
+    });
+
+    it('drops the message and invalidates queries on a 4xx upload failure', async () => {
+      const clientErr = Object.assign(new Error('Bad image'), {
+        response: { status: 413 },
+      });
+      httpRequest.mockRejectedValue(clientErr);
+
+      enqueueMutation({
+        endpoint: '/messages',
+        method: 'post',
+        attachments: [
+          {
+            field: 'image',
+            uri: 'file:///tmp/photo.jpg',
+            filename: 'photo.jpg',
+            mimeType: 'image/jpeg',
+          },
+        ],
+        invalidateKeys: ['messages'],
+      });
+
+      const result = await drainMutationQueue();
+      expect(result.failed).toBe(1);
+      expect(pendingMutationCount()).toBe(0);
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['messages'],
+      });
+    });
+
+    it('still works for image-only sends (no text content)', async () => {
+      enqueueMutation({
+        endpoint: '/messages',
+        method: 'post',
+        attachments: [
+          {
+            field: 'image',
+            uri: 'file:///tmp/cover.png',
+            filename: 'cover.png',
+            mimeType: 'image/png',
+          },
+        ],
+      });
+
+      const result = await drainMutationQueue();
+      expect(result.succeeded).toBe(1);
+      expect(httpRequest).toHaveBeenCalledTimes(1);
+    });
+  });
 });

@@ -482,6 +482,7 @@
     "connecting": "Verbinden...",
     "meetupSuggestion": "Stel een ontmoetingsplek voor",
     "meetupTitle": "Ontmoeting",
+    "meetupLoading": "Locaties zoeken…",
     "noMeetups": "Nog geen ontmoetingen",
     "noMessages": "Nog geen berichten",
     "noMessagesHint": "Start een gesprek vanuit een ruil",
@@ -764,12 +765,13 @@
     "passwordsMismatch": "Wachtwoorden komen niet overeen"
   },
   "dataExport": {
-    "button": "Mijn gegevens downloaden",
-    "subtitle": "Exporteer al je persoonlijke gegevens als JSON",
-    "loading": "Export voorbereiden...",
+    "button": "Mijn gegevens per e-mail",
+    "subtitle": "We sturen je een JSON-kopie van je persoonlijke gegevens per e-mail",
+    "loading": "Versturen…",
+    "success": "Je gegevensexport wordt zo per e-mail naar je verzonden.",
     "shareTitle": "BookSwap Gegevensexport",
     "savedLocally": "Gegevens geëxporteerd en opgeslagen op je apparaat.",
-    "error": "Export mislukt. Probeer het opnieuw."
+    "error": "Verzoek voor gegevensexport mislukt. Probeer het opnieuw."
   },
   "errorBoundary": {
     "message": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."

@@ -184,6 +184,7 @@ export function useDeclineExchange() {
 
 export function useCounterExchange() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
   const { t } = useTranslation();
   return useMutation({
     mutationFn: async ({
@@ -193,6 +194,21 @@ export function useCounterExchange() {
       exchangeId: string;
       payload: CounterProposePayload;
     }) => {
+      if (isOffline) {
+        // AUD-M-102: queue counter-offer when the user is offline.
+        // Backend will validate when the queue drains; on a 4xx the
+        // queue-runner drops the entry and invalidates exchanges so the
+        // user sees the latest server state.
+        enqueueMutation({
+          endpoint: API.exchanges.counter(exchangeId),
+          method: 'post',
+          data: payload,
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.counter(exchangeId),
         payload,
@@ -200,9 +216,11 @@ export function useCounterExchange() {
       return data;
     },
     onSuccess: (_data, { exchangeId }) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.lists() });
-      qc.invalidateQueries({ queryKey: keys.incoming() });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+        qc.invalidateQueries({ queryKey: keys.incoming() });
+      }
     },
     onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
@@ -210,17 +228,32 @@ export function useCounterExchange() {
 
 export function useApproveCounter() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
   const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
+      if (isOffline) {
+        // AUD-M-102: approving a counter-offer is idempotent server-side
+        // (state machine guard rejects duplicates), so it is safe to queue.
+        enqueueMutation({
+          endpoint: API.exchanges.approveCounter(exchangeId),
+          method: 'post',
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.approveCounter(exchangeId),
       );
       return data;
     },
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.lists() });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+      }
     },
     onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
@@ -259,16 +292,30 @@ export function useCancelExchange() {
 
 export function useAcceptConditions() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
   const { t } = useTranslation();
   return useMutation({
     mutationFn: async (exchangeId: string) => {
+      if (isOffline) {
+        // AUD-M-102: accepting conditions is a one-shot transition; queue it.
+        enqueueMutation({
+          endpoint: API.exchanges.acceptConditions(exchangeId),
+          method: 'post',
+          invalidateKeys: ['exchanges'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
       const { data } = await http.post<ExchangeDetail>(
         API.exchanges.acceptConditions(exchangeId),
       );
       return data;
     },
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+      }
     },
     onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });
@@ -276,13 +323,31 @@ export function useAcceptConditions() {
 
 export function useConfirmSwap() {
   const qc = useQueryClient();
+  const { isOffline } = useNetworkStatus();
   const { t } = useTranslation();
   return useMutation({
-    mutationFn: (exchangeId: string) => confirmSwapApi(exchangeId),
+    mutationFn: async (exchangeId: string) => {
+      if (isOffline) {
+        // AUD-M-102: confirm-swap is also idempotent server-side; queue it
+        // so users can mark a meetup complete while standing in a lobby
+        // with no signal and have it sync moments later.
+        enqueueMutation({
+          endpoint: API.exchanges.confirmSwap(exchangeId),
+          method: 'post',
+          invalidateKeys: ['exchanges', 'myBooks'],
+        });
+        showInfoToast(t('offline.queuedForSync'));
+        return { id: exchangeId } as ExchangeDetail;
+      }
+
+      return confirmSwapApi(exchangeId);
+    },
     onSuccess: (_data, exchangeId) => {
-      qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
-      qc.invalidateQueries({ queryKey: keys.lists() });
-      qc.invalidateQueries({ queryKey: ['myBooks'] });
+      if (!isOffline) {
+        qc.invalidateQueries({ queryKey: keys.detail(exchangeId) });
+        qc.invalidateQueries({ queryKey: keys.lists() });
+        qc.invalidateQueries({ queryKey: ['myBooks'] });
+      }
     },
     onError: () => showErrorToast(t('common.error', 'Something went wrong')),
   });

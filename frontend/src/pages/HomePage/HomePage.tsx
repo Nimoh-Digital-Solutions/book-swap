@@ -11,7 +11,7 @@ import { useCommunityStats, useNearbyCount } from "@features/discovery";
 import { useUserCity } from "@hooks";
 import { useLocaleNavigate } from "@hooks/useLocaleNavigate";
 import { PATHS, routeMetadata } from "@routes/config/paths";
-import { ArrowLeftRight, BookOpen, Search, Star } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, BookOpen, RefreshCw, Search, Star } from "lucide-react";
 
 const DEFAULT_RADIUS = 10000; // 10 km
 
@@ -24,7 +24,12 @@ const HomePage = (): ReactElement => {
   const navigate = useLocaleNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { city, lat, lng, loading: cityLoading } = useUserCity();
-  const { data: recentBooks, isLoading: recentBooksLoading } = useBooks({
+  const {
+    data: recentBooks,
+    isLoading: recentBooksLoading,
+    isError: recentBooksError,
+    refetch: refetchRecentBooks,
+  } = useBooks({
     page_size: 4,
     ordering: "-created_at",
   });
@@ -224,24 +229,57 @@ const HomePage = (): ReactElement => {
           </LocaleLink>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {recentBooksLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
-                >
-                  <div className="aspect-[3/4] bg-[#152018]" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-[#28382D] rounded w-3/4" />
-                    <div className="h-3 bg-[#28382D] rounded w-1/2" />
+        {recentBooksError ? (
+          /* AUD-W-201: explicit error state for the homepage feed so a
+             failed /books/ call doesn't leave the section blank with no
+             feedback. Retry button re-runs the same query. */
+          <div className="bg-[#1A251D] border border-[#28382D] rounded-3xl p-12 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-500/10 mb-5">
+              <AlertTriangle
+                className="w-6 h-6 text-red-400"
+                aria-hidden="true"
+              />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              {t("home.recentlyAdded.errorTitle", "Couldn't load books")}
+            </h3>
+            <p className="text-[#5A6A60] mb-5 max-w-sm mx-auto">
+              {t(
+                "home.recentlyAdded.errorBody",
+                "Something went wrong while fetching the latest books. Please try again.",
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                void refetchRecentBooks();
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E4B643] hover:bg-[#D4A633] text-[#152018] font-bold text-sm transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
+              {t("common.retry", "Retry")}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {recentBooksLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden animate-pulse"
+                  >
+                    <div className="aspect-[3/4] bg-[#152018]" />
+                    <div className="p-4 space-y-2">
+                      <div className="h-4 bg-[#28382D] rounded w-3/4" />
+                      <div className="h-3 bg-[#28382D] rounded w-1/2" />
+                    </div>
                   </div>
-                </div>
-              ))
-            : (recentBooks?.results ?? []).map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-        </div>
+                ))
+              : (recentBooks?.results ?? []).map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+          </div>
+        )}
       </section>
 
       {/* ── How it Works & Community Section ── */}

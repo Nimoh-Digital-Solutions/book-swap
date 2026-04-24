@@ -440,7 +440,7 @@
     }
   },
   "home": {
-    "greeting": "Hey, {{name}}!",
+    "greeting": "Hi, {{name}}",
     "greetingDefault": "Welcome back!",
     "activeSwappers": "Active Swappers",
     "searchPlaceholder": "Search by title, author, or ISBN...",
@@ -482,6 +482,7 @@
     "connecting": "Connecting...",
     "meetupSuggestion": "Suggest a meetup location",
     "meetupTitle": "Meetup",
+    "meetupLoading": "Finding meetup spots…",
     "noMeetups": "No meetups yet",
     "noMessages": "No messages yet",
     "noMessagesHint": "Start a conversation from an exchange",
@@ -764,12 +765,13 @@
     "passwordsMismatch": "Passwords do not match"
   },
   "dataExport": {
-    "button": "Download My Data",
-    "subtitle": "Export all your personal data as JSON",
-    "loading": "Preparing export...",
+    "button": "Email Me My Data",
+    "subtitle": "We'll email you a JSON copy of your personal data",
+    "loading": "Sending...",
+    "success": "Your data export will be emailed to you shortly.",
     "shareTitle": "BookSwap Data Export",
     "savedLocally": "Data exported and saved to your device.",
-    "error": "Failed to export data. Please try again."
+    "error": "Failed to request data export. Please try again."
   },
   "errorBoundary": {
     "message": "The app hit an unexpected error. You can try again."

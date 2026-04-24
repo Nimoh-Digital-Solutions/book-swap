@@ -2,7 +2,6 @@ import { BookOpen, Coffee, Landmark, MapPin, TreePine, X } from 'lucide-react-na
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { BrandedLoader } from '@/components/BrandedLoader';
 import { radius, spacing } from '@/constants/theme';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import type { MeetupLocation } from '@/types';
@@ -71,7 +71,13 @@ export function MeetupSuggestionPanel({ visible, locations, isLoading, onSelect,
 
           <ScrollView style={s.list} showsVerticalScrollIndicator={false} bounces>
             {isLoading && (
-              <ActivityIndicator size="small" color={accent} style={s.loader} />
+              <View style={s.loader}>
+                <BrandedLoader
+                  size="sm"
+                  fill={false}
+                  label={t('messaging.meetupLoading', 'Finding meetup spots…')}
+                />
+              </View>
             )}
             {!isLoading && locations.length === 0 && (
               <Text style={[s.empty, { color: c.text.secondary }]}>
