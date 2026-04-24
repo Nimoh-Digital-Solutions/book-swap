@@ -74,33 +74,38 @@ export interface PaginatedBooks {
 }
 
 export interface CreateBookPayload {
-  isbn?: string;
+  isbn?: string | undefined;
   title: string;
   author: string;
-  description?: string;
-  cover_url?: string;
+  description?: string | undefined;
+  cover_url?: string | undefined;
   condition: BookCondition;
-  genres?: string[];
+  genres?: string[] | undefined;
   language: BookLanguage;
   swap_type: SwapType;
-  notes?: string;
-  page_count?: number | null;
-  publish_year?: number | null;
+  notes?: string | undefined;
+  page_count?: number | null | undefined;
+  publish_year?: number | null | undefined;
 }
 
 export interface UpdateBookPayload {
-  title?: string;
-  author?: string;
-  description?: string;
-  cover_url?: string;
-  condition?: BookCondition;
-  genres?: string[];
-  language?: BookLanguage;
-  swap_type?: SwapType;
-  notes?: string;
-  page_count?: number | null;
-  publish_year?: number | null;
-  status?: BookStatus;
+  title?: string | undefined;
+  author?: string | undefined;
+  description?: string | undefined;
+  cover_url?: string | undefined;
+  condition?: BookCondition | undefined;
+  genres?: string[] | undefined;
+  language?: BookLanguage | undefined;
+  swap_type?: SwapType | undefined;
+  notes?: string | undefined;
+  page_count?: number | null | undefined;
+  publish_year?: number | null | undefined;
+  status?: BookStatus | undefined;
+}
+
+/** Payload for `PATCH /api/v1/books/:id/photos/reorder/`. */
+export interface ReorderPhotosPayload {
+  photo_ids: string[];
 }
 
 export interface WishlistItem {
@@ -120,10 +125,21 @@ export interface PaginatedWishlist {
   results: WishlistItem[];
 }
 
+/** Payload for `POST /api/v1/wishlist/`. */
+export interface CreateWishlistPayload {
+  isbn?: string | undefined;
+  title?: string | undefined;
+  author?: string | undefined;
+  genre?: string | undefined;
+  cover_url?: string | undefined;
+}
+
 export interface BookListFilters {
-  owner?: string;
-  status?: BookStatus;
-  genre?: string;
-  language?: BookLanguage;
-  search?: string;
+  owner?: string | undefined;
+  status?: BookStatus | undefined;
+  genre?: string | undefined;
+  language?: BookLanguage | undefined;
+  search?: string | undefined;
+  ordering?: string | undefined;
+  page_size?: number | undefined;
 }

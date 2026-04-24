@@ -27,6 +27,8 @@ export interface UserProfile {
   email_verified: boolean;
   member_since: string;
   profile_public: boolean;
+  /** ISO8601 timestamp when the user requested account deletion (US-203). */
+  deletion_requested_at: string | null;
 }
 
 export interface UserPublicProfile {
@@ -46,20 +48,20 @@ export interface UserPublicProfile {
 }
 
 export interface UpdateProfilePayload {
-  first_name?: string;
-  last_name?: string;
-  bio?: string;
-  avatar?: File | null;
-  preferred_genres?: string[];
-  preferred_language?: PreferredLanguage;
-  preferred_radius?: number;
-  profile_public?: boolean;
+  first_name?: string | undefined;
+  last_name?: string | undefined;
+  bio?: string | undefined;
+  avatar?: File | null | undefined;
+  preferred_genres?: string[] | undefined;
+  preferred_language?: PreferredLanguage | undefined;
+  preferred_radius?: number | undefined;
+  profile_public?: boolean | undefined;
 }
 
 export interface SetLocationPayload {
-  postcode?: string;
-  latitude?: number;
-  longitude?: number;
+  postcode?: string | undefined;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
 }
 
 export interface SetLocationResponse {
@@ -73,7 +75,7 @@ export interface OnboardingCompleteResponse {
 
 export interface CheckUsernameResponse {
   available: boolean;
-  suggestions?: string[];
+  suggestions?: string[] | undefined;
 }
 
 export interface AccountDeletionPayload {

@@ -41,6 +41,7 @@ const MOCK_BOOK: BookListItem = {
   condition: 'good',
   language: 'en',
   status: 'available',
+  swap_type: 'temporary',
   primary_photo: null,
   owner: { id: 'usr_001', username: 'alice', avatar: null, neighborhood: 'Jordaan', avg_rating: '4.5' },
   created_at: '2025-07-10T10:00:00Z',

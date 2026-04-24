@@ -1,5 +1,6 @@
 export type ExchangeStatus =
   | 'pending'
+  | 'counter_proposed'
   | 'accepted'
   | 'conditions_pending'
   | 'active'
@@ -95,7 +96,7 @@ export interface IncomingCount {
 export interface CreateExchangePayload {
   requested_book_id: string;
   offered_book_id: string;
-  message?: string;
+  message?: string | undefined;
 }
 
 export interface CounterProposePayload {
@@ -103,5 +104,5 @@ export interface CounterProposePayload {
 }
 
 export interface DeclinePayload {
-  reason?: DeclineReason;
+  reason?: DeclineReason | undefined;
 }

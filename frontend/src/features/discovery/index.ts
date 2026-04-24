@@ -5,7 +5,7 @@
  * into sub-directories directly from outside this feature.
  *
  * @example
- * import { useBrowseBooks, BrowsePage } from '@features/discovery';
+ * import { useBrowseBooks, CataloguePage } from '@features/discovery';
  */
 
 // Components
@@ -36,7 +36,7 @@ export { useRadiusCounts } from './hooks/useRadiusCounts';
 export { discoveryService } from './services/discovery.service';
 
 // Pages
-export { BrowsePage } from './pages/BrowsePage';
+export { CataloguePage } from './pages/CataloguePage';
 
 // Types
 export type { ViewMode } from './components/ViewToggle';

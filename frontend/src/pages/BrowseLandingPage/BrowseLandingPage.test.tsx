@@ -1,6 +1,6 @@
 /**
- * AUD-W-202 — verifies the BrowsePage renders explicit error UI when the
- * `/books/` (recently-added) call or the `/books/browse/` (map data)
+ * AUD-W-202 — verifies BrowseLandingPage renders explicit error UI when
+ * the `/books/` (recently-added) call or the `/books/browse/` (map data)
  * call fails, rather than leaving the section empty / spinning.
  */
 import React from 'react';
@@ -12,7 +12,7 @@ import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { server } from '../../test/mocks/server';
-import BrowsePage from './BrowsePage';
+import BrowseLandingPage from './BrowseLandingPage';
 
 // useUserCity uses geolocation under the hood — stub it so the map
 // component renders into a mounted state and we can assert error UI.
@@ -44,9 +44,9 @@ function makeWrapper() {
   return Wrapper;
 }
 
-const renderPage = () => render(<BrowsePage />, { wrapper: makeWrapper() });
+const renderPage = () => render(<BrowseLandingPage />, { wrapper: makeWrapper() });
 
-describe('BrowsePage', () => {
+describe('BrowseLandingPage', () => {
   beforeEach(() => {
     server.use(
       http.get('*/api/v1/books/nearby-count/', () =>

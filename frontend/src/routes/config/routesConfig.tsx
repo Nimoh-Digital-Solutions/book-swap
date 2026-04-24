@@ -57,8 +57,8 @@ const PublicProfilePage = lazy(() =>
   import('@features/profile').then(m => ({ default: m.PublicProfilePage }))
 );
 
-const BrowsePage = lazy(() =>
-  import('@features/discovery').then(m => ({ default: m.BrowsePage }))
+const CataloguePage = lazy(() =>
+  import('@features/discovery').then(m => ({ default: m.CataloguePage }))
 );
 
 const MyShelfPage = lazy(() =>
@@ -89,7 +89,7 @@ const IncomingRequestsPage = lazy(() =>
   import('@features/exchanges').then(m => ({ default: m.IncomingRequestsPage }))
 );
 
-const BrowseLandingPage = lazy(() => import('@pages/BrowsePage/BrowsePage'));
+const BrowseLandingPage = lazy(() => import('@pages/BrowseLandingPage/BrowseLandingPage'));
 
 const MapPage = lazy(() => import('@pages/MapPage/MapPage'));
 
@@ -239,7 +239,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: rel(PATHS.CATALOGUE),
-            element: <LazyPage component={BrowsePage} />,
+            element: <LazyPage component={CataloguePage} />,
           },
           {
             path: rel(PATHS.MAP),

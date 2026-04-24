@@ -43,6 +43,7 @@ const MOCK_BOOK: Book = {
   genres: ['Fiction'],
   language: 'en',
   status: 'available',
+  swap_type: 'temporary',
   notes: 'No highlights or marks.',
   page_count: 180,
   publish_year: 1925,

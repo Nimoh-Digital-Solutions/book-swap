@@ -3,11 +3,14 @@ import { z } from 'zod';
 import { swapTypeSchema } from './book.schema';
 
 export const exchangeStatusSchema = z.enum([
-  'pending', 'accepted', 'conditions_pending', 'active', 'swap_confirmed',
-  'completed', 'declined', 'cancelled', 'expired', 'return_requested', 'returned',
+  'pending', 'counter_proposed', 'accepted', 'conditions_pending', 'active',
+  'swap_confirmed', 'completed', 'declined', 'cancelled', 'expired',
+  'return_requested', 'returned',
 ]);
 
-export const declineReasonSchema = z.enum(['not_interested', 'reserved', 'other']);
+export const declineReasonSchema = z.enum([
+  'not_interested', 'reserved', 'counter_proposed', 'other',
+]);
 
 const exchangeParticipantSchema = z.object({
   id: z.string(),

@@ -29,7 +29,7 @@ const GENRES = [
   'Poetry',
 ] as const;
 
-export default function BrowsePage(): ReactElement {
+export default function BrowseLandingPage(): ReactElement {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const navigate = useLocaleNavigate();

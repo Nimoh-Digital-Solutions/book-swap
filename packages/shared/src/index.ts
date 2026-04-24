@@ -6,8 +6,8 @@
 export type {
   BookCondition, BookStatus, BookLanguage, SwapType, BookOwner, BookPhoto,
   BookListItem, Book, BookMetadata, PaginatedBooks,
-  CreateBookPayload, UpdateBookPayload,
-  WishlistItem, PaginatedWishlist, BookListFilters,
+  CreateBookPayload, UpdateBookPayload, ReorderPhotosPayload,
+  WishlistItem, PaginatedWishlist, CreateWishlistPayload, BookListFilters,
 } from './types/book';
 
 // Exchange
@@ -53,11 +53,12 @@ export type {
 export type {
   OwnerLocation, BrowseBookOwner, BrowseBook, PaginatedBrowseBooks,
   RadiusCounts, NearbyCount, BrowseOrdering, BrowseFilters,
+  ActivityFeedItem, CommunityStats,
 } from './types/discovery';
 
 // Rating
 export type {
-  Rating, PaginatedRatings, ExchangeRatingStatus, SubmitRatingPayload,
+  Rating, RatingUser, PaginatedRatings, ExchangeRatingStatus, SubmitRatingPayload,
 } from './types/rating';
 
 // ---------------------------------------------------------------------------

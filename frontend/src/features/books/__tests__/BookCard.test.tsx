@@ -14,6 +14,7 @@ const MOCK_BOOK: BookListItem = {
   condition: 'good',
   language: 'en',
   status: 'available',
+  swap_type: 'temporary',
   primary_photo: null,
   owner: {
     id: 'usr_001',

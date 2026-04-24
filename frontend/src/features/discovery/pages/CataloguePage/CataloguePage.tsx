@@ -1,10 +1,14 @@
 /**
- * BrowsePage — reference-styled catalogue.
+ * CataloguePage — reference-styled book catalogue (route `/catalogue`).
  *
  * Layout: hero header + left filter sidebar + paginated 3-col book grid.
  * Desktop: sticky sidebar with dark card filters.
  * Mobile: "Filters" button opens the MobileFilterSheet.
  * No location → seed books are always shown; no location gate.
+ *
+ * Note: distinct from `pages/BrowseLandingPage` which is the marketing
+ * landing page mounted at `/browse`. Renamed under AUD-W-405 to remove
+ * the duplicate `BrowsePage` ambiguity.
  */
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +48,7 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
   return pages;
 }
 
-export function BrowsePage(): ReactElement {
+export function CataloguePage(): ReactElement {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(isAuthenticated);

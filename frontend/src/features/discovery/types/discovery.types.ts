@@ -1,96 +1,20 @@
 /**
  * discovery.types.ts
  *
- * Type contracts for the discovery/browse feature, aligned with the
- * Django BrowseBookListSerializer, BrowseFilterSerializer, and
- * NearbyCountView.
+ * Re-exports from `@shared` — see `packages/shared/src/types/discovery.ts`
+ * for the canonical contracts (the BookSwap source of truth shared with the
+ * mobile app).
  */
-import type { BookCondition, BookLanguage, BookOwner } from '@features/books';
 
-// ---------------------------------------------------------------------------
-// Response shapes (from BE)
-// ---------------------------------------------------------------------------
-
-/** Snapped owner location for map pins. */
-export interface OwnerLocation {
-  latitude: number;
-  longitude: number;
-}
-
-/** Owner info in browse results — extends BookOwner with snapped location. */
-export interface BrowseBookOwner extends BookOwner {
-  location: OwnerLocation | null;
-}
-
-/** A book in browse results — extends BookListItem with distance. */
-export interface BrowseBook {
-  id: string;
-  title: string;
-  author: string;
-  cover_url: string;
-  condition: BookCondition;
-  language: BookLanguage;
-  status: 'available';
-  primary_photo: string | null;
-  owner: BrowseBookOwner;
-  distance: number; // km, rounded to 1 decimal
-  created_at: string;
-}
-
-/** Paginated browse response. */
-export interface PaginatedBrowseBooks {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: BrowseBook[];
-}
-
-/** Radius-counts response: book count per radius bucket. */
-export interface RadiusCounts {
-  counts: Record<string, number>;
-}
-
-/** Nearby-count response (public). */
-export interface NearbyCount {
-  count: number;
-  user_count: number;
-  radius: number;
-}
-
-/** A single item in the community activity feed. */
-export interface ActivityFeedItem {
-  type: 'new_listing' | 'completed_swap' | 'new_rating';
-  user_name: string;
-  partner_name?: string;
-  book_title?: string | null;
-  score?: number;
-  neighbourhood: string;
-  timestamp: string;
-}
-
-/** Community stats response (public). */
-export interface CommunityStats {
-  swaps_this_week: number;
-  activity_feed: ActivityFeedItem[];
-}
-
-// ---------------------------------------------------------------------------
-// Filter / query params
-// ---------------------------------------------------------------------------
-
-export type BrowseOrdering = 'distance' | '-created_at' | 'relevance';
-
-export interface BrowseFilters {
-  radius?: number | undefined;
-  search?: string | undefined;
-  genre?: string[] | undefined;
-  language?: string[] | undefined;
-  condition?: string[] | undefined;
-  ordering?: BrowseOrdering | undefined;
-  page_size?: number | undefined;
-  page?: number | undefined;
-  /** Fallback latitude for unauthenticated users (backend uses profile location if authed). */
-  lat?: number | undefined;
-  /** Fallback longitude for unauthenticated users (backend uses profile location if authed). */
-  lng?: number | undefined;
-}
+export type {
+  ActivityFeedItem,
+  BrowseBook,
+  BrowseBookOwner,
+  BrowseFilters,
+  BrowseOrdering,
+  CommunityStats,
+  NearbyCount,
+  OwnerLocation,
+  PaginatedBrowseBooks,
+  RadiusCounts,
+} from '@shared/types/discovery';

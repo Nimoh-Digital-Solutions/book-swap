@@ -43,12 +43,33 @@ export interface NearbyCount {
 export type BrowseOrdering = 'distance' | '-created_at' | 'relevance';
 
 export interface BrowseFilters {
-  radius?: number;
-  search?: string;
-  genre?: string[];
-  language?: string[];
-  condition?: string[];
-  ordering?: BrowseOrdering;
-  page_size?: number;
-  page?: number;
+  radius?: number | undefined;
+  search?: string | undefined;
+  genre?: string[] | undefined;
+  language?: string[] | undefined;
+  condition?: string[] | undefined;
+  ordering?: BrowseOrdering | undefined;
+  page_size?: number | undefined;
+  page?: number | undefined;
+  /** Fallback latitude for unauthenticated users (BE uses profile location if authed). */
+  lat?: number | undefined;
+  /** Fallback longitude for unauthenticated users. */
+  lng?: number | undefined;
+}
+
+/** A single item in the community activity feed. */
+export interface ActivityFeedItem {
+  type: 'new_listing' | 'completed_swap' | 'new_rating';
+  user_name: string;
+  partner_name?: string | undefined;
+  book_title?: string | null | undefined;
+  score?: number | undefined;
+  neighbourhood: string;
+  timestamp: string;
+}
+
+/** Community stats response (public). */
+export interface CommunityStats {
+  swaps_this_week: number;
+  activity_feed: ActivityFeedItem[];
 }
