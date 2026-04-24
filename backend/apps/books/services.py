@@ -1,10 +1,28 @@
-"""ISBN lookup service for the books app."""
+"""ISBN lookup service for the books app.
+
+External calls are wrapped in:
+
+- a tight per-call timeout (:data:`ISBN_TIMEOUT`),
+- a per-provider circuit breaker (Open Library / Google Books) so a slow
+  upstream cannot hang every request thread, and
+- a Django-cache layer keyed by ISBN / search query so repeated lookups
+  for the same input do not re-hit the upstream.
+
+See AUD-B-702 in ``docs/deep-audit/deep-audit-2026-04-24.md``.
+"""
 
 import logging
 import re
 from typing import Any
 
 import httpx
+
+from bookswap.external_http import (
+    MEDIUM_TIMEOUT,
+    CircuitBreaker,
+    CircuitOpenError,
+    cached_call,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +31,21 @@ OPEN_LIBRARY_AUTHOR_URL = "https://openlibrary.org{key}.json"
 OPEN_LIBRARY_WORKS_URL = "https://openlibrary.org{key}.json"
 OPEN_LIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
 GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
-ISBN_TIMEOUT = 10  # seconds
+
+# AUD-B-702: tight timeout for any single upstream call. Anything slower than
+# this in production is almost certainly a stuck connection — fail fast and
+# let the caller fall through to the next provider (or surface a 404).
+ISBN_TIMEOUT = MEDIUM_TIMEOUT  # 5s
+
+# Cache TTLs.
+ISBN_CACHE_TTL = 60 * 60 * 24 * 7  # 7 days — book metadata is stable
+ISBN_NEGATIVE_TTL = 60 * 60 * 6  # 6h — short negative cache so retries are cheap
+SEARCH_CACHE_TTL = 60 * 60  # 1h — search results can change as new editions land
+
+# Per-provider breakers — a hung Google Books should not punish Open Library
+# and vice versa.
+_open_library_breaker = CircuitBreaker("open_library", failure_threshold=5, cooldown=60)
+_google_books_breaker = CircuitBreaker("google_books", failure_threshold=5, cooldown=60)
 
 USER_AGENT = "BookSwap/1.0 (bookswap.example; contact@bookswap.example)"
 
@@ -180,44 +212,26 @@ class ISBNLookupService:
     def lookup_isbn(cls, isbn: str) -> dict[str, Any]:
         """Look up a single ISBN. Tries Open Library first, then Google Books.
 
-        If Open Library returns data but is missing author or language,
-        Google Books is queried as a supplement.
+        Cached per-ISBN; both providers are protected by independent circuit
+        breakers so one slow upstream cannot cascade.
 
         Returns a normalised BookMetadata dict.
-        Raises ``ISBNLookupError`` if both sources fail.
+        Raises ``ISBNLookupError`` if both sources fail (or both circuits are
+        open — caller sees the same 404).
         """
-        ol_result = None
-        gb_result = None
+        normalised = isbn.replace("-", "").replace(" ", "").upper()
+        cache_key = f"isbn:lookup:v1:{normalised}"
+        return cached_call(cache_key, ISBN_CACHE_TTL, cls._lookup_isbn_uncached, normalised)
 
-        with httpx.Client(headers={"User-Agent": USER_AGENT}) as client:
-            try:
-                resp = client.get(
-                    OPEN_LIBRARY_ISBN_URL.format(isbn=isbn),
-                    timeout=ISBN_TIMEOUT,
-                    follow_redirects=True,
-                )
-                if resp.status_code == 200:
-                    ol_result = cls._normalise_open_library(resp.json(), client)
-            except (httpx.HTTPError, ValueError, KeyError) as exc:
-                logger.info("Open Library ISBN lookup failed for %s: %s", isbn, exc)
-
+    @classmethod
+    def _lookup_isbn_uncached(cls, isbn: str) -> dict[str, Any]:
+        """Cache-bypassing inner — called by :meth:`lookup_isbn`."""
+        ol_result = cls._lookup_open_library(isbn)
         has_gaps = ol_result and (not ol_result.get("author") or not ol_result.get("language"))
 
+        gb_result = None
         if not ol_result or has_gaps:
-            try:
-                resp = httpx.get(
-                    GOOGLE_BOOKS_URL,
-                    params={"q": f"isbn:{isbn}", "maxResults": "1"},
-                    headers={"User-Agent": USER_AGENT},
-                    timeout=ISBN_TIMEOUT,
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                items = data.get("items", [])
-                if items:
-                    gb_result = cls._normalise_google_books(items[0])
-            except (httpx.HTTPError, ValueError, KeyError) as exc:
-                logger.info("Google Books ISBN lookup failed for %s: %s", isbn, exc)
+            gb_result = cls._lookup_google_books(isbn)
 
         if ol_result and gb_result:
             return cls._merge_results(ol_result, gb_result)
@@ -225,8 +239,58 @@ class ISBNLookupService:
             return ol_result
         if gb_result:
             return gb_result
-
         raise ISBNLookupError(f"No metadata found for ISBN {isbn}")
+
+    @classmethod
+    def _lookup_open_library(cls, isbn: str) -> dict[str, Any] | None:
+        """Open Library ISBN lookup, behind the OL circuit breaker."""
+
+        def _do() -> dict[str, Any] | None:
+            with httpx.Client(headers={"User-Agent": USER_AGENT}) as client:
+                resp = client.get(
+                    OPEN_LIBRARY_ISBN_URL.format(isbn=isbn),
+                    timeout=ISBN_TIMEOUT,
+                    follow_redirects=True,
+                )
+                if resp.status_code != 200:
+                    return None
+                return cls._normalise_open_library(resp.json(), client)
+
+        try:
+            return _open_library_breaker.call(_do)
+        except CircuitOpenError:
+            logger.info("Open Library ISBN lookup short-circuited for %s.", isbn)
+            return None
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            logger.info("Open Library ISBN lookup failed for %s: %s", isbn, exc)
+            return None
+
+    @classmethod
+    def _lookup_google_books(cls, isbn: str) -> dict[str, Any] | None:
+        """Google Books ISBN lookup, behind the GB circuit breaker."""
+
+        def _do() -> dict[str, Any] | None:
+            resp = httpx.get(
+                GOOGLE_BOOKS_URL,
+                params={"q": f"isbn:{isbn}", "maxResults": "1"},
+                headers={"User-Agent": USER_AGENT},
+                timeout=ISBN_TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            items = data.get("items", [])
+            if not items:
+                return None
+            return cls._normalise_google_books(items[0])
+
+        try:
+            return _google_books_breaker.call(_do)
+        except CircuitOpenError:
+            logger.info("Google Books ISBN lookup short-circuited for %s.", isbn)
+            return None
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            logger.info("Google Books ISBN lookup failed for %s: %s", isbn, exc)
+            return None
 
     @staticmethod
     def _merge_results(primary: dict, secondary: dict) -> dict:
@@ -240,17 +304,40 @@ class ISBNLookupService:
     def search_external(cls, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search Open Library by title/author query.
 
-        Returns a list of normalised BookMetadata dicts (up to ``limit``).
+        Cached per-query (1h) and protected by the Open Library breaker.
+        Returns a list of normalised BookMetadata dicts (up to ``limit``);
+        returns ``[]`` on any upstream failure or open circuit.
         """
-        try:
+        normalised_query = " ".join(query.lower().split())
+        capped_limit = min(limit, 20)
+        cache_key = f"isbn:search:v1:{capped_limit}:{normalised_query}"
+        return cached_call(
+            cache_key,
+            SEARCH_CACHE_TTL,
+            cls._search_external_uncached,
+            query,
+            capped_limit,
+        )
+
+    @classmethod
+    def _search_external_uncached(cls, query: str, limit: int) -> list[dict[str, Any]]:
+        """Cache-bypassing inner — called by :meth:`search_external`."""
+
+        def _do() -> dict[str, Any]:
             resp = httpx.get(
                 OPEN_LIBRARY_SEARCH_URL,
-                params={"q": query, "limit": str(min(limit, 20))},
+                params={"q": query, "limit": str(limit)},
                 headers={"User-Agent": USER_AGENT},
                 timeout=ISBN_TIMEOUT,
             )
             resp.raise_for_status()
-            data = resp.json()
+            return resp.json()
+
+        try:
+            data = _open_library_breaker.call(_do)
+        except CircuitOpenError:
+            logger.info("Open Library search short-circuited for '%s'.", query)
+            return []
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("Open Library search failed for '%s': %s", query, exc)
             return []

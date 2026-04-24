@@ -232,17 +232,53 @@ class AccountDeletionCancelView(APIView):
 
 
 class DataExportView(APIView):
-    """GET /users/me/data-export/ — download all personal data as JSON."""
+    """``/users/me/data-export/`` — request a copy of your personal data.
+
+    AUD-B-704: building the export touches every domain table and used to run
+    on the request thread, blocking the worker for several seconds for any
+    user with non-trivial activity. We now enqueue a Celery task that builds
+    the JSON, attaches it to a branded email, and sends it to the user's
+    address — the request returns 202 immediately.
+
+    Both ``GET`` and ``POST`` are accepted so existing clients keep working
+    without a coordinated deploy; both behave identically.
+    """
 
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
-        from .services import build_data_export
+    @extend_schema(
+        summary="Request a personal data export",
+        description=(
+            "Enqueues a background job that builds your full data export and "
+            "emails it to you as a JSON attachment. Always returns 202; the "
+            "email lands within a few minutes."
+        ),
+        responses={
+            202: OpenApiResponse(description="Export queued — will be emailed."),
+        },
+        tags=["users"],
+    )
+    def post(self, request):
+        return self._enqueue(request)
 
-        data = build_data_export(request.user)
-        response = Response(data)
-        response["Content-Disposition"] = 'attachment; filename="bookswap-data-export.json"'
-        return response
+    def get(self, request):
+        return self._enqueue(request)
+
+    @staticmethod
+    def _enqueue(request):
+        from .tasks import send_data_export_email
+
+        send_data_export_email.delay(str(request.user.pk))
+        return Response(
+            {
+                "queued": True,
+                "detail": (
+                    "Your data export is being prepared. We'll email it to you "
+                    "as soon as it's ready (usually within a few minutes)."
+                ),
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
 
 
 # ── Custom Login View (US-104 AC4) ────────────────────────────────────────────

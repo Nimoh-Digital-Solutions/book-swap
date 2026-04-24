@@ -54,10 +54,10 @@
     "manage": "Voorkeuren beheren"
   },
   "dataExport": {
-    "button": "Mijn gegevens downloaden",
-    "loading": "Export voorbereiden…",
-    "success": "Gegevensexport gedownload.",
-    "error": "Export mislukt."
+    "button": "Mijn gegevens per e-mail",
+    "loading": "Versturen…",
+    "success": "Je gegevensexport wordt zo per e-mail naar je verzonden.",
+    "error": "Verzoek voor gegevensexport mislukt."
   },
   "privacy": {
     "title": "Privacybeleid",

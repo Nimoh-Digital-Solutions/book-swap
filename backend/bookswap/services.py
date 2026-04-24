@@ -10,84 +10,138 @@ import logging
 import httpx
 from django.contrib.gis.geos import Point
 
+from .external_http import (
+    SHORT_TIMEOUT,
+    CircuitBreaker,
+    CircuitOpenError,
+    cached_call,
+)
+
 logger = logging.getLogger(__name__)
 
 NOMINATIM_BASE = "https://nominatim.openstreetmap.org"
 USER_AGENT = "BookSwap/1.0 (bookswap.example; contact@bookswap.example)"
-TIMEOUT = 10  # seconds
+
+# AUD-B-701: tight, dedicated timeouts for the two Nominatim calls.
+# Both used to share a 10s budget which meant a slow upstream could pin a
+# request thread for 20s on a single profile-location update.
+NOMINATIM_FORWARD_TIMEOUT = SHORT_TIMEOUT  # 3s — postcode → coords
+NOMINATIM_REVERSE_TIMEOUT = 2.0  # neighbourhood lookup is best-effort
+
+# Cache TTLs.
+NOMINATIM_FORWARD_TTL = 60 * 60 * 24 * 30  # 30 days — postcodes don't move
+NOMINATIM_REVERSE_TTL = 60 * 60 * 24  # 24h is plenty for neighbourhood data
+
+_nominatim_breaker = CircuitBreaker("nominatim", failure_threshold=5, cooldown=60)
 
 
 class GeocodingError(Exception):
     """Raised when geocoding fails."""
 
 
+def _nominatim_forward(postcode: str, country_code: str) -> Point:
+    """Hit Nominatim once for a postcode → Point (no caching, no breaker)."""
+    response = httpx.get(
+        f"{NOMINATIM_BASE}/search",
+        params={
+            "postalcode": postcode,
+            "countrycodes": country_code,
+            "format": "json",
+            "limit": 1,
+        },
+        headers={"User-Agent": USER_AGENT},
+        timeout=NOMINATIM_FORWARD_TIMEOUT,
+    )
+    response.raise_for_status()
+    results = response.json()
+    if not results:
+        raise GeocodingError(f"No results for postcode {postcode}")
+    lat = float(results[0]["lat"])
+    lng = float(results[0]["lon"])
+    return Point(lng, lat, srid=4326)
+
+
+def _nominatim_reverse(lat: float, lng: float) -> str:
+    """Hit Nominatim once for a point → neighbourhood (no caching, no breaker)."""
+    response = httpx.get(
+        f"{NOMINATIM_BASE}/reverse",
+        params={
+            "lat": lat,
+            "lon": lng,
+            "format": "json",
+            "zoom": 14,  # suburb/neighbourhood level
+        },
+        headers={"User-Agent": USER_AGENT},
+        timeout=NOMINATIM_REVERSE_TIMEOUT,
+    )
+    response.raise_for_status()
+    data = response.json()
+    address = data.get("address", {})
+    return (
+        address.get("suburb")
+        or address.get("neighbourhood")
+        or address.get("city_district")
+        or address.get("town")
+        or address.get("city")
+        or ""
+    )
+
+
 class NominatimGeocodingService:
-    """Geocode Dutch postcodes and reverse-geocode points via Nominatim."""
+    """Geocode Dutch postcodes and reverse-geocode points via Nominatim.
+
+    All outbound calls are guarded by a shared circuit breaker
+    (``cb:nominatim``) and cached via the Django cache so repeated lookups
+    for the same postcode / coordinates do not re-hit the upstream.
+    """
 
     @staticmethod
     def geocode_postcode(postcode: str, country_code: str = "nl") -> Point:
         """Convert a postcode to a PostGIS Point.
 
-        Raises ``GeocodingError`` on network or no-result failures.
+        Raises ``GeocodingError`` on network failures, no-result responses,
+        or when the Nominatim circuit breaker is currently open.
         """
+        normalised = postcode.strip().upper().replace(" ", "")
+        cache_key = f"nominatim:fwd:v1:{country_code}:{normalised}"
+
+        def _do_call() -> Point:
+            return _nominatim_breaker.call(_nominatim_forward, postcode, country_code)
+
         try:
-            response = httpx.get(
-                f"{NOMINATIM_BASE}/search",
-                params={
-                    "postalcode": postcode,
-                    "countrycodes": country_code,
-                    "format": "json",
-                    "limit": 1,
-                },
-                headers={"User-Agent": USER_AGENT},
-                timeout=TIMEOUT,
-            )
-            response.raise_for_status()
-            results = response.json()
+            return cached_call(cache_key, NOMINATIM_FORWARD_TTL, _do_call)
+        except CircuitOpenError as exc:
+            logger.warning("Nominatim forward geocode short-circuited (circuit open).")
+            raise GeocodingError("Geocoding service is temporarily unavailable.") from exc
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("Nominatim geocode failed for %s: %s", postcode, exc)
             raise GeocodingError(f"Geocoding failed for postcode {postcode}") from exc
-
-        if not results:
-            raise GeocodingError(f"No results for postcode {postcode}")
-
-        lat = float(results[0]["lat"])
-        lng = float(results[0]["lon"])
-        return Point(lng, lat, srid=4326)
 
     @staticmethod
     def reverse_geocode_neighborhood(point: Point) -> str:
         """Derive a neighborhood/suburb name from a point.
 
-        Returns an empty string on failure (non-critical).
+        Best-effort — returns an empty string on any failure (network, parse,
+        or open circuit). Cache key buckets the point to ~100m so nearby
+        users share a hit.
         """
+        # Round to 3 decimals (~110m at the equator) — fine for a neighbourhood
+        # label and gives us a much better cache hit rate.
+        lat_b = round(point.y, 3)
+        lng_b = round(point.x, 3)
+        cache_key = f"nominatim:rev:v1:{lat_b}:{lng_b}"
+
+        def _do_call() -> str:
+            return _nominatim_breaker.call(_nominatim_reverse, point.y, point.x)
+
         try:
-            response = httpx.get(
-                f"{NOMINATIM_BASE}/reverse",
-                params={
-                    "lat": point.y,
-                    "lon": point.x,
-                    "format": "json",
-                    "zoom": 14,  # suburb/neighbourhood level
-                },
-                headers={"User-Agent": USER_AGENT},
-                timeout=TIMEOUT,
-            )
-            response.raise_for_status()
-            data = response.json()
+            return cached_call(cache_key, NOMINATIM_REVERSE_TTL, _do_call)
+        except CircuitOpenError:
+            logger.info("Nominatim reverse geocode short-circuited (circuit open).")
+            return ""
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("Nominatim reverse geocode failed: %s", exc)
             return ""
-
-        address = data.get("address", {})
-        return (
-            address.get("suburb")
-            or address.get("neighbourhood")
-            or address.get("city_district")
-            or address.get("town")
-            or address.get("city")
-            or ""
-        )
 
 
 # ── Overpass POI discovery ────────────────────────────────────────────────────

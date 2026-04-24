@@ -855,19 +855,15 @@ const trustSafetyHandlers = [
     );
   }),
 
-  /** GET /api/v1/users/me/data-export/ — GDPR data export */
-  http.get('*/api/v1/users/me/data-export/', () => {
-    return HttpResponse.json({
-      profile: { id: 'usr_test_001', email: 'test@example.com', first_name: 'Test' },
-      books: [],
-      exchanges: [],
-      messages_sent: [],
-      ratings_given: [],
-      ratings_received: [],
-      blocks: [],
-      reports_filed: [],
-      exported_at: new Date().toISOString(),
-    });
+  /** POST /api/v1/users/me/data-export/ — GDPR data export (AUD-B-704: now async) */
+  http.post('*/api/v1/users/me/data-export/', () => {
+    return HttpResponse.json(
+      {
+        queued: true,
+        detail: 'Your data export will be emailed to you shortly.',
+      },
+      { status: 202 },
+    );
   }),
 ];
 

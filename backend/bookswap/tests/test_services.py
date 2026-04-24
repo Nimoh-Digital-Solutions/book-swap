@@ -83,3 +83,43 @@ class TestBuildDataExport:
         assert export["ratings_received"] == []
         assert export["blocks"] == []
         assert export["reports_filed"] == []
+
+
+# ── AUD-B-701: Nominatim caching + circuit breaker behaviour ────────────────
+
+
+class TestNominatimCachingAndBreaker:
+    """Verify reverse_geocode_neighborhood caches hits and survives upstream pain."""
+
+    def test_second_call_for_same_point_is_cache_hit(self):
+        """Two calls for the same coords must hit the upstream only once."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"address": {"suburb": "Centre"}}
+        mock_response.raise_for_status = MagicMock()
+
+        with patch("bookswap.services.httpx.get", return_value=mock_response) as get:
+            first = NominatimGeocodingService.reverse_geocode_neighborhood(Point(4.89, 52.35, srid=4326))
+            second = NominatimGeocodingService.reverse_geocode_neighborhood(Point(4.89, 52.35, srid=4326))
+
+        assert first == second == "Centre"
+        # Cached → only one network call.
+        assert get.call_count == 1
+
+    def test_repeated_failures_open_circuit_and_subsequent_calls_skip_http(self):
+        """After enough failures the breaker should short-circuit further calls."""
+        # Make sure both points are different so the cache key never matches.
+        with patch(
+            "bookswap.services.httpx.get",
+            side_effect=httpx.ConnectError("dead"),
+        ) as get:
+            # Trip the breaker (default failure_threshold=5 in services.py).
+            for i in range(5):
+                NominatimGeocodingService.reverse_geocode_neighborhood(
+                    Point(4.89 + i * 0.1, 52.35 + i * 0.1, srid=4326)
+                )
+            assert get.call_count == 5
+
+            # 6th call: circuit is open → http.get must NOT be called again.
+            result = NominatimGeocodingService.reverse_geocode_neighborhood(Point(10.0, 10.0, srid=4326))
+            assert result == ""  # graceful empty
+            assert get.call_count == 5  # unchanged

@@ -313,36 +313,26 @@ describe('CookieConsentBanner', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 describe('DataExportButton', () => {
-  it('renders download button', () => {
+  it('renders the email-export button', () => {
     renderWithProviders(<DataExportButton />);
     expect(screen.getByRole('button')).toBeInTheDocument();
-    expect(screen.getByText(/download/i)).toBeInTheDocument();
+    expect(screen.getByText(/email me my data/i)).toBeInTheDocument();
   });
 
-  it('calls data export API on click', async () => {
+  it('POSTs to the data export endpoint on click (AUD-B-704)', async () => {
     const user = userEvent.setup();
-    let exported = false;
-
-    // Mock URL.createObjectURL and URL.revokeObjectURL
-    const createObjectURL = vi.fn(() => 'blob:test');
-    const revokeObjectURL = vi.fn();
-    globalThis.URL.createObjectURL = createObjectURL;
-    globalThis.URL.revokeObjectURL = revokeObjectURL;
+    let queued = false;
 
     server.use(
-      http.get('*/api/v1/users/me/data-export/', () => {
-        exported = true;
-        return HttpResponse.json({
-          profile: { id: 'usr_test_001' },
-          books: [],
-          exchanges: [],
-          messages_sent: [],
-          ratings_given: [],
-          ratings_received: [],
-          blocks: [],
-          reports_filed: [],
-          exported_at: new Date().toISOString(),
-        });
+      http.post('*/api/v1/users/me/data-export/', () => {
+        queued = true;
+        return HttpResponse.json(
+          {
+            queued: true,
+            detail: 'Your data export will be emailed to you shortly.',
+          },
+          { status: 202 },
+        );
       }),
     );
 
@@ -350,7 +340,7 @@ describe('DataExportButton', () => {
     await user.click(screen.getByRole('button'));
 
     await waitFor(() => {
-      expect(exported).toBe(true);
+      expect(queued).toBe(true);
     });
   });
 });

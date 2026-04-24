@@ -496,10 +496,27 @@ class NearbyCountView(APIView):
 
 
 class CommunityStatsView(APIView):
-    """GET /books/community-stats/ — weekly swap count + recent activity feed (public)."""
+    """GET /books/community-stats/ — weekly swap count + recent activity feed (public).
+
+    AUD-B-705: every request used to do half-a-dozen GIS counts + ORM pulls.
+    The payload is cheap to recompute every few minutes but expensive to
+    compute *per request*, so we cache the response by a coarse
+    (lat, lng, radius) bucket for ``COMMUNITY_STATS_TTL`` seconds. Within a
+    bucket every visitor in the same neighbourhood reuses the same result.
+    """
 
     authentication_classes = (OptionalJWTAuthentication,)
     permission_classes = (AllowAny,)
+
+    # Round to 2 decimals (~1.1 km at the equator) — coarse enough to share
+    # cache hits between visitors in the same area, fine enough that the
+    # "nearby" feed is still meaningful.
+    LOCATION_BUCKET_DECIMALS = 2
+    # Bucket the radius to the nearest 1km so e.g. 5000 / 5100 / 5500 share.
+    RADIUS_BUCKET_M = 1000
+    # 5 minutes is fresh enough for a "this week" feed and keeps the load
+    # off the primary DB during traffic spikes.
+    COMMUNITY_STATS_TTL = 60 * 5
 
     @extend_schema(
         summary="Community stats and activity feed",
@@ -516,14 +533,6 @@ class CommunityStatsView(APIView):
         tags=["books"],
     )
     def get(self, request):
-        from itertools import islice
-
-        from django.contrib.gis.geos import Point
-        from django.utils import timezone
-
-        from apps.exchanges.models import ExchangeRequest, ExchangeStatus
-        from apps.ratings.models import Rating
-
         try:
             lat = float(request.query_params.get("lat", ""))
             lng = float(request.query_params.get("lng", ""))
@@ -544,6 +553,35 @@ class CommunityStatsView(APIView):
         except (TypeError, ValueError):
             search_radius = 10000
         search_radius = max(500, min(search_radius, 50000))
+
+        # Bucket the inputs so visitors in the same neighbourhood share a cache hit.
+        lat_b = round(lat, self.LOCATION_BUCKET_DECIMALS)
+        lng_b = round(lng, self.LOCATION_BUCKET_DECIMALS)
+        radius_b = max(self.RADIUS_BUCKET_M, (search_radius // self.RADIUS_BUCKET_M) * self.RADIUS_BUCKET_M)
+
+        from bookswap.external_http import cached_call
+
+        cache_key = f"community_stats:v1:{lat_b}:{lng_b}:{radius_b}"
+        payload = cached_call(
+            cache_key,
+            self.COMMUNITY_STATS_TTL,
+            self._compute_payload,
+            lat,
+            lng,
+            search_radius,
+        )
+        return Response(payload)
+
+    @staticmethod
+    def _compute_payload(lat: float, lng: float, search_radius: int) -> dict:
+        """Build the stats payload — broken out so it can be wrapped in cache."""
+        from itertools import islice
+
+        from django.contrib.gis.geos import Point
+        from django.utils import timezone
+
+        from apps.exchanges.models import ExchangeRequest, ExchangeStatus
+        from apps.ratings.models import Rating
 
         point = Point(lng, lat, srid=4326)
         one_week_ago = timezone.now() - timezone.timedelta(days=7)
@@ -656,9 +694,7 @@ class CommunityStatsView(APIView):
         feed.sort(key=lambda e: e["timestamp"], reverse=True)
         feed = list(islice(feed, 5))
 
-        return Response(
-            {
-                "swaps_this_week": swaps_this_week,
-                "activity_feed": feed,
-            }
-        )
+        return {
+            "swaps_this_week": swaps_this_week,
+            "activity_feed": feed,
+        }

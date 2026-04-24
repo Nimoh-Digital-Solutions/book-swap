@@ -54,10 +54,10 @@
     "manage": "Gérer les préférences"
   },
   "dataExport": {
-    "button": "Télécharger mes données",
-    "loading": "Préparation de l'export…",
-    "success": "Export des données téléchargé.",
-    "error": "Échec de l'export."
+    "button": "Recevoir mes données par e-mail",
+    "loading": "Envoi…",
+    "success": "Votre export de données vous sera envoyé par e-mail sous peu.",
+    "error": "Échec de la demande d'export."
   },
   "privacy": {
     "title": "Politique de confidentialité",

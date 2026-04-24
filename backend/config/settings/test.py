@@ -15,6 +15,19 @@ DATABASES["default"]["TEST"] = {  # type: ignore[index]  # noqa: F405
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# Use an in-process cache for tests so we don't depend on Redis being reachable
+# (the base settings point at the docker-compose ``redis`` host). The Redis
+# client there is configured with ``IGNORE_EXCEPTIONS=True``, which means every
+# cache.set/get/incr would silently return None when Redis is unreachable —
+# breaking any test that relies on cache state (circuit breakers, response
+# caching, etc.).
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "bookswap-tests",
+    }
+}
+
 # Disable throttling so unauthenticated endpoints (e.g. unsubscribe) are not rate-limited.
 REST_FRAMEWORK.update(  # type: ignore[name-defined]  # noqa: F405
     {

@@ -54,10 +54,10 @@
     "manage": "Manage Preferences"
   },
   "dataExport": {
-    "button": "Download My Data",
-    "loading": "Preparing export…",
-    "success": "Data export downloaded.",
-    "error": "Failed to export data."
+    "button": "Email Me My Data",
+    "loading": "Sending…",
+    "success": "Your data export will be emailed to you shortly.",
+    "error": "Failed to request data export."
   },
   "privacy": {
     "title": "Privacy Policy",
