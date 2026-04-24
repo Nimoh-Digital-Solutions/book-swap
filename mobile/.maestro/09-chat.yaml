@@ -1,0 +1,51 @@
+# Flow 9: Open a chat with a swap partner and send a message.
+#
+# Pre-conditions: the run is logged in (use the EMAIL/PASSWORD variables)
+# AND there is at least one active exchange under "Exchanges" → "Active".
+#
+# Variables:
+#   - EMAIL
+#   - PASSWORD
+#   - MESSAGE_TEXT  (default: "Hi from Maestro!")
+appId: com.bookswap.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Log In"
+- tapOn:
+    id: "email-input"
+    optional: true
+- tapOn: "Email or username"
+  optional: true
+- inputText: ${EMAIL}
+- tapOn:
+    id: "password-input"
+    optional: true
+- tapOn: "Password"
+  optional: true
+- inputText: ${PASSWORD}
+- tapOn: "Log In"
+- assertVisible:
+    text: "Home|Recently Added"
+    optional: true
+- tapOn: "Exchanges"
+- assertVisible:
+    text: "Active|Pending"
+    optional: true
+- tapOn:
+    text: "Active"
+    optional: true
+- tapOn:
+    index: 0
+    text: ".*"
+- assertVisible:
+    text: "No messages yet|Send the first message|Send"
+    optional: true
+- tapOn:
+    text: "Type a message|Message"
+    optional: true
+- inputText: ${MESSAGE_TEXT}
+- tapOn:
+    text: "Send"
+    optional: true
+- back
