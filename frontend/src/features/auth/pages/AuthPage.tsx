@@ -3,7 +3,8 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import { useDocumentTitle, useUserCity } from '@hooks';
+import { SEOHead } from '@components';
+import { useUserCity } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -79,13 +80,22 @@ export function AuthPage() {
     register: `Trade stories, share recommendations, and build a sustainable reading culture in ${city}.`,
   };
 
-  useDocumentTitle(
+  const title =
     view === 'register'
       ? routeMetadata[PATHS.REGISTER].title
       : view === 'forgot'
         ? routeMetadata[PATHS.FORGOT_PASSWORD].title
-        : routeMetadata[PATHS.LOGIN].title,
-  );
+        : routeMetadata[PATHS.LOGIN].title;
+  const description =
+    view === 'register'
+      ? routeMetadata[PATHS.REGISTER].description
+      : view === 'forgot'
+        ? routeMetadata[PATHS.FORGOT_PASSWORD].description
+        : routeMetadata[PATHS.LOGIN].description;
+  const path =
+    view === 'register' ? PATHS.REGISTER
+    : view === 'forgot' ? PATHS.FORGOT_PASSWORD
+    : PATHS.LOGIN;
 
   const directionRef = useRef<1 | -1>(1);
 
@@ -149,70 +159,78 @@ export function AuthPage() {
   const formTransition = { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 
   return (
-    <AuthSplitPanel
-      view={view}
-      brandingTitle={branding.title}
-      brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
-      progress={branding.progress}
-      formContent={
-        <AnimatePresence mode="wait" custom={directionRef.current}>
-          {view === 'login' && (
-            <motion.div
-              key="login"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <LoginForm
-                onSubmit={handleLoginSubmit}
-                onToggle={() => navigateTo('register')}
-                onForgotPassword={() => navigateTo('forgot')}
-                isLoading={isLoading}
-                serverError={error}
-              />
-            </motion.div>
-          )}
-          {view === 'register' && (
-            <motion.div
-              key="register"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <RegisterForm
-                onSubmit={handleRegisterSubmit}
-                onToggle={() => navigateTo('login')}
-              />
-            </motion.div>
-          )}
-          {view === 'forgot' && (
-            <motion.div
-              key="forgot"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <ForgotPasswordForm
-                onSubmit={handleForgotSubmit}
-                onBack={() => navigateTo('login')}
-                isLoading={fpLoading}
-                serverError={fpError}
-                isSuccess={fpSuccess}
-                submittedEmail={fpSubmittedEmail}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      }
-    />
+    <>
+      <SEOHead
+        title={title}
+        description={description}
+        path={path}
+        noIndex
+      />
+      <AuthSplitPanel
+        view={view}
+        brandingTitle={branding.title}
+        brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
+        progress={branding.progress}
+        formContent={
+          <AnimatePresence mode="wait" custom={directionRef.current}>
+            {view === 'login' && (
+              <motion.div
+                key="login"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <LoginForm
+                  onSubmit={handleLoginSubmit}
+                  onToggle={() => navigateTo('register')}
+                  onForgotPassword={() => navigateTo('forgot')}
+                  isLoading={isLoading}
+                  serverError={error}
+                />
+              </motion.div>
+            )}
+            {view === 'register' && (
+              <motion.div
+                key="register"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <RegisterForm
+                  onSubmit={handleRegisterSubmit}
+                  onToggle={() => navigateTo('login')}
+                />
+              </motion.div>
+            )}
+            {view === 'forgot' && (
+              <motion.div
+                key="forgot"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <ForgotPasswordForm
+                  onSubmit={handleForgotSubmit}
+                  onBack={() => navigateTo('login')}
+                  isLoading={fpLoading}
+                  serverError={fpError}
+                  isSuccess={fpSuccess}
+                  submittedEmail={fpSubmittedEmail}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        }
+      />
+    </>
   );
 }

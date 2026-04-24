@@ -2,8 +2,8 @@ import { type ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { HttpError } from '@services';
 import { AlertCircle, CheckCircle, Lock } from 'lucide-react';
@@ -49,8 +49,6 @@ export function PasswordResetConfirmPage(): ReactElement {
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useDocumentTitle(routeMetadata[PATHS.PASSWORD_RESET_CONFIRM].title);
-
   const {
     register,
     handleSubmit,
@@ -93,6 +91,12 @@ export function PasswordResetConfirmPage(): ReactElement {
 
   return (
     <main className="min-h-screen bg-[#152018] flex items-center justify-center p-4">
+      <SEOHead
+        title={routeMetadata[PATHS.PASSWORD_RESET_CONFIRM].title}
+        description={routeMetadata[PATHS.PASSWORD_RESET_CONFIRM].description}
+        path={PATHS.PASSWORD_RESET_CONFIRM}
+        noIndex
+      />
       <div className="w-full max-w-md space-y-6">
         {/* ── Form state ── */}
         {pageState === 'form' && (

@@ -2,9 +2,9 @@ import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { EmptyPlaceholder } from '@components/common';
 import { useAppStore } from '@data/useAppStore';
-import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookMarked, BookOpen, Plus } from 'lucide-react';
 
@@ -22,8 +22,6 @@ export function MyShelfPage(): ReactElement {
   const { t } = useTranslation();
   const addNotification = useAppStore(s => s.addNotification);
   const [activeTab, setActiveTab] = useState<Tab>('listings');
-
-  useDocumentTitle(routeMetadata[PATHS.MY_SHELF].title);
 
   const { data: shelf, isLoading, isError } = useMyShelf();
   const { data: wishlistData } = useWishlist(activeTab === 'wishlist');
@@ -65,6 +63,12 @@ export function MyShelfPage(): ReactElement {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+      <SEOHead
+        title={routeMetadata[PATHS.MY_SHELF].title}
+        description={routeMetadata[PATHS.MY_SHELF].description}
+        path={PATHS.MY_SHELF}
+        noIndex
+      />
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

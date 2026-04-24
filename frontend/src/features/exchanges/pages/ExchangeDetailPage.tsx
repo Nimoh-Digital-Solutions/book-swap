@@ -2,11 +2,11 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
 import { RatingPrompt } from '@features/ratings';
-import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, X } from 'lucide-react';
@@ -321,8 +321,6 @@ export default function ExchangeDetailPage(): ReactElement {
   const { data: exchange, isLoading, isError } = useExchange(id!);
   const currentUserId = useAuthStore(s => s.user?.id);
 
-  useDocumentTitle(routeMetadata[PATHS.EXCHANGE_DETAIL].title);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -343,6 +341,12 @@ export default function ExchangeDetailPage(): ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+      <SEOHead
+        title={routeMetadata[PATHS.EXCHANGE_DETAIL].title}
+        description={routeMetadata[PATHS.EXCHANGE_DETAIL].description}
+        path={PATHS.EXCHANGE_DETAIL}
+        noIndex
+      />
       <button
         type="button"
         onClick={() => navigate(-1)}

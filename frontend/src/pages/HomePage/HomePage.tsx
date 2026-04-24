@@ -2,12 +2,13 @@ import { type ReactElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import HeroBackground from "@assets/hero-image.png";
+import { SEOHead } from "@components";
 import { LocaleLink } from "@components/common/LocaleLink/LocaleLink";
 import { useAuth } from "@features/auth";
 import { BookCard, useBooks } from "@features/books";
 import type { ActivityFeedItem } from "@features/discovery";
 import { useCommunityStats, useNearbyCount } from "@features/discovery";
-import { useDocumentTitle, useUserCity } from "@hooks";
+import { useUserCity } from "@hooks";
 import { useLocaleNavigate } from "@hooks/useLocaleNavigate";
 import { PATHS, routeMetadata } from "@routes/config/paths";
 import { ArrowLeftRight, BookOpen, Search, Star } from "lucide-react";
@@ -27,8 +28,6 @@ const HomePage = (): ReactElement => {
     page_size: 4,
     ordering: "-created_at",
   });
-
-  useDocumentTitle(routeMetadata[PATHS.HOME].title);
 
   const { data: nearbyData } = useNearbyCount(lat, lng, DEFAULT_RADIUS);
   const { data: communityData } = useCommunityStats(lat, lng, DEFAULT_RADIUS);
@@ -68,6 +67,35 @@ const HomePage = (): ReactElement => {
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
+      <SEOHead
+        title={routeMetadata[PATHS.HOME].title}
+        description={routeMetadata[PATHS.HOME].description}
+        path={PATHS.HOME}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'BookSwap',
+            url: 'https://book-swaps.com',
+            logo: 'https://book-swaps.com/icons/apple-touch-icon.png',
+            sameAs: [],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'BookSwap',
+            url: 'https://book-swaps.com',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: 'https://book-swaps.com/en/catalogue?search={search_term_string}',
+              },
+              'query-input': 'required name=search_term_string',
+            },
+          },
+        ]}
+      />
       {/* ── Hero Section ── */}
       <section className="relative">
         {/* Background Overlay */}

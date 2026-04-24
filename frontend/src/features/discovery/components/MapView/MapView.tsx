@@ -1,5 +1,6 @@
 import { type ReactElement, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import {
   APIProvider,
   InfoWindow,

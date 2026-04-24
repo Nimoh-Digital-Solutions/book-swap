@@ -2,8 +2,8 @@ import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
-import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, Loader2, Trash2 } from 'lucide-react';
@@ -22,8 +22,6 @@ export function EditBookPage(): ReactElement {
   const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const addNotification = useAppStore(s => s.addNotification);
-
-  useDocumentTitle(routeMetadata[PATHS.EDIT_BOOK].title);
 
   const { data: book, isLoading, isError } = useBook(id!);
   const updateBook = useUpdateBook(id!);
@@ -98,6 +96,12 @@ export function EditBookPage(): ReactElement {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.EDIT_BOOK].title}
+        description={routeMetadata[PATHS.EDIT_BOOK].description}
+        path={id ? `/books/${id}/edit` : PATHS.EDIT_BOOK}
+        noIndex
+      />
       {/* Back link */}
       <button
         type="button"

@@ -2,11 +2,11 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { BookCard, useBooks } from '@features/books';
 import { RatingsList } from '@features/ratings';
 import { BlockUserButton, ReportButton, useIsBlocked } from '@features/trust-safety';
-import { useDocumentTitle } from '@hooks';
-import { routeMetadata } from '@routes/config/paths';
+import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Globe, MapPin, Star, UserX } from 'lucide-react';
 
 import { NewMemberBadge } from '../components/NewMemberBadge';
@@ -20,12 +20,6 @@ export function PublicProfilePage(): ReactElement {
   const { data: userBooks, isLoading: booksLoading } = useBooks(
     { owner: id!, page_size: 12 },
     !!id && !isLoading && !!profile,
-  );
-
-  useDocumentTitle(
-    profile
-      ? `${profile.first_name} — ${routeMetadata['/profile' as keyof typeof routeMetadata]?.title ?? 'Profile'}`
-      : 'Profile',
   );
 
   if (isLoading) {
@@ -58,6 +52,12 @@ export function PublicProfilePage(): ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <SEOHead
+        title={`${profile.first_name} — ${routeMetadata[PATHS.PROFILE].title}`}
+        description={routeMetadata[PATHS.PUBLIC_PROFILE].description}
+        path={`/profile/${id}`}
+        {...(profile.avatar ? { image: profile.avatar } : {})}
+      />
       {isBlocked && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
           <p className="text-sm text-red-400 font-medium">

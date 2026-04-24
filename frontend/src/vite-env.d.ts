@@ -26,6 +26,8 @@ interface ImportMetaEnv {
    * at compile time. When absent Vite returns `undefined`.
    */
   readonly VITE_PWA: 'true' | 'false' | undefined;
+  /** Public site URL used for canonical links, OG tags, and sitemaps. */
+  readonly VITE_SITE_URL: string | undefined;
   /** Google Maps JavaScript API key for map views. */
   readonly VITE_GOOGLE_MAPS_API_KEY: string | undefined;
 }

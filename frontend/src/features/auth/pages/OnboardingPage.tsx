@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { logoMark } from '@assets';
+import { SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useCompleteOnboarding, useSetLocation } from '@features/profile';
-import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { Info, MapPin, Star } from 'lucide-react';
@@ -21,8 +21,6 @@ export function OnboardingPage() {
   const navigate = useLocaleNavigate();
   const [location, setLocation] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  useDocumentTitle(routeMetadata[PATHS.ONBOARDING].title);
 
   const setLocationMutation = useSetLocation();
   const completeOnboardingMutation = useCompleteOnboarding();
@@ -43,6 +41,12 @@ export function OnboardingPage() {
 
   return (
     <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
+      <SEOHead
+        title={routeMetadata[PATHS.ONBOARDING].title}
+        description={routeMetadata[PATHS.ONBOARDING].description}
+        path={PATHS.ONBOARDING}
+        noIndex
+      />
       <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
         {/* ── Branding panel ──────────────────────────────────── */}
         <div className="md:w-5/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">

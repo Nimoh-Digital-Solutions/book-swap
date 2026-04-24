@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { API } from '@configs/apiEndpoints';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
-import { PATHS } from '@routes/config/paths';
+import { PATHS, routeMetadata } from '@routes/config/paths';
 import { http } from '@services';
 
 import { authService } from '../services/auth.service';
@@ -60,6 +61,12 @@ export function SocialAuthCallbackPage() {
       aria-live="polite"
       aria-label="Completing sign-in"
     >
+      <SEOHead
+        title={routeMetadata[PATHS.SOCIAL_AUTH_CALLBACK].title}
+        description={routeMetadata[PATHS.SOCIAL_AUTH_CALLBACK].description}
+        path={PATHS.SOCIAL_AUTH_CALLBACK}
+        noIndex
+      />
       <p className="text-white text-lg">Signing you in…</p>
     </main>
   );

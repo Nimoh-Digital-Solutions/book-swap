@@ -1,13 +1,14 @@
 import { type ReactElement, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useMapBooks, useRadiusCounts } from '@features/discovery';
 import type {
   BrowseBook,
   BrowseFilters,
 } from '@features/discovery/types/discovery.types';
-import { useDocumentTitle, useUserCity } from '@hooks';
+import { useUserCity } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   APIProvider,
@@ -39,8 +40,6 @@ export default function MapPage(): ReactElement {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-
-  useDocumentTitle(routeMetadata[PATHS.MAP].title);
 
   const filters = useMemo<BrowseFilters>(
     () => ({
@@ -179,6 +178,11 @@ export default function MapPage(): ReactElement {
       className="relative flex-1 -mt-[1px]"
       style={{ height: 'calc(100vh - 73px)' }}
     >
+      <SEOHead
+        title={routeMetadata[PATHS.MAP].title}
+        description={routeMetadata[PATHS.MAP].description}
+        path={PATHS.MAP}
+      />
       <h1 className="sr-only">{t('map.pageTitle', 'Book Map')}</h1>
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
         {/* Top bar */}

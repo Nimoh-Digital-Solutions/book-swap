@@ -1,16 +1,20 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
-import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 export default function AccountDeletionPage(): ReactElement {
   const { t } = useTranslation('trust-safety');
-  useDocumentTitle(routeMetadata[PATHS.ACCOUNT_DELETION].title);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <SEOHead
+        title={routeMetadata[PATHS.ACCOUNT_DELETION].title}
+        description={routeMetadata[PATHS.ACCOUNT_DELETION].description}
+        path={PATHS.ACCOUNT_DELETION}
+      />
       <h1 className="text-2xl font-bold text-white">
         {t('accountDeletion.title', 'Account & Data Deletion')}
       </h1>

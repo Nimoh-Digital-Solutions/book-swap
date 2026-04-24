@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 const SUPPORT_EMAIL = 'admin@nimoh-ict.nl';
@@ -28,10 +28,14 @@ function Section({
 
 export default function TermsOfServicePage(): ReactElement {
   const { t } = useTranslation('trust-safety');
-  useDocumentTitle(routeMetadata[PATHS.TERMS_OF_SERVICE].title);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <SEOHead
+        title={routeMetadata[PATHS.TERMS_OF_SERVICE].title}
+        description={routeMetadata[PATHS.TERMS_OF_SERVICE].description}
+        path={PATHS.TERMS_OF_SERVICE}
+      />
       <h1 className="text-2xl font-bold text-white">{t('terms.title')}</h1>
       <p className="text-sm text-[#8C9C92]">
         {t('terms.lastUpdated', { date: LAST_UPDATED })}

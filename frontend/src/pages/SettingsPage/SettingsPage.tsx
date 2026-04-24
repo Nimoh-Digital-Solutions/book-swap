@@ -1,6 +1,7 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
 import { NotificationPreferencesSection } from '@features/notifications';
 import { profileService,useProfile } from '@features/profile';
@@ -12,14 +13,11 @@ import {
   BlockedUsersList,
   DataExportButton,
 } from '@features/trust-safety';
-import { useDocumentTitle } from '@hooks';
-import { routeMetadata } from '@routes/config/paths';
-import { PATHS } from '@routes/config/paths';
+import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AlertTriangle, Loader2, Shield, Trash2 } from 'lucide-react';
 
 export default function SettingsPage(): ReactElement {
   const { t } = useTranslation();
-  useDocumentTitle(routeMetadata[PATHS.SETTINGS].title);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const addNotification = useAppStore(s => s.addNotification);
@@ -54,6 +52,12 @@ export default function SettingsPage(): ReactElement {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+      <SEOHead
+        title={routeMetadata[PATHS.SETTINGS].title}
+        description={routeMetadata[PATHS.SETTINGS].description}
+        path={PATHS.SETTINGS}
+        noIndex
+      />
       <h1 className="text-2xl font-bold text-white">
         {t('settings.heading', 'Settings')}
       </h1>

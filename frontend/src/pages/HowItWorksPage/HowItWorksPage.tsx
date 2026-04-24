@@ -1,9 +1,9 @@
 import { type ReactElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { SEOHead } from "@components";
 import { LocaleLink } from "@components/common/LocaleLink/LocaleLink";
 import { useAuth } from "@features/auth";
-import { useDocumentTitle } from "@hooks";
 import { PATHS, routeMetadata } from "@routes/config/paths";
 import {
   ArrowLeftRight,
@@ -155,10 +155,14 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 export default function HowItWorksPage(): ReactElement {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  useDocumentTitle(routeMetadata[PATHS.HOW_IT_WORKS].title);
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+      <SEOHead
+        title={routeMetadata[PATHS.HOW_IT_WORKS].title}
+        description={routeMetadata[PATHS.HOW_IT_WORKS].description}
+        path={PATHS.HOW_IT_WORKS}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden pb-8">
         <div

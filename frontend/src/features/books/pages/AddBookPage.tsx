@@ -1,8 +1,8 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
-import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, Camera, Loader2, Search } from 'lucide-react';
@@ -19,8 +19,6 @@ export function AddBookPage(): ReactElement {
   const navigate = useLocaleNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const createBook = useCreateBook();
-
-  useDocumentTitle(routeMetadata[PATHS.ADD_BOOK].title);
 
   // ISBN lookup state
   const [isbnInput, setIsbnInput] = useState('');
@@ -101,6 +99,12 @@ export function AddBookPage(): ReactElement {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.ADD_BOOK].title}
+        description={routeMetadata[PATHS.ADD_BOOK].description}
+        path={PATHS.ADD_BOOK}
+        noIndex
+      />
       {/* Barcode scanner modal */}
       {scannerOpen && (
         <BarcodeScanner

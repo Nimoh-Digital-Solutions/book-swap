@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft } from 'lucide-react';
@@ -13,8 +13,6 @@ export function EditProfilePage(): ReactElement {
   const { t } = useTranslation();
   const navigate = useLocaleNavigate();
   const { data: profile, isLoading, isError } = useProfile();
-
-  useDocumentTitle(routeMetadata[PATHS.PROFILE_EDIT].title);
 
   if (isLoading) {
     return (
@@ -38,6 +36,12 @@ export function EditProfilePage(): ReactElement {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.PROFILE_EDIT].title}
+        description={routeMetadata[PATHS.PROFILE_EDIT].description}
+        path={PATHS.PROFILE_EDIT}
+        noIndex
+      />
       {/* Back link */}
       <button
         type="button"

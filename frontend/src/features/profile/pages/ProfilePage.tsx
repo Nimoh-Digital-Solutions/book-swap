@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Edit2, Globe, MapPin, Star } from 'lucide-react';
@@ -20,8 +20,6 @@ export function ProfilePage(): ReactElement {
   const { t } = useTranslation();
   const navigate = useLocaleNavigate();
   const { data: profile, isLoading, isError } = useProfile();
-
-  useDocumentTitle(routeMetadata[PATHS.PROFILE].title);
 
   if (isLoading) {
     return (
@@ -48,6 +46,11 @@ export function ProfilePage(): ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <SEOHead
+        title={routeMetadata[PATHS.PROFILE].title}
+        description={routeMetadata[PATHS.PROFILE].description}
+        path={PATHS.PROFILE}
+      />
       {/* Header card */}
       <div className="bg-surface-dark rounded-2xl border border-border-dark p-8">
         <div className="flex flex-col sm:flex-row gap-6">

@@ -2,8 +2,8 @@ import { type ReactElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { EmptyPlaceholder } from '@components/common';
-import { useDocumentTitle } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowRightLeft, Clock, Inbox } from 'lucide-react';
 
@@ -26,8 +26,6 @@ function filterByTab(items: ExchangeListItem[], tab: Tab): ExchangeListItem[] {
 export default function ExchangesPage(): ReactElement {
   const { t } = useTranslation('exchanges');
   const [activeTab, setActiveTab] = useState<Tab>('active');
-
-  useDocumentTitle(routeMetadata[PATHS.EXCHANGES].title);
 
   const { data, isLoading, isError } = useExchanges();
   const { data: incomingCount } = useIncomingRequestCount();
@@ -65,6 +63,12 @@ export default function ExchangesPage(): ReactElement {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+      <SEOHead
+        title={routeMetadata[PATHS.EXCHANGES].title}
+        description={routeMetadata[PATHS.EXCHANGES].description}
+        path={PATHS.EXCHANGES}
+        noIndex
+      />
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

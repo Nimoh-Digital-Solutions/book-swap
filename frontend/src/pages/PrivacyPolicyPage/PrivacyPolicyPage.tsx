@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 const PRIVACY_EMAIL = 'admin@nimoh-ict.nl';
@@ -28,10 +28,14 @@ function Section({
 
 export default function PrivacyPolicyPage(): ReactElement {
   const { t } = useTranslation('trust-safety');
-  useDocumentTitle(routeMetadata[PATHS.PRIVACY_POLICY].title);
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <SEOHead
+        title={routeMetadata[PATHS.PRIVACY_POLICY].title}
+        description={routeMetadata[PATHS.PRIVACY_POLICY].description}
+        path={PATHS.PRIVACY_POLICY}
+      />
       <h1 className="text-2xl font-bold text-white">{t('privacy.title')}</h1>
       <p className="text-sm text-[#8C9C92]">
         {t('privacy.lastUpdated', { date: LAST_UPDATED })}

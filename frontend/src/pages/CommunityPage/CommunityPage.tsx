@@ -1,11 +1,12 @@
 import { type ReactElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { SEOHead } from "@components";
 import { LocaleLink } from "@components/common/LocaleLink/LocaleLink";
 import { useAuth } from "@features/auth";
 import type { ActivityFeedItem } from "@features/discovery";
 import { useCommunityStats, useNearbyCount } from "@features/discovery";
-import { useDocumentTitle, useUserCity } from "@hooks";
+import { useUserCity } from "@hooks";
 import { PATHS, routeMetadata } from "@routes/config/paths";
 import {
   ArrowLeftRight,
@@ -152,10 +153,14 @@ export default function CommunityPage(): ReactElement {
   const { city, lat, lng } = useUserCity();
   const { data: nearbyData } = useNearbyCount(lat, lng, DEFAULT_RADIUS);
   const { data: communityData } = useCommunityStats(lat, lng, DEFAULT_RADIUS);
-  useDocumentTitle(routeMetadata[PATHS.COMMUNITY].title);
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+      <SEOHead
+        title={routeMetadata[PATHS.COMMUNITY].title}
+        description={routeMetadata[PATHS.COMMUNITY].description}
+        path={PATHS.COMMUNITY}
+      />
       {/* Hero + Stats */}
       <section className="relative overflow-hidden pb-8">
         <div

@@ -2,11 +2,12 @@ import { type ReactElement } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAuth } from '@features/auth';
 import { BookCard, useBooks } from '@features/books';
 import { MapView, useMapBooks, useNearbyCount } from '@features/discovery';
-import { useDocumentTitle, useUserCity } from '@hooks';
+import { useUserCity } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookOpen, MapPin, Search } from 'lucide-react';
@@ -60,8 +61,6 @@ export default function BrowsePage(): ReactElement {
     });
   };
 
-  useDocumentTitle(routeMetadata[PATHS.BROWSE].title);
-
   const handleSearch = (term: string) => {
     const q = term.trim();
     if (!q) return;
@@ -70,6 +69,11 @@ export default function BrowsePage(): ReactElement {
 
   return (
     <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+      <SEOHead
+        title={routeMetadata[PATHS.BROWSE].title}
+        description={routeMetadata[PATHS.BROWSE].description}
+        path={PATHS.BROWSE}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden pb-8">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">

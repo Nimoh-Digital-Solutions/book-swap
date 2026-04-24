@@ -2,6 +2,7 @@ import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { EmptyPlaceholder } from '@components/common';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
@@ -9,7 +10,6 @@ import { useAuthStore } from '@features/auth/stores/authStore';
 import type { BrowseBook } from '@features/discovery';
 import { SwapFlowModal } from '@features/discovery';
 import { useIsBlocked } from '@features/trust-safety';
-import { useDocumentTitle } from '@hooks';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
@@ -50,8 +50,6 @@ export function BookDetailPage(): ReactElement {
   const addWishlist = useAddWishlistItem();
   const [swapModalOpen, setSwapModalOpen] = useState(false);
   const isOwnerBlocked = useIsBlocked(book?.owner?.id ?? '');
-
-  useDocumentTitle(book?.title ?? routeMetadata[PATHS.BOOK_DETAIL].title);
 
   if (isLoading) {
     return (
@@ -127,6 +125,36 @@ export function BookDetailPage(): ReactElement {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
+      <SEOHead
+        title={book?.title ?? routeMetadata[PATHS.BOOK_DETAIL].title}
+        description={
+          book
+            ? `${book.title} by ${book.author} — ${book.condition} condition. Available for swapping on BookSwap.`
+            : routeMetadata[PATHS.BOOK_DETAIL].description
+        }
+        path={book ? `/books/${book.id}` : PATHS.BOOK_DETAIL}
+        image={book.photos?.[0]?.image ?? book.cover_url}
+        jsonLd={
+          book
+            ? {
+                '@type': 'Book',
+                name: book.title,
+                author: { '@type': 'Person', name: book.author },
+                ...(book.isbn ? { isbn: book.isbn } : {}),
+                ...(book.language ? { inLanguage: book.language } : {}),
+                ...(book.genres?.[0] ? { genre: book.genres[0] } : {}),
+                image: book.photos?.[0]?.image ?? book.cover_url,
+                offers: {
+                  '@type': 'Offer',
+                  availability: 'https://schema.org/InStock',
+                  price: '0',
+                  priceCurrency: 'EUR',
+                  description: `Available for swap — ${book.condition} condition`,
+                },
+              }
+            : undefined
+        }
+      />
       {/* Back button */}
       <button
         type="button"
