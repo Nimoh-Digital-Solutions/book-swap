@@ -354,10 +354,15 @@
 22. AUD-W-201, AUD-W-202 — ✅ DONE — `HomePage` and `BrowsePage` now render explicit error banners with retry buttons when `useBooks` / `useMapBooks` fail instead of leaving sections blank.
 
 **Sprint 5 — refactors & shared package (1–2 weeks, can parallelise)**
-23. AUD-X-001 — Migrate web to `@shared/*` (start with types).
-24. AUD-M-401 → AUD-M-405 — Split oversized mobile screens.
-25. AUD-B-301 → AUD-B-303 — Split oversized backend modules.
-26. AUD-W-402 → AUD-W-405 — Split oversized web components / rename duplicate `BrowsePage`.
+23. AUD-X-001 — ✅ DONE — Web frontend now imports books / exchange / messaging / notification / profile / discovery / rating / trust-safety types from `@shared/*` (book/exchange types extended with reorder + filter extras to match what the FE was already consuming).
+24. AUD-M-401 → AUD-M-405 — ✅ DONE — Oversized mobile screens decomposed:
+    - **AUD-M-401** `SettingsScreen` (1071 → 156 LoC) split into `components/settings/*` sections + `useProfileVisibility` / `useSearchRadius` / `useLocationManager` hooks.
+    - **AUD-M-402** `BookDetailScreen` (995 → ~280 LoC) split into `components/detail/*` (CoverGallery, MetaPills, OwnerStrip, etc.) + `useWishlistToggle` hook.
+    - **AUD-M-403** `BrowseMapScreen` (954 → ~330 LoC) split into `components/browse-map/*` (MapSearchBar, MapFilters, MapControls, BookListItem, mapsLoader) + `useUserLocation` / `useMapClusters` hooks.
+    - **AUD-M-404** `EditProfileScreen` (785 → 221 LoC) split into `components/edit-profile/*` (AvatarPickerSection, BasicInfoFields, GenresField, PreferencePickers, SubmitButton, UsernameField) + `useAvatarPicker` hook.
+    - **AUD-M-405** `AddBookScreen` / `EditBookScreen` (630 / 646 LoC) now share a `components/book-form/*` package (CoverHeader, ChipPicker, GenreGrid, SectionLabel, styles, constants) — eliminates the duplicated chip/genre/condition/language/swap-type rendering across the two screens.
+25. AUD-B-301 → AUD-B-303 — ✅ DONE — Oversized backend modules split into packages with `__init__.py` re-exports preserving the public API (and Celery task names): `bookswap/views.py` → `bookswap/views/{users,account,auth,social_auth,devices}.py`; `apps/books/views.py` → `apps/books/views/{crud,photos,lookups,wishlist,discovery,stats,_helpers}.py`; `apps/notifications/tasks.py` → `apps/notifications/tasks/{exchange,messaging,ratings,account,_helpers}.py`.
+26. AUD-W-402 → AUD-W-405 — ✅ DONE — Web: `SwapFlowModal` split into per-step subcomponents + step hooks; `CommunityPage` decomposed into stats / lists / marketing sections; `MapPage` `SidePanel` split into filter-controls + book-list; duplicate `BrowsePage` resolved (`/browse` landing → `BrowseLandingPage`, `/catalogue` → `CataloguePage`).
 
 **Sprint 6 — test coverage on critical flows (ongoing)**
 27. AUD-M-701 — Add Maestro flows for sign-up / password-reset / email-verify / chat / swap.
