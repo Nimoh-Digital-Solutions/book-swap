@@ -597,9 +597,21 @@
     },
     "public": {
       "blockUser": "Bloquer l'utilisateur",
-      "comingSoon": "Bientôt disponible",
+      "userBlocked": "Utilisateur bloqué",
+      "blockTitle": "Bloquer {{name}} ?",
+      "blockMessage": "Cette personne ne pourra plus voir vos livres ni vous envoyer de demandes d'échange.",
+      "blockConfirm": "Bloquer",
+      "blocked": "Utilisateur bloqué",
+      "blockError": "Échec du blocage de l'utilisateur",
       "notFound": "Utilisateur introuvable",
-      "reportUser": "Signaler l'utilisateur"
+      "deactivated": "Cet utilisateur n'est plus actif.",
+      "reportUser": "Signaler l'utilisateur",
+      "a11y": {
+        "viewReviews": "Voir les avis",
+        "blockUser": "Bloquer l'utilisateur",
+        "userBlocked": "Utilisateur bloqué",
+        "reportUser": "Signaler l'utilisateur"
+      }
     }
   },
   "ratings": {
@@ -679,7 +691,7 @@
     "emptyTitle": "Aucun utilisateur bloqué",
     "emptySubtitle": "Les utilisateurs que vous bloquez ne verront pas vos livres et ne pourront pas vous contacter.",
     "unblock": "Débloquer",
-    "unblockTitle": "Débloquer l'utilisateur",
+    "unblockTitle": "Débloquer {{name}} ?",
     "unblockMessage": "Il pourra à nouveau voir vos livres et vous envoyer des demandes d'échange.",
     "unblockFailed": "Impossible de débloquer l'utilisateur. Réessayez."
   },

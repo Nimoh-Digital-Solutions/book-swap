@@ -4,7 +4,8 @@
     "home": "Accueil",
     "components": "Composants",
     "profile": "Mon profil",
-    "myShelf": "Mon étagère"
+    "myShelf": "Mon étagère",
+    "exchanges": "Échanges"
   },
   "theme": {
     "switchToDim": "Passer en mode tamisé",

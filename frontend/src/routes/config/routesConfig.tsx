@@ -21,11 +21,13 @@ import { LanguageSync } from '../components/LanguageSync';
 // ---------------------------------------------------------------------------
 const HomePage = lazy(() => import('@pages/HomePage/HomePage'));
 
-const ComponentsDemoPage = lazy(() =>
-  import('@pages/ComponentsDemoPage/ComponentsDemoPage').then(m => ({
-    default: m.ComponentsDemoPage,
-  }))
-);
+const ComponentsDemoPage = import.meta.env.DEV
+  ? lazy(() =>
+      import('@pages/ComponentsDemoPage/ComponentsDemoPage').then(m => ({
+        default: m.ComponentsDemoPage,
+      }))
+    )
+  : null;
 
 const NotFoundPage = lazy(() => import('@pages/NotFoundPage/NotFoundPage'));
 
@@ -215,7 +217,7 @@ export const routes: RouteObject[] = [
             index: true,
             element: <LazyPage component={HomePage} />,
           },
-          ...(import.meta.env.DEV
+          ...(import.meta.env.DEV && ComponentsDemoPage
             ? [
                 {
                   path: rel(PATHS.COMPONENTS_DEMO),

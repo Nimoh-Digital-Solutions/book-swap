@@ -597,9 +597,21 @@
     },
     "public": {
       "blockUser": "Gebruiker blokkeren",
-      "comingSoon": "Binnenkort beschikbaar",
+      "userBlocked": "Gebruiker geblokkeerd",
+      "blockTitle": "{{name}} blokkeren?",
+      "blockMessage": "Deze persoon kan je boeken niet meer zien en geen ruilverzoeken meer sturen.",
+      "blockConfirm": "Blokkeren",
+      "blocked": "Gebruiker geblokkeerd",
+      "blockError": "Gebruiker blokkeren mislukt",
       "notFound": "Gebruiker niet gevonden",
-      "reportUser": "Gebruiker melden"
+      "deactivated": "Deze gebruiker is niet meer actief.",
+      "reportUser": "Gebruiker melden",
+      "a11y": {
+        "viewReviews": "Beoordelingen bekijken",
+        "blockUser": "Gebruiker blokkeren",
+        "userBlocked": "Gebruiker geblokkeerd",
+        "reportUser": "Gebruiker melden"
+      }
     }
   },
   "ratings": {
@@ -679,7 +691,7 @@
     "emptyTitle": "Geen geblokkeerde gebruikers",
     "emptySubtitle": "Geblokkeerde gebruikers kunnen je boeken niet zien en geen contact met je opnemen.",
     "unblock": "Deblokkeren",
-    "unblockTitle": "Gebruiker deblokkeren",
+    "unblockTitle": "{{name}} deblokkeren?",
     "unblockMessage": "Ze kunnen je boeken weer zien en je ruilverzoeken sturen.",
     "unblockFailed": "Kan gebruiker niet deblokkeren. Probeer opnieuw."
   },

@@ -597,9 +597,21 @@
     },
     "public": {
       "blockUser": "Block User",
-      "comingSoon": "Coming soon",
+      "userBlocked": "User Blocked",
+      "blockTitle": "Block {{name}}?",
+      "blockMessage": "They won't be able to see your books or send you swap requests.",
+      "blockConfirm": "Block",
+      "blocked": "User blocked",
+      "blockError": "Failed to block user",
       "notFound": "User not found",
-      "reportUser": "Report User"
+      "deactivated": "This user is no longer active.",
+      "reportUser": "Report User",
+      "a11y": {
+        "viewReviews": "View reviews",
+        "blockUser": "Block user",
+        "userBlocked": "User blocked",
+        "reportUser": "Report user"
+      }
     }
   },
   "ratings": {

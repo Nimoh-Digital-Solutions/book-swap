@@ -4,7 +4,8 @@
     "home": "Home",
     "components": "Componenten",
     "profile": "Mijn profiel",
-    "myShelf": "Mijn plank"
+    "myShelf": "Mijn plank",
+    "exchanges": "Uitwisselingen"
   },
   "theme": {
     "switchToDim": "Naar gedimd schakelen",
