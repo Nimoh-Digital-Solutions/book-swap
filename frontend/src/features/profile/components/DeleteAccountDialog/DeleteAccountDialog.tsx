@@ -38,7 +38,14 @@ export function DeleteAccountDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center pt-4 px-4 pb-safe"
+      style={{
+        // Adds the iOS home-indicator inset to the existing 1rem
+        // bottom padding (RESP-006). See tailwind.css `*-safe` utilities.
+        ['--pb' as string]: '1rem',
+      }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60"

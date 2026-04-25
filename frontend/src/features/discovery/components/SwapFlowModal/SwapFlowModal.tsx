@@ -41,7 +41,16 @@ export function SwapFlowModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center pt-4 sm:pt-6 px-4 sm:px-6 pb-safe"
+      style={{
+        // Adds the iOS home-indicator inset to the existing bottom
+        // padding so the centred dialog doesn't hug the edge on
+        // iPhone X+ (RESP-006). Effective on mobile only — desktops
+        // resolve env(safe-area-inset-*) to 0.
+        ['--pb' as string]: '1rem',
+      }}
+    >
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={handleClose}

@@ -11,7 +11,14 @@
   align-items: center;
   justify-content: center;
   gap: func.spacing('3');
-  padding: func.spacing('3') func.spacing('4');
+  /* Add the iOS home-indicator inset on top of the existing horizontal +
+   * vertical padding so the banner doesn't sit over the home bar (RESP-006).
+   * Resolves to 0 on devices without a safe-area inset. */
+  padding:
+    func.spacing('3')
+    calc(func.spacing('4') + env(safe-area-inset-right))
+    calc(func.spacing('3') + env(safe-area-inset-bottom))
+    calc(func.spacing('4') + env(safe-area-inset-left));
   background: func.color('primary');
   color: func.color('white');
   font-size: func.font-size('sm');

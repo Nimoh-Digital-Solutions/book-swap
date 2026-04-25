@@ -42,7 +42,7 @@ export function BlockUserButton({ userId, displayName }: BlockUserButtonProps): 
 
       {showConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pb-safe"
           role="dialog"
           aria-modal="true"
           aria-label={t('block.confirmTitle', { name: displayName })}

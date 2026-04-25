@@ -178,10 +178,15 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 pt-4 px-4 pb-safe"
       role="dialog"
       aria-modal="true"
       aria-label={t('books.scanner.ariaLabel', 'Barcode scanner')}
+      style={{
+        // Adds the iOS home-indicator inset to the existing 1rem
+        // bottom padding (RESP-006). See tailwind.css `*-safe` utilities.
+        ['--pb' as string]: '1rem',
+      }}
     >
       <div className="relative w-full max-w-sm bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden">
         {/* Header */}
