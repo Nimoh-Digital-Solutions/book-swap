@@ -29,7 +29,6 @@ export function CommunityHero({
 
       <div
         className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center"
-        style={{ marginInline: "auto" }}
       >
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
           <span className="w-2 h-2 rounded-full bg-[#E4B643] animate-pulse" />

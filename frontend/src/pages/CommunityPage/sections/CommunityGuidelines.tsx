@@ -57,7 +57,6 @@ export function CommunityGuidelines(): ReactElement {
   return (
     <section
       className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-      style={{ marginInline: "auto" }}
     >
       <div className="text-center mb-12">
         <Users

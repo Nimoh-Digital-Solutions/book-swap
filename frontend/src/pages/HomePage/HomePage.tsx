@@ -125,7 +125,6 @@ const HomePage = (): ReactElement => {
 
         <div
           className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center"
-          style={{ marginInline: "auto" }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
             <span className="w-2 h-2 rounded-full bg-[#E4B643] animate-pulse" />
@@ -207,7 +206,6 @@ const HomePage = (): ReactElement => {
       {/* ── Recently Added Section ── */}
       <section
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="flex items-end justify-between mb-8">
           <div>
@@ -286,7 +284,6 @@ const HomePage = (): ReactElement => {
       <section
         id="how-it-works"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left: How it Works */}
@@ -446,7 +443,6 @@ const HomePage = (): ReactElement => {
       {/* ── CTA Section ── */}
       <section
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8"
-        style={{ marginInline: "auto" }}
       >
         <div className="bg-[#E4B643] rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="max-w-xl">

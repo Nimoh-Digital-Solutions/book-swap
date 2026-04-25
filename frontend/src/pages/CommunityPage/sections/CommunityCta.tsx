@@ -15,7 +15,6 @@ export function CommunityCta({ isAuthenticated }: CommunityCtaProps): ReactEleme
   return (
     <section
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8"
-      style={{ marginInline: "auto" }}
     >
       <div className="bg-[#E4B643] rounded-3xl p-10 md:p-14 text-center">
         <h2 className="text-3xl md:text-4xl font-extrabold text-[#152018] mb-4">

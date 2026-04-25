@@ -175,7 +175,6 @@ export default function HowItWorksPage(): ReactElement {
         </div>
         <div
           className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center"
-          style={{ marginInline: "auto" }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
             <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
@@ -199,7 +198,6 @@ export default function HowItWorksPage(): ReactElement {
       {/* Steps */}
       <section
         className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="relative">
           <div
@@ -252,7 +250,6 @@ export default function HowItWorksPage(): ReactElement {
       {/* Safety Tips */}
       <section
         className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="text-center mb-12">
           <Shield
@@ -294,7 +291,6 @@ export default function HowItWorksPage(): ReactElement {
       {/* Getting Started */}
       <section
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="bg-[#1A251D] border border-[#28382D] rounded-3xl p-8 md:p-12">
           <h2 className="text-2xl font-extrabold text-white mb-2">
@@ -326,7 +322,6 @@ export default function HowItWorksPage(): ReactElement {
       {/* FAQ */}
       <section
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
-        style={{ marginInline: "auto" }}
       >
         <div className="text-center mb-12">
           <h2 className="text-3xl font-extrabold text-white mb-3">
@@ -351,7 +346,6 @@ export default function HowItWorksPage(): ReactElement {
       {/* CTA */}
       <section
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-8"
-        style={{ marginInline: "auto" }}
       >
         <div className="bg-[#E4B643] rounded-3xl p-10 md:p-14 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-[#152018] mb-4">

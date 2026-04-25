@@ -92,7 +92,7 @@ export default function BrowseLandingPage(): ReactElement {
           <div className="absolute top-1/4 -right-32 w-[50vw] h-[30vh] md:w-[300px] md:h-[300px] bg-[#4ADE80]/3 blur-[100px] rounded-full" />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center" style={{ marginInline: 'auto' }}>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A251D] border border-[#28382D] text-[#E4B643] text-xs font-semibold mb-8">
             <Search className="w-3.5 h-3.5" aria-hidden="true" />
             {nearbyData
@@ -138,7 +138,7 @@ export default function BrowseLandingPage(): ReactElement {
       </section>
 
       {/* Genre Pills + Books */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" style={{ marginInline: 'auto' }}>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-end justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">
@@ -300,7 +300,7 @@ export default function BrowseLandingPage(): ReactElement {
       </section>
 
       {/* Books Near You — Map */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24" style={{ marginInline: 'auto' }}>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24">
         <div className="bg-[#1A251D] border border-[#28382D] rounded-3xl p-6 md:p-10 overflow-hidden">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="lg:w-80 flex-shrink-0 flex flex-col justify-center">
