@@ -44,7 +44,7 @@ export function AuthSplitPanel({
 }: AuthSplitPanelProps) {
   return (
     <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+      <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[100dvh] md:min-h-[700px] border border-border-dark">
         {/* ── Branding panel (left) ────────────────────────────── */}
         <div className="md:w-6/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
           {/* Gradient overlay */}
@@ -100,12 +100,24 @@ export function AuthSplitPanel({
             />
           </div>
 
-          {/* Mobile logo (hidden on desktop) */}
+          {/* Condensed mobile brand block (RESP-016, Sprint B).
+            * The full branding panel is `hidden md:flex`, so without this
+            * block mobile users would see only a logo + bare form — losing
+            * the brand promise entirely. We render a tight headline + 1-line
+            * subtitle (no testimonial) so the conversion-relevant hero copy
+            * is still visible above the fold. Hidden on `md:` because the
+            * left panel takes over there. */}
           <div className="md:hidden mb-8">
-            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-5">
               <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </LocaleLink>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-white text-balance mb-2">
+              {brandingTitle}
+            </h1>
+            <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+              {brandingSubtitle}
+            </p>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">

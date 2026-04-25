@@ -47,7 +47,7 @@ export function OnboardingPage() {
         path={PATHS.ONBOARDING}
         noIndex
       />
-      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[100dvh] md:min-h-[700px] border border-border-dark">
         {/* ── Branding panel ──────────────────────────────────── */}
         <div className="md:w-5/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
@@ -97,12 +97,26 @@ export function OnboardingPage() {
             <div className="h-full bg-[#E4B643] w-full" />
           </div>
 
-          {/* Mobile logo */}
+          {/* Condensed mobile brand block (RESP-016, Sprint B).
+            * Mirrors AuthSplitPanel — surface the brand promise above the
+            * form on `<md` so mobile users get the same conversion-relevant
+            * hero copy that desktop users see in the left panel. The
+            * testimonial is intentionally omitted to keep the form
+            * within reach above the fold. */}
           <div className="md:hidden mb-8">
-            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3">
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-5">
               <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
             </LocaleLink>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-white text-balance mb-2">
+              {t('onboarding.branding.title', 'Find Books Near You')}
+            </h1>
+            <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+              {t(
+                'onboarding.branding.subtitle',
+                'Set your location to discover books available for swap in your neighborhood and connect with local readers.',
+              )}
+            </p>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">
