@@ -8,10 +8,15 @@ import {
   Map as GoogleMap,
   Marker,
   useApiIsLoaded,
+  useMarkerRef,
 } from '@vis.gl/react-google-maps';
 
 import type { BrowseBook } from '../../types/discovery.types';
 import { BookPopup } from '../BookPopup';
+import {
+  MarkerClusterProvider,
+  useClusterMarker,
+} from './MarkerClusterContext';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -62,9 +67,12 @@ function BookMarker({ locationKey, books, position, isSelected, onSelect }: Book
     onSelect(isSelected ? null : locationKey);
   }, [isSelected, locationKey, onSelect]);
 
+  const [markerRef, marker] = useMarkerRef();
+  useClusterMarker(marker);
+
   return (
     <>
-      <Marker position={position} onClick={handleClick} />
+      <Marker ref={markerRef} position={position} onClick={handleClick} />
 
       {isSelected && (
         <InfoWindow position={position} onClose={() => onSelect(null)} maxWidth={300}>
@@ -146,20 +154,22 @@ export function MapView({
             }}
           />
 
-          {/* Book markers */}
-          {[...groupedByLocation.entries()].map(([key, booksAtLocation]) => {
-            const loc = booksAtLocation[0]!.owner.location!;
-            return (
-              <BookMarker
-                key={key}
-                locationKey={key}
-                books={booksAtLocation}
-                position={{ lat: loc.latitude, lng: loc.longitude }}
-                isSelected={selectedKey === key}
-                onSelect={setSelectedKey}
-              />
-            );
-          })}
+          {/* Book markers (clustered when many overlap at the same zoom). */}
+          <MarkerClusterProvider>
+            {[...groupedByLocation.entries()].map(([key, booksAtLocation]) => {
+              const loc = booksAtLocation[0]!.owner.location!;
+              return (
+                <BookMarker
+                  key={key}
+                  locationKey={key}
+                  books={booksAtLocation}
+                  position={{ lat: loc.latitude, lng: loc.longitude }}
+                  isSelected={selectedKey === key}
+                  onSelect={setSelectedKey}
+                />
+              );
+            })}
+          </MarkerClusterProvider>
         </GoogleMap>
       </div>
     </APIProvider>

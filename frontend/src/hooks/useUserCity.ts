@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { createExternalHttpClient, HttpError } from '@services';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -12,9 +14,23 @@ const FALLBACK_CITY = 'your area';
 const FALLBACK_LAT = 52.3676;
 const FALLBACK_LNG = 4.9041;
 
-// Swap this URL for a self-hosted or paid proxy if ipapi.co rate limits become an issue
-const IP_GEO_URL = 'https://ipapi.co/json/';
-const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse';
+// ---------------------------------------------------------------------------
+// External HTTP clients (instrumented through services/httpExternal so
+// timeouts, dev logging, and HttpError parsing match the rest of the app).
+// ---------------------------------------------------------------------------
+
+const ipapi = createExternalHttpClient({
+  baseUrl: 'https://ipapi.co',
+  name: 'ipapi',
+  defaultTimeout: 5_000,
+});
+
+const nominatim = createExternalHttpClient({
+  baseUrl: 'https://nominatim.openstreetmap.org',
+  name: 'nominatim',
+  defaultTimeout: 5_000,
+  defaultHeaders: { 'User-Agent': 'BookSwap/1.0 (bookswap.app)' },
+});
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,6 +41,16 @@ interface CityCache {
   lat: number;
   lng: number;
   detectedAt: number;
+}
+
+interface IpGeoResponse {
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface NominatimResponse {
+  address?: { city?: string; town?: string; village?: string };
 }
 
 export interface UserCityResult {
@@ -66,29 +92,18 @@ function writeCache(city: string, lat: number, lng: number): void {
 
 /** Tier 1: silent IP-based lookup — no browser permission required */
 async function detectViaIp(): Promise<{ city: string; lat: number; lng: number }> {
-  const res = await fetch(IP_GEO_URL);
-  if (!res.ok) throw new Error('IP geo request failed');
-  const data = (await res.json()) as {
-    city?: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  const { data } = await ipapi.get<IpGeoResponse>('/json/');
   if (!data.city || data.latitude == null || data.longitude == null) {
-    throw new Error('Incomplete response from IP geo API');
+    throw new HttpError(204, 'Incomplete response from IP geo API');
   }
   return { city: data.city, lat: data.latitude, lng: data.longitude };
 }
 
 /** Reverse-geocode coordinates to a city name via Nominatim (OSM) */
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const url = `${NOMINATIM_URL}?format=json&lat=${lat}&lon=${lng}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'BookSwap/1.0 (bookswap.app)' },
-  });
-  if (!res.ok) throw new Error('Nominatim reverse geocode failed');
-  const data = (await res.json()) as {
-    address?: { city?: string; town?: string; village?: string };
-  };
+  const { data } = await nominatim.get<NominatimResponse>(
+    `/reverse?format=json&lat=${lat}&lon=${lng}`,
+  );
   return (
     data.address?.city ??
     data.address?.town ??
@@ -126,11 +141,12 @@ async function detectViaBrowser(): Promise<{ city: string; lat: number; lng: num
 
 /**
  * Detects the user's current city using a two-tier strategy:
- *  1. IP-based geolocation (silent, no permission required)
- *  2. Browser Geolocation API + Nominatim reverse geocode (more accurate)
+ *  1. Browser Geolocation API + Nominatim reverse geocode (more accurate)
+ *  2. IP-based geolocation (silent, no permission required) as fallback
  *
  * Results are cached in localStorage for 24 hours to avoid repeated lookups.
- * Defaults to Amsterdam if both tiers fail.
+ * Both external lookups go through `services/httpExternal` so timeouts,
+ * dev logging, and HttpError handling match the rest of the app.
  */
 export function useUserCity(): UserCityResult {
   const [result, setResult] = useState<UserCityResult>({

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BrandedLoader, SEOHead } from '@components';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useMapBooks, useRadiusCounts } from '@features/discovery';
+import { MarkerClusterProvider } from '@features/discovery/components/MapView/MarkerClusterContext';
 import type {
   BrowseBook,
   BrowseFilters,
@@ -271,21 +272,23 @@ export default function MapPage(): ReactElement {
             strokeWeight={1}
           />
 
-          {/* Book markers */}
-          {[...groupedByLocation.entries()].map(([key, booksAtLocation]) => {
-            const loc = booksAtLocation[0]!.owner.location!;
-            return (
-              <BookMarker
-                key={key}
-                locationKey={key}
-                books={booksAtLocation}
-                position={{ lat: loc.latitude, lng: loc.longitude }}
-                isSelected={selectedKey === key}
-                onSelect={setSelectedKey}
-                selectedBookId={selectedBookId}
-              />
-            );
-          })}
+          {/* Book markers (clustered when many overlap at the same zoom). */}
+          <MarkerClusterProvider>
+            {[...groupedByLocation.entries()].map(([key, booksAtLocation]) => {
+              const loc = booksAtLocation[0]!.owner.location!;
+              return (
+                <BookMarker
+                  key={key}
+                  locationKey={key}
+                  books={booksAtLocation}
+                  position={{ lat: loc.latitude, lng: loc.longitude }}
+                  isSelected={selectedKey === key}
+                  onSelect={setSelectedKey}
+                  selectedBookId={selectedBookId}
+                />
+              );
+            })}
+          </MarkerClusterProvider>
         </GoogleMap>
       </APIProvider>
     </main>

@@ -12,11 +12,10 @@
  */
 import { Route, Routes } from 'react-router-dom';
 
+import type { BrowseBook } from '@features/discovery/types/discovery.types';
 import { renderWithProviders } from '@test/renderWithProviders';
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { BrowseBook } from '@features/discovery/types/discovery.types';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -54,6 +53,19 @@ vi.mock('@vis.gl/react-google-maps', () => ({
   Marker: () => <div data-testid="map-marker" />,
   Circle: () => <div data-testid="map-circle" />,
   useApiIsLoaded: () => true,
+  // MarkerClusterProvider calls useMap to grab the active map instance.
+  useMap: () => null,
+}));
+
+// MarkerClusterer attaches to a real google.maps.Map; with useMap returning null
+// the provider just renders its children, so we don't need to stub the lib.
+vi.mock('@googlemaps/markerclusterer', () => ({
+  MarkerClusterer: class {
+    addMarkers() {}
+    removeMarker() {}
+    clearMarkers() {}
+    setMap() {}
+  },
 }));
 
 // Mock BookMarker to keep marker rendering trivial.

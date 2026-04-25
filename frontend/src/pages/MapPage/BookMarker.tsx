@@ -2,8 +2,9 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
+import { useClusterMarker } from '@features/discovery/components/MapView/MarkerClusterContext';
 import type { BrowseBook } from '@features/discovery/types/discovery.types';
-import { InfoWindow, Marker } from '@vis.gl/react-google-maps';
+import { InfoWindow, Marker, useMarkerRef } from '@vis.gl/react-google-maps';
 import { ArrowLeft, BookOpen, MapPin, X } from 'lucide-react';
 
 export interface BookMarkerProps {
@@ -36,9 +37,12 @@ export function BookMarker({
     onSelect(isSelected ? null : locationKey);
   }, [isSelected, locationKey, onSelect]);
 
+  const [markerRef, marker] = useMarkerRef();
+  useClusterMarker(marker);
+
   return (
     <>
-      <Marker position={position} onClick={handleClick} />
+      <Marker ref={markerRef} position={position} onClick={handleClick} />
 
       {isSelected && (
         <InfoWindow

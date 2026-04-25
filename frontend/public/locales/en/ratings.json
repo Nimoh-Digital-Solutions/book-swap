@@ -16,5 +16,7 @@
   },
   "error": {
     "load": "Failed to load ratings."
-  }
+  },
+  "loadMore": "Load more",
+  "loadingMore": "Loading…"
 }

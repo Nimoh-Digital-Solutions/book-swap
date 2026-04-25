@@ -44,6 +44,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@googlemaps/markerclusterer": "^2.6.2",
     "@hookform/resolvers": "^5.2.2",
     "@nimoh-digital-solutions/tast-hooks": "^1.2.6",
     "@nimoh-digital-solutions/tast-styles": "^1.1.5",

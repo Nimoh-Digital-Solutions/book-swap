@@ -16,5 +16,7 @@
   },
   "error": {
     "load": "Échec du chargement des évaluations."
-  }
+  },
+  "loadMore": "Charger plus",
+  "loadingMore": "Chargement…"
 }

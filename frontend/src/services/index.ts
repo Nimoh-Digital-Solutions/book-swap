@@ -10,6 +10,8 @@ export type {
   ResponseInterceptor,
 } from './http';
 export { http, HttpError } from './http';
+export type { ExternalHttpClientConfig } from './httpExternal';
+export { createExternalHttpClient } from './httpExternal';
 export { queryClient } from './queryClient';
 
 // Error parsing & handling
