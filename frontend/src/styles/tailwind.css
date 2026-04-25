@@ -68,6 +68,54 @@
   --radius: 0.5rem;
 }
 
+/* ─── Layout custom properties ────────────────────────────────────────────
+ * --header-h is measured at runtime by the Header component via
+ * ResizeObserver. The fallback below paints correctly before JS
+ * hydration and on screens where the Header is not yet mounted
+ * (e.g. AuthSplitPanel which is its own full-bleed shell).
+ * Used by MapPage (RESP-004) and any future fill-parent layouts.
+ * ───────────────────────────────────────────────────────────────────── */
+:root {
+  --header-h: 73px;
+}
+
+/* ─── Responsive utilities ────────────────────────────────────────────────
+ * Sprint A — RESP-002 / RESP-005 / RESP-006 / RESP-015.
+ *
+ *  *-safe        Apply env(safe-area-inset-*) padding/margin so fixed
+ *                bottom/top UI doesn't collide with the iOS home-indicator
+ *                or the notch. Requires viewport-fit=cover (set in
+ *                index.html, RESP-002), otherwise these resolve to 0.
+ *
+ *                These are *additive*: declare your base padding via a
+ *                custom property and the utility adds the OS-required
+ *                inset on top. Example:
+ *
+ *                  <div class="pb-safe" style="--pb: 0.75rem">…</div>
+ *
+ *                Without --pb the utility falls back to 0px (matches the
+ *                `pb-safe` semantics most apps expect on a snug edge).
+ *
+ *  min-h-dvh / min-h-svh / h-dvh
+ *                Dynamic / small viewport units — replace `100vh` to
+ *                avoid the iOS Safari URL-bar jump. Use min-h-svh when
+ *                you want the *smallest* stable height (e.g. centred
+ *                content above an opening keyboard).
+ *
+ *  break-anywhere Long URLs / German compounds inside chat bubbles
+ *                wrap correctly instead of forcing horizontal scroll.
+ * ───────────────────────────────────────────────────────────────────── */
+@utility pb-safe { padding-bottom: calc(var(--pb, 0px) + env(safe-area-inset-bottom)); }
+@utility pt-safe { padding-top: calc(var(--pt, 0px) + env(safe-area-inset-top)); }
+@utility pl-safe { padding-left: calc(var(--pl, 0px) + env(safe-area-inset-left)); }
+@utility pr-safe { padding-right: calc(var(--pr, 0px) + env(safe-area-inset-right)); }
+@utility mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+@utility mt-safe { margin-top: env(safe-area-inset-top); }
+@utility min-h-dvh { min-height: 100dvh; }
+@utility min-h-svh { min-height: 100svh; }
+@utility h-dvh { height: 100dvh; }
+@utility break-anywhere { overflow-wrap: anywhere; }
+
 /* ─── Google Maps InfoWindow — dark theme override ─────────────────────── */
 .gm-style-iw-c {
   background: #152018 !important;
