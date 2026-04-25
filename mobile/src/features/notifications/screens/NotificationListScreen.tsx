@@ -9,6 +9,7 @@ import {
 import Animated, { FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import type { HomeTabNavProp } from "@/navigation/navigationHelpers";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
@@ -60,7 +61,9 @@ export function NotificationListScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
-  const navigation = useNavigation<any>();
+  // Notifications screen is mounted within HomeStack; navigation jumps cross-tab
+  // to MessagesTab via getParent() (AUD-M-407 — replaces useNavigation<any>()).
+  const navigation = useNavigation<HomeTabNavProp>();
 
   const { data, isLoading, isRefetching, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -84,21 +87,18 @@ export function NotificationListScreen() {
       const exchangeId = extractExchangeId(notif.link);
       if (!exchangeId) return;
 
-      const tabNav = navigation.getParent();
+      // Composite navigation lets us hop straight from HomeStack →
+      // MessagesTab without resorting to getParent() (AUD-M-407).
       if (notif.notification_type === "new_message") {
-        if (tabNav) {
-          tabNav.navigate("MessagesTab", {
-            screen: "Chat",
-            params: { exchangeId },
-          });
-        }
+        navigation.navigate("MessagesTab", {
+          screen: "Chat",
+          params: { exchangeId },
+        });
       } else {
-        if (tabNav) {
-          tabNav.navigate("MessagesTab", {
-            screen: "ExchangeDetail",
-            params: { exchangeId },
-          });
-        }
+        navigation.navigate("MessagesTab", {
+          screen: "ExchangeDetail",
+          params: { exchangeId },
+        });
       }
     },
     [markRead, navigation],

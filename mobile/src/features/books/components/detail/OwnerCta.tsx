@@ -1,12 +1,21 @@
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Pencil } from "lucide-react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
+import type { HomeStackParamList } from "@/navigation/types";
 
 import { bookDetailStyles as s } from "./styles";
+
+// `BookDetailScreen` is registered in HomeStack, BrowseStack, MessagesStack
+// and ProfileStack — every one of which has an `EditBook` route. Typing
+// against `HomeStackParamList` is enough for the compiler to enforce the
+// `{ bookId: string }` payload while the actual stack at runtime can be any
+// of the four (AUD-M-407 — replaces the previous `useNavigation<any>()`).
+type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
 interface OwnerCtaProps {
   bookId: string;
@@ -28,7 +37,7 @@ export function OwnerCta({
   const c = useColors();
   const isDark = useIsDark();
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<Nav>();
 
   return (
     <View style={[s.ctaWrap, { borderTopColor: cardBorderColor }]}>

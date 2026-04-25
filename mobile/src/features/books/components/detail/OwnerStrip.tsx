@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ChevronRight, MapPin, Repeat2 } from "lucide-react-native";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -6,9 +7,15 @@ import { Pressable, Text, View } from "react-native";
 
 import { Avatar } from "@/components/Avatar";
 import { useColors } from "@/hooks/useColors";
+import type { HomeStackParamList } from "@/navigation/types";
 
 import { bookDetailStyles as s } from "./styles";
 import type { BookOwner } from "./types";
+
+// `UserProfile` exists in every stack that hosts `BookDetailScreen`.
+// Pinning the type to one of them gives strict param checking without
+// forcing the component to know which stack mounted it (AUD-M-407).
+type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
 interface OwnerStripProps {
   owner: BookOwner;
@@ -23,7 +30,7 @@ export function OwnerStrip({
 }: OwnerStripProps) {
   const c = useColors();
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<Nav>();
 
   const ownerName = owner.username ?? t("common.unknownUser", "Unknown");
 

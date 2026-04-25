@@ -3,6 +3,7 @@ import {
   useRoute,
   type RouteProp,
 } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AlertTriangle, Pencil } from "lucide-react-native";
 import React, { useCallback, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,12 +37,23 @@ import { useWishlistToggle } from "../hooks/useWishlistToggle";
 
 type Route = RouteProp<{ BookDetail: { bookId: string } }, "BookDetail">;
 
+// BookDetailScreen is registered in HomeStack, BrowseStack, MessagesStack,
+// and ProfileStack. Rather than hard-couple to one of them, we declare a
+// local nav-param shape listing only the routes this screen navigates to.
+// (AUD-M-407 — replaces `useNavigation<any>()`.)
+type BookDetailNavParams = {
+  EditBook: { bookId: string };
+  RequestSwap: { bookId: string };
+  ExchangeDetail: { exchangeId: string };
+};
+type Nav = NativeStackNavigationProp<BookDetailNavParams>;
+
 export function BookDetailScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
   const { params } = useRoute<Route>();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<Nav>();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { requireVerified } = useEmailVerificationGate();
 

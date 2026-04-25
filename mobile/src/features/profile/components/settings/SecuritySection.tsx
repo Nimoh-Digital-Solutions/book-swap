@@ -1,14 +1,18 @@
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Fingerprint, Lock } from "lucide-react-native";
 import React from "react";
 import { Switch, Text, View, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
+import type { ProfileStackParamList } from "@/navigation/types";
 import type { User } from "@/types";
 
 import { SettingsRow } from "./SettingsRow";
 import { settingsStyles as s } from "./styles";
+
+type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 interface SecuritySectionProps {
   user: User;
@@ -32,7 +36,7 @@ export function SecuritySection({
   const c = useColors();
   const isDark = useIsDark();
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<Nav>();
 
   return (
     <>

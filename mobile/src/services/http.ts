@@ -66,13 +66,32 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor
-let isRefreshing = false;
-let failedQueue: { resolve: (token: string) => void; reject: (error: unknown) => void }[] = [];
+// Single in-flight refresh shared between the http interceptor and the
+// websocket reconnect path (AUD-M-408). Without this, two concurrent paths
+// could double-refresh and rotate the refresh token twice in a row.
+let refreshPromise: Promise<{ access: string; refresh: string }> | null = null;
 
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token!)));
-  failedQueue = [];
+export async function refreshAccessToken(): Promise<{ access: string; refresh: string }> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const refresh = tokenStorage.getRefresh();
+    if (!refresh) throw new Error('No refresh token');
+    const { data } = await axios.post(
+      `${env.apiUrl}/auth/token/refresh/`,
+      { refresh },
+      { headers: { 'X-Client-Type': 'mobile' } },
+    );
+    const newAccess = data.access as string;
+    const newRefresh = (data.refresh as string) || refresh;
+    tokenStorage.setTokens(newAccess, newRefresh);
+    addBreadcrumb('auth', 'access token refreshed', {});
+    return { access: newAccess, refresh: newRefresh };
+  })();
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
 }
 
 function showGlobalErrorToast(key: string) {
@@ -112,45 +131,26 @@ http.interceptors.response.use(
       showGlobalErrorToast('common.error');
       return Promise.reject(error);
     }
-    // 401 refresh
+    // 401 refresh — uses the shared `refreshAccessToken` helper so concurrent
+    // failures dedupe to a single network call (AUD-M-408).
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     if (error.response?.status !== 401 || originalRequest._retry) return Promise.reject(error);
     if (originalRequest.url?.includes('/auth/token/refresh/')) return Promise.reject(error);
-    if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then((token) => {
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return http(originalRequest);
-      });
-    }
     originalRequest._retry = true;
-    isRefreshing = true;
     try {
-      const refreshToken = tokenStorage.getRefresh();
-      if (!refreshToken) throw new Error('No refresh token');
-      const { data } = await axios.post(`${env.apiUrl}/auth/token/refresh/`, { refresh: refreshToken }, {
-        headers: { 'X-Client-Type': 'mobile' },
-      });
-      const newAccess = data.access as string;
-      const newRefresh = (data.refresh as string) || refreshToken;
-      tokenStorage.setTokens(newAccess, newRefresh);
-      originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+      const { access } = await refreshAccessToken();
+      originalRequest.headers.Authorization = `Bearer ${access}`;
       try {
         const { wsManager } = await import('@/services/websocket');
         wsManager.reconnectWithNewToken();
       } catch {
         /* ws may not be loaded */
       }
-      processQueue(null, newAccess);
       return http(originalRequest);
     } catch (refreshError) {
-      processQueue(refreshError, null);
       captureException(refreshError, { context: '401_refresh_failure' });
       await useAuthStore.getState().logout();
       return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
     }
   },
 );

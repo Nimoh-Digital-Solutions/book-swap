@@ -12,6 +12,26 @@ import { FloatingTabBar } from '@/components/FloatingTabBar';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/**
+ * MainTabs — bottom tab navigator for the authenticated app.
+ *
+ * Tab visibility model:
+ *   - The default React Navigation tab bar is **replaced** by `FloatingTabBar`
+ *     (custom design). React Navigation's per-screen `tabBarButton` option is
+ *     therefore ignored at render time — `FloatingTabBar` decides which tabs
+ *     to show via its own `computeVisibility` + `route.name === 'ProfileTab'`
+ *     guard.
+ *   - `ProfileTab` is intentionally hidden from the floating bar (the bar is
+ *     designed around the four primary actions: Home / Browse / Scan /
+ *     Exchanges). Profile is reached via:
+ *       • the avatar tap in `headerOptions` (every screen that uses the app
+ *         header)
+ *       • Home tile shortcuts (e.g. "My Books")
+ *       • post-action redirects from `AddBookScreen`
+ *       • deep links registered in `navigation/linking.ts`
+ *   - Do NOT add `tabBarButton: () => null` to ProfileTab — it would only
+ *     matter if we re-enabled the default tab bar; today it just adds noise.
+ */
 export function MainTabs() {
   const { t } = useTranslation();
   return (
@@ -57,7 +77,6 @@ export function MainTabs() {
         options={{
           title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>

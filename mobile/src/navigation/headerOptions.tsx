@@ -1,6 +1,7 @@
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "@/navigation/types";
+import type { HomeStackParamList, RootStackParamList } from "@/navigation/types";
+import type { AnyTabNavProp } from "@/navigation/navigationHelpers";
 import { Bell, ChevronLeft, Home } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,17 +29,15 @@ function getUserDisplayName(
 
 export function HeaderAvatar() {
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  // Header sits inside a stack inside MainTabs — `AnyTabNavProp` is a
+  // composite that knows about both this stack AND the surrounding tab
+  // navigator, so cross-tab `.navigate(...)` is typed (no more `<any>`).
+  const navigation = useNavigation<AnyTabNavProp<HomeStackParamList>>();
   const user = useAuthStore((s) => s.user);
   const c = useColors();
 
   const goToProfile = () => {
-    const tabNav = navigation.getParent();
-    if (tabNav) {
-      tabNav.navigate("ProfileTab", { screen: "MyProfile" });
-    } else {
-      navigation.navigate("ProfileTab", { screen: "MyProfile" });
-    }
+    navigation.navigate("ProfileTab", { screen: "MyProfile" });
   };
 
   return (
@@ -61,7 +60,7 @@ export function HeaderAvatar() {
 
 export function NotificationBell() {
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<AnyTabNavProp<HomeStackParamList>>();
   const c = useColors();
   const isDark = useIsDark();
   const unread = useUnreadCount();
@@ -83,12 +82,7 @@ export function NotificationBell() {
   }));
 
   const goToNotifications = () => {
-    const tabNav = navigation.getParent();
-    if (tabNav) {
-      tabNav.navigate("HomeTab", { screen: "Notifications" });
-    } else {
-      navigation.navigate("Notifications");
-    }
+    navigation.navigate("HomeTab", { screen: "Notifications" });
   };
 
   return (
@@ -152,15 +146,12 @@ export function HeaderBackButton() {
 
 export function HeaderHomeButton() {
   const { t } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<AnyTabNavProp<HomeStackParamList>>();
   const c = useColors();
   const isDark = useIsDark();
 
   const goHome = () => {
-    const tabNav = navigation.getParent();
-    if (tabNav) {
-      tabNav.navigate("HomeTab");
-    }
+    navigation.navigate("HomeTab");
   };
 
   return (

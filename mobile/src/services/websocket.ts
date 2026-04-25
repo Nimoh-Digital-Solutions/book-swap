@@ -1,5 +1,4 @@
 import { AppState, type AppStateStatus } from 'react-native';
-import axios from 'axios';
 import { tokenStorage } from '@/lib/storage';
 import { addBreadcrumb } from '@/lib/sentry';
 import { env } from '@/configs/env';
@@ -138,14 +137,11 @@ class WebSocketManager {
     if (this.refreshingToken) return;
     this.refreshingToken = true;
     try {
-      const refresh = tokenStorage.getRefresh();
-      if (!refresh) return;
-      const { data } = await axios.post(`${env.apiUrl}/auth/token/refresh/`, { refresh }, {
-        headers: { 'X-Client-Type': 'mobile' },
-      });
-      const newAccess = data.access as string;
-      const newRefresh = (data.refresh as string) || refresh;
-      tokenStorage.setTokens(newAccess, newRefresh);
+      // Lazy import keeps services/http.ts off the websocket module's
+      // top-level dependency graph (and avoids a circular import). The
+      // refresh itself is deduped inside http.ts (AUD-M-408).
+      const { refreshAccessToken } = await import('@/services/http');
+      await refreshAccessToken();
       addBreadcrumb('websocket', 'token refreshed — reconnecting', {});
       this.reconnectWithNewToken();
     } catch {

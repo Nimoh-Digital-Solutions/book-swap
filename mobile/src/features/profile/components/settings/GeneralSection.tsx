@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Constants from "expo-constants";
 import { Globe, Info, Sun } from "lucide-react-native";
 import React from "react";
@@ -6,10 +7,13 @@ import { Text, View, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
+import type { ProfileStackParamList } from "@/navigation/types";
 import { useThemeStore } from "@/stores/themeStore";
 
 import { SettingsRow } from "./SettingsRow";
 import { settingsStyles as s } from "./styles";
+
+type Nav = NativeStackNavigationProp<ProfileStackParamList>;
 
 interface GeneralSectionProps {
   cardStyle: ViewStyle | ViewStyle[];
@@ -20,7 +24,7 @@ export function GeneralSection({ cardStyle, dividerColor }: GeneralSectionProps)
   const c = useColors();
   const isDark = useIsDark();
   const { t, i18n } = useTranslation();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<Nav>();
   const appearanceMode = useThemeStore((s) => s.mode);
 
   const currentLang = i18n.language?.startsWith("fr")
