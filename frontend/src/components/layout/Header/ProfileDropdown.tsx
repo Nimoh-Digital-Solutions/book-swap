@@ -73,7 +73,7 @@ export function ProfileDropdown(): ReactElement {
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={t('navigation.profileMenu', 'Profile menu')}
-        className="flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E4B643]"
+        className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E4B643]"
       >
         {avatar ? (
           <img

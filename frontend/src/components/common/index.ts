@@ -1,6 +1,8 @@
 // Composite / cross-cutting components shared across features
 export type { BrandedLoaderProps, BrandedLoaderSize } from './BrandedLoader';
 export { BrandedLoader } from './BrandedLoader';
+export type { DrawerProps, DrawerSide } from './Drawer';
+export { Drawer } from './Drawer';
 export type { EmptyPlaceholderProps } from './EmptyState';
 export { EmptyPlaceholder } from './EmptyState';
 export * from './ErrorBoundary';

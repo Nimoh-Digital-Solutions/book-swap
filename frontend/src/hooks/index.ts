@@ -1,4 +1,6 @@
 // Export all custom hooks from this file
+export type { Breakpoint } from './useBreakpoint';
+export { BREAKPOINTS, useBreakpoint, useIsBelow } from './useBreakpoint';
 export { useClickOutside } from './useClickOutside';
 export { useDebounce } from './useDebounce';
 export { useDocumentTitle } from './useDocumentTitle';

@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { logoMark } from "@assets";
+import { Drawer } from "@components/common/Drawer";
 import { LocaleLink } from "@components/common/LocaleLink/LocaleLink";
 import { useAuthStore } from "@features/auth/stores/authStore";
 import { NotificationBell } from "@features/notifications";
@@ -47,7 +48,7 @@ function LanguageToggle(): ReactElement {
   return (
     <button
       onClick={cycleLanguage}
-      className="flex items-center gap-1.5 text-[#8C9C92] hover:text-white transition-colors"
+      className="inline-flex items-center justify-center gap-1.5 min-w-[44px] min-h-[44px] px-2 text-[#8C9C92] hover:text-white transition-colors rounded-lg"
       aria-label={`Language: ${LANGUAGE_LABELS[currentLang]}. Switch to ${LANGUAGE_LABELS[nextLang]}`}
       title={`Switch to ${LANGUAGE_LABELS[nextLang]}`}
     >
@@ -75,15 +76,16 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
 }
 
 /**
- * Mobile slide-in navigation drawer (RESP-001 / Sprint A).
+ * Mobile slide-in navigation drawer.
  *
- * Rendered alongside the desktop nav and only made visible by its hamburger
- * trigger on `<md` viewports. Locks body scroll while open, closes on Esc /
- * backdrop click / link click, and traps initial focus inside the panel.
+ * Refactored in Sprint C to use the shared `Drawer` primitive — the
+ * focus-trap, body-scroll-lock, Esc handling and exit animation now live
+ * in one place (`components/common/Drawer`). This component is just the
+ * mobile nav *content*: header bar, link list, and a footer Sign-In CTA
+ * + LanguageToggle.
  *
- * The trigger and panel each carry their own `aria-controls` / `aria-modal`
- * wiring so the existing Header.test.tsx (which queries the visible <nav>)
- * stays green — the drawer's links live in a separate <nav> inside the dialog.
+ * Trigger + panel are wired together via `aria-controls` / `aria-expanded`
+ * on the hamburger button (see `Header` below).
  */
 function MobileNavDrawer({
   open,
@@ -95,51 +97,24 @@ function MobileNavDrawer({
   onClose: () => void;
   isAuthenticated: boolean;
   panelId: string;
-}): ReactElement | null {
+}): ReactElement {
   const { t } = useTranslation();
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    // Move focus into the panel so subsequent Tab keys stay inside.
-    const t0 = window.setTimeout(() => {
-      const first = panelRef.current?.querySelector<HTMLElement>(
-        'a, button, [tabindex]:not([tabindex="-1"])',
-      );
-      first?.focus();
-    }, 0);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", onKey);
-      window.clearTimeout(t0);
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
   return (
-    <div className="md:hidden fixed inset-0 z-50">
+    <Drawer
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      side="right"
+      ariaLabel={t("home.nav.menuLabel", "Main menu")}
+      id={panelId}
+      panelClassName="w-[min(85vw,320px)] bg-[#1A251D] border-l border-[#28382D] shadow-2xl flex flex-col"
+    >
       <div
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <aside
-        ref={panelRef}
-        id={panelId}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("home.nav.menuLabel", "Main menu")}
-        className="absolute right-0 top-0 h-[100dvh] w-[min(85vw,320px)] bg-[#1A251D] border-l border-[#28382D] shadow-2xl flex flex-col pt-safe pb-safe pl-safe pr-safe"
+        className="flex flex-col h-full"
         style={{
-          ['--pt' as string]: '1.25rem',
-          ['--pb' as string]: '1.25rem',
+          ["--pt" as string]: "1.25rem",
+          ["--pb" as string]: "1.25rem",
         }}
       >
         <div className="flex items-center justify-between px-5 pb-4 border-b border-[#28382D]">
@@ -149,7 +124,7 @@ function MobileNavDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8C9C92] hover:text-white p-2 -mr-2 rounded-full"
+            className="text-[#8C9C92] hover:text-white p-2 -mr-2 rounded-full min-w-[44px] min-h-[44px] inline-flex items-center justify-center"
             aria-label={t("common.close", "Close")}
           >
             <X className="w-5 h-5" />
@@ -197,8 +172,8 @@ function MobileNavDrawer({
             <LanguageToggle />
           </div>
         </div>
-      </aside>
-    </div>
+      </div>
+    </Drawer>
   );
 }
 
@@ -251,7 +226,6 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
       <nav
         className="flex items-center justify-between px-6 py-5 max-w-7xl mx-auto"
         aria-label="Main navigation"
-        style={{ marginInline: "auto" }}
       >
         <div className="flex items-center gap-8">
           <LocaleLink to={PATHS.HOME} className="flex items-center gap-3">
