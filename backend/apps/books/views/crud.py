@@ -1,5 +1,6 @@
 """Book CRUD viewset (list, retrieve, create, update, destroy)."""
 
+from django.db.models import Q
 from rest_framework import mixins, status, viewsets
 from rest_framework import serializers as drf_serializers
 from rest_framework.pagination import PageNumberPagination
@@ -17,6 +18,34 @@ from ..serializers import (
     BookUpdateSerializer,
 )
 from ._helpers import _get_blocked_user_ids
+
+
+def _active_exchange_book_ids(user):
+    """IDs of books the user is currently a party to via an active exchange.
+
+    Active = any non-terminal status. Both ``requested_book`` and
+    ``offered_book`` are returned for both sides of the request, so the
+    counter-party can load the book they're swapping for.
+    """
+    from apps.exchanges.models import ExchangeRequest, ExchangeStatus
+
+    active_statuses = (
+        ExchangeStatus.PENDING,
+        ExchangeStatus.ACCEPTED,
+        ExchangeStatus.CONDITIONS_PENDING,
+        ExchangeStatus.ACTIVE,
+        ExchangeStatus.SWAP_CONFIRMED,
+        ExchangeStatus.RETURN_REQUESTED,
+    )
+    pairs = ExchangeRequest.objects.filter(
+        Q(requester=user) | Q(owner=user),
+        status__in=active_statuses,
+    ).values_list("requested_book_id", "offered_book_id")
+    ids: set = set()
+    for requested_id, offered_id in pairs:
+        ids.add(requested_id)
+        ids.add(offered_id)
+    return ids
 
 
 class BookPagination(PageNumberPagination):
@@ -60,6 +89,19 @@ class BookViewSet(
             return qs.filter(owner=user)
 
         blocked_ids = _get_blocked_user_ids(user) if user.is_authenticated else set()
+
+        # Detail view: owners must always be able to load their own books
+        # (any status), and parties to an active exchange must be able to
+        # load the books being swapped — otherwise IN_EXCHANGE / RETURNED
+        # books 404 on MyBooks, the exchange detail screen, and chat.
+        # Public/anonymous users keep the AVAILABLE-only restriction so
+        # non-AVAILABLE listings stay private.
+        if self.action == "retrieve" and user.is_authenticated:
+            party_ids = _active_exchange_book_ids(user)
+            return qs.filter(
+                Q(owner=user) | Q(id__in=party_ids) | Q(status=BookStatus.AVAILABLE),
+            ).exclude(owner_id__in=blocked_ids)
+
         if owner_param and owner_param != "me":
             return qs.filter(owner_id=owner_param, status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)
         return qs.filter(status=BookStatus.AVAILABLE).exclude(owner_id__in=blocked_ids)

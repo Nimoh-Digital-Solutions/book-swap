@@ -4,6 +4,7 @@ import {
   type RouteProp,
 } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import axios from "axios";
 import { AlertTriangle, Pencil } from "lucide-react-native";
 import React, { useCallback, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,8 +62,11 @@ export function BookDetailScreen() {
     data: rawBook,
     isLoading,
     isError,
+    error,
     refetch,
   } = useBookDetail(params.bookId);
+  const isNotFound =
+    isError && axios.isAxiosError(error) && error.response?.status === 404;
   const updateBook = useUpdateBook(params.bookId);
   const wishlist = useWishlistToggle(params.bookId);
   const { exchange: existingExchange, status: exchangeStatus } =
@@ -158,6 +162,16 @@ export function BookDetailScreen() {
     );
   }
 
+  if (isNotFound || (!isLoading && !isError && !rawBook)) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <Text style={[s.notFound, { color: c.text.secondary }]}>
+          {t("books.notFound", "Book not found")}
+        </Text>
+      </View>
+    );
+  }
+
   if (isError) {
     return (
       <View style={[s.centered, { backgroundColor: bg }]}>
@@ -176,13 +190,7 @@ export function BookDetailScreen() {
   }
 
   if (!rawBook) {
-    return (
-      <View style={[s.centered, { backgroundColor: bg }]}>
-        <Text style={[s.notFound, { color: c.text.secondary }]}>
-          {t("books.notFound", "Book not found")}
-        </Text>
-      </View>
-    );
+    return null;
   }
 
   const book = rawBook as unknown as BookDetailData & typeof rawBook;

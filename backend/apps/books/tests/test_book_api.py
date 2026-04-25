@@ -508,12 +508,73 @@ class TestBookDetailView:
         assert "photos" in response.data
         assert "owner" in response.data
 
-    def test_get_unavailable_book_not_found(self, auth_client):
-        """Non-available books not in default queryset."""
+    def test_unrelated_user_cannot_get_in_exchange_book(self, auth_client):
+        """Non-AVAILABLE books are hidden from unrelated users (privacy)."""
         client, _ = auth_client
         book = BookFactory(status=BookStatus.IN_EXCHANGE)
         response = client.get(f"/api/v1/books/{book.id}/")
         assert response.status_code == 404
+
+    def test_unrelated_user_cannot_get_returned_book(self, auth_client):
+        client, _ = auth_client
+        book = BookFactory(status=BookStatus.RETURNED)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 404
+
+    def test_anonymous_cannot_get_in_exchange_book(self, api_client):
+        book = BookFactory(status=BookStatus.IN_EXCHANGE)
+        response = api_client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 404
+
+    def test_owner_can_get_own_in_exchange_book(self, auth_client):
+        """Regression: MyBooks must be able to open IN_EXCHANGE listings."""
+        client, user = auth_client
+        book = BookFactory(owner=user, status=BookStatus.IN_EXCHANGE)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["id"] == str(book.id)
+        assert response.data["status"] == BookStatus.IN_EXCHANGE
+
+    def test_owner_can_get_own_returned_book(self, auth_client):
+        client, user = auth_client
+        book = BookFactory(owner=user, status=BookStatus.RETURNED)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["status"] == BookStatus.RETURNED
+
+    def test_active_exchange_party_can_get_in_exchange_book(self, api_client):
+        """Counter-party in an active exchange must be able to load both books."""
+        from apps.exchanges.tests.factories import ExchangeRequestFactory
+
+        exchange = ExchangeRequestFactory(active=True)
+        # ``active=True`` flips both books to IN_EXCHANGE via the factory hook.
+
+        # Requester views the owner's requested_book.
+        api_client.force_authenticate(user=exchange.requester)
+        resp = api_client.get(f"/api/v1/books/{exchange.requested_book_id}/")
+        assert resp.status_code == 200
+        assert resp.data["id"] == str(exchange.requested_book_id)
+
+        # Owner views the requester's offered_book.
+        api_client.force_authenticate(user=exchange.owner)
+        resp = api_client.get(f"/api/v1/books/{exchange.offered_book_id}/")
+        assert resp.status_code == 200
+        assert resp.data["id"] == str(exchange.offered_book_id)
+
+    def test_completed_exchange_does_not_grant_access(self, api_client):
+        """After completion, the other party loses access to non-AVAILABLE books."""
+        from apps.exchanges.models import ExchangeStatus
+        from apps.exchanges.tests.factories import ExchangeRequestFactory
+
+        exchange = ExchangeRequestFactory(status=ExchangeStatus.COMPLETED)
+        # COMPLETED is not in the active set; books default to AVAILABLE in
+        # the factory for non-post-accept statuses, so flip one to RETURNED.
+        exchange.requested_book.status = BookStatus.RETURNED
+        exchange.requested_book.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=exchange.requester)
+        resp = api_client.get(f"/api/v1/books/{exchange.requested_book_id}/")
+        assert resp.status_code == 404
 
 
 class TestBookUpdateView:
