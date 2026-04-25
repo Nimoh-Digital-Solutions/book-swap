@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { BookCard, useBooks } from '@features/books';
 import { RatingsList } from '@features/ratings';
 import { BlockUserButton, ReportButton, useIsBlocked } from '@features/trust-safety';
@@ -24,10 +24,8 @@ export function PublicProfilePage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">
-          {t('common.loading', 'Loading…')}
-        </div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }

@@ -2,7 +2,7 @@ import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
@@ -80,8 +80,8 @@ export function EditBookPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft } from 'lucide-react';
@@ -16,10 +16,8 @@ export function EditProfilePage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">
-          {t('common.loading', 'Loading…')}
-        </div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }

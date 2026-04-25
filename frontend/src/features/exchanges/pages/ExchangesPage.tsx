@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { SEOHead } from '@components';
-import { EmptyPlaceholder } from '@components/common';
+import { BrandedLoader, EmptyPlaceholder } from '@components/common';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowRightLeft, Clock, Inbox } from 'lucide-react';
 
@@ -41,8 +41,8 @@ export default function ExchangesPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function ExchangesPage(): ReactElement {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <SEOHead
         title={routeMetadata[PATHS.EXCHANGES].title}
         description={routeMetadata[PATHS.EXCHANGES].description}
