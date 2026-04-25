@@ -108,7 +108,7 @@ const HomePage = (): ReactElement => {
           className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
           aria-hidden="true"
         >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#E4B643]/10 blur-[120px] rounded-full" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[40vh] md:w-[800px] md:h-[400px] bg-[#E4B643]/10 blur-[120px] rounded-full" />
           <div
             className="absolute inset-0 opacity-60 bg-center bg-no-repeat bg-cover"
             style={{
@@ -141,7 +141,7 @@ const HomePage = (): ReactElement => {
             )}
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
+          <h1 className="text-[clamp(2rem,8vw,4.5rem)] md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-[1.1] text-balance">
             {t("home.hero.titlePart1", "Find your next")} <br />
             <span className="text-[#E4B643]">
               {t("home.hero.titlePart2", "great adventure.")}

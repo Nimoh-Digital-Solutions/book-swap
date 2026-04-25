@@ -169,9 +169,9 @@ export default function HowItWorksPage(): ReactElement {
           className="absolute inset-0 pointer-events-none"
           aria-hidden="true"
         >
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#E4B643]/6 blur-[140px] rounded-full" />
-          <div className="absolute top-1/3 -left-32 w-[400px] h-[400px] bg-[#E4B643]/4 blur-[120px] rounded-full" />
-          <div className="absolute top-1/4 -right-32 w-[300px] h-[300px] bg-[#4ADE80]/3 blur-[100px] rounded-full" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[90vw] h-[40vh] md:w-[900px] md:h-[500px] bg-[#E4B643]/6 blur-[140px] rounded-full" />
+          <div className="absolute top-1/3 -left-32 w-[60vw] h-[40vh] md:w-[400px] md:h-[400px] bg-[#E4B643]/4 blur-[120px] rounded-full" />
+          <div className="absolute top-1/4 -right-32 w-[50vw] h-[30vh] md:w-[300px] md:h-[300px] bg-[#4ADE80]/3 blur-[100px] rounded-full" />
         </div>
         <div
           className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center"
