@@ -34,11 +34,20 @@ export function BrowseBookCard({ book, onRequestSwap }: BrowseBookCardProps): Re
   const coverUrl = book.primary_photo ?? book.cover_url;
 
   return (
-    <div className="bg-surface-dark rounded-2xl overflow-hidden border border-white/5 hover:border-white/10 transition-colors flex flex-col h-full">
+    // 5.8 (Sprint C) — container-query pilot.
+    //
+    // The same card renders inside a 4-up grid on `lg` (~ 250 px wide) AND
+    // a 1-up list (~ 700 px wide) on the same page in different views. A
+    // viewport-keyed Tailwind class can't handle both. We name the
+    // container `card` and key padding / font-size on its width so the
+    // typography auto-tunes to whichever grid this card lands in. Falls
+    // back gracefully on browsers without container-query support: only
+    // the *@container* variants drop, the base styles still render.
+    <div className="@container/card bg-surface-dark rounded-2xl overflow-hidden border border-white/5 hover:border-white/10 transition-colors flex flex-col h-full">
       {/* Cover area with blurred background */}
       <LocaleLink
         to={`/books/${book.id}`}
-        className="relative aspect-[3/4] bg-[#0f1a12] p-6 flex items-center justify-center overflow-hidden"
+        className="relative aspect-[3/4] bg-[#0f1a12] p-3 @[18rem]/card:p-6 flex items-center justify-center overflow-hidden"
         aria-label={t('books.card.viewDetail', { title: book.title })}
       >
         {coverUrl && (
@@ -80,27 +89,27 @@ export function BrowseBookCard({ book, onRequestSwap }: BrowseBookCardProps): Re
       </LocaleLink>
 
       {/* Card body */}
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-3 @[18rem]/card:p-5 flex flex-col flex-1">
         <LocaleLink to={`/books/${book.id}`} className="block mb-1 group">
-          <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-[#E4B643] transition-colors">
+          <h3 className="text-sm @[18rem]/card:text-lg font-bold text-white line-clamp-1 group-hover:text-[#E4B643] transition-colors">
             {book.title}
           </h3>
         </LocaleLink>
-        <p className="text-gray-400 text-sm mb-4">{book.author}</p>
+        <p className="text-gray-400 text-xs @[18rem]/card:text-sm mb-3 @[18rem]/card:mb-4">{book.author}</p>
 
-        <div className="flex items-center gap-2 text-xs text-gray-300 mb-6 mt-auto">
+        <div className="flex items-center gap-1.5 @[18rem]/card:gap-2 text-[10px] @[18rem]/card:text-xs text-gray-300 mb-4 @[18rem]/card:mb-6 mt-auto">
           <span className="material-symbols-outlined text-[#E4B643] text-sm" aria-hidden="true">
             location_on
           </span>
-          <span>{book.owner.neighborhood}</span>
+          <span className="truncate">{book.owner.neighborhood}</span>
           <span className="text-gray-500" aria-hidden="true">•</span>
-          <span>{t('discovery.distance', { km: book.distance })}</span>
+          <span className="whitespace-nowrap">{t('discovery.distance', { km: book.distance })}</span>
         </div>
 
         <button
           type="button"
           onClick={() => onRequestSwap?.(book)}
-          className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-full transition-colors text-xs tracking-widest uppercase"
+          className="w-full inline-flex items-center justify-center min-h-[44px] bg-white/10 hover:bg-white/20 text-white font-bold py-2 @[18rem]/card:py-2.5 rounded-full transition-colors text-[10px] @[18rem]/card:text-xs tracking-widest uppercase"
         >
           {t('discovery.requestSwap', 'Request Swap')}
         </button>
