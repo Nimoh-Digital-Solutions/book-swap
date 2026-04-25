@@ -14,7 +14,7 @@
 }
 
 .backdrop {
-  background-color: rgba(15, 26, 20, 0.85);
+  background-color: rgb(15, 26, 20, 0.85);
   backdrop-filter: blur(2px);
 }
 
@@ -38,7 +38,7 @@
   border-radius: 50%;
   border: 2px solid transparent;
   border-top-color: #e4b643;
-  border-right-color: rgba(228, 182, 67, 0.4);
+  border-right-color: rgb(228, 182, 67, 0.4);
   animation: ring-spin 1s linear infinite;
 }
 
@@ -58,10 +58,12 @@
     width: 28px;
     height: 28px;
   }
+
   .ring {
     inset: -6px;
     border-width: 1.5px;
   }
+
   .label {
     font-size: 0.75rem;
   }
@@ -73,6 +75,7 @@
     width: 40px;
     height: 40px;
   }
+
   .ring {
     inset: -8px;
     border-width: 2px;
@@ -84,10 +87,12 @@
     width: 56px;
     height: 56px;
   }
+
   .ring {
     inset: -12px;
     border-width: 2.5px;
   }
+
   .label {
     font-size: 1rem;
   }
@@ -108,6 +113,7 @@
     transform: scale(1);
     opacity: 0.95;
   }
+
   50% {
     transform: scale(1.06);
     opacity: 1;
@@ -120,10 +126,8 @@
   .logo {
     animation: none;
   }
+
   .ring {
-    border-top-color: #e4b643;
-    border-right-color: #e4b643;
-    border-bottom-color: rgba(228, 182, 67, 0.3);
-    border-left-color: rgba(228, 182, 67, 0.3);
+    border-color: #e4b643 #e4b643 rgb(228, 182, 67, 0.3) rgb(228, 182, 67, 0.3);
   }
 }

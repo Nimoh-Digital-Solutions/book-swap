@@ -82,7 +82,9 @@ jobs:
             echo "backend=false" >> $GITHUB_OUTPUT
           fi
 
-          if echo "$CHANGED" | grep -qE '^frontend/'; then
+          # Frontend redeploy is also triggered by changes in packages/shared,
+          # because the Vite build inlines those types via the @shared alias.
+          if echo "$CHANGED" | grep -qE '^frontend/|^packages/shared/'; then
             echo "frontend=true"  >> $GITHUB_OUTPUT
           else
             echo "frontend=false" >> $GITHUB_OUTPUT

@@ -4,8 +4,10 @@
 services:
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # Build context is the repo root so packages/shared/ is available
+      # for the @shared/* TS path alias (frontend/Dockerfile expects this).
+      context: ..
+      dockerfile: frontend/Dockerfile
       args:
         VITE_API_URL: https://api-stag.book-swaps.com
         VITE_APP_TITLE: BookSwap

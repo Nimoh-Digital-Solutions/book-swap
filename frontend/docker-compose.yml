@@ -38,8 +38,10 @@ services:
   # Production preview (multi-stage build -> nginx)
   app-prod:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # Build context is the repo root so packages/shared/ is available
+      # for the @shared/* TS path alias (frontend/Dockerfile expects this).
+      context: ..
+      dockerfile: frontend/Dockerfile
     container_name: ${APP_NAME:-bookswap}-fe-prod
     ports:
       - '8150:8080'

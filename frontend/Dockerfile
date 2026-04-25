@@ -12,18 +12,28 @@ WORKDIR /app
 # Enable Corepack so Yarn 4 (Berry) is available
 RUN corepack enable
 
-# Copy dependency files first (improves layer caching).
-# Root manifests and lockfile are copied first so `yarn install` is only
-# re-run when dependencies change, not on every source file change.
-COPY package.json yarn.lock .yarnrc.yml ./
+# NOTE: Build context is the repo root (so `packages/shared/` is reachable for
+# the @shared/* TS path alias used since AUD-X-001). Compose / CI must build
+# with `context: ..` and `dockerfile: frontend/Dockerfile`.
 
-# Install dependencies
-# Uses BuildKit cache for faster rebuilds.
+# Copy dependency files first (improves layer caching). Frontend manifest +
+# lockfile + Yarn config drive `yarn install`; the shared package is plain
+# npm so its lockfile + manifest are copied separately.
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml ./
+COPY packages/shared/package.json packages/shared/package-lock.json /packages/shared/
+
+# Install frontend dependencies (Yarn 4) and shared package deps (npm). The
+# shared package has no runtime deps shipped to the frontend bundle — the
+# install is only needed so its tsconfig / type-checker is happy.
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
     yarn install --immutable
+RUN cd /packages/shared && npm ci --no-audit --no-fund
 
-# Copy project files
-COPY . .
+# Copy the rest of the source — frontend/ becomes /app/, and packages/shared/
+# stays at /packages/shared/ to match the @shared TS path alias
+# (resolves to ../../packages/shared/src from /app/tsconfig.json).
+COPY frontend/ ./
+COPY packages/shared/ /packages/shared/
 
 # Build-time args — Vite inlines these into the bundle via import.meta.env.
 # Override with --build-arg VITE_API_URL=... or docker-compose build.args.

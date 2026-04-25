@@ -40,8 +40,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 COPY . .
 
-RUN chmod +x scripts/entrypoint.sh scripts/check-env.sh start.sh \
-    && python manage.py collectstatic --noinput --settings=config.settings.production
+RUN chmod +x scripts/entrypoint.sh scripts/check-env.sh start.sh
+
+# collectstatic only needs a runnable settings module — it never connects to
+# the DB and never signs anything. Real SECRET_KEY / DATABASE_URL are still
+# required at runtime (the production settings raise ImproperlyConfigured if
+# they're missing — see config/settings/production.py — AUD-B-801/802). The
+# dummy values below exist only for the duration of this RUN.
+RUN SECRET_KEY="build-time-dummy-not-used-at-runtime" \
+    DATABASE_URL="postgres://build:build@build/build" \
+    ALLOWED_HOSTS="localhost" \
+    python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Run as a non-root user for security (GAP-I-003)
 RUN addgroup --system app && adduser --system --ingroup app app \

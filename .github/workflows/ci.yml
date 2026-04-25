@@ -237,7 +237,9 @@ jobs:
       matrix:
         context:
           - { name: backend, file: backend/Dockerfile, dir: backend }
-          - { name: frontend, file: frontend/Dockerfile, dir: frontend }
+          # Frontend Dockerfile expects the repo root as context so the
+          # packages/shared workspace is available for the @shared/* alias.
+          - { name: frontend, file: frontend/Dockerfile, dir: . }
 
     steps:
       - uses: actions/checkout@v6
