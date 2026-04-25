@@ -46,7 +46,9 @@
       "browse": "Bladeren",
       "howItWorks": "Hoe het werkt",
       "community": "Community",
-      "signIn": "Inloggen"
+      "signIn": "Inloggen",
+      "openMenu": "Menu openen",
+      "menuLabel": "Hoofdmenu"
     },
     "hero": {
       "badge": "Amsterdams boekenruilgemeenschap",

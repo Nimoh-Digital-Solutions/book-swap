@@ -46,7 +46,9 @@
       "browse": "Browse",
       "howItWorks": "How it Works",
       "community": "Community",
-      "signIn": "Sign In"
+      "signIn": "Sign In",
+      "openMenu": "Open menu",
+      "menuLabel": "Main menu"
     },
     "hero": {
       "badge": "Amsterdam's Book Exchange Community",

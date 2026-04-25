@@ -177,8 +177,7 @@ export default function MapPage(): ReactElement {
 
   return (
     <main
-      className="relative flex-1 -mt-[1px]"
-      style={{ height: 'calc(100vh - 73px)' }}
+      className="relative flex-1 -mt-[1px] h-[calc(100dvh-var(--header-h))]"
     >
       <SEOHead
         title={routeMetadata[PATHS.MAP].title}

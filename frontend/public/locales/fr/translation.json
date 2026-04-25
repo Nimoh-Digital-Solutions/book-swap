@@ -46,7 +46,9 @@
       "browse": "Parcourir",
       "howItWorks": "Comment ça marche",
       "community": "Communauté",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "openMenu": "Ouvrir le menu",
+      "menuLabel": "Menu principal"
     },
     "hero": {
       "badge": "La communauté d'échange de livres d'Amsterdam",

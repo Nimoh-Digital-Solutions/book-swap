@@ -66,14 +66,23 @@ export function SidePanel({
     }
   }, [selectedBookId]);
 
+  // Responsive widths (RESP-003 / Sprint A):
+  //  - <sm  : full-screen sheet (covers the map entirely)
+  //  - sm   : 360px sidebar
+  //  - md+  : 420px sidebar
+  // Both the outer transition wrapper and the inner panel share the same
+  // width tokens so the slide-in transform lines up exactly with the
+  // collapse-to-zero of the wrapper.
+  const widthClass = "w-full sm:w-[360px] md:w-[420px]";
+
   return (
     <div
       className={`absolute top-0 left-0 h-full z-10 transition-[width] duration-300 ease-in-out flex ${
-        isOpen ? "w-[420px]" : "w-0"
+        isOpen ? widthClass : "w-0"
       }`}
     >
       <div
-        className={`h-full w-[420px] shrink-0 bg-[#0f1a14] border-r border-[#28382D]/50 flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`h-full ${widthClass} shrink-0 bg-[#0f1a14] border-r border-[#28382D]/50 flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
