@@ -191,23 +191,27 @@ export default function MapPage(): ReactElement {
          *
          * Position is panel-aware so the centered pills don't crash into the
          * SidePanel header on narrow widths (RESP-036, Sprint C polish):
-         *   - panel closed (any width): center over the whole `<main>`.
+         *   - panel closed (any width): center over the whole `<main>` via
+         *                               `left-1/2 -translate-x-1/2`.
          *   - panel open + `<sm`:       full-screen panel covers the map, so
          *                               hide the bar entirely (the panel has
          *                               its own close affordance + search).
-         *   - panel open + `sm:`/`md:`+: shift the centering anchor right by
-         *                               half the panel width so the pills
-         *                               center over the visible map area
-         *                               instead of straddling the panel.
+         *   - panel open + `sm:`/`md:`+: pin the bar to the right edge of
+         *                               `<main>` (`right-4` / `md:right-6`)
+         *                               so it lives in the visible map
+         *                               column and never straddles the panel.
          *
-         * `transition-[left]` keeps the slide visually smooth when the panel
-         * opens / closes.
+         * NOTE: a previous attempt used `left-[calc(50%+Xpx)]` to recenter
+         * over the map column, but CSS `calc()` requires whitespace around
+         * `+` and Tailwind arbitrary values eat the literal spaces, so the
+         * rule was silently invalid and the bar stayed centered. Pinning to
+         * `right-*` avoids the calc() pitfall and keeps the markup simple.
          */}
         <div
-          className={`absolute top-4 z-20 -translate-x-1/2 transition-[left] duration-300 ease-in-out flex items-center gap-2 sm:gap-3 ${
+          className={`absolute top-4 z-20 items-center gap-2 sm:gap-3 ${
             panelOpen
-              ? 'hidden sm:flex sm:left-[calc(50%+180px)] md:left-[calc(50%+210px)]'
-              : 'flex left-1/2'
+              ? 'hidden sm:flex sm:right-4 md:right-6'
+              : 'flex left-1/2 -translate-x-1/2'
           }`}
         >
           <LocaleLink

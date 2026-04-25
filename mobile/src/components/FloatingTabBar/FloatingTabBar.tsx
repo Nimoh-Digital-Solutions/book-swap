@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Animated, {
   Easing,
   runOnJS as _runOnJS,
@@ -72,23 +73,39 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   const { indicatorStyle, onTabLayout } = useTabIndicator(activeVisibleIndex);
 
-  const pillBg = isDark ? 'rgba(15, 26, 20, 0.95)' : 'rgba(255, 255, 255, 0.92)';
+  // Glass styling: BlurView paints the frosted material; a thin tinted
+  // overlay on top boosts legibility when the underlying content is very
+  // bright/dark/busy (icons + labels stay readable). The inner hairline
+  // stroke gets a stronger alpha so the pill edge reads on glass.
+  const blurTint = isDark ? 'dark' : 'light';
+  const vibrancyOverlay = isDark
+    ? 'rgba(15, 26, 20, 0.35)'
+    : 'rgba(255, 255, 255, 0.18)';
   const activeTint = isDark ? c.auth.golden : c.brand.primary;
   const innerBorder = isDark
-    ? c.auth.cardBorder + '60'
-    : c.border.default + '60';
+    ? c.auth.cardBorder + 'A0'
+    : c.border.default + 'A0';
 
   return (
     <Animated.View
       style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) }, wrapperAnimStyle]}
       pointerEvents={shouldShow ? 'box-none' : 'none'}
     >
-      <View style={[styles.pill, { backgroundColor: pillBg }]}>
+      <BlurView
+        style={styles.pill}
+        tint={blurTint}
+        intensity={70}
+        experimentalBlurMethod="dimezisBlurView"
+      >
+        <View
+          pointerEvents="none"
+          style={[styles.vibrancy, { backgroundColor: vibrancyOverlay }]}
+        />
         <View style={[styles.inner, { borderColor: innerBorder }]}>
           <Animated.View
             style={[
               styles.indicator,
-              { backgroundColor: activeTint + '12' },
+              { backgroundColor: activeTint + '38' },
               indicatorStyle,
             ]}
           />
@@ -145,7 +162,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             );
           })}
         </View>
-      </View>
+      </BlurView>
     </Animated.View>
   );
 }
@@ -166,11 +183,14 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.22,
-        shadowRadius: 16,
+        shadowOpacity: 0.18,
+        shadowRadius: 18,
       },
       android: { elevation: 12 },
     }),
+  },
+  vibrancy: {
+    ...StyleSheet.absoluteFillObject,
   },
   inner: {
     flexDirection: 'row',
