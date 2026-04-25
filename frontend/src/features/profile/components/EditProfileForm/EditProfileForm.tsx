@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@data/useAppStore';
+import { useScrollIntoViewOnFocus } from '@hooks';
 import { AlertCircle, Check, Loader2, Save } from 'lucide-react';
 import { z } from 'zod';
 
@@ -111,8 +112,11 @@ export function EditProfileForm({ profile, onSuccess }: EditProfileFormProps): R
 
   const usernameChanged = usernameInput.toLowerCase() !== profile.username.toLowerCase();
 
+  // RESP-035 (Sprint C).
+  const formRef = useScrollIntoViewOnFocus<HTMLFormElement>();
+
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form ref={formRef} className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
       {/* Avatar */}
       <AvatarUpload
         currentAvatar={profile.avatar}

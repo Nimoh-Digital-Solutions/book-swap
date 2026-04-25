@@ -13,6 +13,7 @@ export { useMediaQuery } from './useMediaQuery';
 export { usePrevious } from './usePrevious';
 export { usePwaUpdate } from './usePwaUpdate';
 export { useRouteAnnouncer } from './useRouteAnnouncer';
+export { useScrollIntoViewOnFocus } from './useScrollIntoViewOnFocus';
 export { useTheme } from './useTheme';
 export type { ToastItem, ToastVariant, UseToastReturn } from './useToast';
 export { useToast } from './useToast';

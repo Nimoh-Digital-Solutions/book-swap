@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { API } from '@configs/apiEndpoints';
 import { APP_CONFIG } from '@configs/appConfig';
+import { useScrollIntoViewOnFocus } from '@hooks';
 import { ArrowRight, Lock, Mail } from 'lucide-react';
 import { z } from 'zod';
 
@@ -67,6 +68,10 @@ export function LoginForm({
     resolver: makeZodResolver(loginSchema),
     mode: 'onTouched',
   });
+
+  // RESP-035 (Sprint C): scroll the focused field into view in landscape
+  // when the iOS / Android soft-keyboard occupies the lower viewport.
+  const formRef = useScrollIntoViewOnFocus<HTMLFormElement>();
 
   return (
     <div>
@@ -135,7 +140,12 @@ export function LoginForm({
       </div>
 
       {/* Form */}
-      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form
+        ref={formRef}
+        className="space-y-5"
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+      >
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1" htmlFor="email_or_username">
             {t('auth.credentialLabel', 'Email or Username')}

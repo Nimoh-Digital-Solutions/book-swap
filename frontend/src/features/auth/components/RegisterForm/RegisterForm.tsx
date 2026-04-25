@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { API } from '@configs/apiEndpoints';
 import { APP_CONFIG } from '@configs/appConfig';
+import { useScrollIntoViewOnFocus } from '@hooks';
 import { ArrowRight, Calendar, Lock, Mail, User } from 'lucide-react';
 import { z } from 'zod';
 
@@ -98,6 +99,9 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
     mode: 'onTouched',
   });
 
+  // RESP-035 (Sprint C).
+  const formRef = useScrollIntoViewOnFocus<HTMLFormElement>();
+
   const handleFormSubmit = (values: RegisterFormValues) => {
     const payload: RegisterPayload = {
       first_name: values.first_name,
@@ -179,7 +183,12 @@ export function RegisterForm({ onSubmit, onToggle, isLoading = false, serverErro
       </div>
 
       {/* Form */}
-      <form className="space-y-5" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+      <form
+        ref={formRef}
+        className="space-y-5"
+        onSubmit={handleSubmit(handleFormSubmit)}
+        noValidate
+      >
         {/* Name row */}
         {/* <div className="grid grid-cols-2 gap-4">
           <div>
