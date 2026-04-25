@@ -53,15 +53,22 @@ export function ChatHeader({
         </div>
       </div>
 
-      {/* Meetup suggestion button */}
+      {/* Meetup suggestion button.
+        *
+        * RESP-024 (Sprint C): on `<sm` the partner name + status indicator
+        * + this CTA easily exceeded 320 px and pushed the button off-screen.
+        * Below `sm:` we collapse to icon-only (44×44 tap target) and keep
+        * the accessible name via `aria-label`. At `sm:` the full text label
+        * returns. */}
       {showMeetupButton && (
         <button
           type="button"
           onClick={onSuggestMeetup}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#28382D] hover:bg-[#344a3a] text-sm text-[#8C9C92] hover:text-white transition-colors"
+          aria-label={t('meetup.suggest')}
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-1.5 sm:px-3 sm:py-1.5 rounded-full bg-[#28382D] hover:bg-[#344a3a] text-sm text-[#8C9C92] hover:text-white transition-colors"
         >
           <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
-          {t('meetup.suggest')}
+          <span className="hidden sm:inline">{t('meetup.suggest')}</span>
         </button>
       )}
     </div>

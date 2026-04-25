@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SEOHead } from '@components';
-import { EmptyPlaceholder } from '@components/common';
+import { BrandedLoader, EmptyPlaceholder } from '@components/common';
 import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
@@ -89,12 +89,18 @@ function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElemen
         <p className="text-sm text-[#8C9C92] italic mb-4">&ldquo;{exchange.message}&rdquo;</p>
       )}
 
-      <div className="flex gap-3">
+      {/* RESP-023 (Sprint C): on `<sm` the 3-button action row used to
+        * squeeze 3 controls into ~280 px and clipped with longer
+        * translations. The grid layout below promotes Accept to a full
+        * row on phones and stacks Decline + View as a 2-up underneath;
+        * `sm:flex` reverts to the desktop single-row layout. Each button
+        * is also `min-h-[44px]` for the tap-target pass (RESP-028). */}
+      <div className="grid grid-cols-2 gap-3 sm:flex">
         <button
           type="button"
           onClick={handleAccept}
           disabled={busy}
-          className="flex-1 px-4 py-2 bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] font-bold text-sm rounded-full transition-colors disabled:opacity-50"
+          className="col-span-2 sm:flex-1 inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] font-bold text-sm rounded-full transition-colors disabled:opacity-50"
         >
           {t('incoming.accept', 'Accept')}
         </button>
@@ -102,13 +108,13 @@ function IncomingCard({ exchange }: { exchange: ExchangeListItem }): ReactElemen
           type="button"
           onClick={handleDecline}
           disabled={busy}
-          className="flex-1 px-4 py-2 bg-[#28382D] hover:bg-[#344a3a] text-white font-medium text-sm rounded-full transition-colors disabled:opacity-50"
+          className="sm:flex-1 inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-[#28382D] hover:bg-[#344a3a] text-white font-medium text-sm rounded-full transition-colors disabled:opacity-50"
         >
           {t('incoming.decline', 'Decline')}
         </button>
         <LocaleLink
           to={`/exchanges/${exchange.id}`}
-          className="px-4 py-2 border border-[#28382D] hover:border-[#8C9C92] text-[#8C9C92] text-sm rounded-full transition-colors text-center"
+          className="sm:flex-1 inline-flex items-center justify-center min-h-[44px] px-4 py-2 border border-[#28382D] hover:border-[#8C9C92] text-[#8C9C92] text-sm rounded-full transition-colors text-center"
         >
           {t('incoming.view', 'View')}
         </LocaleLink>
@@ -125,8 +131,8 @@ export default function IncomingRequestsPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -142,7 +148,7 @@ export default function IncomingRequestsPage(): ReactElement {
   const items = requests ?? [];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <SEOHead
         title={routeMetadata[PATHS.INCOMING_REQUESTS].title}
         description={routeMetadata[PATHS.INCOMING_REQUESTS].description}

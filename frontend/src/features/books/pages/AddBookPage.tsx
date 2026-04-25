@@ -149,7 +149,10 @@ export function AddBookPage(): ReactElement {
               type="button"
               onClick={() => setScannerOpen(true)}
               aria-label={t('books.addBook.scanBarcode', 'Scan barcode with camera')}
-              className="flex items-center gap-2 px-3 py-3 bg-[#28382D] hover:bg-[#354A3A] text-[#E4B643] text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
+              // RESP-026 (Sprint C): icon-only button bumped to 44×44 min
+              // tap target so it clears WCAG 2.5.5 alongside the ISBN
+              // input.
+              className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-2 px-3 bg-[#28382D] hover:bg-[#354A3A] text-[#E4B643] text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
             >
               <Camera className="w-4 h-4" aria-hidden="true" />
             </button>
