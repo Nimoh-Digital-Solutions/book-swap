@@ -198,7 +198,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
           <button
             type="button"
             onClick={handleClose}
-            className="text-[#8C9C92] hover:text-white transition-colors"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 rounded-full text-[#8C9C92] hover:text-white transition-colors"
             aria-label={t('books.scanner.close', 'Close scanner')}
           >
             <X className="w-5 h-5" />

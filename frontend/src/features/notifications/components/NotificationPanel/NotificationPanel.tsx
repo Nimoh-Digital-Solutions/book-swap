@@ -114,7 +114,13 @@ export function NotificationPanel({ onClose: _onClose }: NotificationPanelProps)
     <div
       role="dialog"
       aria-label={t('bell.label')}
-      className="absolute right-0 top-full mt-2 w-80 max-h-[480px] overflow-y-auto rounded-2xl bg-[#152018] border border-[#28382D] shadow-2xl z-50 flex flex-col"
+      // RESP-020 (Sprint C): clamp width to the viewport so a wide locale
+      // label or a narrow phone (320 px) can never push the panel off-edge,
+      // and use `dvh` for the max height so the iOS URL-bar collapse doesn't
+      // jump the panel. `min(20rem, calc(100vw - 1rem))` keeps the desktop
+      // 320 px width but yields under 320 px on a 320 px viewport (with an
+      // 8 px breathing margin on each side).
+      className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-1rem))] max-h-[70dvh] overflow-y-auto rounded-2xl bg-[#152018] border border-[#28382D] shadow-2xl z-50 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#28382D] shrink-0">
@@ -126,7 +132,7 @@ export function NotificationPanel({ onClose: _onClose }: NotificationPanelProps)
             type="button"
             onClick={handleMarkAll}
             disabled={markAllRead.isPending}
-            className="text-xs text-[#E4B643] hover:text-[#D4A633] transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center min-h-[44px] px-2 -mr-2 text-xs text-[#E4B643] hover:text-[#D4A633] transition-colors disabled:opacity-50 rounded-lg"
           >
             {t('bell.markAllRead')}
           </button>

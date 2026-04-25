@@ -33,7 +33,7 @@ export function SuccessStep({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+        className="absolute top-4 right-4 inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full bg-white/10 text-gray-400 hover:text-white transition-colors"
         aria-label="Close"
       >
         <span className="material-symbols-outlined text-sm">close</span>
@@ -41,7 +41,7 @@ export function SuccessStep({
 
       <div className="w-24 h-24 rounded-full bg-[#E4B643]/20 flex items-center justify-center mb-6">
         <span
-          className="material-symbols-outlined text-[#E4B643] text-5xl"
+          className="material-symbols-outlined text-[#E4B643] text-4xl sm:text-5xl"
           aria-hidden="true"
         >
           check_circle

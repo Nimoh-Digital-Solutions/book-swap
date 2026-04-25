@@ -60,7 +60,7 @@ export function SelectOfferStep({
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-gray-400 hover:text-white transition-colors"
           aria-label="Close"
         >
           <span className="material-symbols-outlined">close</span>
@@ -87,7 +87,7 @@ export function SelectOfferStep({
         ) : shelfBooks.length === 0 ? (
           <div className="text-center py-12">
             <span
-              className="material-symbols-outlined text-gray-500 text-5xl mb-4 block"
+              className="material-symbols-outlined text-gray-500 text-4xl sm:text-5xl mb-4 block"
               aria-hidden="true"
             >
               library_books
@@ -138,7 +138,7 @@ export function SelectOfferStep({
                       />
                     ) : (
                       <span
-                        className="material-symbols-outlined text-[#28382D] text-5xl"
+                        className="material-symbols-outlined text-[#28382D] text-4xl sm:text-5xl"
                         aria-hidden="true"
                       >
                         menu_book

@@ -50,7 +50,7 @@ export function ConfirmSwapStep({
         <button
           type="button"
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full bg-white/10 text-gray-400 hover:text-white transition-colors"
           aria-label="Close"
         >
           <span className="material-symbols-outlined text-sm">close</span>
@@ -79,7 +79,7 @@ export function ConfirmSwapStep({
                 />
               ) : (
                 <span
-                  className="material-symbols-outlined text-[#28382D] text-5xl"
+                  className="material-symbols-outlined text-[#28382D] text-4xl sm:text-5xl"
                   aria-hidden="true"
                 >
                   menu_book
@@ -111,7 +111,7 @@ export function ConfirmSwapStep({
                 />
               ) : (
                 <span
-                  className="material-symbols-outlined text-gray-300 text-5xl"
+                  className="material-symbols-outlined text-gray-300 text-4xl sm:text-5xl"
                   aria-hidden="true"
                 >
                   menu_book

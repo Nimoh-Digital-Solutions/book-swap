@@ -74,7 +74,7 @@ export function MobileFilterSheet({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8C9C92] hover:text-white"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 rounded-full text-[#8C9C92] hover:text-white"
             aria-label={t('common.cancel', 'Close')}
           >
             <X className="w-5 h-5" />

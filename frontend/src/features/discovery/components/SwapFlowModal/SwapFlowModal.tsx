@@ -42,12 +42,13 @@ export function SwapFlowModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center pt-4 sm:pt-6 px-4 sm:px-6 pb-safe"
+      // RESP-021 (Sprint C): below `sm:` the modal becomes a full-screen
+      // sheet (no centering padding, edge-to-edge). At `sm:` and up it
+      // returns to a centred dialog with comfortable insets. The
+      // additive `--pb` keeps the iOS home-indicator inset on top of
+      // the baseline 1 rem padding (see RESP-006).
+      className="fixed inset-0 z-50 flex sm:items-center sm:justify-center sm:pt-6 sm:px-6 sm:pb-safe"
       style={{
-        // Adds the iOS home-indicator inset to the existing bottom
-        // padding so the centred dialog doesn't hug the edge on
-        // iPhone X+ (RESP-006). Effective on mobile only — desktops
-        // resolve env(safe-area-inset-*) to 0.
         ['--pb' as string]: '1rem',
       }}
     >
@@ -61,7 +62,10 @@ export function SwapFlowModal({
         role="dialog"
         aria-modal="true"
         aria-label="Swap request"
-        className="relative w-full max-w-3xl bg-surface-dark rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        // Mobile: full viewport, no rounded corners, dvh-bound for the
+        // iOS URL-bar collapse. Desktop: capped width / height with
+        // rounded corners, identical to the legacy modal look.
+        className="relative w-full h-[100dvh] sm:h-auto sm:max-w-3xl sm:max-h-[90dvh] bg-surface-dark sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
       >
         {flow.step === 'SELECT_OFFER' && (
           <SelectOfferStep
