@@ -246,7 +246,7 @@ export function BookDetailPage(): ReactElement {
           </div>
 
           {/* Title + author */}
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-none">
+          <h1 className="text-[clamp(1.75rem,7vw,3.75rem)] md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight md:leading-none text-balance break-anywhere">
             {book.title}
           </h1>
           <p className="text-2xl text-[#E4B643] font-medium italic font-serif mb-8">

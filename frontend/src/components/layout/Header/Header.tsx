@@ -256,7 +256,13 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
         <div className="flex items-center gap-8">
           <LocaleLink to={PATHS.HOME} className="flex items-center gap-3">
             <img src={logoMark} alt="" width={32} height={32} />
-            <span className="text-xl font-bold tracking-tight text-white">
+            {/* Wordmark visually hidden below `sm` (RESP-014) — at 320 px the
+              * right cluster (NotificationBell + ProfileDropdown + hamburger)
+              * plus a language pill would push the layout off-screen. We keep
+              * the text in the accessibility tree via `sr-only` so the link
+              * still has an accessible name on mobile (the icon mark uses
+              * empty `alt=""` to avoid duplicate alt + text axe violation). */}
+            <span className="sr-only sm:not-sr-only text-xl font-bold tracking-tight text-white">
               BookSwap
             </span>
           </LocaleLink>
@@ -272,7 +278,7 @@ export const Header = ({ className }: { className?: string }): ReactElement => {
             </NavLink>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {isAuthenticated && <NotificationBell enabled={isAuthenticated} />}
           {isAuthenticated ? (
             <ProfileDropdown />
