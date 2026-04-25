@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { SEOHead } from '@components';
+import { BrandedLoader, SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
@@ -323,8 +323,8 @@ export default function ExchangeDetailPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -340,7 +340,7 @@ export default function ExchangeDetailPage(): ReactElement {
   const isOwner = currentUserId === exchange.owner.id;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+    <div className="max-w-4xl mx-auto px-4 py-8">
       <SEOHead
         title={routeMetadata[PATHS.EXCHANGE_DETAIL].title}
         description={routeMetadata[PATHS.EXCHANGE_DETAIL].description}
@@ -357,8 +357,14 @@ export default function ExchangeDetailPage(): ReactElement {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left — Timeline */}
-        <div className="md:col-span-1">
+        {/* Left — Timeline.
+          *
+          * RESP-019 (Sprint C): on mobile the most action-relevant block is
+          * the actions card (Accept/Decline/Counter or Mark Completed), not
+          * the status timeline. We push the timeline to `order-2` below `md:`
+          * so the right column (which contains the title, books, and
+          * actions) appears first. Desktop is unchanged via `md:order-1`. */}
+        <div className="md:col-span-1 order-2 md:order-1">
           <h2 className="text-sm font-medium text-[#8C9C92] uppercase tracking-wider mb-4">
             {t('detail.progress', 'Progress')}
           </h2>
@@ -366,7 +372,7 @@ export default function ExchangeDetailPage(): ReactElement {
         </div>
 
         {/* Right — Detail */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-6 order-1 md:order-2">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">{t('detail.title', 'Exchange Details')}</h1>
             <ExchangeStatusBadge status={exchange.status} />

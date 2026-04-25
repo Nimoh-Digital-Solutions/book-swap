@@ -168,9 +168,15 @@ export function BookDetailPage(): ReactElement {
         </span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      {/* RESP-032 (Sprint C): the previous `grid-cols-1 lg:grid-cols-12`
+        * jumped from 1 column straight to a 12-column sub-grid at 1024 px,
+        * leaving the 768 px iPad mini stuck in single-column mode with a
+        * very tall scroll. The intermediate `md:grid-cols-12` step (with
+        * matching `md:col-span-*` below) gives tablet readers a cover +
+        * details split, and the gap shrinks proportionally. */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 lg:gap-16">
         {/* ── Left column: cover + quick stats ── */}
-        <div className="lg:col-span-5">
+        <div className="md:col-span-5 lg:col-span-5">
           <div className="relative group">
             {/* Ambient glow */}
             <div
@@ -235,7 +241,7 @@ export function BookDetailPage(): ReactElement {
         </div>
 
         {/* ── Right column: details ── */}
-        <div className="lg:col-span-7">
+        <div className="md:col-span-7 lg:col-span-7">
           {/* Genre + archival ID */}
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[#E4B643] text-xs font-bold uppercase tracking-[0.2em]">{genre}</span>
@@ -252,6 +258,35 @@ export function BookDetailPage(): ReactElement {
           <p className="text-2xl text-[#E4B643] font-medium italic font-serif mb-8">
             {t('books.card.by', { author: book.author, defaultValue: 'by {{author}}' })}
           </p>
+
+          {/* Mobile-only primary CTA (RESP-019, Sprint C).
+            *
+            * The full action block lives at the bottom of this very long
+            * right column. On a phone the user has to scroll past
+            * synopsis + swap notes + metadata grid (~600 px) before they
+            * can act. We surface the single most-relevant CTA next to the
+            * title on `<lg`. The full action set is still rendered below;
+            * desktop hides this duplicate via `lg:hidden`. */}
+          <div className="lg:hidden mb-8">
+            {isOwner ? (
+              <LocaleLink
+                to={`/books/${book.id}/edit`}
+                className="w-full inline-flex items-center justify-center gap-3 border border-[#28382D] text-white py-4 rounded-2xl font-bold hover:bg-[#28382D] transition-colors"
+              >
+                <Edit2 className="w-5 h-5" aria-hidden="true" />
+                {t('books.detail.editListing', 'Edit Listing')}
+              </LocaleLink>
+            ) : isOwnerBlocked ? null : (
+              <button
+                type="button"
+                onClick={() => setSwapModalOpen(true)}
+                className="w-full bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] py-4 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
+              >
+                <ArrowLeftRight className="w-5 h-5" aria-hidden="true" />
+                {t('books.detail.requestSwap', 'Request Swap')}
+              </button>
+            )}
+          </div>
 
           <div className="h-px bg-gradient-to-r from-[#28382D] to-transparent mb-8" aria-hidden="true" />
 
