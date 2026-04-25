@@ -55,7 +55,7 @@ export function SearchBar({
           'discovery.search.placeholder',
           'Search by title, author, or ISBN...',
         )}
-        className="w-full bg-[#1A251D] border border-[#28382D] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-[#5A6A60] focus:border-[#E4B643] focus:outline-none transition-colors"
+        className="w-full bg-[#1A251D] border border-[#28382D] rounded-xl pl-10 pr-10 py-2.5 text-base sm:text-sm text-white placeholder-[#5A6A60] focus:border-[#E4B643] focus:outline-none transition-colors"
         aria-label={t('discovery.search.placeholder', 'Search')}
       />
       {isLoading ? (

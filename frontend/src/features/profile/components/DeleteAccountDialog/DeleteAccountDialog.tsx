@@ -97,7 +97,7 @@ export function DeleteAccountDialog({
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-[#28382D] rounded-xl text-sm bg-[#152018] text-white placeholder-[#5A6A60] focus:ring-red-500 focus:border-red-500"
+              className="block w-full pl-10 pr-3 py-3 border border-[#28382D] rounded-xl text-base sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] focus:ring-red-500 focus:border-red-500"
               placeholder="••••••••"
               autoComplete="current-password"
             />

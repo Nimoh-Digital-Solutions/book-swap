@@ -124,7 +124,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: MessageInpu
             placeholder={t('chat.sendPlaceholder')}
             disabled={disabled}
             rows={1}
-            className="w-full resize-none rounded-xl bg-[#28382D] text-white text-sm px-4 py-2.5 pr-16 placeholder:text-[#8C9C92] focus:outline-none focus:ring-1 focus:ring-[#E4B643] disabled:opacity-50 max-h-[100px] overflow-y-auto"
+            className="w-full resize-none rounded-xl bg-[#28382D] text-white text-base sm:text-sm px-4 py-2.5 pr-16 placeholder:text-[#8C9C92] focus:outline-none focus:ring-1 focus:ring-[#E4B643] disabled:opacity-50 max-h-[100px] overflow-y-auto"
           />
           <span className="absolute right-3 bottom-2 text-[10px] text-[#8C9C92]">
             {t('chat.charsRemaining', { count: content.length })}

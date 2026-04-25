@@ -107,7 +107,7 @@ export function EditProfileForm({ profile, onSuccess }: EditProfileFormProps): R
   );
 
   const inputBase =
-    'block w-full px-3 py-3 border rounded-xl text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
+    'block w-full px-3 py-3 border rounded-xl text-base sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
 
   const usernameChanged = usernameInput.toLowerCase() !== profile.username.toLowerCase();
 

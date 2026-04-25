@@ -129,7 +129,7 @@ export function LocationSection(): ReactElement {
           onChange={(e) => setPostcode(e.target.value)}
           placeholder={t('settings.location.placeholder', 'e.g. Amsterdam West, 1054')}
           disabled={isBusy}
-          className="w-full px-4 py-2.5 rounded-xl text-sm bg-[#152018] border border-[#28382D] text-white placeholder-[#5A6E60] focus:outline-none focus:ring-2 focus:ring-[#E4B643] disabled:opacity-50"
+          className="w-full px-4 py-2.5 rounded-xl text-base sm:text-sm bg-[#152018] border border-[#28382D] text-white placeholder-[#5A6E60] focus:outline-none focus:ring-2 focus:ring-[#E4B643] disabled:opacity-50"
         />
         <div className="flex gap-3">
           <button

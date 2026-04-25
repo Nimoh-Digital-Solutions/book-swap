@@ -95,7 +95,7 @@ export function AddBookPage(): ReactElement {
   );
 
   const inputBase =
-    'block w-full px-3 py-3 border border-[#28382D] rounded-xl text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
+    'block w-full px-3 py-3 border border-[#28382D] rounded-xl text-base sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">

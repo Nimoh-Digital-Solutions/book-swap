@@ -82,7 +82,7 @@ export function SidePanelHeader({
             "map.search.placeholder",
             "Search books, authors...",
           )}
-          className="w-full bg-[#152018] border border-[#1e3026] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-[#3d5c47] focus:border-[#E4B643]/50 focus:ring-1 focus:ring-[#E4B643]/20 focus:outline-none transition-all"
+          className="w-full bg-[#152018] border border-[#1e3026] rounded-xl pl-10 pr-10 py-2.5 text-base sm:text-sm text-white placeholder-[#3d5c47] focus:border-[#E4B643]/50 focus:ring-1 focus:ring-[#E4B643]/20 focus:outline-none transition-all"
           aria-label={t(
             "map.search.placeholder",
             "Search books, authors...",
