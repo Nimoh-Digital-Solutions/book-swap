@@ -370,6 +370,23 @@
 29. AUD-W-602 — ✅ DONE for high-impact pages — `BookDetailPage`, `ExchangeDetailPage`, `MyShelfPage` already had vitest coverage; new suites `frontend/src/pages/MapPage/__tests__/MapPage.test.tsx` (6 tests) and `frontend/src/pages/SettingsPage/__tests__/SettingsPage.test.tsx` (8 tests) bring all five flagged pages to green. Lower-priority pages (legal / Community / HowItWorks / EditBook / AddBook / EditProfile / PublicProfile) remain as a follow-up backlog item.
 30. AUD-M-702 — ✅ DONE — `mobile/src/features/messaging/__tests__/ChatScreen.test.tsx` (9 tests) and `mobile/src/features/exchanges/__tests__/RequestSwapScreen.test.tsx` (8 tests) now cover the chat and swap-request screens end-to-end (loading, error, empty, happy path, locked / disabled states, DRF errors).
 
+**Sprint 7 — small and high-value (✅ done)**
+31. AUD-W-401 — ✅ DONE — `useUserCity` now uses two `createExternalHttpClient` instances (ipapi + nominatim) so timeouts, dev logging and `HttpError` parsing match the rest of the app. Direct `fetch` calls are gone.
+32. AUD-W-501 — ✅ DONE — `RatingsList` virtualises with `react-window` once `data.results.length > 12`; small lists still render inline so layout/animation regressions are avoided.
+33. AUD-W-502 — ✅ DONE — `MapView` and the `MapPage` now use `@googlemaps/markerclusterer` via a shared `MarkerClusterContext`, keeping pins clean even at city zoom levels.
+34. AUD-M-202 — ✅ DONE — `MainTabs` and `FloatingTabBar` now share a `TAB_VISIBILITY` source of truth; `ProfileTab` is unreachable from the tab bar by design and the rationale is documented inline.
+35. AUD-M-406 — ✅ DONE — `FloatingTabBar` decomposed into `useTabBarVisibility` (visibility + animation) + `TabBarIndicator` (pill / underline animation) + `TabBarItem` (single tab); root file dropped from ~340 LoC to ~140.
+36. AUD-M-407 — ✅ DONE — `useNavigation<any>()` removed from `BookDetailScreen`, `useEmailVerificationGate`, `AccountSection`, `SecuritySection`, `GeneralSection`, and `NotificationListScreen` (latter now uses a `CompositeNavigationProp` so cross-tab navigation no longer needs `getParent()`).
+37. AUD-M-408 — ✅ DONE — Token refresh extracted into a shared `refreshAccessToken` helper in `services/http.ts` (deduped via a `refreshPromise`); the 401 interceptor and `services/websocket.ts` both go through this helper, with the websocket using a lazy import to avoid the circular dependency.
+38. AUD-W-602 follow-up — ✅ DONE — New vitest suites for `PrivacyPolicyPage` (4 tests), `TermsOfServicePage` (4 tests), `CommunityPage` (5 tests), `HowItWorksPage` (5 tests), `EditBookPage` (6 tests), and `EditProfilePage` (4 tests). All hooks/forms appropriately mocked so the suites stay focused on page composition.
+39. AUD-W-603 — ✅ DONE — `frontend/src/features/exchanges/pages/__tests__/ExchangeDetailPage.test.tsx` adds 17 dedicated cases covering counter-offer flow, conditions step (you / partner / both accepted), active-step confirmations, terminal statuses (cancelled / expired / returned), and chat / rating panel visibility transitions.
+40. AUD-M-703 — ✅ DONE — `mobile/src/services/__tests__/notificationHandler.test.ts` adds 19 cases for the foreground-tap and cold-start routing paths (chat, exchange, book, unknown type, missing IDs, navigationRef-not-ready guard).
+
+**Verification (Sprint 7 close)**
+- Backend: `ruff check` clean; `pytest` 132 tests pass.
+- Frontend: `tsc --noEmit` clean; `eslint src` clean; `vitest` 926 tests / 86 files pass; `playwright test --list` resolves 234 specs.
+- Mobile: `tsc --noEmit` clean; `npm run lint` 0 errors / 24 warnings (cap = 50); `jest` 137 tests / 24 suites pass.
+
 ---
 
 ## 6. Notes on what was NOT in scope
