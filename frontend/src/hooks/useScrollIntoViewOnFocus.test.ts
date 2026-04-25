@@ -97,4 +97,65 @@ describe('useScrollIntoViewOnFocus', () => {
 
     document.body.removeChild(div);
   });
+
+  it('does not throw when `scrollIntoView` is unavailable on the target', () => {
+    // Simulate an environment (e.g. legacy WebView, raw jsdom) where
+    // `scrollIntoView` isn't implemented. Without the hook's defensive
+    // guard this would surface as an unhandled `TypeError` thrown from
+    // inside a `setTimeout` callback (which is exactly how the bug
+    // manifested in CI before the fix).
+    const original = Element.prototype.scrollIntoView;
+    // @ts-expect-error - intentionally clobbering the prototype for the test
+    delete Element.prototype.scrollIntoView;
+
+    try {
+      const { result, rerender } = renderHook(() =>
+        useScrollIntoViewOnFocus<HTMLDivElement>({ delay: 0 }),
+      );
+
+      const div = document.createElement('div');
+      const input = document.createElement('input');
+      div.appendChild(input);
+      document.body.appendChild(div);
+      result.current.current = div;
+      rerender();
+
+      const evt = new Event('focusin', { bubbles: true });
+      Object.defineProperty(evt, 'target', { value: input });
+
+      expect(() => {
+        div.dispatchEvent(evt);
+        vi.runAllTimers();
+      }).not.toThrow();
+
+      document.body.removeChild(div);
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+
+  it('cancels pending deferred scrolls when the host unmounts', () => {
+    const { result, rerender, unmount } = renderHook(() =>
+      useScrollIntoViewOnFocus<HTMLDivElement>({ delay: 100 }),
+    );
+
+    const div = document.createElement('div');
+    const input = document.createElement('input');
+    div.appendChild(input);
+    document.body.appendChild(div);
+    result.current.current = div;
+    rerender();
+
+    const evt = new Event('focusin', { bubbles: true });
+    Object.defineProperty(evt, 'target', { value: input });
+    div.dispatchEvent(evt);
+
+    // Unmount the consumer BEFORE the 100 ms timer fires.
+    unmount();
+    vi.advanceTimersByTime(500);
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+
+    document.body.removeChild(div);
+  });
 });
