@@ -59,7 +59,7 @@ export function MobileFilterSheet({
         role="dialog"
         aria-modal="true"
         aria-label={t('discovery.filters.title', 'Filters')}
-        className="relative w-full max-w-lg max-h-[80vh] bg-[#1A251D] border-t border-[#28382D] rounded-t-2xl overflow-y-auto px-6 pt-6 pb-safe animate-slide-up"
+        className="relative w-full max-w-none sm:max-w-lg max-h-[85dvh] bg-[#1A251D] border-t border-[#28382D] rounded-t-2xl overflow-y-auto px-6 pt-6 pb-safe animate-slide-up"
         style={{
           // Adds the iOS home-indicator inset to the existing 1.5rem
           // bottom padding (RESP-006). See tailwind.css `*-safe` utilities.

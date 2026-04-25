@@ -196,7 +196,7 @@ export function ChatPanel({
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="bg-[#1A251D] rounded-xl border border-[#28382D] overflow-hidden flex flex-col max-h-[600px]">
+    <div className="bg-[#1A251D] sm:rounded-xl sm:border sm:border-[#28382D] overflow-hidden flex flex-col min-h-[400px] max-h-[70dvh] sm:max-h-[600px]">
       {/* Header */}
       <ChatHeader
         partnerName={partnerName}
