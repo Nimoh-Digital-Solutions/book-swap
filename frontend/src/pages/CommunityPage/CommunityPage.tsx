@@ -28,7 +28,7 @@ export default function CommunityPage(): ReactElement {
   const { data: communityData } = useCommunityStats(lat, lng, DEFAULT_RADIUS);
 
   return (
-    <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+    <div className="min-h-[100dvh] bg-[#152018] text-[#8C9C92]">
       <SEOHead
         title={routeMetadata[PATHS.COMMUNITY].title}
         description={routeMetadata[PATHS.COMMUNITY].description}

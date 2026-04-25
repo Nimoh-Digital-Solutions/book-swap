@@ -157,7 +157,7 @@ export default function HowItWorksPage(): ReactElement {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+    <div className="min-h-[100dvh] bg-[#152018] text-[#8C9C92]">
       <SEOHead
         title={routeMetadata[PATHS.HOW_IT_WORKS].title}
         description={routeMetadata[PATHS.HOW_IT_WORKS].description}

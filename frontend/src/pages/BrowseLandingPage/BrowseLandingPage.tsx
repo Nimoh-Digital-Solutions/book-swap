@@ -78,7 +78,7 @@ export default function BrowseLandingPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-[#152018] text-[#8C9C92]">
+    <div className="min-h-[100dvh] bg-[#152018] text-[#8C9C92]">
       <SEOHead
         title={routeMetadata[PATHS.BROWSE].title}
         description={routeMetadata[PATHS.BROWSE].description}

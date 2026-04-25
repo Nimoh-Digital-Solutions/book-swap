@@ -35,7 +35,7 @@ export function SocialAuthErrorPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4">
       <SEOHead
         title={routeMetadata[PATHS.SOCIAL_AUTH_ERROR].title}
         description={routeMetadata[PATHS.SOCIAL_AUTH_ERROR].description}

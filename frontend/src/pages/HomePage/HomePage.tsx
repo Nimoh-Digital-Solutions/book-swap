@@ -71,7 +71,7 @@ const HomePage = (): ReactElement => {
   };
 
   return (
-    <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
+    <div className="min-h-[100dvh] bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
       <SEOHead
         title={routeMetadata[PATHS.HOME].title}
         description={routeMetadata[PATHS.HOME].description}

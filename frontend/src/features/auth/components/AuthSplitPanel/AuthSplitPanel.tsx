@@ -43,7 +43,7 @@ export function AuthSplitPanel({
   progress = 100,
 }: AuthSplitPanelProps) {
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4 font-sans">
       <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
         {/* ── Branding panel (left) ────────────────────────────── */}
         <div className="md:w-6/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">

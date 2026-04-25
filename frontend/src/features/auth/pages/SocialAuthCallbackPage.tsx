@@ -57,7 +57,7 @@ export function SocialAuthCallbackPage() {
 
   return (
     <main
-      className="min-h-screen bg-background-dark flex items-center justify-center"
+      className="min-h-[100dvh] bg-background-dark flex items-center justify-center"
       aria-live="polite"
       aria-label="Completing sign-in"
     >

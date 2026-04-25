@@ -90,7 +90,7 @@ export function PasswordResetConfirmPage(): ReactElement {
   const missingParams = !uid || !token;
 
   return (
-    <main className="min-h-screen bg-[#152018] flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-[#152018] flex items-center justify-center p-4">
       <SEOHead
         title={routeMetadata[PATHS.PASSWORD_RESET_CONFIRM].title}
         description={routeMetadata[PATHS.PASSWORD_RESET_CONFIRM].description}

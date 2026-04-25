@@ -40,7 +40,7 @@ export function OnboardingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4 font-sans">
       <SEOHead
         title={routeMetadata[PATHS.ONBOARDING].title}
         description={routeMetadata[PATHS.ONBOARDING].description}

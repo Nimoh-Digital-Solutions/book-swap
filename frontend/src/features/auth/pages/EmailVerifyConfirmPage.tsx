@@ -46,7 +46,7 @@ export function EmailVerifyConfirmPage(): ReactElement {
   }, [searchParams]);
 
   return (
-    <main className="min-h-screen bg-[#152018] flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-[#152018] flex items-center justify-center p-4">
       <SEOHead
         title={routeMetadata[PATHS.EMAIL_VERIFY_CONFIRM].title}
         description={routeMetadata[PATHS.EMAIL_VERIFY_CONFIRM].description}
