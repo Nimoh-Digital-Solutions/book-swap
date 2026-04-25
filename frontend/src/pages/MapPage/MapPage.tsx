@@ -186,26 +186,48 @@ export default function MapPage(): ReactElement {
       />
       <h1 className="sr-only">{t('map.pageTitle', 'Book Map')}</h1>
       <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-        {/* Top bar */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+        {/*
+         * Top bar.
+         *
+         * Position is panel-aware so the centered pills don't crash into the
+         * SidePanel header on narrow widths (RESP-036, Sprint C polish):
+         *   - panel closed (any width): center over the whole `<main>`.
+         *   - panel open + `<sm`:       full-screen panel covers the map, so
+         *                               hide the bar entirely (the panel has
+         *                               its own close affordance + search).
+         *   - panel open + `sm:`/`md:`+: shift the centering anchor right by
+         *                               half the panel width so the pills
+         *                               center over the visible map area
+         *                               instead of straddling the panel.
+         *
+         * `transition-[left]` keeps the slide visually smooth when the panel
+         * opens / closes.
+         */}
+        <div
+          className={`absolute top-4 z-20 -translate-x-1/2 transition-[left] duration-300 ease-in-out flex items-center gap-2 sm:gap-3 ${
+            panelOpen
+              ? 'hidden sm:flex sm:left-[calc(50%+180px)] md:left-[calc(50%+210px)]'
+              : 'flex left-1/2'
+          }`}
+        >
           <LocaleLink
             to={PATHS.BROWSE}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#152018]/90 backdrop-blur-xl border border-[#28382D] rounded-full text-white text-sm font-medium hover:bg-[#1A251D] transition-colors no-underline shadow-lg"
+            aria-label={t('map.topBar.back', 'Browse')}
+            className="inline-flex items-center justify-center min-h-[44px] gap-2 px-4 py-2.5 bg-[#152018]/90 backdrop-blur-xl border border-[#28382D] rounded-full text-white text-sm font-medium hover:bg-[#1A251D] transition-colors no-underline shadow-lg"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             {t('map.topBar.back', 'Browse')}
           </LocaleLink>
 
-          <div className="flex items-center gap-2 px-5 py-2.5 bg-[#152018]/90 backdrop-blur-xl border border-[#28382D] rounded-full shadow-lg">
-            <MapPin className="w-4 h-4 text-[#E4B643]" />
-            <span className="text-white text-sm font-medium">
+          <div className="inline-flex items-center min-h-[44px] gap-2 px-4 sm:px-5 py-2.5 bg-[#152018]/90 backdrop-blur-xl border border-[#28382D] rounded-full shadow-lg max-w-[60vw]">
+            <MapPin className="w-4 h-4 text-[#E4B643] shrink-0" aria-hidden="true" />
+            <span className="text-white text-sm font-medium truncate">
               {city ?? t('map.topBar.unknownCity', 'Your area')}
             </span>
-            <span className="text-[#5A6A60] text-xs">
+            <span className="text-[#5A6A60] text-xs whitespace-nowrap">
               &middot; {books.length} {t('map.topBar.books', 'books')}
             </span>
           </div>
-
         </div>
 
         {/* Side panel */}
