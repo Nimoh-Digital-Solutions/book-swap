@@ -67,10 +67,11 @@ RUN apk upgrade --no-cache
 USER nginx
 
 # Copy custom nginx configuration (as a template — envsubst replaces ${CSP_CONNECT_SRC})
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Paths are relative to the repo-root build context.
+COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 
 # Copy shared security headers include (as a template for CSP domain injection)
-COPY nginx/security_headers.conf /etc/nginx/templates/security_headers.conf.template
+COPY frontend/nginx/security_headers.conf /etc/nginx/templates/security_headers.conf.template
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
