@@ -15,8 +15,14 @@ interface UseUserLocationOptions {
   mapAvailable: boolean;
 }
 
+export interface UserCoords {
+  latitude: number;
+  longitude: number;
+}
+
 export function useUserLocation({ mapAvailable }: UseUserLocationOptions) {
   const [region, setRegion] = useState<MapRegion>(DEFAULT_REGION);
+  const [userCoords, setUserCoords] = useState<UserCoords | null>(null);
   const [locationReady, setLocationReady] = useState(false);
   const mapRef = useRef<MapAnimator | null>(null);
 
@@ -27,9 +33,13 @@ export function useUserLocation({ mapAvailable }: UseUserLocationOptions) {
       if (status === "granted") {
         const loc = await Location.getCurrentPositionAsync({});
         if (cancelled) return;
-        const userRegion: MapRegion = {
+        const coords: UserCoords = {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
+        };
+        setUserCoords(coords);
+        const userRegion: MapRegion = {
+          ...coords,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         };
@@ -49,9 +59,13 @@ export function useUserLocation({ mapAvailable }: UseUserLocationOptions) {
     const { status } = await Location.getForegroundPermissionsAsync();
     if (status !== "granted") return;
     const loc = await Location.getCurrentPositionAsync({});
-    const newRegion: MapRegion = {
+    const coords: UserCoords = {
       latitude: loc.coords.latitude,
       longitude: loc.coords.longitude,
+    };
+    setUserCoords(coords);
+    const newRegion: MapRegion = {
+      ...coords,
       latitudeDelta: 0.05,
       longitudeDelta: 0.05,
     };
@@ -62,6 +76,7 @@ export function useUserLocation({ mapAvailable }: UseUserLocationOptions) {
   return {
     region,
     setRegion,
+    userCoords,
     locationReady,
     mapRef,
     recenterMap,

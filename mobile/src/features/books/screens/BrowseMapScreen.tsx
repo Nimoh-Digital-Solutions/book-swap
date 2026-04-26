@@ -51,7 +51,7 @@ export function BrowseMapScreen() {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const { region, setRegion, mapRef, recenterMap } = useUserLocation({
+  const { region, setRegion, userCoords, mapRef, recenterMap } = useUserLocation({
     mapAvailable: nativeMaps.available,
   });
 
@@ -316,10 +316,12 @@ export function BrowseMapScreen() {
       >
         {MapCircle && (
           <MapCircle
-            center={{
-              latitude: region.latitude,
-              longitude: region.longitude,
-            }}
+            center={
+              userCoords ?? {
+                latitude: region.latitude,
+                longitude: region.longitude,
+              }
+            }
             radius={selectedRadius}
             strokeColor={accent + "80"}
             fillColor={accent + "12"}

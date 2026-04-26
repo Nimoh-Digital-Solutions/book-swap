@@ -52,8 +52,8 @@ export const MessageBubble = React.memo(function MessageBubble({ message, isOwn 
   const hasText = !!message.content && !meetup;
 
   const entering = isOwn
-    ? SlideInRight.duration(200).springify().damping(18)
-    : SlideInLeft.duration(200).springify().damping(18);
+    ? SlideInRight.duration(160)
+    : SlideInLeft.duration(160);
 
   return (
     <Animated.View

@@ -11,23 +11,31 @@ import Animated, { FadeOut, Layout } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { AlertTriangle, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { EmptyState } from '@/components/EmptyState';
 import { BrandedLoader } from '@/components/BrandedLoader';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius, shadows } from '@/constants/theme';
+import { hapticImpact } from '@/lib/haptics';
 import { useWishlist, useRemoveWishlistItem } from '@/features/books/hooks/useWishlist';
 import { AddWishlistSheet } from '@/features/books/components/AddWishlistSheet';
 import type { WishlistItem } from '@/types';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type Nav = NativeStackNavigationProp<ProfileStackParamList, 'Wishlist'>;
 
 const COVER_COLORS = ['#2D5F3F', '#3B4F7A', '#6B3A5E', '#7A5C2E', '#2B4E5F'];
 
 function WishlistCard({
   item,
   onRemove,
+  onOpen,
 }: {
   item: WishlistItem;
   onRemove: (id: string) => void;
+  onOpen: (bookId: string) => void;
 }) {
   const { t } = useTranslation();
   const c = useColors();
@@ -38,55 +46,78 @@ function WishlistCard({
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
   const coverBg = COVER_COLORS[item.id.charCodeAt(0) % COVER_COLORS.length];
 
+  const canOpen = !!item.book_id;
+  const a11yLabel = `${item.title || t('books.untitled', 'Untitled')}${item.author ? `, ${item.author}` : ''}`;
+
   return (
     <Animated.View
       exiting={FadeOut.duration(200)}
       layout={Layout.springify().damping(18).stiffness(180)}
-      accessibilityRole="button"
-      accessibilityLabel={`${item.title || t('books.untitled', 'Untitled')}${item.author ? `, ${item.author}` : ''}`}
       style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
     >
-      <View style={[s.coverWrap, { backgroundColor: coverBg }]}>
-        {item.cover_url ? (
-          <Image
-            source={{ uri: item.cover_url }}
-            style={s.coverImg}
-            contentFit="cover"
-            transition={200}
-          />
-        ) : (
-          <Text style={s.coverInitial} numberOfLines={2}>
-            {item.title?.slice(0, 2).toUpperCase() || '?'}
-          </Text>
-        )}
-      </View>
-
-      <View style={s.cardBody}>
-        <Text style={[s.cardTitle, { color: c.text.primary }]} numberOfLines={2}>
-          {item.title || t('books.untitled', 'Untitled')}
-        </Text>
-        {!!item.author && (
-          <Text style={[s.cardAuthor, { color: c.text.secondary }]} numberOfLines={1}>
-            {item.author}
-          </Text>
-        )}
-        <View style={s.cardMeta}>
-          {!!item.genre && (
-            <View style={[s.pillSmall, { backgroundColor: accent + '18' }]}>
-              <Text style={[s.pillSmallText, { color: accent }]}>{item.genre}</Text>
-            </View>
-          )}
-          {!!item.isbn && (
-            <Text style={[s.cardIsbn, { color: c.text.placeholder }]}>
-              ISBN {item.isbn}
+      <Pressable
+        onPress={() => {
+          if (!canOpen || !item.book_id) return;
+          void hapticImpact('light');
+          onOpen(item.book_id);
+        }}
+        disabled={!canOpen}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel}
+        accessibilityHint={
+          canOpen
+            ? t('books.wishlist.openHint', 'Opens book details')
+            : t('books.wishlist.unlinkedHint', 'No linked book available')
+        }
+        style={({ pressed }) => [
+          s.cardTappable,
+          pressed && canOpen && { opacity: 0.7 },
+        ]}
+      >
+        <View style={[s.coverWrap, { backgroundColor: coverBg }]}>
+          {item.cover_url ? (
+            <Image
+              source={{ uri: item.cover_url }}
+              style={s.coverImg}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <Text style={s.coverInitial} numberOfLines={2}>
+              {item.title?.slice(0, 2).toUpperCase() || '?'}
             </Text>
           )}
         </View>
-      </View>
+
+        <View style={s.cardBody}>
+          <Text style={[s.cardTitle, { color: c.text.primary }]} numberOfLines={2}>
+            {item.title || t('books.untitled', 'Untitled')}
+          </Text>
+          {!!item.author && (
+            <Text style={[s.cardAuthor, { color: c.text.secondary }]} numberOfLines={1}>
+              {item.author}
+            </Text>
+          )}
+          <View style={s.cardMeta}>
+            {!!item.genre && (
+              <View style={[s.pillSmall, { backgroundColor: accent + '18' }]}>
+                <Text style={[s.pillSmallText, { color: accent }]}>{item.genre}</Text>
+              </View>
+            )}
+            {!!item.isbn && (
+              <Text style={[s.cardIsbn, { color: c.text.placeholder }]}>
+                ISBN {item.isbn}
+              </Text>
+            )}
+          </View>
+        </View>
+      </Pressable>
 
       <Pressable
         onPress={() => onRemove(item.id)}
         hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel={t('books.wishlist.removeA11y', 'Remove from wishlist')}
         style={({ pressed }) => [s.removeBtn, pressed && { opacity: 0.6 }]}
       >
         <Trash2 size={18} color={c.status.error} />
@@ -99,6 +130,7 @@ export function WishlistScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const isDark = useIsDark();
+  const navigation = useNavigation<Nav>();
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const accent = c.auth.golden;
@@ -127,11 +159,16 @@ export function WishlistScreen() {
     [removeItem, t],
   );
 
+  const handleOpen = useCallback(
+    (bookId: string) => navigation.navigate('BookDetail', { bookId }),
+    [navigation],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: WishlistItem }) => (
-      <WishlistCard item={item} onRemove={handleRemove} />
+      <WishlistCard item={item} onRemove={handleRemove} onOpen={handleOpen} />
     ),
-    [handleRemove],
+    [handleRemove, handleOpen],
   );
 
   const keyExtractor = useCallback((item: WishlistItem) => item.id, []);
@@ -217,6 +254,12 @@ const s = StyleSheet.create({
     padding: spacing.sm + 2,
     gap: spacing.sm,
     ...shadows.card,
+  },
+  cardTappable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   coverWrap: {
     width: 56,
