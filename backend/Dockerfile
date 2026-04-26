@@ -50,6 +50,8 @@ RUN chmod +x scripts/entrypoint.sh scripts/check-env.sh start.sh
 RUN SECRET_KEY="build-time-dummy-not-used-at-runtime" \
     DATABASE_URL="postgres://build:build@build/build" \
     ALLOWED_HOSTS="localhost" \
+    GDAL_LIBRARY_PATH="" \
+    GEOS_LIBRARY_PATH="" \
     python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Run as a non-root user for security (GAP-I-003)
