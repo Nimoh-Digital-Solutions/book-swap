@@ -5,7 +5,12 @@ from rest_framework import serializers
 
 from apps.books.models import Book, BookStatus, SwapType
 
-from .models import ConditionsAcceptance, DeclineReason, ExchangeRequest
+from .models import (
+    MAX_COUNTER_OFFERS_PER_PARTICIPANT,
+    ConditionsAcceptance,
+    DeclineReason,
+    ExchangeRequest,
+)
 
 User = get_user_model()
 
@@ -96,6 +101,8 @@ class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
 
     original_offered_book = ExchangeBookSerializer(read_only=True)
     last_counter_by = serializers.PrimaryKeyRelatedField(read_only=True)
+    max_counter_offers = serializers.SerializerMethodField()
+    counter_offers_remaining_by_me = serializers.SerializerMethodField()
     conditions_accepted_by_me = serializers.SerializerMethodField()
     conditions_accepted_count = serializers.SerializerMethodField()
     conditions_version = serializers.SerializerMethodField()
@@ -108,6 +115,10 @@ class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
             "original_offered_book",
             "last_counter_by",
             "counter_approved_at",
+            "requester_counter_count",
+            "owner_counter_count",
+            "max_counter_offers",
+            "counter_offers_remaining_by_me",
             "requester_confirmed_at",
             "owner_confirmed_at",
             "return_requested_at",
@@ -119,6 +130,15 @@ class ExchangeRequestDetailSerializer(ExchangeRequestListSerializer):
             "conditions_version",
         )
         read_only_fields = fields
+
+    def get_max_counter_offers(self, obj) -> int:
+        return MAX_COUNTER_OFFERS_PER_PARTICIPANT
+
+    def get_counter_offers_remaining_by_me(self, obj) -> int:
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return 0
+        return obj.remaining_counters_for(request.user)
 
     def get_conditions_accepted_by_me(self, obj) -> bool:
         request = self.context.get("request")

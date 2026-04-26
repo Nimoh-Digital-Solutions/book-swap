@@ -92,9 +92,13 @@ export function DetailActions({ exchange }: Props) {
     const counterApproved = !!exchange.counter_approved_at;
     const iMadeLastCounter = exchange.last_counter_by === currentUserId;
     const pendingApproval = hasBeenCountered && !counterApproved;
+    const maxCounterOffers = exchange.max_counter_offers;
+    const myCounterCount = isRequester ? exchange.requester_counter_count : exchange.owner_counter_count;
+    const countersRemaining = exchange.counter_offers_remaining_by_me;
+    const counterLimitReached = countersRemaining <= 0;
 
-    const canOwnerCounter = !hasBeenCountered || (!iMadeLastCounter);
-    const canRequesterCounter = hasBeenCountered && !iMadeLastCounter;
+    const canOwnerCounter = (!hasBeenCountered || !iMadeLastCounter) && !counterLimitReached;
+    const canRequesterCounter = hasBeenCountered && !iMadeLastCounter && !counterLimitReached;
     const canAccept = !pendingApproval;
 
     const otherUser = isOwner ? exchange.requester : exchange.owner;
@@ -193,6 +197,18 @@ export function DetailActions({ exchange }: Props) {
             </Pressable>
           )}
 
+          {counterLimitReached && !pendingApproval && (
+            <InfoRow
+              icon={AlertCircle}
+              text={t('exchanges.counterLimitReached', {
+                defaultValue: 'Counter offer limit reached ({{count}}/{{max}}).',
+                count: myCounterCount,
+                max: maxCounterOffers,
+              })}
+              color={c.text.secondary}
+            />
+          )}
+
           <DeclineReasonSheet
             visible={declineSheetVisible}
             loading={declineMutation.isPending}
@@ -252,6 +268,17 @@ export function DetailActions({ exchange }: Props) {
                 {t('exchanges.counterOffer', 'Counter Offer')}
               </Text>
             </Pressable>
+          )}
+          {counterLimitReached && !pendingApproval && (
+            <InfoRow
+              icon={AlertCircle}
+              text={t('exchanges.counterLimitReached', {
+                defaultValue: 'Counter offer limit reached ({{count}}/{{max}}).',
+                count: myCounterCount,
+                max: maxCounterOffers,
+              })}
+              color={c.text.secondary}
+            />
           )}
           <Pressable
             accessibilityRole="button"

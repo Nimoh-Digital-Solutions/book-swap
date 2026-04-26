@@ -14,6 +14,7 @@ import {
 } from '@test/mocks/handlers';
 import { renderWithProviders } from '@test/renderWithProviders';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ExchangeDetail } from '../../types/exchange.types';
@@ -24,8 +25,13 @@ import type { ExchangeDetail } from '../../types/exchange.types';
 // ---------------------------------------------------------------------------
 
 const mockUseExchange = vi.fn();
+const mockUseBooks = vi.fn();
 vi.mock('../../hooks/useExchange', () => ({
   useExchange: () => mockUseExchange(),
+}));
+
+vi.mock('@features/books', () => ({
+  useBooks: () => mockUseBooks(),
 }));
 
 vi.mock('@features/auth/stores/authStore', () => ({
@@ -96,6 +102,10 @@ function renderPage() {
 
 beforeEach(() => {
   mockUseExchange.mockReset();
+  mockUseBooks.mockReturnValue({
+    data: { count: 0, next: null, previous: null, results: [] },
+    isLoading: false,
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -103,29 +113,85 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('ExchangeDetailPage — counter-offer flow', () => {
-  it('shows the requester accept/decline counter buttons', () => {
+  it('shows the requester approve button for a pending owner counter', () => {
     mockUseExchange.mockReturnValue({
-      data: asRequester({ status: 'counter_proposed' }),
+      data: asRequester({
+        status: 'pending',
+        last_counter_by: 'usr_other',
+        counter_approved_at: null,
+      }),
       isLoading: false,
       isError: false,
     });
     renderPage();
 
     expect(screen.getByText(/accept counter/i)).toBeInTheDocument();
-    expect(screen.getByText(/decline/i)).toBeInTheDocument();
+    expect(screen.getByText(/cancel request/i)).toBeInTheDocument();
   });
 
-  it('shows the owner waiting message while the counter is pending', () => {
+  it('shows the owner waiting message after they send a counter', () => {
     mockUseExchange.mockReturnValue({
-      data: asOwner({ status: 'counter_proposed' }),
+      data: asOwner({
+        status: 'pending',
+        last_counter_by: CURRENT_USER_ID,
+        counter_approved_at: null,
+      }),
       isLoading: false,
       isError: false,
     });
     renderPage();
 
     expect(
-      screen.getByText(/waiting for the requester/i),
+      screen.getByText(/waiting for testuser/i),
     ).toBeInTheDocument();
+  });
+
+  it('shows a counter picker from the other participant shelf', async () => {
+    const user = userEvent.setup();
+    mockUseBooks.mockReturnValue({
+      data: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 'book_alt_001',
+            title: 'Kindred',
+            author: 'Octavia Butler',
+            status: 'available',
+          },
+        ],
+      },
+      isLoading: false,
+    });
+    mockUseExchange.mockReturnValue({
+      data: asOwner({ status: 'pending' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: /counter offer/i }));
+
+    expect(screen.getByText(/choose a book from testuser/i)).toBeInTheDocument();
+    expect(screen.getByText('Kindred')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send counter offer/i })).toBeDisabled();
+  });
+
+  it('shows the counter cap message instead of the counter button', () => {
+    mockUseExchange.mockReturnValue({
+      data: asOwner({
+        status: 'pending',
+        owner_counter_count: 2,
+        counter_offers_remaining_by_me: 0,
+      }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+
+    expect(screen.getByText(/counter offer limit reached \(2\/2\)/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /counter offer/i })).not.toBeInTheDocument();
   });
 });
 

@@ -65,6 +65,10 @@ export interface ExchangeDetail extends ExchangeListItem {
   original_offered_book: ExchangeBook | null;
   last_counter_by: string | null;
   counter_approved_at: string | null;
+  requester_counter_count: number;
+  owner_counter_count: number;
+  max_counter_offers: number;
+  counter_offers_remaining_by_me: number;
   requester_confirmed_at: string | null;
   owner_confirmed_at: string | null;
   return_requested_at: string | null;

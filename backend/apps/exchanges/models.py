@@ -35,6 +35,9 @@ class DeclineReason(models.TextChoices):
     OTHER = "other", "Other"
 
 
+MAX_COUNTER_OFFERS_PER_PARTICIPANT = 2
+
+
 # Valid state transitions — used by the API to guard status changes.
 VALID_TRANSITIONS: dict[str, list[str]] = {
     ExchangeStatus.PENDING: [
@@ -119,6 +122,14 @@ class ExchangeRequest(TimeStampedModel):
         null=True,
         blank=True,
         help_text="When the other party approved the latest counter-proposal.",
+    )
+    requester_counter_count = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Number of counter-offers made by the requester.",
+    )
+    owner_counter_count = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Number of counter-offers made by the owner.",
     )
 
     status = models.CharField(
@@ -211,6 +222,30 @@ class ExchangeRequest(TimeStampedModel):
 
     def both_conditions_accepted(self) -> bool:
         return self.conditions_acceptances.count() == 2
+
+    def counter_count_for(self, user) -> int:
+        user_id = getattr(user, "pk", user)
+        if user_id == self.requester_id:
+            return self.requester_counter_count
+        if user_id == self.owner_id:
+            return self.owner_counter_count
+        raise ValueError("User is not a participant of this exchange.")
+
+    def remaining_counters_for(self, user) -> int:
+        return max(MAX_COUNTER_OFFERS_PER_PARTICIPANT - self.counter_count_for(user), 0)
+
+    def can_counter(self, user) -> bool:
+        return self.remaining_counters_for(user) > 0
+
+    def increment_counter_for(self, user) -> None:
+        user_id = getattr(user, "pk", user)
+        if user_id == self.requester_id:
+            self.requester_counter_count += 1
+            return
+        if user_id == self.owner_id:
+            self.owner_counter_count += 1
+            return
+        raise ValueError("User is not a participant of this exchange.")
 
     def can_transition_to(self, new_status: str) -> bool:
         return new_status in VALID_TRANSITIONS.get(self.status, [])

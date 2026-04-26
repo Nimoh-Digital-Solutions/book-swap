@@ -319,16 +319,18 @@ class TestDeclineExchange:
 
 
 class TestCounterPropose:
+    def counter_with(self, exchange, user, book):
+        return api_client(user).post(
+            exchange_url(pk=exchange.pk, action="counter"),
+            {"offered_book_id": str(book.pk)},
+        )
+
     def test_counter_updates_in_place(self):
         exchange = ExchangeRequestFactory()
         original_offered = exchange.offered_book
         alt_book = BookFactory(owner=exchange.requester)
 
-        client = api_client(exchange.owner)
-        response = client.post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
-        )
+        response = self.counter_with(exchange, exchange.owner, alt_book)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -336,11 +338,17 @@ class TestCounterPropose:
         assert data["offered_book"]["id"] == str(alt_book.pk)
         assert data["original_offered_book"]["id"] == str(original_offered.pk)
         assert data["last_counter_by"] == str(exchange.owner.pk)
+        assert data["owner_counter_count"] == 1
+        assert data["requester_counter_count"] == 0
+        assert data["max_counter_offers"] == 2
+        assert data["counter_offers_remaining_by_me"] == 1
 
         exchange.refresh_from_db()
         assert exchange.status == ExchangeStatus.PENDING
         assert exchange.offered_book_id == alt_book.pk
         assert exchange.original_offered_book_id == original_offered.pk
+        assert exchange.owner_counter_count == 1
+        assert exchange.requester_counter_count == 0
 
     def test_counter_preserves_original_on_second_counter(self):
         """Second counter keeps the very first original_offered_book."""
@@ -349,38 +357,25 @@ class TestCounterPropose:
         alt_book_1 = BookFactory(owner=exchange.requester)
         alt_book_2 = BookFactory(owner=exchange.owner)
 
-        owner_client = api_client(exchange.owner)
-        owner_client.post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book_1.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book_1)
 
-        requester_client = api_client(exchange.requester)
-        response = requester_client.post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book_2.pk)},
-        )
+        response = self.counter_with(exchange, exchange.requester, alt_book_2)
 
         assert response.status_code == status.HTTP_200_OK
         exchange.refresh_from_db()
         assert exchange.offered_book_id == alt_book_2.pk
         assert exchange.original_offered_book_id == original_offered.pk
         assert exchange.last_counter_by_id == exchange.requester_id
+        assert exchange.owner_counter_count == 1
+        assert exchange.requester_counter_count == 1
 
     def test_cannot_counter_twice_in_a_row(self):
         exchange = ExchangeRequestFactory()
         alt_book_1 = BookFactory(owner=exchange.requester)
         alt_book_2 = BookFactory(owner=exchange.requester)
 
-        client = api_client(exchange.owner)
-        client.post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book_1.pk)},
-        )
-        response = client.post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book_2.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book_1)
+        response = self.counter_with(exchange, exchange.owner, alt_book_2)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_counter_must_pick_different_book(self):
@@ -396,10 +391,7 @@ class TestCounterPropose:
         exchange = ExchangeRequestFactory()
         alt_book = BookFactory(owner=exchange.requester)
 
-        api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book)
         exchange.refresh_from_db()
         assert exchange.counter_approved_at is None
 
@@ -407,10 +399,7 @@ class TestCounterPropose:
         exchange = ExchangeRequestFactory()
         alt_book = BookFactory(owner=exchange.requester)
 
-        api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book)
         response = api_client(exchange.owner).post(
             exchange_url(pk=exchange.pk, action="accept"),
         )
@@ -420,10 +409,7 @@ class TestCounterPropose:
         exchange = ExchangeRequestFactory()
         alt_book = BookFactory(owner=exchange.requester)
 
-        api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book)
 
         response = api_client(exchange.requester).post(
             exchange_url(pk=exchange.pk, action="approve-counter"),
@@ -442,14 +428,77 @@ class TestCounterPropose:
         exchange = ExchangeRequestFactory()
         alt_book = BookFactory(owner=exchange.requester)
 
-        api_client(exchange.owner).post(
-            exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
-        )
+        self.counter_with(exchange, exchange.owner, alt_book)
         response = api_client(exchange.owner).post(
             exchange_url(pk=exchange.pk, action="approve-counter"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_owner_cannot_make_more_than_two_counter_offers(self):
+        exchange = ExchangeRequestFactory()
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+        owner_third = BookFactory(owner=exchange.requester)
+
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+
+        response = self.counter_with(exchange, exchange.owner, owner_third)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "maximum of 2 counter offers" in response.json()["detail"]
+        exchange.refresh_from_db()
+        assert exchange.owner_counter_count == 2
+        assert exchange.offered_book_id == requester_second.pk
+        assert exchange.status == ExchangeStatus.PENDING
+
+    def test_requester_cannot_make_more_than_two_counter_offers(self):
+        exchange = ExchangeRequestFactory()
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_third = BookFactory(owner=exchange.owner)
+
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+
+        response = self.counter_with(exchange, exchange.requester, requester_third)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "maximum of 2 counter offers" in response.json()["detail"]
+        exchange.refresh_from_db()
+        assert exchange.requester_counter_count == 2
+        assert exchange.offered_book_id == owner_second.pk
+
+    def test_latest_offer_remains_approvable_after_both_sides_hit_counter_cap(self):
+        exchange = ExchangeRequestFactory()
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+
+        response = api_client(exchange.owner).post(
+            exchange_url(pk=exchange.pk, action="approve-counter"),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "pending"
+        assert data["counter_approved_at"] is not None
+        assert data["owner_counter_count"] == 2
+        assert data["requester_counter_count"] == 2
 
 
 # ══════════════════════════════════════════════════════════════════════════════

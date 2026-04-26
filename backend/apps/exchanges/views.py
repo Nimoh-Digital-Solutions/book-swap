@@ -16,6 +16,7 @@ from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import (
+    MAX_COUNTER_OFFERS_PER_PARTICIPANT,
     ConditionsAcceptance,
     DeclineReason,
     ExchangeRequest,
@@ -239,42 +240,67 @@ class ExchangeRequestViewSet(
     @action(detail=True, methods=["post"])
     def counter(self, request, pk=None):
         """Either party counter-proposes a different book — updates in place."""
-        exchange = self.get_object()
-        if exchange.status != ExchangeStatus.PENDING:
-            return Response(
-                {"detail": "Only pending requests can be countered."},
-                status=status.HTTP_400_BAD_REQUEST,
+        exchange_pk = self.get_object().pk
+        with transaction.atomic():
+            exchange = (
+                ExchangeRequest.objects.select_for_update()
+                .select_related("requester", "owner", "requested_book", "offered_book")
+                .get(pk=exchange_pk)
             )
-        if exchange.last_counter_by_id == request.user.pk:
-            return Response(
-                {"detail": "Wait for the other party to respond before countering again."},
-                status=status.HTTP_400_BAD_REQUEST,
+            if exchange.status != ExchangeStatus.PENDING:
+                return Response(
+                    {"detail": "Only pending requests can be countered."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if exchange.last_counter_by_id == request.user.pk:
+                return Response(
+                    {"detail": "Wait for the other party to respond before countering again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not exchange.can_counter(request.user):
+                return Response(
+                    {
+                        "detail": (
+                            "You have reached the maximum of "
+                            f"{MAX_COUNTER_OFFERS_PER_PARTICIPANT} counter offers for this exchange."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            ser = CounterProposeSerializer(
+                data=request.data,
+                context={"exchange": exchange, "request": request},
             )
-        ser = CounterProposeSerializer(
-            data=request.data,
-            context={"exchange": exchange, "request": request},
-        )
-        ser.is_valid(raise_exception=True)
+            ser.is_valid(raise_exception=True)
 
-        if not exchange.original_offered_book_id:
-            exchange.original_offered_book = exchange.offered_book
+            if not exchange.original_offered_book_id:
+                exchange.original_offered_book = exchange.offered_book
 
-        exchange.offered_book = ser._offered_book
-        exchange.last_counter_by = request.user
-        exchange.counter_approved_at = None
-        exchange.save(
-            update_fields=[
-                "offered_book",
-                "original_offered_book",
-                "last_counter_by",
-                "counter_approved_at",
-                "updated_at",
-            ]
-        )
+            exchange.offered_book = ser._offered_book
+            exchange.last_counter_by = request.user
+            exchange.counter_approved_at = None
+            exchange.increment_counter_for(request.user)
+            count_field = (
+                "requester_counter_count"
+                if request.user.pk == exchange.requester_id
+                else "owner_counter_count"
+            )
+            exchange.save(
+                update_fields=[
+                    "offered_book",
+                    "original_offered_book",
+                    "last_counter_by",
+                    "counter_approved_at",
+                    count_field,
+                    "updated_at",
+                ]
+            )
 
-        from apps.notifications.tasks import send_counter_proposed_notification
+            from apps.notifications.tasks import send_counter_proposed_notification
 
-        send_counter_proposed_notification.delay(str(exchange.pk), str(request.user.pk))
+            transaction.on_commit(
+                lambda: send_counter_proposed_notification.delay(str(exchange.pk), str(request.user.pk))
+            )
 
         detail = ExchangeRequestDetailSerializer(
             exchange,

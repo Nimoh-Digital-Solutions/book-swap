@@ -185,8 +185,13 @@ describe('ExchangesPage', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const mockUseExchange = vi.fn();
+const mockUseBooks = vi.fn();
 vi.mock('../hooks/useExchange', () => ({
   useExchange: () => mockUseExchange(),
+}));
+
+vi.mock('@features/books', () => ({
+  useBooks: () => mockUseBooks(),
 }));
 
 // Mock auth store to provide current user ID
@@ -240,6 +245,13 @@ vi.mock('../hooks/useExchangeMutations', () => ({
 const { default: ExchangeDetailPage } = await import('../pages/ExchangeDetailPage');
 
 describe('ExchangeDetailPage', () => {
+  beforeEach(() => {
+    mockUseBooks.mockReturnValue({
+      data: { count: 0, next: null, previous: null, results: [] },
+      isLoading: false,
+    });
+  });
+
   it('shows loading state', () => {
     mockUseExchange.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     renderWithProviders(

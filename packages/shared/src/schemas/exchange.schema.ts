@@ -27,6 +27,7 @@ const exchangeBookSchema = z.object({
   cover_url: z.string(),
   condition: z.string(),
   primary_photo: z.string().nullable(),
+  primary_thumbnail: z.string().nullable(),
 });
 
 export const exchangeListItemSchema = z.object({
@@ -45,6 +46,13 @@ export const exchangeListItemSchema = z.object({
 export const exchangeDetailSchema = exchangeListItemSchema.extend({
   decline_reason: declineReasonSchema.nullable(),
   counter_to: z.string().nullable(),
+  original_offered_book: exchangeBookSchema.nullable(),
+  last_counter_by: z.string().nullable(),
+  counter_approved_at: z.string().nullable(),
+  requester_counter_count: z.number(),
+  owner_counter_count: z.number(),
+  max_counter_offers: z.number(),
+  counter_offers_remaining_by_me: z.number(),
   requester_confirmed_at: z.string().nullable(),
   owner_confirmed_at: z.string().nullable(),
   return_requested_at: z.string().nullable(),
