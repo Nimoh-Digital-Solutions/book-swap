@@ -126,9 +126,11 @@ jobs:
           echo "No backend, frontend, or mobile files changed in this push — skipping deploy."
 
       # ── Backend ──────────────────────────────────────────────────────────────
-      - name: Copy backend env file
+      - name: Link backend env file
         if: steps.detect.outputs.backend == 'true'
-        run: cp ~/envs/bookswap.backend.prod.env ~/apps/bookswap/backend/.env.production
+        run: |
+          ln -sf ~/envs/bookswap.backend.prod.env \
+            /home/gnimoh001/apps/bookswap/backend/.env.production
 
       - name: Build backend image
         if: steps.detect.outputs.backend == 'true'
@@ -140,16 +142,14 @@ jobs:
       - name: Remove old backend containers
         if: steps.detect.outputs.backend == 'true'
         run: |
-          docker rm -f bookswap-be-web bookswap-be-celery bookswap-be-celery-email \
-            bookswap-be-celery-maintenance bookswap-be-celery-beat bookswap-be-redis \
-            2>/dev/null || true
+          docker rm -f bs_web_prod bs_celery_prod bs_beat_prod 2>/dev/null || true
 
       - name: Deploy backend
         if: steps.detect.outputs.backend == 'true'
         working-directory: /home/gnimoh001/apps/bookswap/backend
         run: |
           docker compose -p bs_prod -f docker-compose.prod.yml \
-            up -d --force-recreate web celery celery-email celery-maintenance celery-beat
+            up -d --force-recreate web celery_worker celery_beat
 
       # ── Frontend ─────────────────────────────────────────────────────────────
       - name: Build frontend image
@@ -158,11 +158,12 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker compose -p bs_frontend_prod \
             -f docker-compose.prod.yml build --no-cache \
-            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_PROD }}"
+            --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_PROD }}" \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY="${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}"
 
       - name: Remove old frontend container
         if: steps.detect.outputs.frontend == 'true'
-        run: docker rm -f bookswap-fe-prod 2>/dev/null || true
+        run: docker rm -f bs_frontend_prod 2>/dev/null || true
 
       - name: Deploy frontend
         if: steps.detect.outputs.frontend == 'true'
@@ -208,7 +209,7 @@ jobs:
       - name: Health check — backend
         if: steps.detect.outputs.backend == 'true'
         run: |
-          echo "Waiting for bookswap-be-web to become healthy..."
+          echo "Waiting for bs_web_prod to become healthy..."
           for i in $(seq 1 30); do
             if curl -sf http://localhost:8071/api/v1/health/ > /dev/null 2>&1; then
               echo "Backend healthy ✓"; break
@@ -251,7 +252,7 @@ jobs:
       # ── Summary ───────────────────────────────────────────────────────────────
       - name: Container status
         if: always()
-        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "bookswap-|NAMES" || true
+        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "bs_.*_prod|NAMES" || true
 
       - name: Deployment summary
         if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true' || steps.detect.outputs.mobile == 'true'
