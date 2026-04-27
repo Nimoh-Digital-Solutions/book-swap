@@ -34,12 +34,36 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SHA=$(git rev-parse HEAD)
-          STATUS=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '.state' 2>/dev/null || echo "unknown")
-          echo "CI status for $SHA: $STATUS"
-          if [ "$STATUS" != "success" ]; then
-            echo "::error::CI has not passed for this commit ($STATUS). Aborting production deploy."
+          # Use the check-runs API (modern GitHub Actions emit check-runs, not
+          # legacy statuses, so the combined-status endpoint always reports
+          # "pending" for our repo). Exclude the deploy job itself, which is
+          # in_progress while this step runs.
+          CONCLUSIONS=$(gh api \
+            "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" \
+            --jq '[.check_runs[] | select(.name | test("Pi 5 .*production"; "i") | not) | {name, status, conclusion}]' \
+            2>/dev/null || echo "[]")
+          echo "Check-runs for $SHA:"
+          echo "$CONCLUSIONS" | jq -r '.[] | "  - \(.name): \(.status)/\(.conclusion // "n/a")"'
+
+          TOTAL=$(echo "$CONCLUSIONS" | jq 'length')
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "::error::No check-runs found for $SHA. Aborting production deploy."
             exit 1
           fi
+
+          INCOMPLETE=$(echo "$CONCLUSIONS" | jq '[.[] | select(.status != "completed")] | length')
+          if [ "$INCOMPLETE" -gt 0 ]; then
+            echo "::error::$INCOMPLETE check-run(s) still in progress for $SHA. Aborting."
+            exit 1
+          fi
+
+          BAD=$(echo "$CONCLUSIONS" | jq '[.[] | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")] | length')
+          if [ "$BAD" -gt 0 ]; then
+            echo "::error::$BAD check-run(s) did not pass for $SHA. Aborting production deploy."
+            exit 1
+          fi
+
+          echo "All check-runs passed ✓"
 
       # ── Detect which layers changed ───────────────────────────────────────────
       - name: Detect changed layers
