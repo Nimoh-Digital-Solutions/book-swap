@@ -26,9 +26,12 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
       DJANGO_ENVIRONMENT: production
+      # redis_shared has the default 16 logical DBs (0-15). Staging owns
+      # 11/12/13. Prod uses 14/15 contiguously plus DB 4 for the result
+      # backend (DB 16 would overflow the default range).
       REDIS_URL: redis://redis_shared:6379/14
       CELERY_BROKER_URL: redis://redis_shared:6379/15
-      CELERY_RESULT_BACKEND: redis://redis_shared:6379/16
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: production
       PORT: "8071"
@@ -69,7 +72,7 @@ services:
       DJANGO_ENVIRONMENT: production
       REDIS_URL: redis://redis_shared:6379/14
       CELERY_BROKER_URL: redis://redis_shared:6379/15
-      CELERY_RESULT_BACKEND: redis://redis_shared:6379/16
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: production
     volumes:
@@ -107,7 +110,7 @@ services:
       DJANGO_ENVIRONMENT: production
       REDIS_URL: redis://redis_shared:6379/14
       CELERY_BROKER_URL: redis://redis_shared:6379/15
-      CELERY_RESULT_BACKEND: redis://redis_shared:6379/16
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: production
     networks:
