@@ -89,6 +89,7 @@ describe('useCreateBook', () => {
       author: 'New Author',
       condition: 'new',
       language: 'en',
+      swap_type: 'temporary',
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.title).toBe('New Book');

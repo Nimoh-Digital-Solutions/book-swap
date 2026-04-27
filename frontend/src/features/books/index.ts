@@ -72,6 +72,7 @@ export type {
   PaginatedBooks,
   PaginatedWishlist,
   ReorderPhotosPayload,
+  SwapType,
   UpdateBookPayload,
   WishlistItem,
 } from './types/book.types';

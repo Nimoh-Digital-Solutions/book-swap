@@ -11,6 +11,11 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      # The @shared/* TS path alias resolves to /packages/shared/src/*
+      # (from frontend/tsconfig.json: ../../packages/shared/src).
+      # Mount the sibling shared package so Vite + tsc can find it.
+      - ../packages/shared:/packages/shared
+      - /packages/shared/node_modules
       - yarn_cache:/root/.yarn/berry/cache
     ports:
       - '3070:3070'
@@ -25,9 +30,13 @@ services:
       # Optional: enable PWA during dev in Docker
       # - VITE_PWA=true
 
+    # Install both the shared package (npm) and the frontend (yarn) before dev.
+    # The shared package install is cheap (no runtime deps shipped to the bundle)
+    # but needed for tsc / IDE language servers to resolve @shared/* imports.
     command: >-
       sh -c "corepack enable
       && corepack prepare yarn@4.12.0 --activate
+      && (cd /packages/shared && npm install --no-audit --no-fund)
       && yarn install
       && yarn dev"
     stdin_open: true
@@ -38,8 +47,10 @@ services:
   # Production preview (multi-stage build -> nginx)
   app-prod:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # Build context is the repo root so packages/shared/ is available
+      # for the @shared/* TS path alias (frontend/Dockerfile expects this).
+      context: ..
+      dockerfile: frontend/Dockerfile
     container_name: ${APP_NAME:-bookswap}-fe-prod
     ports:
       - '8150:8080'

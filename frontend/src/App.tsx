@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import { I18nextProvider } from 'react-i18next';
 
 import { ErrorBoundary, PageLoader, PwaUpdateBanner } from '@components';
@@ -39,24 +40,26 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <I18nextProvider i18n={i18n}>
-        <Suspense fallback={<PageLoader />}>
-          <ErrorBoundary onError={handleBoundaryError}>
-            <ThemeProvider>
-              <AuthGate>
-                <div className="app">
-                  <AppRouter />
-                  <PwaUpdateBanner />
-                  <CookieConsentBanner />
-                </div>
-              </AuthGate>
-            </ThemeProvider>
-          </ErrorBoundary>
-        </Suspense>
-      </I18nextProvider>
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <Suspense fallback={<PageLoader />}>
+            <ErrorBoundary onError={handleBoundaryError}>
+              <ThemeProvider>
+                <AuthGate>
+                  <div className="app">
+                    <AppRouter />
+                    <PwaUpdateBanner />
+                    <CookieConsentBanner />
+                  </div>
+                </AuthGate>
+              </ThemeProvider>
+            </ErrorBoundary>
+          </Suspense>
+        </I18nextProvider>
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

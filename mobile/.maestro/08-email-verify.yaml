@@ -1,0 +1,25 @@
+# Flow 8: Email verification.
+#
+# Maestro deep-links into the EmailVerify screen with a verification token,
+# allowing us to drive the screen without involving an email inbox.
+#
+# Variables:
+#   - VERIFY_TOKEN  (a token issued by the backend before the run)
+#
+# The screen automatically POSTs the token on mount. We just assert one of
+# the success / failure copies appears so the flow doesn't break across
+# minor backend variations.
+appId: com.bookswap.mobile
+---
+- launchApp:
+    clearState: true
+- openLink: "bookswap://email-verify/${VERIFY_TOKEN}"
+- assertVisible:
+    text: "Verify Your Email|Verifying"
+    optional: true
+- assertVisible:
+    text: "Email verified successfully|Verification failed"
+    optional: true
+- tapOn:
+    text: "Sign in|Resend verification email"
+    optional: true

@@ -1,0 +1,174 @@
+{
+  "id": "bookswap-platform",
+  "image": "bookswapImg",
+  "titleKey": "BookSwap",
+  "typeKey": "Peer-to-Peer Book Exchange",
+  "descriptionKey": "A location-aware peer-to-peer book exchange platform that helps readers discover, swap, and share physical books with people nearby — spending less while reading more.",
+  "tags": ["Django", "GeoDjango", "PostGIS", "React", "TypeScript", "Docker"],
+  "url": "",
+  "inProgress": true,
+  "title": "BookSwap",
+  "category": "Community Marketplace Platform",
+  "description": "A location-aware peer-to-peer book exchange platform that helps readers discover, swap, and share physical books with people nearby — spending less while reading more.",
+  "client": "thrilled (Solo Founder)",
+  "duration": "Ongoing (Feb 2026 – Present)",
+  "technologies": [
+    "Python",
+    "Django",
+    "DRF",
+    "GeoDjango",
+    "PostGIS",
+    "Redis",
+    "Celery",
+    "Django Channels",
+    "React",
+    "TypeScript",
+    "Vite",
+    "Leaflet",
+    "Docker"
+  ],
+  "liveUrl": "",
+  "sector": {
+    "nl": "Consument / Gemeenschapsmarktplaats",
+    "en": "Consumer / Community Marketplace"
+  },
+  "services": {
+    "nl": "Full-stack ontwikkeling, API-ontwerp, Geolocatie & Kaarten, PWA",
+    "en": "Full-Stack Development, API Design, Geolocation & Maps, PWA"
+  },
+  "subtitle": {
+    "nl": "Een locatiebewust ruilplatform waar boekenliefhebbers fysieke boeken ontdekken en ruilen met mensen in de buurt — minder uitgeven, meer lezen.",
+    "en": "A location-aware exchange platform where book lovers discover and swap physical books with people nearby — spend less, read more."
+  },
+  "challengeData": {
+    "description": {
+      "nl": "Nieuwe boeken zijn duur in Nederland, terwijl miljoenen exemplaren ongelezen op planken staan. Bestaande tweedehands-platforms zijn transactiegericht en missen het sociale, buurtgerichte element. Er is geen tool die nabijheid, vertrouwen en een soepel ruilproces combineert — en tegelijkertijd voldoet aan de strenge Europese privacywetgeving voor locatiegegevens.",
+      "en": "New books are expensive in the Netherlands while millions of copies sit unread on shelves. Existing second-hand platforms are transaction-focused and lack the social, neighbourhood-driven element. No tool combines proximity, trust, and a smooth exchange flow — while also complying with strict European privacy regulations for location data."
+    },
+    "points": [
+      {
+        "nl": "Nieuwe boeken zijn duur — gemiddeld €20+ per titel in Nederland.",
+        "en": "New books are expensive — averaging €20+ per title in the Netherlands."
+      },
+      {
+        "nl": "Bestaande platforms missen een buurtgericht, sociaal ruilmechanisme.",
+        "en": "Existing platforms lack a neighbourhood-driven, social swap mechanism."
+      },
+      {
+        "nl": "Geen ontdekkingservaring op basis van nabijheid en gedeelde leesinteresses.",
+        "en": "No discovery experience based on proximity and shared reading interests."
+      },
+      {
+        "nl": "Locatiegegevens moeten veilig worden verwerkt volgens AVG/GDPR-vereisten.",
+        "en": "Location data must be processed securely under AVG/GDPR requirements."
+      }
+    ],
+    "goals": [
+      {
+        "nl": "Boeken ontdekken in de buurt",
+        "en": "Nearby Book Discovery"
+      },
+      {
+        "nl": "Naadloos ruilproces met vertrouwen",
+        "en": "Seamless Trust-Based Exchange Flow"
+      },
+      {
+        "nl": "Privacy-first locatie-architectuur (AVG/GDPR)",
+        "en": "Privacy-First Location Architecture (GDPR)"
+      }
+    ]
+  },
+  "solutionData": {
+    "description": {
+      "nl": "Een Django + DRF backend met GeoDjango/PostGIS voor ruimtelijke zoekopdrachten, realtime berichten via Django Channels, en Celery-workers voor achtergrondtaken zoals ruilverval en GDPR-anonimisering. De React PWA-frontend gebruikt Leaflet-kaarten voor buurtontdekking, ISBN-scanning voor eenvoudig toevoegen van boeken, en een stapsgewijs ruilproces met wederzijdse beoordelingen.",
+      "en": "A Django + DRF backend with GeoDjango/PostGIS for spatial queries, real-time messaging via Django Channels, and Celery workers for background tasks like exchange expiry and GDPR anonymization. The React PWA frontend uses Leaflet maps for neighbourhood discovery, ISBN barcode scanning for easy book listing, and a step-by-step exchange flow with mutual ratings."
+    },
+    "cards": [
+      {
+        "icon": "MapPin",
+        "title": {
+          "nl": "Geolocatie & Ontdekking",
+          "en": "Geolocation & Discovery"
+        },
+        "description": {
+          "nl": "PostGIS-gestuurde nabijheidszoekopdrachten met Leaflet-kaarten — gebruikers zien beschikbare boeken binnen een instelbare straal, gefilterd op genre en conditie.",
+          "en": "PostGIS-powered proximity queries with Leaflet maps — users see available books within a configurable radius, filtered by genre and condition."
+        }
+      },
+      {
+        "icon": "ArrowLeftRight",
+        "title": {
+          "nl": "Ruilproces & State Machine",
+          "en": "Exchange Flow & State Machine"
+        },
+        "description": {
+          "nl": "Een volledige state machine voor ruilverzoeken — van voorstel tot acceptatie, voorwaarden, voltooiing en wederzijdse beoordeling — met automatische vervalregels.",
+          "en": "A full state machine for exchange requests — from proposal to acceptance, conditions, completion, and mutual rating — with automatic expiry rules."
+        }
+      },
+      {
+        "icon": "Shield",
+        "title": {
+          "nl": "Vertrouwen & Veiligheid",
+          "en": "Trust & Safety"
+        },
+        "description": {
+          "nl": "Reputatiesysteem met beoordelingen, rapportage- en blokkeertools, account-lockout bij herhaalde mislukte logins, en AVG-compliant gegevensanonimisering.",
+          "en": "Reputation system with ratings, report and block tooling, account lockout on repeated failed logins, and GDPR-compliant data anonymization."
+        }
+      }
+    ]
+  },
+  "resultData": {
+    "description": {
+      "nl": "Een volledig werkende full-stack MVP met JWT-authenticatie, OAuth (Google & Apple), 2FA, GDPR-tooling, realtime berichten, PostGIS-ontdekking en Celery-achtergrondtaken — met domeinapps voor boekenbeheer, ruilprocessen, berichten, beoordelingen en meldingen actief in ontwikkeling richting een lancering in Amsterdam.",
+      "en": "A fully operational full-stack MVP with JWT auth, OAuth (Google & Apple), 2FA, GDPR tooling, real-time messaging, PostGIS discovery, and Celery background tasks — with domain apps for book management, exchanges, messaging, ratings, and notifications actively under development targeting an Amsterdam launch."
+    },
+    "stats": [
+      {
+        "value": "5km",
+        "label": {
+          "nl": "Standaard zoekstraal",
+          "en": "Default Discovery Radius"
+        },
+        "subLabel": {
+          "nl": "Instelbaar per gebruiker",
+          "en": "Configurable per user"
+        }
+      },
+      {
+        "value": "500+",
+        "label": {
+          "nl": "Boeken bij lancering",
+          "en": "Books at Launch"
+        },
+        "subLabel": {
+          "nl": "Doelstelling binnen 8 weken",
+          "en": "Target within 8 weeks"
+        }
+      },
+      {
+        "value": "50+",
+        "label": {
+          "nl": "Voltooide ruilen",
+          "en": "Completed Exchanges"
+        },
+        "subLabel": {
+          "nl": "Doelstelling binnen 12 weken",
+          "en": "Target within 12 weeks"
+        }
+      },
+      {
+        "value": "<5%",
+        "label": {
+          "nl": "Geschillenpercentage",
+          "en": "Dispute Rate"
+        },
+        "subLabel": {
+          "nl": "Vertrouwen & veiligheid als kernpijler",
+          "en": "Trust & safety as a core pillar"
+        }
+      }
+    ]
+  }
+}

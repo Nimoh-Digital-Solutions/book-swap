@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
-import { useDocumentTitle, useUserCity } from '@hooks';
+import { SEOHead } from '@components';
+import { useUserCity } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
@@ -19,20 +21,16 @@ import type { LoginPayload, RegisterPayload } from '../types/auth.types';
 const VIEW_ORDER: Record<AuthView, number> = { register: -1, login: 0, forgot: 1 };
 
 function pathToView(pathname: string): AuthView {
-  if (pathname === PATHS.REGISTER) return 'register';
-  if (pathname === PATHS.FORGOT_PASSWORD) return 'forgot';
+  if (pathname.endsWith('/register')) return 'register';
+  if (pathname.endsWith('/forgot-password')) return 'forgot';
   return 'login';
 }
 
-// Per-view branding content for the split panel
 const BRANDING: Record<
   AuthView,
   {
     title: ReactElement;
     subtitle: string;
-    quote: string;
-    authorName: string;
-    authorDetails: string;
     progress: number;
   }
 > = {
@@ -43,12 +41,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
-    subtitle:
-      'Your next favorite story is waiting. Reconnect with fellow book lovers in Amsterdam.',
-    quote:
-      "The quality of books I've found here is incredible. It feels like browsing a curated boutique, but everything is free to swap!",
-    authorName: 'Elena Rodriguez',
-    authorDetails: 'Member since 2022',
+    subtitle: 'Your next favorite story is waiting. Reconnect with fellow book lovers.',
     progress: 100,
   },
   register: {
@@ -58,12 +51,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Community</span>
       </>
     ),
-    subtitle:
-      'Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in Amsterdam.',
-    quote:
-      "I've discovered so many hidden gems through BookSwap. It's not just about the books, it's about connecting with neighbors who share my passion.",
-    authorName: 'Sarah Jenkins',
-    authorDetails: 'Swapping since 2021',
+    subtitle: 'Trade stories, share recommendations, and build a sustainable reading culture.',
     progress: 50,
   },
   forgot: {
@@ -73,12 +61,7 @@ const BRANDING: Record<
         <span className="text-[#E4B643] italic">Password</span>
       </>
     ),
-    subtitle:
-      "No worries — it happens to the best of us. We'll help you get back to your books.",
-    quote:
-      'The support team got me back into my account in minutes. Fantastic community!',
-    authorName: 'David Park',
-    authorDetails: 'Member since 2023',
+    subtitle: "No worries — it happens to the best of us. We'll help you get back to your books.",
     progress: 100,
   },
 };
@@ -86,7 +69,7 @@ const BRANDING: Record<
 export function AuthPage() {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const prefersReducedMotion = useReducedMotion();
 
   const view = pathToView(location.pathname);
@@ -94,16 +77,25 @@ export function AuthPage() {
   const { city } = useUserCity();
   const citySubtitles: Partial<Record<AuthView, string>> = {
     login: `Your next favorite story is waiting. Reconnect with fellow book lovers in ${city}.`,
-    register: `Join over 15,000 book lovers trading stories, sharing recommendations, and building a sustainable reading culture in ${city}.`,
+    register: `Trade stories, share recommendations, and build a sustainable reading culture in ${city}.`,
   };
 
-  useDocumentTitle(
+  const title =
     view === 'register'
       ? routeMetadata[PATHS.REGISTER].title
       : view === 'forgot'
         ? routeMetadata[PATHS.FORGOT_PASSWORD].title
-        : routeMetadata[PATHS.LOGIN].title,
-  );
+        : routeMetadata[PATHS.LOGIN].title;
+  const description =
+    view === 'register'
+      ? routeMetadata[PATHS.REGISTER].description
+      : view === 'forgot'
+        ? routeMetadata[PATHS.FORGOT_PASSWORD].description
+        : routeMetadata[PATHS.LOGIN].description;
+  const path =
+    view === 'register' ? PATHS.REGISTER
+    : view === 'forgot' ? PATHS.FORGOT_PASSWORD
+    : PATHS.LOGIN;
 
   const directionRef = useRef<1 | -1>(1);
 
@@ -167,73 +159,78 @@ export function AuthPage() {
   const formTransition = { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 
   return (
-    <AuthSplitPanel
-      view={view}
-      brandingTitle={branding.title}
-      brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
-      quote={branding.quote}
-      authorName={branding.authorName}
-      authorDetails={branding.authorDetails}
-      progress={branding.progress}
-      formContent={
-        <AnimatePresence mode="wait" custom={directionRef.current}>
-          {view === 'login' && (
-            <motion.div
-              key="login"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <LoginForm
-                onSubmit={handleLoginSubmit}
-                onToggle={() => navigateTo('register')}
-                onForgotPassword={() => navigateTo('forgot')}
-                isLoading={isLoading}
-                serverError={error}
-              />
-            </motion.div>
-          )}
-          {view === 'register' && (
-            <motion.div
-              key="register"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <RegisterForm
-                onSubmit={handleRegisterSubmit}
-                onToggle={() => navigateTo('login')}
-              />
-            </motion.div>
-          )}
-          {view === 'forgot' && (
-            <motion.div
-              key="forgot"
-              custom={directionRef.current}
-              variants={formVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={formTransition}
-            >
-              <ForgotPasswordForm
-                onSubmit={handleForgotSubmit}
-                onBack={() => navigateTo('login')}
-                isLoading={fpLoading}
-                serverError={fpError}
-                isSuccess={fpSuccess}
-                submittedEmail={fpSubmittedEmail}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      }
-    />
+    <>
+      <SEOHead
+        title={title}
+        description={description}
+        path={path}
+        noIndex
+      />
+      <AuthSplitPanel
+        view={view}
+        brandingTitle={branding.title}
+        brandingSubtitle={citySubtitles[view] ?? branding.subtitle}
+        progress={branding.progress}
+        formContent={
+          <AnimatePresence mode="wait" custom={directionRef.current}>
+            {view === 'login' && (
+              <motion.div
+                key="login"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <LoginForm
+                  onSubmit={handleLoginSubmit}
+                  onToggle={() => navigateTo('register')}
+                  onForgotPassword={() => navigateTo('forgot')}
+                  isLoading={isLoading}
+                  serverError={error}
+                />
+              </motion.div>
+            )}
+            {view === 'register' && (
+              <motion.div
+                key="register"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <RegisterForm
+                  onSubmit={handleRegisterSubmit}
+                  onToggle={() => navigateTo('login')}
+                />
+              </motion.div>
+            )}
+            {view === 'forgot' && (
+              <motion.div
+                key="forgot"
+                custom={directionRef.current}
+                variants={formVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={formTransition}
+              >
+                <ForgotPasswordForm
+                  onSubmit={handleForgotSubmit}
+                  onBack={() => navigateTo('login')}
+                  isLoading={fpLoading}
+                  serverError={fpError}
+                  isSuccess={fpSuccess}
+                  submittedEmail={fpSubmittedEmail}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        }
+      />
+    </>
   );
 }

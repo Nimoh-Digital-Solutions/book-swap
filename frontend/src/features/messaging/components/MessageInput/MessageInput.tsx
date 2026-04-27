@@ -86,7 +86,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: MessageInpu
           <button
             type="button"
             onClick={clearImage}
-            className="p-1 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-1 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors"
             aria-label={t('chat.removeImage')}
           >
             <X className="w-4 h-4" />
@@ -100,7 +100,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: MessageInpu
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="flex-shrink-0 p-2 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors disabled:opacity-50"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] flex-shrink-0 p-2 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors disabled:opacity-50"
           aria-label={t('chat.attachImage')}
         >
           <ImagePlus className="w-5 h-5" />
@@ -124,7 +124,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: MessageInpu
             placeholder={t('chat.sendPlaceholder')}
             disabled={disabled}
             rows={1}
-            className="w-full resize-none rounded-xl bg-[#28382D] text-white text-sm px-4 py-2.5 pr-16 placeholder:text-[#8C9C92] focus:outline-none focus:ring-1 focus:ring-[#E4B643] disabled:opacity-50 max-h-[100px] overflow-y-auto"
+            className="w-full resize-none rounded-xl bg-[#28382D] text-white text-base sm:text-sm px-4 py-2.5 pr-16 placeholder:text-[#8C9C92] focus:outline-none focus:ring-1 focus:ring-[#E4B643] disabled:opacity-50 max-h-[100px] overflow-y-auto"
           />
           <span className="absolute right-3 bottom-2 text-[10px] text-[#8C9C92]">
             {t('chat.charsRemaining', { count: content.length })}
@@ -135,7 +135,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: MessageInpu
         <button
           type="submit"
           disabled={!canSend}
-          className="flex-shrink-0 p-2.5 rounded-full bg-[#E4B643] text-[#152018] transition-colors hover:bg-[#d9b93e] disabled:opacity-50 disabled:hover:bg-[#E4B643]"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] flex-shrink-0 p-3 rounded-full bg-[#E4B643] text-[#152018] transition-colors hover:bg-[#d9b93e] disabled:opacity-50 disabled:hover:bg-[#E4B643]"
           aria-label={t('chat.send')}
         >
           <Send className="w-5 h-5" />

@@ -41,7 +41,13 @@
         font-family: #{func.font('default')};
         margin: 0;
         padding: 0;
-        overflow-x: hidden;
+        /* No `overflow-x: hidden` here on purpose (RESP-009 / Sprint B).
+         * Globally clipping the body silently *hides* real horizontal-overflow
+         * bugs (oversized hero blobs, unwrapped long words, wide tables) so
+         * regressions ship unnoticed. Each section that needs to clip a
+         * decorative element should declare `overflow-hidden` on its own
+         * parent — and any genuinely wide element (chat URL, hero blob) must
+         * wrap correctly. */
         background: var(--surface-1);
         color: var(--text-1);
     }
@@ -92,6 +98,25 @@
         background: transparent;
         margin: 0;
         border: none;
+    }
+
+    /* iOS auto-zoom prevention (RESP-007 / RESP-017 / RESP-026, Sprint B).
+     *
+     * iOS Safari auto-zooms when a focused input has computed font-size < 16px.
+     * The `font: inherit` rule above pulls font-size from <body> (≈16px), but
+     * Tailwind utilities like `text-sm` (14px) override that on many inputs.
+     *
+     * Below the `sm` breakpoint we enforce a 16px minimum on every form
+     * control so even bare `text-sm` inputs no longer trigger the zoom.
+     * Components are still free to opt back into smaller text on tablet+
+     * via `sm:text-sm` (or smaller) — that's why the cap is mobile-only.
+     */
+    @media (width < 640px) {
+        input,
+        select,
+        textarea {
+            font-size: max(1rem, 16px);
+        }
     }
 
     /* Subtle selection */

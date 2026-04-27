@@ -1,0 +1,420 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+} from "react-native";
+import { Image } from "expo-image";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { BookOpen, PenLine, AlertTriangle, User, BookText, Search } from "lucide-react-native";
+
+import { http } from "@/services/http";
+import { API } from "@/configs/apiEndpoints";
+import { useColors, useIsDark } from "@/hooks/useColors";
+import { spacing, radius } from "@/constants/theme";
+import { BrandedLoader } from "@/components/BrandedLoader";
+import type { ScanStackParamList } from "@/navigation/types";
+
+type Route = RouteProp<ScanStackParamList, "ScanResult">;
+type Nav = NativeStackNavigationProp<ScanStackParamList, "ScanResult">;
+
+interface ISBNResult {
+  title: string;
+  author: string;
+  isbn: string;
+  cover_url?: string;
+  description?: string;
+  page_count?: number | null;
+  publish_year?: number | null;
+  language?: string;
+}
+
+export function ScanResultScreen() {
+  const { t } = useTranslation();
+  const c = useColors();
+  const isDark = useIsDark();
+  const { params } = useRoute<Route>();
+  const navigation = useNavigation<Nav>();
+
+  const bg = isDark ? c.auth.bg : c.neutral[50];
+  const cardBg = isDark ? c.auth.card : c.surface.white;
+  const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
+  const accent = c.auth.golden;
+
+  const hasPrefilledMetadata = !!params.title;
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["isbn-lookup", params.isbn],
+    queryFn: async () => {
+      const { data: result } = await http.get(API.books.isbnLookup, {
+        params: { isbn: params.isbn },
+      });
+      return result as ISBNResult;
+    },
+    enabled: !hasPrefilledMetadata,
+  });
+
+  const displayData: ISBNResult | undefined = hasPrefilledMetadata
+    ? {
+        title: params.title!,
+        author: params.author ?? "",
+        isbn: params.isbn,
+        cover_url: params.cover_url,
+        description: params.description,
+        page_count: params.page_count,
+        publish_year: params.publish_year,
+      }
+    : data;
+
+  if (isLoading && !hasPrefilledMetadata) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <BrandedLoader
+          size="lg"
+          fill={false}
+          label={t("scanner.lookingUp", "Looking up your book...")}
+        />
+        <Text style={[s.loadingSub, { color: c.text.secondary }]}>
+          ISBN {params.isbn}
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError && !hasPrefilledMetadata) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <View
+          style={[
+            s.errorIcon,
+            { backgroundColor: isDark ? c.auth.card : "#FEE2E2" },
+          ]}
+        >
+          <AlertTriangle size={36} color={c.status?.error ?? "#DC2626"} />
+        </View>
+        <Text style={[s.errorTitle, { color: c.text.primary }]}>
+          {t("scanner.lookupError", "Lookup failed")}
+        </Text>
+        <Text style={[s.errorSub, { color: c.text.secondary }]}>
+          {t("scanner.lookupErrorSub", "We couldn't reach the book database. Check your connection and try again.")}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            s.primaryBtn,
+            { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => refetch()}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.retryLookup", "Retry book lookup")}
+        >
+          <Text style={s.primaryBtnText}>
+            {t("common.retry", "Retry")}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            s.secondaryBtn,
+            { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.addManually", "Add book manually")}
+        >
+          <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
+            {t("scanner.addManually", "Add manually")}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!displayData) {
+    return (
+      <View style={[s.centered, { backgroundColor: bg }]}>
+        <View
+          style={[
+            s.errorIcon,
+            { backgroundColor: isDark ? c.auth.card : "#FEF3C7" },
+          ]}
+        >
+          <AlertTriangle size={36} color={accent} />
+        </View>
+        <Text style={[s.errorTitle, { color: c.text.primary }]}>
+          {t("scanner.notFound", "Book not found")}
+        </Text>
+        <Text style={[s.errorSub, { color: c.text.secondary }]}>
+          {t(
+            "scanner.notFoundSub",
+            "We couldn't find a match for ISBN {{isbn}}. You can still add it manually.",
+            { isbn: params.isbn },
+          )}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            s.primaryBtn,
+            { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+          ]}
+          onPress={() => navigation.navigate("BookSearch")}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.searchByTitle", "Search by title")}
+        >
+          <Search size={18} color="#fff" />
+          <Text style={s.primaryBtnText}>
+            {t("scanner.searchByTitle", "Search by title")}
+          </Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            s.secondaryBtn,
+            { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={() => navigation.navigate("AddBook", { isbn: params.isbn })}
+          accessibilityRole="button"
+          accessibilityLabel={t("scanner.accessibility.addManually", "Add book manually")}
+        >
+          <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
+            {t("scanner.addManually", "Add manually")}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView
+      style={[s.root, { backgroundColor: bg }]}
+      contentContainerStyle={s.content}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Cover hero */}
+      <View
+        style={[
+          s.coverWrap,
+          { backgroundColor: cardBg, borderColor: cardBorder },
+        ]}
+      >
+        {displayData.cover_url ? (
+          <Image
+            source={{ uri: displayData.cover_url }}
+            style={s.cover}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={[s.coverPlaceholder, { backgroundColor: accent + "18" }]}>
+            <BookOpen size={48} color={accent} />
+          </View>
+        )}
+      </View>
+
+      {/* Book info */}
+      <Text style={[s.title, { color: c.text.primary }]}>{displayData.title}</Text>
+      <View style={s.authorRow}>
+        <User size={14} color={c.text.secondary} />
+        <Text style={[s.author, { color: c.text.secondary }]}>
+          {displayData.author || t("scanner.unknownAuthor", "Unknown author")}
+        </Text>
+      </View>
+
+      {/* Meta pills */}
+      <View style={s.metaRow}>
+        {displayData.isbn ? (
+          <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[s.pillText, { color: c.text.secondary }]}>
+              ISBN {displayData.isbn}
+            </Text>
+          </View>
+        ) : null}
+        {displayData.publish_year ? (
+          <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[s.pillText, { color: c.text.secondary }]}>
+              {displayData.publish_year}
+            </Text>
+          </View>
+        ) : null}
+        {displayData.page_count ? (
+          <View style={[s.pill, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <BookText size={11} color={c.text.secondary} />
+            <Text style={[s.pillText, { color: c.text.secondary }]}>
+              {t("scanner.pages", "{{count}} pages", { count: displayData.page_count })}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Description */}
+      {displayData.description ? (
+        <Text
+          style={[s.description, { color: c.text.secondary }]}
+          numberOfLines={5}
+        >
+          {displayData.description}
+        </Text>
+      ) : null}
+
+      {/* Action buttons */}
+      <Pressable
+        style={({ pressed }) => [
+          s.primaryBtn,
+          { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
+        ]}
+        onPress={() =>
+          navigation.navigate("AddBook", {
+            isbn: displayData.isbn,
+            title: displayData.title,
+            author: displayData.author,
+            cover_url: displayData.cover_url,
+            description: displayData.description,
+            language: displayData.language,
+            page_count: displayData.page_count,
+            publish_year: displayData.publish_year,
+          })
+        }
+        accessibilityRole="button"
+        accessibilityLabel={t("scanner.accessibility.addThisBook", "Add this book")}
+      >
+        <Text style={s.primaryBtnText}>
+          {t("scanner.addThisBook", "Add this book")}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          s.secondaryBtn,
+          { borderColor: cardBorder, opacity: pressed ? 0.8 : 1 },
+        ]}
+        onPress={() => navigation.navigate("AddBook", { isbn: displayData.isbn })}
+        accessibilityRole="button"
+        accessibilityLabel={t("scanner.accessibility.editDetailsBeforeAdd", "Edit details before adding")}
+      >
+        <Text style={[s.secondaryBtnText, { color: c.text.secondary }]}>
+          {t("scanner.editDetails", "Edit details before adding")}
+        </Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  content: {
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: 20,
+  },
+
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+
+  loadingTitle: { fontSize: 18, fontWeight: "600", marginTop: spacing.md },
+  loadingSub: { fontSize: 14 },
+
+  errorIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.sm,
+  },
+  errorTitle: { fontSize: 20, fontWeight: "700", textAlign: "center" },
+  errorSub: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    maxWidth: 300,
+  },
+
+  coverWrap: {
+    width: 180,
+    height: 260,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginBottom: spacing.lg,
+  },
+  cover: { width: "100%", height: "100%" },
+  coverPlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: spacing.md,
+  },
+  author: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  pillText: { fontSize: 12, fontWeight: "500" },
+
+  description: {
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: radius.xl,
+    width: "100%",
+    marginTop: spacing.sm,
+  },
+  primaryBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  secondaryBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    width: "100%",
+    marginTop: spacing.sm,
+  },
+  secondaryBtnText: { fontWeight: "600", fontSize: 14 },
+});

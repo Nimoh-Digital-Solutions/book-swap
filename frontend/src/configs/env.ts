@@ -41,7 +41,8 @@ const envSchema = z.object({
    */
   VITE_SENTRY_DSN: z
     .string()
-    .url('VITE_SENTRY_DSN must be a valid Sentry DSN URL')
+    .transform(v => (v === '' ? undefined : v))
+    .pipe(z.string().url('VITE_SENTRY_DSN must be a valid Sentry DSN URL').optional())
     .optional(),
 
   /**

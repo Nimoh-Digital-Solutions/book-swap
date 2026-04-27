@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { PATHS } from '@routes/config/paths';
+import { SEOHead } from '@components';
+import { PATHS, routeMetadata } from '@routes/config/paths';
 
 const REASON_MAP: Record<string, { title: string; message: string }> = {
   oauth_error: {
@@ -34,7 +35,13 @@ export function SocialAuthErrorPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4">
+      <SEOHead
+        title={routeMetadata[PATHS.SOCIAL_AUTH_ERROR].title}
+        description={routeMetadata[PATHS.SOCIAL_AUTH_ERROR].description}
+        path={PATHS.SOCIAL_AUTH_ERROR}
+        noIndex
+      />
       <div className="text-center max-w-md">
         <h1 className="text-2xl font-bold text-white mb-4">
           {t(`auth.social.${reason}.title`, content.title)}

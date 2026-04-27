@@ -42,9 +42,16 @@ export function CookieConsentBanner(): ReactElement | null {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[#1A251D] border-t border-[#28382D] px-4 py-3"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#1A251D] border-t border-[#28382D] px-4 pt-3 pl-safe pr-safe pb-safe"
       role="alert"
       aria-live="polite"
+      style={{
+        // Baseline padding the additive `pb-safe` utility extends on iOS.
+        // See tailwind.css `*-safe` utilities (RESP-006).
+        ['--pb' as string]: '0.75rem',
+        ['--pl' as string]: '1rem',
+        ['--pr' as string]: '1rem',
+      }}
     >
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-3">
         <Cookie className="w-5 h-5 text-[#E4B643] shrink-0" aria-hidden="true" />

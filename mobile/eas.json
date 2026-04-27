@@ -1,0 +1,69 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "http://localhost:8000/api/v1"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "development:device": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
+      }
+    },
+    "preview:store": {
+      "distribution": "store",
+      "channel": "staging",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_API_URL": "https://api-stag.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "staging"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.book-swaps.com/api/v1",
+        "EXPO_PUBLIC_ENV": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6762515297",
+        "appleTeamId": "Z68MT647CX"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

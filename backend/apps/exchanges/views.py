@@ -1,16 +1,22 @@
 """Exchange views — REST endpoints for the full exchange lifecycle."""
 
 from django.db import models as db_models
+from django.db import transaction
+from django.db.models import CharField, Count, Max, OuterRef, Q, Subquery
+from django.db.models.functions import Substr
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.books.models import BookStatus
+from apps.books.models import BookStatus, SwapType
+from apps.messaging.models import Message
+from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import (
+    MAX_COUNTER_OFFERS_PER_PARTICIPANT,
     ConditionsAcceptance,
     DeclineReason,
     ExchangeRequest,
@@ -56,15 +62,21 @@ class ExchangeRequestViewSet(
     """
 
     permission_classes = (IsAuthenticated,)
+    pagination_class = DefaultPagination
 
     def get_queryset(self):
         from apps.trust_safety.services import get_blocked_user_ids
 
-        blocked_ids = get_blocked_user_ids(self.request.user)
+        user = self.request.user
+        blocked_ids = get_blocked_user_ids(user)
+
+        last_msg_preview = Subquery(
+            Message.objects.filter(exchange=OuterRef("pk")).order_by("-created_at").values("content")[:1],
+            output_field=CharField(),
+        )
+
         return (
-            ExchangeRequest.objects.filter(
-                db_models.Q(requester=self.request.user) | db_models.Q(owner=self.request.user)
-            )
+            ExchangeRequest.objects.filter(db_models.Q(requester=user) | db_models.Q(owner=user))
             .exclude(requester_id__in=blocked_ids)
             .exclude(owner_id__in=blocked_ids)
             .select_related(
@@ -78,6 +90,18 @@ class ExchangeRequestViewSet(
                 "offered_book__photos",
                 "conditions_acceptances",
             )
+            .annotate(
+                unread_count=Count(
+                    "messages",
+                    filter=Q(messages__read_at__isnull=True) & ~Q(messages__sender=user),
+                ),
+                last_message_at=Max("messages__created_at"),
+                last_message_preview=Substr(last_msg_preview, 1, 80),
+            )
+            # Explicit ordering keeps pagination deterministic — Django's
+            # ``.annotate()`` stripping ``Meta.ordering`` would otherwise raise
+            # ``UnorderedObjectListWarning`` and risk duplicates across pages.
+            .order_by("-created_at")
         )
 
     def get_serializer_class(self):
@@ -88,8 +112,10 @@ class ExchangeRequestViewSet(
         return ExchangeRequestDetailSerializer
 
     def get_permissions(self):
-        if self.action in ("accept", "decline", "counter"):
+        if self.action in ("accept", "decline"):
             return [IsAuthenticated(), IsExchangeOwner()]
+        if self.action in ("counter", "approve_counter"):
+            return [IsAuthenticated(), IsExchangeParticipant()]
         if self.action == "cancel":
             return [IsAuthenticated(), IsExchangeRequester()]
         if self.action in (
@@ -97,6 +123,7 @@ class ExchangeRequestViewSet(
             "accept_conditions",
             "conditions",
             "confirm_swap",
+            "complete",
             "request_return",
             "confirm_return",
         ):
@@ -132,23 +159,53 @@ class ExchangeRequestViewSet(
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         """Owner accepts a pending request → status 'accepted'."""
-        exchange = self.get_object()
-        if exchange.status != ExchangeStatus.PENDING:
-            return Response(
-                {"detail": "Only pending requests can be accepted."},
-                status=status.HTTP_400_BAD_REQUEST,
+        with transaction.atomic():
+            exchange = (
+                ExchangeRequest.objects.select_for_update()
+                .select_related("requested_book", "offered_book", "requester", "owner")
+                .get(pk=self.get_object().pk)
             )
-        exchange.transition_to(ExchangeStatus.ACCEPTED)
-        exchange.save(update_fields=["status", "updated_at"])
+            if exchange.status != ExchangeStatus.PENDING:
+                return Response(
+                    {"detail": "Only pending requests can be accepted."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if exchange.last_counter_by_id and not exchange.counter_approved_at:
+                return Response(
+                    {"detail": "The counter offer must be approved before accepting."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            exchange.transition_to(ExchangeStatus.ACCEPTED)
+            exchange.save(update_fields=["status", "updated_at"])
 
-        # Auto-decline other pending requests for the same book
-        ExchangeRequest.objects.filter(
-            requested_book=exchange.requested_book,
-            status=ExchangeStatus.PENDING,
-        ).exclude(pk=exchange.pk).update(
-            status=ExchangeStatus.DECLINED,
-            decline_reason=DeclineReason.RESERVED,
-        )
+            # Lock both books so they can't be requested by others
+            exchange.requested_book.status = BookStatus.IN_EXCHANGE
+            exchange.requested_book.save(update_fields=["status"])
+            exchange.offered_book.status = BookStatus.IN_EXCHANGE
+            exchange.offered_book.save(update_fields=["status"])
+
+            # SECURITY (ADV-203): Collect PKs before bulk update so we can
+            # dispatch decline notifications. QuerySet.update() bypasses
+            # post_save signals, so the signal-based notification path
+            # never fires for these rows.
+            auto_declined_pks = list(
+                ExchangeRequest.objects.filter(
+                    Q(requested_book=exchange.requested_book) | Q(offered_book=exchange.offered_book),
+                    status=ExchangeStatus.PENDING,
+                )
+                .exclude(pk=exchange.pk)
+                .values_list("pk", flat=True)
+            )
+
+            ExchangeRequest.objects.filter(pk__in=auto_declined_pks).update(
+                status=ExchangeStatus.DECLINED,
+                decline_reason=DeclineReason.RESERVED,
+            )
+
+            from apps.notifications.tasks import send_request_declined_notification
+
+            for declined_pk in auto_declined_pks:
+                send_request_declined_notification.delay(str(declined_pk))
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,
@@ -182,39 +239,114 @@ class ExchangeRequestViewSet(
 
     @action(detail=True, methods=["post"])
     def counter(self, request, pk=None):
-        """Owner counter-proposes a different book from requester's shelf."""
+        """Either party counter-proposes a different book — updates in place."""
+        exchange_pk = self.get_object().pk
+        with transaction.atomic():
+            exchange = (
+                ExchangeRequest.objects.select_for_update()
+                .select_related("requester", "owner", "requested_book", "offered_book")
+                .get(pk=exchange_pk)
+            )
+            if exchange.status != ExchangeStatus.PENDING:
+                return Response(
+                    {"detail": "Only pending requests can be countered."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if exchange.last_counter_by_id == request.user.pk:
+                return Response(
+                    {"detail": "Wait for the other party to respond before countering again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not exchange.can_counter(request.user):
+                return Response(
+                    {
+                        "detail": (
+                            "You have reached the maximum of "
+                            f"{MAX_COUNTER_OFFERS_PER_PARTICIPANT} counter offers for this exchange."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            ser = CounterProposeSerializer(
+                data=request.data,
+                context={"exchange": exchange, "request": request},
+            )
+            ser.is_valid(raise_exception=True)
+
+            if not exchange.original_offered_book_id:
+                exchange.original_offered_book = exchange.offered_book
+
+            exchange.offered_book = ser._offered_book
+            exchange.last_counter_by = request.user
+            exchange.counter_approved_at = None
+            exchange.increment_counter_for(request.user)
+            count_field = (
+                "requester_counter_count"
+                if request.user.pk == exchange.requester_id
+                else "owner_counter_count"
+            )
+            exchange.save(
+                update_fields=[
+                    "offered_book",
+                    "original_offered_book",
+                    "last_counter_by",
+                    "counter_approved_at",
+                    count_field,
+                    "updated_at",
+                ]
+            )
+
+            from apps.notifications.tasks import send_counter_proposed_notification
+
+            transaction.on_commit(
+                lambda: send_counter_proposed_notification.delay(str(exchange.pk), str(request.user.pk))
+            )
+
+        detail = ExchangeRequestDetailSerializer(
+            exchange,
+            context={"request": request},
+        )
+        return Response(detail.data)
+
+    @action(detail=True, methods=["post"], url_path="approve-counter")
+    def approve_counter(self, request, pk=None):
+        """The party who received the counter approves the new book selection."""
         exchange = self.get_object()
         if exchange.status != ExchangeStatus.PENDING:
             return Response(
-                {"detail": "Only pending requests can be countered."},
+                {"detail": "Only pending requests can have counters approved."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        ser = CounterProposeSerializer(
-            data=request.data,
-            context={"exchange": exchange, "request": request},
-        )
-        ser.is_valid(raise_exception=True)
+        if not exchange.last_counter_by_id:
+            return Response(
+                {"detail": "There is no counter to approve."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exchange.last_counter_by_id == request.user.pk:
+            return Response(
+                {"detail": "You cannot approve your own counter offer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if exchange.counter_approved_at:
+            return Response(
+                {"detail": "Counter has already been approved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # Decline original with counter_proposed reason
-        exchange.transition_to(ExchangeStatus.DECLINED)
-        exchange.decline_reason = DeclineReason.COUNTER_PROPOSED
-        exchange.save(update_fields=["status", "decline_reason", "updated_at"])
+        from django.utils import timezone
 
-        # Create new exchange with the counter-proposed book
-        new_exchange = ExchangeRequest.objects.create(
-            requester=exchange.requester,
-            owner=exchange.owner,
-            requested_book=exchange.requested_book,
-            offered_book=ser._offered_book,
-            counter_to=exchange,
-            message=f"Counter-proposal: {ser._offered_book.title}",
-        )
+        exchange.counter_approved_at = timezone.now()
+        exchange.save(update_fields=["counter_approved_at", "updated_at"])
 
-        detail = ExchangeRequestDetailSerializer(
-            new_exchange,
+        from apps.notifications.tasks import send_counter_approved_notification
+
+        send_counter_approved_notification.delay(str(exchange.pk), str(request.user.pk))
+
+        serializer = ExchangeRequestDetailSerializer(
+            exchange,
             context={"request": request},
         )
-        return Response(detail.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data)
 
     # ── Requester actions ─────────────────────────────────────────────
 
@@ -294,51 +426,80 @@ class ExchangeRequestViewSet(
 
     @action(detail=True, methods=["post"], url_path="confirm-swap")
     def confirm_swap(self, request, pk=None):
-        """Confirm the physical swap happened."""
+        """Confirm the physical swap happened.
+
+        SECURITY (ADV-202): Uses ``select_for_update()`` inside
+        ``transaction.atomic()`` to prevent the concurrent-confirmation race
+        where two simultaneous saves could clobber each other's timestamp,
+        leaving the exchange stuck in ACTIVE with a lost confirmation.
+        """
+        with transaction.atomic():
+            exchange = ExchangeRequest.objects.select_for_update().get(pk=self.get_object().pk)
+            if exchange.status != ExchangeStatus.ACTIVE:
+                return Response(
+                    {"detail": "The exchange must be active to confirm the swap."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            now = timezone.now()
+            if request.user.pk == exchange.requester_id:
+                if exchange.requester_confirmed_at is not None:
+                    return Response(
+                        {"detail": "You have already confirmed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                exchange.requester_confirmed_at = now
+            else:
+                if exchange.owner_confirmed_at is not None:
+                    return Response(
+                        {"detail": "You have already confirmed."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                exchange.owner_confirmed_at = now
+
+            if exchange.is_swap_confirmed:
+                exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
+                exchange._confirmed_by_user_id = request.user.pk
+
+                from django.contrib.auth import get_user_model
+                from django.db.models import F
+
+                UserModel = get_user_model()
+                UserModel.objects.filter(
+                    pk__in=[exchange.requester_id, exchange.owner_id],
+                ).update(swap_count=F("swap_count") + 1)
+
+            exchange.save()
+
+        serializer = ExchangeRequestDetailSerializer(
+            exchange,
+            context={"request": request},
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def complete(self, request, pk=None):
+        """Mark a swap-confirmed exchange as completed."""
         exchange = self.get_object()
-        if exchange.status != ExchangeStatus.ACTIVE:
+        if exchange.status != ExchangeStatus.SWAP_CONFIRMED:
             return Response(
-                {"detail": "The exchange must be active to confirm the swap."},
+                {"detail": "Only swap-confirmed exchanges can be completed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        now = timezone.now()
-        if request.user.pk == exchange.requester_id:
-            if exchange.requester_confirmed_at is not None:
-                return Response(
-                    {"detail": "You have already confirmed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            exchange.requester_confirmed_at = now
+        exchange.transition_to(ExchangeStatus.COMPLETED)
+        exchange.save(update_fields=["status", "updated_at"])
+
+        if exchange.swap_type == SwapType.PERMANENT:
+            exchange.requested_book.owner = exchange.requester
+            exchange.requested_book.status = BookStatus.AVAILABLE
+            exchange.requested_book.save(update_fields=["owner", "status"])
+            exchange.offered_book.owner = exchange.owner
+            exchange.offered_book.status = BookStatus.AVAILABLE
+            exchange.offered_book.save(update_fields=["owner", "status"])
         else:
-            if exchange.owner_confirmed_at is not None:
-                return Response(
-                    {"detail": "You have already confirmed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            exchange.owner_confirmed_at = now
-
-        update_fields = ["requester_confirmed_at", "owner_confirmed_at", "updated_at"]
-
-        if exchange.is_swap_confirmed:
-            exchange.transition_to(ExchangeStatus.SWAP_CONFIRMED)
-            update_fields.append("status")
-
-            # Update book statuses
-            exchange.requested_book.status = BookStatus.IN_EXCHANGE
+            exchange.requested_book.status = BookStatus.AVAILABLE
             exchange.requested_book.save(update_fields=["status"])
-            exchange.offered_book.status = BookStatus.IN_EXCHANGE
+            exchange.offered_book.status = BookStatus.AVAILABLE
             exchange.offered_book.save(update_fields=["status"])
-
-            # Increment swap_count for both users
-            from django.contrib.auth import get_user_model
-            from django.db.models import F
-
-            UserModel = get_user_model()
-            UserModel.objects.filter(
-                pk__in=[exchange.requester_id, exchange.owner_id],
-            ).update(swap_count=F("swap_count") + 1)
-
-        exchange.save(update_fields=update_fields)
 
         serializer = ExchangeRequestDetailSerializer(
             exchange,
@@ -352,6 +513,11 @@ class ExchangeRequestViewSet(
     def request_return(self, request, pk=None):
         """Initiate a book return."""
         exchange = self.get_object()
+        if exchange.swap_type == SwapType.PERMANENT:
+            return Response(
+                {"detail": "Returns are not available for permanent swaps."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if exchange.status != ExchangeStatus.SWAP_CONFIRMED:
             return Response(
                 {"detail": "Returns can only be requested after swap is confirmed."},
@@ -359,6 +525,7 @@ class ExchangeRequestViewSet(
             )
         exchange.transition_to(ExchangeStatus.RETURN_REQUESTED)
         exchange.return_requested_at = timezone.now()
+        exchange._return_requested_by_user_id = request.user.pk
         exchange.save(update_fields=["status", "return_requested_at", "updated_at"])
 
         serializer = ExchangeRequestDetailSerializer(

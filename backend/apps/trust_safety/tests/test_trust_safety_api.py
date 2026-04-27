@@ -411,38 +411,65 @@ class TestIsEmailVerified:
 
 
 class TestDataExport:
-    def test_data_export_returns_json(self):
-        me = UserFactory(email_verified=True)
-        BookFactory(owner=me)
-        client = _auth_client(me)
-        resp = client.get("/api/v1/users/me/data-export/")
-        assert resp.status_code == status.HTTP_200_OK
-        data = resp.json()
-        assert "profile" in data
-        assert "books" in data
-        assert "exchanges" in data
-        assert "messages_sent" in data
-        assert "ratings_given" in data
-        assert "ratings_received" in data
-        assert "blocks" in data
-        assert "reports_filed" in data
+    """AUD-B-704: the export is now built off-thread and emailed.
 
-    def test_data_export_includes_user_books(self):
+    The HTTP endpoint accepts both GET (legacy) and POST and returns 202
+    immediately; the JSON lands as an email attachment a few seconds later
+    via the ``bookswap.send_data_export_email`` Celery task (eager in tests).
+    """
+
+    def test_post_data_export_returns_202_and_emails_user(self):
+        from django.core import mail
+
         me = UserFactory(email_verified=True)
         BookFactory(owner=me, title="My Book")
         client = _auth_client(me)
+
+        mail.outbox = []
+        resp = client.post("/api/v1/users/me/data-export/")
+
+        assert resp.status_code == status.HTTP_202_ACCEPTED
+        assert resp.json() == {
+            "queued": True,
+            "detail": (
+                "Your data export is being prepared. We'll email it to you "
+                "as soon as it's ready (usually within a few minutes)."
+            ),
+        }
+
+        # Eager Celery means the task ran inline — assert the email was sent
+        # with the JSON attachment.
+        assert len(mail.outbox) == 1
+        msg = mail.outbox[0]
+        assert me.email in msg.to
+        assert "data export" in msg.subject.lower()
+        assert msg.attachments, "Expected a JSON attachment on the export email"
+        filename, content, mime = msg.attachments[0]
+        assert filename.startswith("bookswap-data-export-")
+        assert filename.endswith(".json")
+        assert mime == "application/json"
+        # Body should be valid JSON containing the user's book.
+        import json as _json
+
+        payload = _json.loads(content)
+        assert "profile" in payload
+        assert "books" in payload
+        assert any(b["title"] == "My Book" for b in payload["books"])
+
+    def test_get_data_export_kept_for_backwards_compat(self):
+        """Legacy GET still enqueues the same task and returns 202."""
+        from django.core import mail
+
+        me = UserFactory(email_verified=True)
+        client = _auth_client(me)
+
+        mail.outbox = []
         resp = client.get("/api/v1/users/me/data-export/")
-        data = resp.json()
-        assert len(data["books"]) == 1
-        assert data["books"][0]["title"] == "My Book"
+
+        assert resp.status_code == status.HTTP_202_ACCEPTED
+        assert len(mail.outbox) == 1
 
     def test_data_export_requires_auth(self):
         client = APIClient()
-        resp = client.get("/api/v1/users/me/data-export/")
+        resp = client.post("/api/v1/users/me/data-export/")
         assert resp.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN)
-
-    def test_data_export_content_disposition(self):
-        me = UserFactory(email_verified=True)
-        client = _auth_client(me)
-        resp = client.get("/api/v1/users/me/data-export/")
-        assert "bookswap-data-export.json" in resp.get("Content-Disposition", "")

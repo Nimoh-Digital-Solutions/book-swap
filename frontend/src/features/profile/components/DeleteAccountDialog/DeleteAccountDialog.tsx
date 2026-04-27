@@ -27,7 +27,10 @@ export function DeleteAccountDialog({
     deleteAccount.mutate(
       { password },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          if (data.cancel_token) {
+            localStorage.setItem('bs_deletion_cancel_token', data.cancel_token);
+          }
           onDeleted?.();
         },
       },
@@ -35,7 +38,14 @@ export function DeleteAccountDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center pt-4 px-4 pb-safe"
+      style={{
+        // Adds the iOS home-indicator inset to the existing 1rem
+        // bottom padding (RESP-006). See tailwind.css `*-safe` utilities.
+        ['--pb' as string]: '1rem',
+      }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60"
@@ -87,7 +97,7 @@ export function DeleteAccountDialog({
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-[#28382D] rounded-xl text-sm bg-[#152018] text-white placeholder-[#5A6A60] focus:ring-red-500 focus:border-red-500"
+              className="block w-full pl-10 pr-3 py-3 border border-[#28382D] rounded-xl text-base sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] focus:ring-red-500 focus:border-red-500"
               placeholder="••••••••"
               autoComplete="current-password"
             />

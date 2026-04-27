@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
 
+import { logoMark } from '@assets';
+import { SEOHead } from '@components';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useCompleteOnboarding, useSetLocation } from '@features/profile';
-import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { Info, MapPin, Star } from 'lucide-react';
 
@@ -16,11 +18,9 @@ import { Info, MapPin, Star } from 'lucide-react';
  */
 export function OnboardingPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const [location, setLocation] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  useDocumentTitle(routeMetadata[PATHS.ONBOARDING].title);
 
   const setLocationMutation = useSetLocation();
   const completeOnboardingMutation = useCompleteOnboarding();
@@ -40,19 +40,23 @@ export function OnboardingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4 font-sans">
+      <SEOHead
+        title={routeMetadata[PATHS.ONBOARDING].title}
+        description={routeMetadata[PATHS.ONBOARDING].description}
+        path={PATHS.ONBOARDING}
+        noIndex
+      />
+      <div className="w-full max-w-6xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[100dvh] md:min-h-[700px] border border-border-dark">
         {/* ── Branding panel ──────────────────────────────────── */}
         <div className="md:w-5/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
 
           <div className="relative z-10">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
               Find Books <span className="text-[#E4B643] italic">Near You</span>
             </h1>
@@ -93,14 +97,26 @@ export function OnboardingPage() {
             <div className="h-full bg-[#E4B643] w-full" />
           </div>
 
-          {/* Mobile logo */}
+          {/* Condensed mobile brand block (RESP-016, Sprint B).
+            * Mirrors AuthSplitPanel — surface the brand promise above the
+            * form on `<md` so mobile users get the same conversion-relevant
+            * hero copy that desktop users see in the left panel. The
+            * testimonial is intentionally omitted to keep the form
+            * within reach above the fold. */}
           <div className="md:hidden mb-8">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-5">
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-white text-balance mb-2">
+              {t('onboarding.branding.title', 'Find Books Near You')}
+            </h1>
+            <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+              {t(
+                'onboarding.branding.subtitle',
+                'Set your location to discover books available for swap in your neighborhood and connect with local readers.',
+              )}
+            </p>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">
@@ -109,12 +125,12 @@ export function OnboardingPage() {
               <span className="uppercase tracking-widest text-xs font-bold text-text-secondary">
                 {t('onboarding.step', 'Step 2 of 2')}
               </span>
-              <Link
+              <LocaleLink
                 to={PATHS.HOME}
                 className="text-sm font-medium text-text-secondary hover:text-[#E4B643] transition-colors"
               >
                 {t('onboarding.skip', 'Skip for now')}
-              </Link>
+              </LocaleLink>
             </div>
 
             <h2 className="text-3xl font-bold text-white mb-2">

@@ -8,6 +8,7 @@ from django.views.generic import RedirectView
 from nimoh_base.auth.views.social import social_login_done_view
 from nimoh_base.conf.urls import nimoh_base_urlpatterns
 
+from apps.books.views_og import book_og_view
 from bookswap.views import login_view
 
 urlpatterns = [
@@ -33,6 +34,9 @@ urlpatterns = [
     path("api/v1/exchanges/", include("apps.exchanges.urls")),
     path("api/v1/messaging/", include("apps.messaging.urls")),
     path("api/v1/ratings/", include("apps.ratings.urls")),
+    # OG meta for social-crawler link previews (not under /api/v1/ so nginx can
+    # proxy bot requests directly from the frontend location block)
+    path("oembed/books/<uuid:pk>/", book_og_view, name="book-og"),
 ]
 
 # In development, redirect the root URL to the API docs for convenience
@@ -40,4 +44,18 @@ if settings.DEBUG:
     urlpatterns += [
         path("", RedirectView.as_view(url="/api/v1/schema/docs/", permanent=False)),
     ]
+
+# Serve media files via Django in all environments.
+# WhiteNoise handles static files; media files must be served separately
+# since there is no separate nginx in front of Django.
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    from django.views.static import serve as _serve_static
+
+    urlpatterns += [
+        path(
+            "media/<path:path>",
+            lambda request, path: _serve_static(request, path, document_root=settings.MEDIA_ROOT),
+        ),
+    ]

@@ -26,7 +26,9 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=config.settings.production
+    DJANGO_SETTINGS_MODULE=config.settings.production \
+    GDAL_LIBRARY_PATH="" \
+    GEOS_LIBRARY_PATH=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
@@ -38,7 +40,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 COPY . .
 
-RUN python manage.py collectstatic --noinput --settings=config.settings.production
+RUN chmod +x scripts/entrypoint.sh scripts/check-env.sh start.sh
+
+# collectstatic only needs a runnable settings module — it never connects to
+# the DB and never signs anything. Real SECRET_KEY / DATABASE_URL are still
+# required at runtime (the production settings raise ImproperlyConfigured if
+# they're missing — see config/settings/production.py — AUD-B-801/802). The
+# dummy values below exist only for the duration of this RUN.
+RUN SECRET_KEY="build-time-dummy-not-used-at-runtime" \
+    DATABASE_URL="postgres://build:build@build/build" \
+    ALLOWED_HOSTS="localhost" \
+    GDAL_LIBRARY_PATH="" \
+    GEOS_LIBRARY_PATH="" \
+    python manage.py collectstatic --noinput --settings=config.settings.production
 
 # Run as a non-root user for security (GAP-I-003)
 RUN addgroup --system app && adduser --system --ingroup app app \
@@ -47,9 +61,5 @@ USER app
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.asgi:application", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "4", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--timeout", "30", \
-     "--log-level", "info"]
+ENTRYPOINT ["scripts/entrypoint.sh"]
+CMD ["./start.sh"]

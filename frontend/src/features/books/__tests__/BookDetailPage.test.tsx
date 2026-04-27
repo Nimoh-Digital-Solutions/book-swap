@@ -1,6 +1,7 @@
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
-import { render, screen } from '@testing-library/react';
+import { renderWithProviders } from '@test/renderWithProviders';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '../../auth/stores/authStore';
@@ -42,6 +43,7 @@ const MOCK_BOOK: Book = {
   genres: ['Fiction'],
   language: 'en',
   status: 'available',
+  swap_type: 'temporary',
   notes: 'No highlights or marks.',
   page_count: 180,
   publish_year: 1925,
@@ -58,12 +60,11 @@ const MOCK_BOOK: Book = {
 // ---------------------------------------------------------------------------
 
 function renderPage(bookId = 'book_001') {
-  return render(
-    <MemoryRouter initialEntries={[`/books/${bookId}`]}>
-      <Routes>
-        <Route path="/books/:id" element={<BookDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+  return renderWithProviders(
+    <Routes>
+      <Route path="/:lng/books/:id" element={<BookDetailPage />} />
+    </Routes>,
+    { routerProps: { initialEntries: [`/en/books/${bookId}`] } },
   );
 }
 
@@ -142,14 +143,20 @@ describe('BookDetailPage', () => {
     useAuthStore.setState({ user: { id: 'usr_viewer', email: 'v@e.com', first_name: 'V', last_name: 'V' } });
     mockUseBook.mockReturnValue({ data: MOCK_BOOK, isLoading: false, isError: false });
     renderPage();
-    expect(screen.getByRole('button', { name: /request swap/i })).toBeInTheDocument();
+    // RESP-019 (Sprint C): the page renders a duplicate primary CTA at
+    // the top of the right column on `<lg:` (visible on mobile) and the
+    // full action block at the bottom (visible on desktop). Both are in
+    // the DOM at all times — Tailwind toggles visibility — so we expect
+    // *at least one* button to be present here.
+    expect(screen.getAllByRole('button', { name: /request swap/i }).length).toBeGreaterThan(0);
   });
 
   it('shows "Edit Listing" link for the owner', () => {
     useAuthStore.setState({ user: { id: 'usr_other', email: 'o@e.com', first_name: 'O', last_name: 'O' } });
     mockUseBook.mockReturnValue({ data: MOCK_BOOK, isLoading: false, isError: false });
     renderPage();
-    expect(screen.getByText(/edit listing/i)).toBeInTheDocument();
+    // Same as above — duplicated for mobile (RESP-019).
+    expect(screen.getAllByText(/edit listing/i).length).toBeGreaterThan(0);
   });
 
   it('renders the main photo', () => {

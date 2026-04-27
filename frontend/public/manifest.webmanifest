@@ -1,21 +1,15 @@
 {
-  "name": "Bookswap",
-  "short_name": "ReactStarterKit",
-  "description": "A modern React starter kit with TypeScript, Vite, SCSS, and comprehensive tooling for building scalable applications",
+  "name": "BookSwap",
+  "short_name": "BookSwap",
+  "description": "A location-aware peer-to-peer book exchange platform — spend less, read more.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#111827",
-  "categories": ["productivity", "utilities"],
+  "background_color": "#f5f5dc",
+  "theme_color": "#1a2f23",
+  "categories": ["books", "social", "lifestyle"],
   "icons": [
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

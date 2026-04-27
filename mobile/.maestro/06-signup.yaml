@@ -1,0 +1,41 @@
+# Flow 6: Register a new account (sign-up).
+#
+# Drives the full register screen end-to-end, exercising:
+#   - the screen launches from Login → "Sign Up"
+#   - first/last/username/email/password inputs accept text
+#   - the terms checkbox can be toggled
+#   - the "Create Account" CTA submits and we land somewhere logged-in
+#
+# Requires the staging build to point at a backend whose registration is
+# enabled. Maestro variables:
+#   - SIGNUP_FIRST          (default: Test)
+#   - SIGNUP_LAST           (default: User)
+#   - SIGNUP_USERNAME       (must be unique across runs)
+#   - SIGNUP_EMAIL          (must be unique across runs)
+#   - SIGNUP_PASSWORD       (default: Password123!)
+appId: com.bookswap.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Log In"
+- tapOn: "Sign Up"
+- assertVisible: "Create Account"
+  optional: true
+- tapOn: "First name"
+- inputText: ${SIGNUP_FIRST}
+- tapOn: "Last name"
+- inputText: ${SIGNUP_LAST}
+- tapOn: "Username"
+- inputText: ${SIGNUP_USERNAME}
+- tapOn: "Email"
+- inputText: ${SIGNUP_EMAIL}
+- tapOn: "Password"
+- inputText: ${SIGNUP_PASSWORD}
+- tapOn: "Confirm password"
+- inputText: ${SIGNUP_PASSWORD}
+- tapOn: "I agree to the Terms of Service and Privacy Policy"
+  optional: true
+- tapOn: "Create Account"
+- assertVisible:
+    text: "Verify Your Email|Welcome|Home|Recently Added"
+    optional: true

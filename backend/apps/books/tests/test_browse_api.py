@@ -163,18 +163,19 @@ class TestBrowseEndpoint:
         titles = [b["title"] for b in resp.data["results"]]
         assert "No Location Book" not in titles
 
-    def test_400_when_user_has_no_location(self, api_client):
-        """Returns 400 if the user hasn't set their location and no lat/lng provided."""
+    def test_empty_results_when_user_has_no_location(self, api_client):
+        """Returns empty results if the user hasn't set their location and no lat/lng provided."""
         user = UserFactory(is_active=True)  # no location
         api_client.force_authenticate(user=user)
         resp = api_client.get("/api/v1/books/browse/")
-        assert resp.status_code == 400
-        assert "lat" in resp.data["detail"].lower() or "location" in resp.data["detail"].lower()
+        assert resp.status_code == 200
+        assert resp.data["results"] == []
 
-    def test_400_for_unauthenticated_without_coords(self, api_client):
-        """Anonymous users without lat/lng get 400, not 401."""
+    def test_empty_results_for_unauthenticated_without_coords(self, api_client):
+        """Anonymous users without lat/lng get empty results."""
         resp = api_client.get("/api/v1/books/browse/")
-        assert resp.status_code == 400
+        assert resp.status_code == 200
+        assert resp.data["results"] == []
 
     def test_anonymous_browse_with_lat_lng(self, api_client, nearby_books):
         """Anonymous users CAN browse when lat/lng query params are supplied."""

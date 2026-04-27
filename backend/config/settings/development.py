@@ -1,7 +1,7 @@
 """Development settings — never use in production."""
 
 from config.settings.base import *  # noqa: F403
-from config.settings.base import env
+from config.settings.base import REST_FRAMEWORK, env
 
 DEBUG = True
 
@@ -14,6 +14,17 @@ CSRF_COOKIE_SECURE = False
 REFRESH_TOKEN_COOKIE_SECURE = False
 # Console email during development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Relax throttle rates for local development
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"].update(
+    {
+        "anon": "5000/hour",
+        "user": "10000/hour",
+        "auth": "200/minute",
+        "auth_sensitive": "50/minute",
+        "enumeration": "100/minute",
+    }
+)
 
 # Django Debug Toolbar (optional — install separately)
 # INSTALLED_APPS += ['debug_toolbar']

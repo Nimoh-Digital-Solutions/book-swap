@@ -1,9 +1,9 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { useAppStore } from '@data/useAppStore';
 import { useMyShelf } from '@features/books/hooks/useMyShelf';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { ArrowRightLeft } from 'lucide-react';
 
 import { useCreateExchange } from '../../hooks/useExchangeMutations';
@@ -16,7 +16,7 @@ interface RequestSwapButtonProps {
 
 export function RequestSwapButton({ bookId, bookOwnerId, currentUserId }: RequestSwapButtonProps): ReactElement | null {
   const { t } = useTranslation('exchanges');
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const createMutation = useCreateExchange();
   const { data: shelf } = useMyShelf();

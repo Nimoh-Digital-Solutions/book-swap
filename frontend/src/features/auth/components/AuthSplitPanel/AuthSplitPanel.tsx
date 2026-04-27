@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
+import { logoMark } from '@assets';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { PATHS } from '@routes/config/paths';
 import { Star } from 'lucide-react';
 
@@ -13,12 +14,12 @@ export interface AuthSplitPanelProps {
   brandingTitle: ReactNode;
   /** Subtitle text for the branding panel */
   brandingSubtitle: string;
-  /** Testimonial quote */
-  quote: string;
+  /** Testimonial quote (optional — omit to hide testimonial card) */
+  quote?: string;
   /** Testimonial author name */
-  authorName: string;
+  authorName?: string;
   /** Testimonial author detail line */
-  authorDetails: string;
+  authorDetails?: string;
   /** Progress bar 0–100. Default 100. */
   progress?: number;
 }
@@ -42,20 +43,18 @@ export function AuthSplitPanel({
   progress = 100,
 }: AuthSplitPanelProps) {
   return (
-    <main className="min-h-screen bg-background-dark flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[700px] border border-border-dark">
+    <main className="min-h-[100dvh] bg-background-dark flex items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-7xl bg-surface-dark shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row min-h-[100dvh] md:min-h-[700px] border border-border-dark">
         {/* ── Branding panel (left) ────────────────────────────── */}
         <div className="md:w-6/12 bg-background-dark text-white p-8 md:p-12 flex-col justify-between relative overflow-hidden border-r border-border-dark hidden md:flex">
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-background-dark/80 via-transparent to-background-dark/90 z-0" aria-hidden="true" />
 
           <div className="relative z-10">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-8">
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 mt-6">
               {brandingTitle}
             </h1>
@@ -64,26 +63,31 @@ export function AuthSplitPanel({
             </p>
           </div>
 
-          {/* Testimonial card */}
-          <div className="relative z-10 mt-12 md:mt-0">
-            <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
-              <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
-                ))}
-              </div>
-              <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
-                  {authorName ? authorName.charAt(0) + authorName.split(' ').slice(-1)[0]?.charAt(0) : 'AB'}
+          {quote && (
+            <div className="relative z-10 mt-12 md:mt-0">
+              <div className="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-xl border border-border-dark">
+                <div className="flex text-[#E4B643] mb-3 gap-1" aria-label="5 stars">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current" aria-hidden="true" />
+                  ))}
                 </div>
-                <div>
-                  <p className="font-bold text-sm text-white">{authorName}</p>
-                  <p className="text-xs text-text-secondary">{authorDetails}</p>
-                </div>
+                <p className="italic text-gray-200 mb-4">&ldquo;{quote}&rdquo;</p>
+                {authorName && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E4B643] to-[#d9b93e] flex items-center justify-center text-[#152018] text-sm font-bold border-2 border-[#E4B643]">
+                      {authorName.charAt(0) + (authorName.split(' ').slice(-1)[0]?.charAt(0) ?? '')}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-white">{authorName}</p>
+                      {authorDetails && (
+                        <p className="text-xs text-text-secondary">{authorDetails}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Form panel (right) ──────────────────────────────── */}
@@ -96,14 +100,24 @@ export function AuthSplitPanel({
             />
           </div>
 
-          {/* Mobile logo (hidden on desktop) */}
+          {/* Condensed mobile brand block (RESP-016, Sprint B).
+            * The full branding panel is `hidden md:flex`, so without this
+            * block mobile users would see only a logo + bare form — losing
+            * the brand promise entirely. We render a tight headline + 1-line
+            * subtitle (no testimonial) so the conversion-relevant hero copy
+            * is still visible above the fold. Hidden on `md:` because the
+            * left panel takes over there. */}
           <div className="md:hidden mb-8">
-            <Link to={PATHS.HOME} className="inline-flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#E4B643] rounded-sm transform rotate-45 flex items-center justify-center">
-                <div className="w-4 h-4 bg-[#152018] transform -rotate-45 rounded-sm" />
-              </div>
+            <LocaleLink to={PATHS.HOME} className="inline-flex items-center gap-3 mb-5">
+              <img src={logoMark} alt="" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight text-white">BookSwap</span>
-            </Link>
+            </LocaleLink>
+            <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-white text-balance mb-2">
+              {brandingTitle}
+            </h1>
+            <p className="text-sm sm:text-base text-text-secondary leading-relaxed">
+              {brandingSubtitle}
+            </p>
           </div>
 
           <div className="max-w-md mx-auto w-full relative z-10">

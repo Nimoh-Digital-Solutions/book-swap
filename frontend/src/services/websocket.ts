@@ -61,7 +61,7 @@ function parseMessage(raw: unknown): WsMessage | null {
  * createWebSocket — low-level factory for managed WebSocket connections.
  *
  * Features:
- * - Appends JWT as `?token=` query parameter for Django Channels auth
+ * - Sends JWT as first message after connection (no token in URL)
  * - Parses incoming JSON into typed `WsMessage` discriminated union
  * - Exponential backoff auto-reconnect (configurable, skipped for 4003/4004)
  * - Sentry breadcrumbs for open/close/error events
@@ -97,13 +97,14 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
   let retryCount = 0;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let intentionalClose = false;
+  let _authenticated = false;
 
   // -- Helpers --------------------------------------------------------------
 
-  /** Build the full URL with the JWT query param. */
-  function buildUrl(): string {
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(token)}`;
+  function sendAuthMessage(): void {
+    if (socket?.readyState === WebSocket.OPEN && token) {
+      socket.send(JSON.stringify({ type: 'authenticate', token }));
+    }
   }
 
   /** Calculate exponential backoff delay with jitter. */
@@ -142,21 +143,38 @@ export function createWebSocket(options: WebSocketOptions): WebSocketHandle {
       socket.onclose = null;
     }
 
-    socket = new WebSocket(buildUrl());
+    socket = new WebSocket(url);
+    _authenticated = false;
 
     socket.onopen = (event) => {
-      retryCount = 0; // Reset on successful connection
       addBreadcrumb('WebSocket connected', 'websocket', { url });
+      sendAuthMessage();
       onOpen?.(event);
     };
 
     socket.onmessage = (event: MessageEvent) => {
       const message = parseMessage(event.data);
-      if (message) {
-        onMessage(message);
-      } else if (import.meta.env.DEV) {
-        logger.warn('[ws] Unparseable message', { data: event.data });
+      if (!message) {
+        if (import.meta.env.DEV) {
+          logger.warn('[ws] Unparseable message', { data: event.data });
+        }
+        return;
       }
+
+      if (message.type === 'auth.success') {
+        _authenticated = true;
+        retryCount = 0;
+        return;
+      }
+
+      if (message.type === 'auth.failed' || message.type === 'auth.required') {
+        if (import.meta.env.DEV) {
+          logger.warn('[ws] Auth failed', { type: message.type, reason: 'reason' in message ? message.reason : undefined });
+        }
+        return;
+      }
+
+      onMessage(message);
     };
 
     socket.onerror = (event) => {

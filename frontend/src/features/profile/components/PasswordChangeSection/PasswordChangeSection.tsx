@@ -54,7 +54,7 @@ function PasswordInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           autoComplete={autoComplete}
-          className="w-full bg-[#152018] border border-[#28382D] rounded-xl px-4 py-2.5 pr-10 text-sm text-white placeholder-[#8C9C92] focus:outline-none focus:border-[#E4B643]"
+          className="w-full bg-[#152018] border border-[#28382D] rounded-xl px-4 py-2.5 pr-10 text-base sm:text-sm text-white placeholder-[#8C9C92] focus:outline-none focus:border-[#E4B643]"
         />
         <button
           type="button"

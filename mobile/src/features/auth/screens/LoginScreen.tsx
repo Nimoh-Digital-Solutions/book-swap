@@ -1,0 +1,304 @@
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertTriangle, Mail, Lock } from 'lucide-react-native';
+
+import type { AuthStackParamList } from '@/navigation/types';
+import { useColors } from '@/hooks/useColors';
+import { spacing, typography, radius } from '@/constants/theme';
+import { ANIMATION } from '@/constants/animation';
+import { showErrorToast } from '@/components/Toast';
+import { deletionStorage } from '@/lib/storage';
+import { useCancelDeletion } from '@/features/profile/hooks/useAccountDeletion';
+
+import { createLoginSchema, type LoginInput } from '../schemas/auth.schemas';
+import { useLogin } from '../hooks/useLogin';
+import { AuthScreenWrapper } from '../components/AuthScreenWrapper';
+import { AuthLogo } from '../components/AuthLogo';
+import { AuthInput } from '../components/AuthInput';
+import { AuthButton } from '../components/AuthButton';
+import { SocialAuthSection } from '../components/SocialAuthSection';
+
+type Nav = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+
+export function LoginScreen() {
+  const { t } = useTranslation();
+  const c = useColors();
+  const nav = useNavigation<Nav>();
+  const passwordRef = useRef<TextInput>(null);
+  const login = useLogin();
+  const cancelDeletion = useCancelDeletion();
+  const [pendingCancelToken, setPendingCancelToken] = useState<string | null>(
+    () => deletionStorage.getCancelToken(),
+  );
+
+  const schema = useMemo(() => createLoginSchema(t), [t]);
+
+  const {
+    control,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(schema),
+    defaultValues: { email_or_username: '', password: '' },
+  });
+
+  const onSubmit = useCallback(
+    (data: LoginInput) => {
+      login.mutate(data, {
+        onError: (err) => {
+          const ax = err as { response?: { data?: Record<string, unknown> } };
+          const raw = ax.response?.data;
+          if (!raw) { showErrorToast(t('common.error')); return; }
+
+          const fieldKeys = Object.keys(raw).filter(
+            (k) => k !== 'detail' && k !== 'non_field_errors',
+          ) as (keyof LoginInput)[];
+
+          if (fieldKeys.length > 0) {
+            for (const key of fieldKeys) {
+              const val = raw[key];
+              const msg = Array.isArray(val) ? val.join('. ') : String(val ?? '');
+              if (msg) setError(key, { message: msg });
+            }
+            return;
+          }
+
+          const detail =
+            typeof raw.detail === 'string'
+              ? raw.detail
+              : Array.isArray(raw.non_field_errors)
+                ? (raw.non_field_errors as string[]).join('. ')
+                : t('common.error');
+          setError('root', { message: detail });
+        },
+      });
+    },
+    [login, t, setError],
+  );
+
+  const handleCancelDeletion = useCallback(() => {
+    if (!pendingCancelToken) return;
+    cancelDeletion.mutate(
+      { token: pendingCancelToken },
+      {
+        onSuccess: () => {
+          setPendingCancelToken(null);
+          Alert.alert(
+            t('accountDeletion.cancelledTitle', 'Deletion Cancelled'),
+            t('accountDeletion.cancelledMessage', 'Your account has been restored. You can log in again.'),
+          );
+        },
+        onError: () => {
+          deletionStorage.clearCancelToken();
+          setPendingCancelToken(null);
+          Alert.alert(
+            t('common.error', 'Error'),
+            t('accountDeletion.cancelError', 'Could not cancel deletion. The link may have expired.'),
+          );
+        },
+      },
+    );
+  }, [pendingCancelToken, cancelDeletion, t]);
+
+  return (
+    <AuthScreenWrapper centered>
+      {pendingCancelToken && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('accountDeletion.pendingTapCancel', 'Tap here to cancel and restore your account.')}
+          accessibilityState={{ disabled: cancelDeletion.isPending }}
+          onPress={handleCancelDeletion}
+          disabled={cancelDeletion.isPending}
+          style={({ pressed }) => [
+            s.deletionBanner,
+            {
+              backgroundColor: c.auth.golden + '14',
+              borderColor: c.auth.golden + '40',
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <AlertTriangle size={16} color={c.auth.golden} />
+          <View style={s.deletionBannerText}>
+            <Text style={[s.deletionBannerTitle, { color: c.auth.golden }]}>
+              {t('accountDeletion.pendingTitle', 'Account scheduled for deletion')}
+            </Text>
+            <Text style={[s.deletionBannerSub, { color: c.auth.textMuted }]}>
+              {t('accountDeletion.pendingTapCancel', 'Tap here to cancel and restore your account.')}
+            </Text>
+          </View>
+          {cancelDeletion.isPending && (
+            <ActivityIndicator size="small" color={c.auth.golden} />
+          )}
+        </Pressable>
+      )}
+
+      <Animated.View entering={FadeIn.duration(400)} style={s.hero}>
+        <AuthLogo size="lg" showName />
+        <Text style={[s.subtitle, { color: c.auth.textMuted }]}>
+          {t('auth.loginSubtitle')}
+        </Text>
+      </Animated.View>
+
+      <View style={s.form}>
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 0)}>
+          <Controller
+            control={control}
+            name="email_or_username"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <AuthInput
+                ref={ref}
+                icon={Mail}
+                placeholder={t('auth.emailOrUsername')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.email_or_username?.message}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+              />
+            )}
+          />
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 1)}>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value, ref } }) => (
+              <AuthInput
+                ref={(el) => {
+                  if (typeof ref === 'function') ref(el);
+                  (passwordRef as React.MutableRefObject<TextInput | null>).current = el;
+                }}
+                icon={Lock}
+                placeholder={t('auth.password')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.password?.message}
+                secureTextEntry
+                textContentType="password"
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit(onSubmit)}
+                rightAction={{
+                  label: t('auth.forgotPassword'),
+                  onPress: () => nav.navigate('ForgotPassword'),
+                }}
+              />
+            )}
+          />
+        </Animated.View>
+
+        {errors.root?.message && (
+          <View style={[s.rootError, { backgroundColor: c.status.error + '14', borderColor: c.status.error + '40' }]}>
+            <AlertTriangle size={14} color={c.status.error} />
+            <Text style={[s.rootErrorText, { color: c.status.error }]}>
+              {errors.root.message}
+            </Text>
+          </View>
+        )}
+
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.normal * 2)}>
+          <AuthButton
+            label={t('auth.login')}
+            onPress={handleSubmit(onSubmit)}
+            loading={login.isPending}
+          />
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 3 + 60)}>
+          <SocialAuthSection />
+        </Animated.View>
+      </View>
+
+      <Animated.View entering={FadeInUp.duration(200).delay(ANIMATION.stagger.normal * 4 + 60)}>
+        <Pressable
+          onPress={() => nav.navigate('Register')}
+          style={s.footer}
+          hitSlop={12}
+          accessibilityRole="link"
+          accessibilityLabel={`${t('auth.noAccountPrompt')} ${t('auth.register')}`}
+        >
+          <Text style={[s.footerText, { color: c.auth.textMuted }]}>
+            {t('auth.noAccountPrompt')}{' '}
+            <Text style={{ color: c.auth.golden, fontWeight: '700', textDecorationLine: 'underline' }}>
+              {t('auth.register')}
+            </Text>
+          </Text>
+        </Pressable>
+      </Animated.View>
+    </AuthScreenWrapper>
+  );
+}
+
+const s = StyleSheet.create({
+  hero: {
+    alignItems: 'center',
+    marginBottom: spacing.xl + spacing.md,
+  },
+  subtitle: {
+    ...typography.body,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+    maxWidth: 260,
+  },
+  form: {
+    width: '100%',
+  },
+  footer: {
+    marginTop: spacing.xl,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  footerText: {
+    ...typography.body,
+  },
+  deletionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.lg,
+    width: '100%',
+  },
+  deletionBannerText: { flex: 1 },
+  deletionBannerTitle: { fontSize: 13, fontWeight: '700' },
+  deletionBannerSub: { fontSize: 12, marginTop: 2 },
+  rootError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  rootErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+});

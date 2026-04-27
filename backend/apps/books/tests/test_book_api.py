@@ -2,14 +2,16 @@
 
 import io
 import uuid
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
 
-from apps.books.models import Book, BookStatus, WishlistItem
+from apps.books.models import Book, BookStatus, SwapType, WishlistItem
 from apps.books.services import ISBNLookupError, ISBNLookupService
 from apps.books.tests.factories import (
     BookFactory,
@@ -45,6 +47,24 @@ def _make_image(fmt="JPEG", size=(100, 100), color="red"):
     return buf
 
 
+def _jwt_access_token_for_user(user):
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    return str(RefreshToken.for_user(user).access_token)
+
+
+def _jwt_expired_access_token_for_user(user):
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    token = AccessToken.for_user(user)
+    token.set_exp(from_time=timezone.now() - timedelta(days=1))
+    return str(token)
+
+
+def _set_bearer(client, token: str) -> None:
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # ISBN Lookup Service (unit tests with mocked HTTP)
 # ═══════════════════════════════════════════════════════════════════════
@@ -54,10 +74,15 @@ class TestISBNLookupService:
     """ISBNLookupService with mocked external APIs."""
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_open_library_success(self, mock_get):
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.json.return_value = {
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_open_library_success(self, mock_client_cls, mock_get):
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
+        ol_resp = MagicMock()
+        ol_resp.status_code = 200
+        ol_resp.json.return_value = {
             "title": "Test Book",
             "authors": [{"name": "Author One"}],
             "isbn_13": ["9781234567890"],
@@ -65,8 +90,9 @@ class TestISBNLookupService:
             "number_of_pages": 200,
             "publish_date": "2020-01-15",
             "description": "A great book.",
+            "languages": [{"key": "/languages/eng"}],
         }
-        mock_get.return_value = mock_resp
+        mock_client.get.return_value = ol_resp
 
         result = ISBNLookupService.lookup_isbn("9781234567890")
         assert result["title"] == "Test Book"
@@ -77,10 +103,16 @@ class TestISBNLookupService:
         assert "covers.openlibrary.org" in result["cover_url"]
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_falls_back_to_google(self, mock_get):
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_falls_back_to_google(self, mock_client_cls, mock_get):
         """When Open Library returns 404, fall back to Google Books."""
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
         ol_resp = MagicMock()
         ol_resp.status_code = 404
+        mock_client.get.return_value = ol_resp
 
         gb_resp = MagicMock()
         gb_resp.status_code = 200
@@ -100,7 +132,7 @@ class TestISBNLookupService:
                 }
             ]
         }
-        mock_get.side_effect = [ol_resp, gb_resp]
+        mock_get.return_value = gb_resp
 
         result = ISBNLookupService.lookup_isbn("9780000000001")
         assert result["title"] == "Fallback Book"
@@ -108,14 +140,21 @@ class TestISBNLookupService:
         assert result["publish_year"] == 2019
 
     @patch("apps.books.services.httpx.get")
-    def test_lookup_isbn_both_fail_raises(self, mock_get):
+    @patch("apps.books.services.httpx.Client")
+    def test_lookup_isbn_both_fail_raises(self, mock_client_cls, mock_get):
+        mock_client = MagicMock()
+        mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
         ol_resp = MagicMock()
         ol_resp.status_code = 404
+        mock_client.get.return_value = ol_resp
+
         gb_resp = MagicMock()
         gb_resp.status_code = 200
         gb_resp.raise_for_status.return_value = None
         gb_resp.json.return_value = {"items": []}
-        mock_get.side_effect = [ol_resp, gb_resp]
+        mock_get.return_value = gb_resp
 
         with pytest.raises(ISBNLookupError, match="No metadata found"):
             ISBNLookupService.lookup_isbn("0000000000")
@@ -225,9 +264,117 @@ class TestBookListView:
         assert len(response.data["results"]) == 1
         assert response.data["results"][0]["owner"]["id"] == str(user.id)
 
-    def test_unauthenticated_rejected(self, api_client):
+    def test_unauthenticated_allowed_read_only(self, api_client):
         response = api_client.get("/api/v1/books/")
-        assert response.status_code == 401
+        assert response.status_code == 200
+
+
+class TestOptionalJWTAuthenticationBooksListRead:
+    """JWT + anonymous behaviour on ``GET /api/v1/books/``.
+
+    ``BookViewSet`` uses ``perform_authentication`` so invalid Bearer tokens on
+    list/retrieve fall back to anonymous (no 401), matching the UX of
+    :class:`config.authentication.OptionalJWTAuthentication` on public endpoints.
+    """
+
+    def test_unauthenticated_books_list_returns_200_not_401(self, api_client):
+        BookFactory(status=BookStatus.AVAILABLE)
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert len(response.data["results"]) >= 1
+
+    def test_valid_jwt_books_list_returns_200_owner_me_context(self, api_client):
+        owner = UserFactory(is_active=True)
+        BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        response = api_client.get("/api/v1/books/?owner=me")
+        assert response.status_code == 200
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["owner"]["id"] == str(owner.id)
+
+    def test_expired_jwt_books_list_returns_200_not_401(self, api_client):
+        user = UserFactory(is_active=True)
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, _jwt_expired_access_token_for_user(user))
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_garbage_jwt_books_list_returns_200_not_401(self, api_client):
+        BookFactory(status=BookStatus.AVAILABLE)
+        _set_bearer(api_client, "not-a-valid-jwt")
+        response = api_client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_valid_jwt_books_owner_me_differs_from_unauthenticated(self, api_client):
+        owner = UserFactory(is_active=True)
+        mine = BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        other_book = BookFactory(status=BookStatus.AVAILABLE)
+
+        anon = api_client.get("/api/v1/books/?owner=me")
+        assert anon.status_code == 200
+        # ``owner=me`` is ignored for anonymous users; list is all available books.
+        anon_ids = {row["id"] for row in anon.data["results"]}
+        assert str(mine.id) in anon_ids
+        assert str(other_book.id) in anon_ids
+
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        authed = api_client.get("/api/v1/books/?owner=me")
+        assert authed.status_code == 200
+        assert len(authed.data["results"]) == 1
+        assert authed.data["results"][0]["id"] == str(mine.id)
+
+
+class TestOptionalJWTAuthenticationPublicEndpoints:
+    """``OptionalJWTAuthentication`` on ``nearby-count`` and ``browse`` (not on ``BookViewSet``)."""
+
+    _NEARBY = "/api/v1/books/nearby-count/?lat=52.3676&lng=4.9041&radius=10000"
+
+    def test_optional_jwt_nearby_count_unauthenticated_returns_200(self, api_client):
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert "count" in response.data
+
+    def test_optional_jwt_nearby_count_valid_jwt_returns_200(self, api_client):
+        user = UserFactory(is_active=True)
+        _set_bearer(api_client, _jwt_access_token_for_user(user))
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert "count" in response.data
+
+    def test_optional_jwt_nearby_count_expired_jwt_returns_200_not_401(self, api_client):
+        user = UserFactory(is_active=True)
+        _set_bearer(api_client, _jwt_expired_access_token_for_user(user))
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_optional_jwt_nearby_count_garbage_jwt_returns_200_not_401(self, api_client):
+        _set_bearer(api_client, "%%%garbage%%%")
+        response = api_client.get(self._NEARBY)
+        assert response.status_code == 200
+        assert response.status_code != 401
+
+    def test_optional_jwt_browse_authenticated_jwt_excludes_own_listing(self, api_client):
+        """Authenticated browse excludes the caller's own books; anonymous sees them."""
+        owner = UserFactory(is_active=True, with_location=True)
+        mine = BookFactory(owner=owner, status=BookStatus.AVAILABLE)
+        lat = owner.location.y
+        lng = owner.location.x
+        browse_url = f"/api/v1/books/browse/?lat={lat}&lng={lng}&radius=50000"
+
+        anon_resp = api_client.get(browse_url)
+        assert anon_resp.status_code == 200
+        anon_ids = {row["id"] for row in anon_resp.data["results"]}
+        assert str(mine.id) in anon_ids
+
+        _set_bearer(api_client, _jwt_access_token_for_user(owner))
+        auth_resp = api_client.get(browse_url)
+        assert auth_resp.status_code == 200
+        auth_ids = {row["id"] for row in auth_resp.data["results"]}
+        assert str(mine.id) not in auth_ids
 
 
 class TestBookCreateView:
@@ -279,6 +426,76 @@ class TestBookCreateView:
         assert response.status_code == 400
 
 
+class TestBookSwapType:
+    """Create, read, and update swap_type on book listings."""
+
+    def test_create_book_defaults_swap_type_temporary(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Default Swap",
+            "author": "Author",
+            "condition": "good",
+            "language": "en",
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.TEMPORARY
+
+    def test_create_book_with_swap_type_temporary(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Temporary Swap",
+            "author": "Author",
+            "condition": "good",
+            "language": "en",
+            "swap_type": SwapType.TEMPORARY,
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.TEMPORARY
+
+    def test_create_book_with_swap_type_permanent(self, auth_client):
+        client, _ = auth_client
+        data = {
+            "title": "Giveaway",
+            "author": "Author",
+            "condition": "like_new",
+            "language": "en",
+            "swap_type": SwapType.PERMANENT,
+        }
+        response = client.post("/api/v1/books/", data, format="json")
+        assert response.status_code == 201
+        assert response.data["swap_type"] == SwapType.PERMANENT
+
+    def test_list_includes_swap_type(self, auth_client):
+        client, _ = auth_client
+        BookFactory(status=BookStatus.AVAILABLE, swap_type=SwapType.PERMANENT)
+        response = client.get("/api/v1/books/")
+        assert response.status_code == 200
+        assert "swap_type" in response.data["results"][0]
+        assert response.data["results"][0]["swap_type"] == SwapType.PERMANENT
+
+    def test_detail_includes_swap_type(self, auth_client):
+        client, _ = auth_client
+        book = BookFactory(status=BookStatus.AVAILABLE, swap_type=SwapType.PERMANENT)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["swap_type"] == SwapType.PERMANENT
+
+    def test_patch_updates_swap_type(self, auth_client):
+        client, user = auth_client
+        book = BookFactory(owner=user, swap_type=SwapType.TEMPORARY)
+        response = client.patch(
+            f"/api/v1/books/{book.id}/",
+            {"swap_type": SwapType.PERMANENT},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["swap_type"] == SwapType.PERMANENT
+        book.refresh_from_db()
+        assert book.swap_type == SwapType.PERMANENT
+
+
 class TestBookDetailView:
     """GET /api/v1/books/{id}/ — book detail."""
 
@@ -291,12 +508,73 @@ class TestBookDetailView:
         assert "photos" in response.data
         assert "owner" in response.data
 
-    def test_get_unavailable_book_not_found(self, auth_client):
-        """Non-available books not in default queryset."""
+    def test_unrelated_user_cannot_get_in_exchange_book(self, auth_client):
+        """Non-AVAILABLE books are hidden from unrelated users (privacy)."""
         client, _ = auth_client
         book = BookFactory(status=BookStatus.IN_EXCHANGE)
         response = client.get(f"/api/v1/books/{book.id}/")
         assert response.status_code == 404
+
+    def test_unrelated_user_cannot_get_returned_book(self, auth_client):
+        client, _ = auth_client
+        book = BookFactory(status=BookStatus.RETURNED)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 404
+
+    def test_anonymous_cannot_get_in_exchange_book(self, api_client):
+        book = BookFactory(status=BookStatus.IN_EXCHANGE)
+        response = api_client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 404
+
+    def test_owner_can_get_own_in_exchange_book(self, auth_client):
+        """Regression: MyBooks must be able to open IN_EXCHANGE listings."""
+        client, user = auth_client
+        book = BookFactory(owner=user, status=BookStatus.IN_EXCHANGE)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["id"] == str(book.id)
+        assert response.data["status"] == BookStatus.IN_EXCHANGE
+
+    def test_owner_can_get_own_returned_book(self, auth_client):
+        client, user = auth_client
+        book = BookFactory(owner=user, status=BookStatus.RETURNED)
+        response = client.get(f"/api/v1/books/{book.id}/")
+        assert response.status_code == 200
+        assert response.data["status"] == BookStatus.RETURNED
+
+    def test_active_exchange_party_can_get_in_exchange_book(self, api_client):
+        """Counter-party in an active exchange must be able to load both books."""
+        from apps.exchanges.tests.factories import ExchangeRequestFactory
+
+        exchange = ExchangeRequestFactory(active=True)
+        # ``active=True`` flips both books to IN_EXCHANGE via the factory hook.
+
+        # Requester views the owner's requested_book.
+        api_client.force_authenticate(user=exchange.requester)
+        resp = api_client.get(f"/api/v1/books/{exchange.requested_book_id}/")
+        assert resp.status_code == 200
+        assert resp.data["id"] == str(exchange.requested_book_id)
+
+        # Owner views the requester's offered_book.
+        api_client.force_authenticate(user=exchange.owner)
+        resp = api_client.get(f"/api/v1/books/{exchange.offered_book_id}/")
+        assert resp.status_code == 200
+        assert resp.data["id"] == str(exchange.offered_book_id)
+
+    def test_completed_exchange_does_not_grant_access(self, api_client):
+        """After completion, the other party loses access to non-AVAILABLE books."""
+        from apps.exchanges.models import ExchangeStatus
+        from apps.exchanges.tests.factories import ExchangeRequestFactory
+
+        exchange = ExchangeRequestFactory(status=ExchangeStatus.COMPLETED)
+        # COMPLETED is not in the active set; books default to AVAILABLE in
+        # the factory for non-post-accept statuses, so flip one to RETURNED.
+        exchange.requested_book.status = BookStatus.RETURNED
+        exchange.requested_book.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=exchange.requester)
+        resp = api_client.get(f"/api/v1/books/{exchange.requested_book_id}/")
+        assert resp.status_code == 404
 
 
 class TestBookUpdateView:

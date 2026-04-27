@@ -46,7 +46,9 @@
       "browse": "Browse",
       "howItWorks": "How it Works",
       "community": "Community",
-      "signIn": "Sign In"
+      "signIn": "Sign In",
+      "openMenu": "Open menu",
+      "menuLabel": "Main menu"
     },
     "hero": {
       "badge": "Amsterdam's Book Exchange Community",
@@ -58,7 +60,9 @@
     },
     "recentlyAdded": {
       "title": "Recently Added",
-      "viewAll": "View all →"
+      "viewAll": "View all →",
+      "errorTitle": "Couldn't load books",
+      "errorBody": "Something went wrong while fetching the latest books. Please try again."
     },
     "howItWorks": {
       "title": "How It Works",
@@ -155,7 +159,22 @@
     "heading": "Settings",
     "dangerZone": "Danger Zone",
     "deleteDescription": "Once you delete your account, there is no going back. You will have a 30-day grace period to cancel.",
-    "deleteAccount": "Delete Account"
+    "deleteAccount": "Delete Account",
+    "location": {
+      "heading": "Location",
+      "current": "Current: {{neighborhood}}",
+      "inputLabel": "City, neighborhood, or postcode",
+      "placeholder": "e.g. Amsterdam West, 1054",
+      "setBtn": "Set location",
+      "useGps": "Use GPS",
+      "updated": "Location set to {{neighborhood}}",
+      "updatedGeneric": "Your location has been updated.",
+      "notFound": "Could not find that location. Please check and try again.",
+      "noGps": "Geolocation is not supported by your browser.",
+      "gpsError": "Failed to update location via GPS.",
+      "denied": "Location access denied. Please check your browser settings.",
+      "privacyNote": "Your exact address is never shared — we only use it to calculate distances to available books."
+    }
   },
   "common": {
     "loading": "Loading…",
@@ -275,11 +294,13 @@
       "addError": "Failed to add to wishlist.",
       "removeError": "Failed to remove from wishlist."
     },
-    "card": {
-      "by": "by {{author}}",
+    "status": {
       "available": "Available",
       "in_exchange": "In Exchange",
       "returned": "Returned"
+    },
+    "card": {
+      "by": "by {{author}}"
     },
     "photo": {
       "uploadSuccess": "Photo uploaded.",

@@ -1,0 +1,80 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { ProfileStackParamList } from '@/navigation/types';
+import { MyProfileScreen } from '@/features/profile/screens/MyProfileScreen';
+import { EditProfileScreen } from '@/features/profile/screens/EditProfileScreen';
+import { MyBooksScreen } from '@/features/books/screens/MyBooksScreen';
+import { BookDetailScreen } from '@/features/books/screens/BookDetailScreen';
+import { AddBookScreen } from '@/features/books/screens/AddBookScreen';
+import { EditBookScreen } from '@/features/books/screens/EditBookScreen';
+import { WishlistScreen } from '@/features/books/screens/WishlistScreen';
+import { SettingsScreen } from '@/features/profile/screens/SettingsScreen';
+import { NotificationPreferencesScreen } from '@/features/notifications/screens/NotificationPreferencesScreen';
+import { BlockedUsersScreen } from '@/features/trust-safety/screens/BlockedUsersScreen';
+import { ChangePasswordScreen } from '@/features/auth/screens/ChangePasswordScreen';
+import { MyReviewsScreen } from '@/features/ratings/screens/MyReviewsScreen';
+import { AppearanceScreen } from '@/features/profile/screens/AppearanceScreen';
+import { LanguageScreen } from '@/features/profile/screens/LanguageScreen';
+import { AboutScreen } from '@/features/profile/screens/AboutScreen';
+import { useProfileHeaderOptions, useChildHeaderOptions } from '@/navigation/headerOptions';
+
+const Stack = createNativeStackNavigator<ProfileStackParamList>();
+
+export function ProfileStack() {
+  const { t } = useTranslation();
+  const profile = useProfileHeaderOptions();
+  const child = useChildHeaderOptions();
+
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ ...profile, headerTitle: t('navigation.profile', 'Profile') }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ ...child, headerTitle: t('navigation.editProfile', 'Edit profile') }} />
+      <Stack.Screen name="MyBooks" component={MyBooksScreen} options={{ ...child, headerTitle: t('navigation.myBooks', 'My books') }} />
+      <Stack.Screen name="BookDetail" component={BookDetailScreen} options={{ ...child, headerTitle: '' }} />
+      <Stack.Screen name="AddBook" component={AddBookScreen} options={{ ...child, headerTitle: t('navigation.addBook', 'Add book') }} />
+      <Stack.Screen name="EditBook" component={EditBookScreen} options={{ ...child, headerTitle: t('navigation.editBook', 'Edit book') }} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ ...child, headerTitle: t('navigation.wishlist', 'Wishlist') }} />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ ...child, headerTitle: t('navigation.settings', 'Settings') }}
+      />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+        options={{ ...child, headerTitle: t('navigation.notifications', 'Notifications') }}
+      />
+      <Stack.Screen
+        name="BlockedUsers"
+        component={BlockedUsersScreen}
+        options={{ ...child, headerTitle: t('navigation.blockedUsers', 'Blocked Users') }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ ...child, headerTitle: t('navigation.changePassword', 'Change Password') }}
+      />
+      <Stack.Screen
+        name="MyReviews"
+        component={MyReviewsScreen}
+        options={{ ...child, headerTitle: t('navigation.reviews', 'Reviews') }}
+      />
+      <Stack.Screen
+        name="Appearance"
+        component={AppearanceScreen}
+        options={{ ...child, headerTitle: t('navigation.appearance', 'Appearance') }}
+      />
+      <Stack.Screen
+        name="Language"
+        component={LanguageScreen}
+        options={{ ...child, headerTitle: t('navigation.language', 'Language') }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{ ...child, headerTitle: t('navigation.about', 'About') }}
+      />
+    </Stack.Navigator>
+  );
+}

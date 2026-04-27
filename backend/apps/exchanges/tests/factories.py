@@ -1,5 +1,6 @@
 import factory
 
+from apps.books.models import BookStatus
 from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import (
     ConditionsAcceptance,
@@ -26,6 +27,24 @@ class ExchangeRequestFactory(factory.django.DjangoModelFactory):
         active = factory.Trait(status=ExchangeStatus.ACTIVE)
         swap_confirmed = factory.Trait(status=ExchangeStatus.SWAP_CONFIRMED)
         return_requested = factory.Trait(status=ExchangeStatus.RETURN_REQUESTED)
+
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        super()._after_postgeneration(instance, create, results)
+        if not create:
+            return
+        post_accept_statuses = {
+            ExchangeStatus.ACCEPTED,
+            ExchangeStatus.CONDITIONS_PENDING,
+            ExchangeStatus.ACTIVE,
+            ExchangeStatus.SWAP_CONFIRMED,
+            ExchangeStatus.RETURN_REQUESTED,
+        }
+        if instance.status in post_accept_statuses:
+            instance.requested_book.status = BookStatus.IN_EXCHANGE
+            instance.requested_book.save(update_fields=["status"])
+            instance.offered_book.status = BookStatus.IN_EXCHANGE
+            instance.offered_book.save(update_fields=["status"])
 
 
 class ConditionsAcceptanceFactory(factory.django.DjangoModelFactory):

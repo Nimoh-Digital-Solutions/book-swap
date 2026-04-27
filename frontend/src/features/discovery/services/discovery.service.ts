@@ -9,6 +9,7 @@ import { http } from '@services';
 
 import type {
   BrowseFilters,
+  CommunityStats,
   NearbyCount,
   PaginatedBrowseBooks,
   RadiusCounts,
@@ -37,6 +38,8 @@ export const discoveryService = {
     if (filters.ordering) params.set('ordering', filters.ordering);
     if (filters.page_size) params.set('page_size', String(filters.page_size));
     if (filters.page) params.set('page', String(filters.page));
+    if (filters.lat != null) params.set('lat', String(filters.lat));
+    if (filters.lng != null) params.set('lng', String(filters.lng));
 
     const qs = params.toString();
     const url = qs
@@ -46,9 +49,14 @@ export const discoveryService = {
     return data;
   },
 
-  /** Fetch book counts per radius bucket. */
-  async radiusCounts(): Promise<RadiusCounts> {
-    const { data } = await http.get<RadiusCounts>(API.browse.radiusCounts);
+  /** Fetch book counts per radius bucket. Passes lat/lng for unauthenticated users. */
+  async radiusCounts(lat?: number, lng?: number): Promise<RadiusCounts> {
+    const params = new URLSearchParams();
+    if (lat != null) params.set('lat', String(lat));
+    if (lng != null) params.set('lng', String(lng));
+    const qs = params.toString();
+    const url = qs ? `${API.browse.radiusCounts}?${qs}` : API.browse.radiusCounts;
+    const { data } = await http.get<RadiusCounts>(url);
     return data;
   },
 
@@ -65,6 +73,23 @@ export const discoveryService = {
     });
     const { data } = await http.get<NearbyCount>(
       `${API.browse.nearbyCount}?${params}`,
+    );
+    return data;
+  },
+
+  /** Fetch community stats and activity feed (public / AllowAny). */
+  async communityStats(
+    lat: number,
+    lng: number,
+    radius = 10000,
+  ): Promise<CommunityStats> {
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radius: String(radius),
+    });
+    const { data } = await http.get<CommunityStats>(
+      `${API.browse.communityStats}?${params}`,
     );
     return data;
   },

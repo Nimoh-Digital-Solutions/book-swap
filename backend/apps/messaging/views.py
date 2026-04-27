@@ -13,6 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
 from apps.trust_safety.services import get_blocked_user_ids
+from bookswap.pagination import DefaultPagination
 from bookswap.permissions import IsEmailVerified
 
 from .models import MeetupLocation, Message
@@ -38,6 +39,7 @@ class MessageViewSet(GenericViewSet):
     """
 
     permission_classes = [IsAuthenticated, IsExchangeParticipantForChat]  # noqa: RUF012
+    pagination_class = DefaultPagination
 
     def initial(self, request, *args, **kwargs):
         """Resolve the exchange before permission checks."""
@@ -78,11 +80,12 @@ class MessageViewSet(GenericViewSet):
             )
 
         queryset = self.get_queryset()
+        ctx = {"request": request}
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = MessageSerializer(page, many=True)
+            serializer = MessageSerializer(page, many=True, context=ctx)
             return self.get_paginated_response(serializer.data)
-        serializer = MessageSerializer(queryset, many=True)
+        serializer = MessageSerializer(queryset, many=True, context=ctx)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -107,10 +110,75 @@ class MessageViewSet(GenericViewSet):
             sender=request.user,
             **serializer.validated_data,
         )
+
+        self._broadcast_to_ws_group(message)
+
         return Response(
-            MessageSerializer(message).data,
+            MessageSerializer(message, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @staticmethod
+    def _absolute_media_url(field):
+        """Return an absolute URL for a FileField, handling both S3 and local storage."""
+        if not field:
+            return None
+        url = field.url
+        if url.startswith(("http://", "https://")):
+            return url
+        from django.conf import settings as _s
+
+        frontend_url = getattr(_s, "FRONTEND_URL", "").rstrip("/")
+        if frontend_url:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(frontend_url)
+            base = f"{parsed.scheme}://{parsed.hostname}"
+            if parsed.port and parsed.port not in (80, 443):
+                base += f":{parsed.port}"
+            return f"{base}{url}"
+        return url
+
+    @staticmethod
+    def _broadcast_to_ws_group(message):
+        """Push the new message to the chat WebSocket group for real-time delivery."""
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        group_name = f"chat_{message.exchange_id}"
+        sender = message.sender
+        import logging
+
+        abs_url = MessageViewSet._absolute_media_url
+
+        try:
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    "type": "chat_message",
+                    "id": str(message.id),
+                    "exchange": str(message.exchange_id),
+                    "sender": {
+                        "id": str(sender.id),
+                        "username": sender.username,
+                        "avatar": abs_url(sender.avatar),
+                    },
+                    "content": message.content,
+                    "image": abs_url(message.image),
+                    "read_at": None,
+                    "created_at": message.created_at.isoformat(),
+                },
+            )
+        except Exception:
+            logging.getLogger("messaging").warning(
+                "Failed to broadcast message %s to WS group %s",
+                message.id,
+                group_name,
+            )
 
     @action(detail=False, methods=["post"], url_path="mark-read")
     def mark_read(self, request, *args, **kwargs):
@@ -127,7 +195,38 @@ class MessageViewSet(GenericViewSet):
             .exclude(sender=request.user)
             .update(read_at=now)
         )
+
+        if updated:
+            self._broadcast_read_receipt(self.exchange.pk, now)
+
         return Response({"marked_read": updated})
+
+    @staticmethod
+    def _broadcast_read_receipt(exchange_id, read_at):
+        """Notify the sender that their messages have been read."""
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        import logging
+
+        group_name = f"chat_{exchange_id}"
+        try:
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    "type": "chat_read_all",
+                    "read_at": read_at.isoformat(),
+                },
+            )
+        except Exception:
+            logging.getLogger("messaging").warning(
+                "Failed to broadcast read receipt to WS group %s",
+                group_name,
+            )
 
 
 class MeetupSuggestionViewSet(GenericViewSet):
@@ -149,6 +248,15 @@ class MeetupSuggestionViewSet(GenericViewSet):
             ).get(pk=exchange_id)
         except (ExchangeRequest.DoesNotExist, ValueError):
             raise NotFound("Exchange not found.") from None
+
+        if request.user.is_authenticated:
+            blocked_ids = get_blocked_user_ids(request.user)
+            other_id = (
+                self.exchange.owner_id if self.exchange.requester_id == request.user.pk else self.exchange.requester_id
+            )
+            if other_id in blocked_ids:
+                raise NotFound("Exchange not found.")
+
         super().initial(request, *args, **kwargs)
 
     def get_queryset(self):

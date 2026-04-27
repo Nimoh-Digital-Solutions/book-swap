@@ -1,9 +1,9 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { BrandedLoader, SEOHead } from '@components';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 import { authService } from '../services/auth.service';
 
@@ -20,8 +20,6 @@ export function EmailVerifyConfirmPage(): ReactElement {
   const [state, setState] = useState<VerifyState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const hasFired = useRef(false);
-
-  useDocumentTitle(routeMetadata[PATHS.EMAIL_VERIFY_CONFIRM].title);
 
   useEffect(() => {
     if (hasFired.current) return;
@@ -48,14 +46,17 @@ export function EmailVerifyConfirmPage(): ReactElement {
   }, [searchParams]);
 
   return (
-    <main className="min-h-screen bg-[#152018] flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-[#152018] flex items-center justify-center p-4">
+      <SEOHead
+        title={routeMetadata[PATHS.EMAIL_VERIFY_CONFIRM].title}
+        description={routeMetadata[PATHS.EMAIL_VERIFY_CONFIRM].description}
+        path={PATHS.EMAIL_VERIFY_CONFIRM}
+        noIndex
+      />
       <div className="text-center max-w-md space-y-6">
         {state === 'loading' && (
           <>
-            <Loader2
-              className="w-12 h-12 text-[#E4B643] mx-auto animate-spin"
-              aria-hidden="true"
-            />
+            <BrandedLoader size="lg" fillParent={false} />
             <h1 className="text-2xl font-bold text-white">
               Verifying your email…
             </h1>

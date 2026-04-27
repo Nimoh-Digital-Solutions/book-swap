@@ -50,6 +50,7 @@ const MOCK_PROFILE: UserProfile = {
   email_verified: true,
   profile_public: true,
   member_since: '2025-06-01T10:00:00Z',
+  deletion_requested_at: null,
 };
 
 const MOCK_PUBLIC_PROFILE: UserPublicProfile = {

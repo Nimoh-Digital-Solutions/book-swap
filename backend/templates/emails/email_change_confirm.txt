@@ -1,0 +1,22 @@
+{% load i18n %}{% trans "Confirm Your New Email Address" %} — BookSwap
+
+{% blocktrans with name=user.get_full_name|default:user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% blocktrans with new=new_email %}You recently requested to change your BookSwap email address to {{ new }}.{% endblocktrans %}
+
+{% trans "To confirm this change, use the token below:" %}
+
+  {{ token }}
+
+{% blocktrans with hours=expiry_hours %}This token expires in {{ hours }} hours.{% endblocktrans %}
+
+{% trans "SECURITY NOTICE:" %}
+- {% trans "If you did not request this change, please ignore this email." %}
+- {% trans "Never share this token with anyone." %}
+
+{% trans "Happy swapping!" %}
+{% trans "The BookSwap Team" %}
+
+---
+© {% now "Y" %} BookSwap. {% trans "All rights reserved." %}
+{% trans "Contact:" %} info@bookswap.com

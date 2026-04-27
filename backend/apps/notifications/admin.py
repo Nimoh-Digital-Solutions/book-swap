@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Notification, NotificationPreferences
+from .models import MobileDevice, Notification, NotificationPreferences
 
 
 @admin.register(Notification)
@@ -23,3 +23,11 @@ class NotificationPreferencesAdmin(admin.ModelAdmin):
     list_display = ("user", "email_new_request", "email_new_message", "email_exchange_completed")
     search_fields = ("user__email",)
     readonly_fields = ("unsubscribe_token",)
+
+
+@admin.register(MobileDevice)
+class MobileDeviceAdmin(admin.ModelAdmin):
+    list_display = ("user", "platform", "device_name", "is_active", "created_at")
+    list_filter = ("platform", "is_active")
+    search_fields = ("user__email", "device_name", "push_token")
+    readonly_fields = ("id", "created_at", "updated_at")

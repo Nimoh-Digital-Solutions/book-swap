@@ -3,6 +3,7 @@ import type { FieldValues, Resolver } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useScrollIntoViewOnFocus } from '@hooks';
 import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
@@ -79,14 +80,17 @@ export function BookForm({
   });
 
   const inputBase =
-    'block w-full px-3 py-3 border rounded-xl text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
+    'block w-full px-3 py-3 border rounded-xl text-base sm:text-sm bg-[#152018] text-white placeholder-[#5A6A60] transition-colors focus:ring-[#E4B643] focus:border-[#E4B643]';
 
   const handleFormSubmit = handleSubmit((values: FormValues) => {
     onSubmit(values as CreateBookPayload);
   });
 
+  // RESP-035 (Sprint C).
+  const formRef = useScrollIntoViewOnFocus<HTMLFormElement>();
+
   return (
-    <form className="space-y-6" onSubmit={handleFormSubmit} noValidate>
+    <form ref={formRef} className="space-y-6" onSubmit={handleFormSubmit} noValidate>
       {/* Title */}
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-[#8C9C92] mb-1">

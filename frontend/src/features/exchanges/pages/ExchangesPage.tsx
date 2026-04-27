@@ -2,8 +2,8 @@ import { type ReactElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { EmptyPlaceholder } from '@components/common';
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
+import { BrandedLoader, EmptyPlaceholder } from '@components/common';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowRightLeft, Clock, Inbox } from 'lucide-react';
 
@@ -27,8 +27,6 @@ export default function ExchangesPage(): ReactElement {
   const { t } = useTranslation('exchanges');
   const [activeTab, setActiveTab] = useState<Tab>('active');
 
-  useDocumentTitle(routeMetadata[PATHS.EXCHANGES].title);
-
   const { data, isLoading, isError } = useExchanges();
   const { data: incomingCount } = useIncomingRequestCount();
 
@@ -43,8 +41,8 @@ export default function ExchangesPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -64,7 +62,13 @@ export default function ExchangesPage(): ReactElement {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.EXCHANGES].title}
+        description={routeMetadata[PATHS.EXCHANGES].description}
+        path={PATHS.EXCHANGES}
+        noIndex
+      />
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://book-swaps.com/sitemap.xml

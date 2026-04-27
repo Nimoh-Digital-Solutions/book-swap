@@ -2,6 +2,7 @@ import { type ReactElement, useCallback, useRef } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
 import { routeChunkMap } from '@routes/config/routeChunkMap';
+import { stripLocalePath } from '@routes/utils/localePath';
 
 export interface PrefetchLinkProps extends LinkProps {
   /**
@@ -21,7 +22,7 @@ export interface PrefetchLinkProps extends LinkProps {
  *
  * @example
  * ```tsx
- * <PrefetchLink to="/components">Components</PrefetchLink>
+ * <PrefetchLink to="/en/components">Components</PrefetchLink>
  * ```
  */
 export function PrefetchLink({
@@ -37,7 +38,8 @@ export function PrefetchLink({
   const prefetch = useCallback(() => {
     if (prefetchedRef.current) return;
 
-    const path = typeof to === 'string' ? to : to.pathname;
+    const rawPath = typeof to === 'string' ? to : to.pathname;
+    const path = rawPath ? stripLocalePath(rawPath) : undefined;
     const factory = path ? routeChunkMap[path] : undefined;
 
     if (factory) {

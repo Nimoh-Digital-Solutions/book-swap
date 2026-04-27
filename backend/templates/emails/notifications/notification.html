@@ -1,0 +1,48 @@
+{% extends "emails/base_email.html" %}
+{% load i18n %}
+
+{% block title %}{{ subject }}{% endblock %}
+
+{% block preheader_text %}{{ preheader|default:body_text|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 24px; font-size:18px; font-weight:600; color:#1a2f23;">
+  {% blocktrans with name=recipient_name %}Hi {{ name }},{% endblocktrans %}
+</p>
+
+<p style="margin:0 0 28px; font-size:16px; color:#3d4a40; line-height:1.7;">
+  {{ body_html|default:body_text }}
+</p>
+
+{% if cta_url and cta_text %}
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr>
+    <td align="center" style="padding:8px 0 28px;">
+      <a href="{{ cta_url }}" class="cta-btn" style="display:inline-block; background-color:#6B8F71; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:8px; font-weight:600; font-size:15px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+        {{ cta_text }}
+      </a>
+    </td>
+  </tr>
+</table>
+{% endif %}
+
+{% if extra_html %}
+{{ extra_html }}
+{% endif %}
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr><td style="padding:20px 0 0; border-top:1px solid #e5e8e5;"></td></tr>
+</table>
+<p style="margin:0; font-size:13px; color:#8C9C92; line-height:1.6;">
+  {% trans "Happy swapping!" %}<br>
+  {% trans "The BookSwap Team" %}
+</p>
+{% endblock %}
+
+{% block unsubscribe %}
+{% if unsubscribe_url %}
+<p style="margin:0 0 12px; font-size:12px; color:#a1a8a3;">
+  <a href="{{ unsubscribe_url }}" style="color:#8C9C92; text-decoration:underline;">{% trans "Manage email preferences" %}</a>
+</p>
+{% endif %}
+{% endblock %}

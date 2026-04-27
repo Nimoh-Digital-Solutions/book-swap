@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "BookSwap",
+    "slug": "bookswap",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "bookswap",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a2f23"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gnimoh.bookswap",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "BookSwap needs camera access to scan book barcodes.",
+        "NSPhotoLibraryUsageDescription": "BookSwap needs photo library access to upload book cover photos and profile pictures.",
+        "NSLocationWhenInUseUsageDescription": "BookSwap uses your location to find books nearby.",
+        "NSFaceIDUsageDescription": "Use Face ID to quickly log in to BookSwap.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.gnimoh.bookswap",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a2f23"
+      },
+      "softwareKeyboardLayoutMode": "resize",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
+    },
+    "updates": {
+      "url": "https://u.expo.dev/eb323114-a697-4df4-98e6-d413ef08e943"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1a2f23"
+        }
+      ],
+      "expo-local-authentication",
+      "expo-camera",
+      "expo-image-picker",
+      "expo-location",
+      [
+        "@sentry/react-native",
+        {
+          "organization": "nimoh-digital-solutions",
+          "project": "bookswap-mobile"
+        }
+      ],
+      "expo-updates",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.558977683320-iupjh65b02b670g7ja0ohm31ug3pvpfc"
+        }
+      ],
+      "expo-apple-authentication"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "eb323114-a697-4df4-98e6-d413ef08e943"
+      }
+    },
+    "owner": "info_nimoh"
+  }
+}

@@ -2,7 +2,7 @@ import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { SEOHead } from '@components';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { CheckCircle, Mail, RefreshCw } from 'lucide-react';
 
@@ -22,8 +22,6 @@ export function EmailVerifyPendingPage(): ReactElement {
   const user = useAuthStore((s) => s.user);
   const [resendState, setResendState] = useState<ResendState>('idle');
 
-  useDocumentTitle(routeMetadata[PATHS.EMAIL_VERIFY_PENDING].title);
-
   const handleResend = useCallback(async () => {
     setResendState('sending');
     try {
@@ -35,7 +33,13 @@ export function EmailVerifyPendingPage(): ReactElement {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#152018] flex items-center justify-center p-4">
+    <main className="min-h-[100dvh] bg-[#152018] flex items-center justify-center p-4">
+      <SEOHead
+        title={routeMetadata[PATHS.EMAIL_VERIFY_PENDING].title}
+        description={routeMetadata[PATHS.EMAIL_VERIFY_PENDING].description}
+        path={PATHS.EMAIL_VERIFY_PENDING}
+        noIndex
+      />
       <div className="text-center max-w-md space-y-6">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#1A251D] border border-[#28382D]">
           <Mail className="w-8 h-8 text-[#E4B643]" aria-hidden="true" />

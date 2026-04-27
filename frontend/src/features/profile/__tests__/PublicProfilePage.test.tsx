@@ -75,7 +75,7 @@ describe('PublicProfilePage', () => {
     });
 
     expect(await screen.findByText('4.5')).toBeInTheDocument();
-    expect(screen.getByText(/rating/i)).toBeInTheDocument();
+    expect(screen.getByText(/Rating \(5\)/)).toBeInTheDocument();
   });
 
   it('shows NewMemberBadge when rating_count < 3', async () => {

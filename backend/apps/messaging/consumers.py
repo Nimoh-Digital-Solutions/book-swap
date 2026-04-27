@@ -1,40 +1,62 @@
 """WebSocket consumer for real-time chat between exchange partners."""
 
 import time
+from urllib.parse import urlparse
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.conf import settings as django_settings
 
 from apps.exchanges.models import ExchangeRequest
+from bookswap.ws_first_msg_auth import FirstMessageAuthMixin
 
 from .models import Message
 from .permissions import CHAT_ELIGIBLE_STATUSES, CHAT_WRITABLE_STATUSES
 
 
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+def _absolute_media_url(field):
+    """Return an absolute URL for a FileField, handling both S3 and local storage."""
+    if not field:
+        return None
+    url = field.url
+    if url.startswith(("http://", "https://")):
+        return url
+    frontend_url = getattr(django_settings, "FRONTEND_URL", "").rstrip("/")
+    if frontend_url:
+        parsed = urlparse(frontend_url)
+        base = f"{parsed.scheme}://{parsed.hostname}"
+        if parsed.port and parsed.port not in (80, 443):
+            base += f":{parsed.port}"
+        return f"{base}{url}"
+    return url
+
+
+class ChatConsumer(FirstMessageAuthMixin, AsyncJsonWebsocketConsumer):
     """
     Real-time chat WebSocket for exchange partners.
 
     Route: ws/chat/{exchange_id}/
     """
 
-    # Rate limit: max 5 messages per 10-second window.
     RATE_LIMIT_MAX = 5
     RATE_LIMIT_WINDOW = 10
+    TYPING_RATE_LIMIT_MAX = 10
+    TYPING_RATE_LIMIT_WINDOW = 10
+    READ_RATE_LIMIT_MAX = 20
+    READ_RATE_LIMIT_WINDOW = 10
+    INVALID_MSG_LIMIT = 5
+    INVALID_MSG_WINDOW = 30
 
-    async def connect(self):
-        # Reject unauthenticated connections.
-        user = self.scope.get("user")
-        if not user or not user.is_authenticated:
-            await self.close(code=4001)
-            return
-
+    async def post_authenticate(self):
+        """Called after successful auth — validate exchange and join group."""
+        user = self.user
         self.exchange_id = self.scope["url_route"]["kwargs"]["exchange_id"]
         self.group_name = f"chat_{self.exchange_id}"
-        self.user = user
         self.send_timestamps: list[float] = []
+        self.typing_timestamps: list[float] = []
+        self.read_timestamps: list[float] = []
+        self.invalid_msg_timestamps: list[float] = []
 
-        # Validate exchange and participant.
         exchange = await self._get_exchange()
         if exchange is None:
             await self.close(code=4004)
@@ -44,7 +66,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4003)
             return
 
-        # Block check: reject if the other party is blocked
         other_id = exchange.owner_id if user.id == exchange.requester_id else exchange.requester_id
         if await self._is_blocked(user, other_id):
             await self.close(code=4003)
@@ -56,9 +77,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         self.is_read_only = exchange.status not in CHAT_WRITABLE_STATUSES
 
-        # Join the chat group.
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        await self.accept()
+
+        if not self._ws_accepted:
+            await self.accept()
+            self._ws_accepted = True
 
         if self.is_read_only:
             await self.send_json(
@@ -74,8 +97,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 self.group_name,
                 self.channel_name,
             )
+        await super().disconnect(code)
 
     async def receive_json(self, content, **kwargs):
+        if not await self.ensure_authenticated(content):
+            return
+
         msg_type = content.get("type")
 
         if msg_type == "chat.message":
@@ -85,6 +112,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         elif msg_type == "chat.read":
             await self._handle_read(content)
         else:
+            now = time.time()
+            self.invalid_msg_timestamps = [
+                ts for ts in self.invalid_msg_timestamps if now - ts < self.INVALID_MSG_WINDOW
+            ]
+            self.invalid_msg_timestamps.append(now)
+            if len(self.invalid_msg_timestamps) > self.INVALID_MSG_LIMIT:
+                await self.send_json({"type": "chat.error", "message": "Too many invalid messages. Disconnecting."})
+                await self.close(code=4008)
+                return
             await self.send_json(
                 {
                     "type": "chat.error",
@@ -95,7 +131,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     # ── Message handlers ──────────────────────────────────────────────
 
     async def _handle_message(self, content):
-        if self.is_read_only:
+        if await self._refresh_read_only():
             await self.send_json(
                 {
                     "type": "chat.error",
@@ -104,7 +140,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        # Email verification gate (US-803)
         if not await self._is_email_verified():
             await self.send_json(
                 {
@@ -114,7 +149,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        # Rate limiting.
         now = time.monotonic()
         self.send_timestamps = [ts for ts in self.send_timestamps if now - ts < self.RATE_LIMIT_WINDOW]
         if len(self.send_timestamps) >= self.RATE_LIMIT_MAX:
@@ -148,7 +182,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         message = await self._save_message(text)
 
-        # Broadcast to the group.
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -158,7 +191,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "sender": {
                     "id": str(self.user.id),
                     "username": self.user.username,
-                    "avatar": self.user.avatar.url if self.user.avatar else None,
+                    "avatar": _absolute_media_url(self.user.avatar),
                 },
                 "content": message.content,
                 "image": None,
@@ -171,7 +204,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if self.is_read_only:
             return
 
-        # Broadcast typing indicator to the group (excluding sender via frontend).
+        now = time.monotonic()
+        self.typing_timestamps = [ts for ts in self.typing_timestamps if now - ts < self.TYPING_RATE_LIMIT_WINDOW]
+        if len(self.typing_timestamps) >= self.TYPING_RATE_LIMIT_MAX:
+            return  # silently drop — no error to avoid amplifying traffic
+        self.typing_timestamps.append(now)
+
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -185,6 +223,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         message_id = content.get("message_id")
         if not message_id:
             return
+
+        now = time.monotonic()
+        self.read_timestamps = [ts for ts in self.read_timestamps if now - ts < self.READ_RATE_LIMIT_WINDOW]
+        if len(self.read_timestamps) >= self.READ_RATE_LIMIT_MAX:
+            return  # silently drop
+        self.read_timestamps.append(now)
 
         read_at = await self._mark_message_read(message_id)
         if read_at:
@@ -214,7 +258,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def chat_typing(self, event):
-        # Don't echo typing back to the sender.
         if event["user_id"] != str(self.user.id):
             await self.send_json(
                 {
@@ -233,7 +276,26 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
+    async def chat_read_all(self, event):
+        await self.send_json(
+            {
+                "type": "chat.read_all",
+                "read_at": event["read_at"],
+            }
+        )
+
     # ── Database helpers ──────────────────────────────────────────────
+
+    @database_sync_to_async
+    def _refresh_read_only(self) -> bool:
+        """Re-check exchange status from DB and update the cached flag.
+
+        SECURITY (ADV-303): Prevents sending messages after the exchange
+        transitions to a read-only status while the WS is still open.
+        """
+        current_status = ExchangeRequest.objects.filter(pk=self.exchange_id).values_list("status", flat=True).first()
+        self.is_read_only = current_status not in CHAT_WRITABLE_STATUSES
+        return self.is_read_only
 
     @database_sync_to_async
     def _get_exchange(self):

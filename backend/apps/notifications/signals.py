@@ -44,9 +44,14 @@ def on_exchange_saved(sender, instance, created, **kwargs):
     """Dispatch notification tasks when an exchange changes state."""
     from .tasks import (
         send_exchange_completed_notification,
+        send_exchange_returned_notification,
         send_new_request_notification,
         send_request_accepted_notification,
+        send_request_cancelled_notification,
         send_request_declined_notification,
+        send_request_expired_notification,
+        send_return_requested_notification,
+        send_swap_confirmed_notification,
     )
 
     exchange_id = str(instance.pk)
@@ -67,8 +72,25 @@ def on_exchange_saved(sender, instance, created, **kwargs):
     elif current == ExchangeStatus.DECLINED:
         send_request_declined_notification.delay(exchange_id)
 
+    elif current == ExchangeStatus.CANCELLED:
+        send_request_cancelled_notification.delay(exchange_id)
+
+    elif current == ExchangeStatus.EXPIRED:
+        send_request_expired_notification.delay(exchange_id)
+
+    elif current == ExchangeStatus.SWAP_CONFIRMED:
+        triggered_by = getattr(instance, "_confirmed_by_user_id", None)
+        send_swap_confirmed_notification.delay(exchange_id, str(triggered_by) if triggered_by else "")
+
     elif current == ExchangeStatus.COMPLETED:
         send_exchange_completed_notification.delay(exchange_id)
+
+    elif current == ExchangeStatus.RETURN_REQUESTED:
+        triggered_by = getattr(instance, "_return_requested_by_user_id", None)
+        send_return_requested_notification.delay(exchange_id, str(triggered_by) if triggered_by else "")
+
+    elif current == ExchangeStatus.RETURNED:
+        send_exchange_returned_notification.delay(exchange_id)
 
     logger.debug(
         "Exchange %s: %s → %s (notification task dispatched if applicable).",

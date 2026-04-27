@@ -1,13 +1,16 @@
 import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
+import { BrandedLoader, SEOHead } from '@components';
 import { EmptyPlaceholder } from '@components/common';
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
 import type { BrowseBook } from '@features/discovery';
 import { SwapFlowModal } from '@features/discovery';
-import { useDocumentTitle } from '@hooks';
+import { useIsBlocked } from '@features/trust-safety';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import {
   ArrowLeft,
@@ -18,7 +21,6 @@ import {
   Edit2,
   Hash,
   Layers,
-  Loader2,
   ShieldCheck,
   Star,
   User,
@@ -39,20 +41,19 @@ function relativeDate(dateStr: string): string {
 
 export function BookDetailPage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUserId = useAuthStore(s => s.user?.id);
   const addNotification = useAppStore(s => s.addNotification);
   const { data: book, isLoading, isError } = useBook(id!);
   const addWishlist = useAddWishlistItem();
   const [swapModalOpen, setSwapModalOpen] = useState(false);
-
-  useDocumentTitle(book?.title ?? routeMetadata[PATHS.BOOK_DETAIL].title);
+  const isOwnerBlocked = useIsBlocked(book?.owner?.id ?? '');
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading" className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 text-[#E4B643] animate-spin" aria-hidden="true" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <BrandedLoader size="lg" label={t('books.detail.loading', 'Loading book…')} fillParent={false} />
       </div>
     );
   }
@@ -123,6 +124,36 @@ export function BookDetailPage(): ReactElement {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
+      <SEOHead
+        title={book?.title ?? routeMetadata[PATHS.BOOK_DETAIL].title}
+        description={
+          book
+            ? `${book.title} by ${book.author} — ${book.condition} condition. Available for swapping on BookSwap.`
+            : routeMetadata[PATHS.BOOK_DETAIL].description
+        }
+        path={book ? `/books/${book.id}` : PATHS.BOOK_DETAIL}
+        image={book.photos?.[0]?.image ?? book.cover_url}
+        jsonLd={
+          book
+            ? {
+                '@type': 'Book',
+                name: book.title,
+                author: { '@type': 'Person', name: book.author },
+                ...(book.isbn ? { isbn: book.isbn } : {}),
+                ...(book.language ? { inLanguage: book.language } : {}),
+                ...(book.genres?.[0] ? { genre: book.genres[0] } : {}),
+                image: book.photos?.[0]?.image ?? book.cover_url,
+                offers: {
+                  '@type': 'Offer',
+                  availability: 'https://schema.org/InStock',
+                  price: '0',
+                  priceCurrency: 'EUR',
+                  description: `Available for swap — ${book.condition} condition`,
+                },
+              }
+            : undefined
+        }
+      />
       {/* Back button */}
       <button
         type="button"
@@ -137,9 +168,15 @@ export function BookDetailPage(): ReactElement {
         </span>
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      {/* RESP-032 (Sprint C): the previous `grid-cols-1 lg:grid-cols-12`
+        * jumped from 1 column straight to a 12-column sub-grid at 1024 px,
+        * leaving the 768 px iPad mini stuck in single-column mode with a
+        * very tall scroll. The intermediate `md:grid-cols-12` step (with
+        * matching `md:col-span-*` below) gives tablet readers a cover +
+        * details split, and the gap shrinks proportionally. */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 lg:gap-16">
         {/* ── Left column: cover + quick stats ── */}
-        <div className="lg:col-span-5">
+        <div className="md:col-span-5 lg:col-span-5">
           <div className="relative group">
             {/* Ambient glow */}
             <div
@@ -204,7 +241,7 @@ export function BookDetailPage(): ReactElement {
         </div>
 
         {/* ── Right column: details ── */}
-        <div className="lg:col-span-7">
+        <div className="md:col-span-7 lg:col-span-7">
           {/* Genre + archival ID */}
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[#E4B643] text-xs font-bold uppercase tracking-[0.2em]">{genre}</span>
@@ -215,12 +252,41 @@ export function BookDetailPage(): ReactElement {
           </div>
 
           {/* Title + author */}
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-none">
+          <h1 className="text-[clamp(1.75rem,7vw,3.75rem)] md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight md:leading-none text-balance break-anywhere">
             {book.title}
           </h1>
           <p className="text-2xl text-[#E4B643] font-medium italic font-serif mb-8">
             {t('books.card.by', { author: book.author, defaultValue: 'by {{author}}' })}
           </p>
+
+          {/* Mobile-only primary CTA (RESP-019, Sprint C).
+            *
+            * The full action block lives at the bottom of this very long
+            * right column. On a phone the user has to scroll past
+            * synopsis + swap notes + metadata grid (~600 px) before they
+            * can act. We surface the single most-relevant CTA next to the
+            * title on `<lg`. The full action set is still rendered below;
+            * desktop hides this duplicate via `lg:hidden`. */}
+          <div className="lg:hidden mb-8">
+            {isOwner ? (
+              <LocaleLink
+                to={`/books/${book.id}/edit`}
+                className="w-full inline-flex items-center justify-center gap-3 border border-[#28382D] text-white py-4 rounded-2xl font-bold hover:bg-[#28382D] transition-colors"
+              >
+                <Edit2 className="w-5 h-5" aria-hidden="true" />
+                {t('books.detail.editListing', 'Edit Listing')}
+              </LocaleLink>
+            ) : isOwnerBlocked ? null : (
+              <button
+                type="button"
+                onClick={() => setSwapModalOpen(true)}
+                className="w-full bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] py-4 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
+              >
+                <ArrowLeftRight className="w-5 h-5" aria-hidden="true" />
+                {t('books.detail.requestSwap', 'Request Swap')}
+              </button>
+            )}
+          </div>
 
           <div className="h-px bg-gradient-to-r from-[#28382D] to-transparent mb-8" aria-hidden="true" />
 
@@ -300,7 +366,7 @@ export function BookDetailPage(): ReactElement {
                   <ShieldCheck className="w-4 h-4 text-[#E4B643]" aria-hidden="true" />
                   {t('books.detail.verifiedCurator', 'Verified Curator')}
                 </h3>
-                <Link
+                <LocaleLink
                   to={isOwner ? PATHS.PROFILE : `/profile/${book.owner.id}`}
                   className="flex items-center gap-4 mb-6 hover:opacity-80 transition-opacity"
                 >
@@ -319,7 +385,7 @@ export function BookDetailPage(): ReactElement {
                     <p className="text-white font-bold">{book.owner.username}</p>
                     <p className="text-xs text-[#8C9C92]">{book.owner.neighborhood}</p>
                   </div>
-                </Link>
+                </LocaleLink>
                 {ownerRating > 0 && (
                   <div className="flex items-center gap-1 pt-4 border-t border-[#28382D]">
                     <Star className="w-3 h-3 text-[#E4B643] fill-current" aria-hidden="true" />
@@ -335,13 +401,19 @@ export function BookDetailPage(): ReactElement {
           {/* Action buttons */}
           {isOwner ? (
             <div className="flex gap-4">
-              <Link
+              <LocaleLink
                 to={`/books/${book.id}/edit`}
                 className="flex-1 flex items-center justify-center gap-3 border border-[#28382D] text-white py-5 rounded-2xl font-bold hover:bg-[#28382D] transition-colors"
               >
                 <Edit2 className="w-5 h-5" aria-hidden="true" />
                 {t('books.detail.editListing', 'Edit Listing')}
-              </Link>
+              </LocaleLink>
+            </div>
+          ) : isOwnerBlocked ? (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+              <p className="text-sm text-red-400">
+                {t('books.detail.blockedOwner', 'You have blocked this user. Swap actions are unavailable.')}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4">

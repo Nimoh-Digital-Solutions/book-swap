@@ -22,8 +22,8 @@ class BookOwnerSerializer(serializers.ModelSerializer):
 class BookPhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookPhoto
-        fields = ("id", "image", "position", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = ("id", "image", "thumbnail", "position", "created_at")
+        read_only_fields = ("id", "thumbnail", "created_at")
 
 
 class BookListSerializer(serializers.ModelSerializer):
@@ -31,6 +31,7 @@ class BookListSerializer(serializers.ModelSerializer):
 
     owner = BookOwnerSerializer(read_only=True)
     primary_photo = serializers.SerializerMethodField()
+    primary_thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -42,20 +43,36 @@ class BookListSerializer(serializers.ModelSerializer):
             "condition",
             "language",
             "status",
+            "swap_type",
             "primary_photo",
+            "primary_thumbnail",
             "owner",
             "created_at",
         )
         read_only_fields = fields
 
+    def _get_first_photo(self, obj):
+        if not hasattr(obj, "_prefetched_first_photo"):
+            obj._prefetched_first_photo = obj.photos.first()
+        return obj._prefetched_first_photo
+
+    def _build_url(self, field) -> str | None:
+        if not field:
+            return None
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(field.url)
+        return field.url
+
     def get_primary_photo(self, obj) -> str | None:
-        first = obj.photos.first()
-        if first and first.image:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(first.image.url)
-            return first.image.url
-        return None
+        first = self._get_first_photo(obj)
+        return self._build_url(first.image) if first else None
+
+    def get_primary_thumbnail(self, obj) -> str | None:
+        first = self._get_first_photo(obj)
+        if first and first.thumbnail:
+            return self._build_url(first.thumbnail)
+        return self.get_primary_photo(obj)
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -77,6 +94,7 @@ class BookSerializer(serializers.ModelSerializer):
             "genres",
             "language",
             "status",
+            "swap_type",
             "notes",
             "page_count",
             "publish_year",
@@ -108,6 +126,7 @@ class BookCreateSerializer(serializers.ModelSerializer):
             "condition",
             "genres",
             "language",
+            "swap_type",
             "notes",
             "page_count",
             "publish_year",
@@ -124,7 +143,14 @@ class BookCreateSerializer(serializers.ModelSerializer):
 
 
 class BookUpdateSerializer(serializers.ModelSerializer):
-    """Partial update for a book listing (owner only)."""
+    """Partial update for a book listing (owner only).
+
+    SECURITY (ADV-201): ``status`` is intentionally excluded from writable fields.
+    Book status is managed exclusively by the exchange lifecycle (accept sets
+    ``in_exchange``, complete/return resets to ``available``).  Allowing direct
+    PATCH of status would let an owner break an active exchange by setting
+    their book back to ``available``.
+    """
 
     class Meta:
         model = Book
@@ -136,10 +162,10 @@ class BookUpdateSerializer(serializers.ModelSerializer):
             "condition",
             "genres",
             "language",
+            "swap_type",
             "notes",
             "page_count",
             "publish_year",
-            "status",
         )
 
     def validate_genres(self, value):
@@ -177,23 +203,79 @@ class ExternalSearchSerializer(serializers.Serializer):
 
 
 class WishlistItemSerializer(serializers.ModelSerializer):
+    book_id = serializers.UUIDField(source="book.id", read_only=True, default=None)
+    book = serializers.PrimaryKeyRelatedField(
+        queryset=Book.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+
     class Meta:
         model = WishlistItem
-        fields = ("id", "isbn", "title", "author", "genre", "cover_url", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = ("id", "book", "book_id", "isbn", "title", "author", "genre", "cover_url", "created_at")
+        read_only_fields = ("id", "book_id", "created_at")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        book = instance.book
+        if book:
+            if not data.get("title"):
+                data["title"] = book.title
+            if not data.get("author"):
+                data["author"] = book.author
+            if not data.get("isbn"):
+                data["isbn"] = book.isbn
+            if not data.get("genre") and book.genres:
+                data["genre"] = book.genres[0]
+            if not data.get("cover_url"):
+                data["cover_url"] = book.cover_url
+        return data
 
     def validate(self, attrs):
-        isbn = attrs.get("isbn", "")
-        title = attrs.get("title", "")
-        genre = attrs.get("genre", "")
-        if not any([isbn, title, genre]):
-            raise serializers.ValidationError("At least one of 'isbn', 'title', or 'genre' is required.")
+        book = attrs.get("book")
+        if not book:
+            isbn = attrs.get("isbn", "")
+            title = attrs.get("title", "")
+            genre = attrs.get("genre", "")
+            if not any([isbn, title, genre]):
+                raise serializers.ValidationError("At least one of 'isbn', 'title', or 'genre' is required.")
         return attrs
 
     def create(self, validated_data):
         user = self.context["request"].user
         if user.wishlist_items.count() >= 20:
             raise serializers.ValidationError("You can have up to 20 wishlist items.")
+
+        book = validated_data.get("book")
+        if book and WishlistItem.objects.filter(user=user, book=book).exists():
+            raise serializers.ValidationError("This book is already on your wishlist.")
+
+        if not book:
+            isbn = validated_data.get("isbn", "").strip()
+            title = validated_data.get("title", "").strip()
+            dup_qs = WishlistItem.objects.filter(user=user, book__isnull=True)
+            if isbn:
+                dup_qs = dup_qs.filter(isbn=isbn)
+            elif title:
+                dup_qs = dup_qs.filter(title__iexact=title)
+            else:
+                dup_qs = WishlistItem.objects.none()
+            if dup_qs.exists():
+                raise serializers.ValidationError("A matching wishlist entry already exists.")
+
+        if book:
+            if not validated_data.get("title"):
+                validated_data["title"] = book.title
+            if not validated_data.get("author"):
+                validated_data["author"] = book.author
+            if not validated_data.get("isbn"):
+                validated_data["isbn"] = book.isbn
+            if not validated_data.get("genre") and book.genres:
+                validated_data["genre"] = book.genres[0]
+            if not validated_data.get("cover_url"):
+                validated_data["cover_url"] = book.cover_url
+
         validated_data["user"] = user
         return super().create(validated_data)
 

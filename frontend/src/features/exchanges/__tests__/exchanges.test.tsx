@@ -76,7 +76,7 @@ describe('ExchangeCard', () => {
     const exchange = makeExchangeListItem({ id: 'exch_abc' });
     renderWithProviders(<ExchangeCard exchange={exchange} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/exchanges/exch_abc');
+    expect(link).toHaveAttribute('href', '/en/exchanges/exch_abc');
   });
 
   it('renders formatted date', () => {
@@ -185,8 +185,13 @@ describe('ExchangesPage', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const mockUseExchange = vi.fn();
+const mockUseBooks = vi.fn();
 vi.mock('../hooks/useExchange', () => ({
   useExchange: () => mockUseExchange(),
+}));
+
+vi.mock('@features/books', () => ({
+  useBooks: () => mockUseBooks(),
 }));
 
 // Mock auth store to provide current user ID
@@ -224,9 +229,29 @@ vi.mock('@features/messaging/hooks/useMeetupSuggestions', () => ({
   useMeetupSuggestions: () => ({ data: [], isLoading: false }),
 }));
 
+vi.mock('../hooks/useExchangeMutations', () => ({
+  useAcceptExchange: () => ({ mutate: vi.fn(), isPending: false }),
+  useDeclineExchange: () => ({ mutate: vi.fn(), isPending: false }),
+  useCancelExchange: () => ({ mutate: vi.fn(), isPending: false }),
+  useAcceptConditions: () => ({ mutate: vi.fn(), isPending: false }),
+  useConfirmSwap: () => ({ mutate: vi.fn(), isPending: false }),
+  useRequestReturn: () => ({ mutate: vi.fn(), isPending: false }),
+  useConfirmReturn: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateExchange: () => ({ mutate: vi.fn(), isPending: false }),
+  useCounterExchange: () => ({ mutate: vi.fn(), isPending: false }),
+  useApproveCounter: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 const { default: ExchangeDetailPage } = await import('../pages/ExchangeDetailPage');
 
 describe('ExchangeDetailPage', () => {
+  beforeEach(() => {
+    mockUseBooks.mockReturnValue({
+      data: { count: 0, next: null, previous: null, results: [] },
+      isLoading: false,
+    });
+  });
+
   it('shows loading state', () => {
     mockUseExchange.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     renderWithProviders(
@@ -436,18 +461,6 @@ describe('ExchangeDetailPage', () => {
 const mockUseIncomingRequests = vi.fn();
 vi.mock('../hooks/useIncomingRequests', () => ({
   useIncomingRequests: () => mockUseIncomingRequests(),
-}));
-
-vi.mock('../hooks/useExchangeMutations', () => ({
-  useAcceptExchange: () => ({ mutate: vi.fn(), isPending: false }),
-  useDeclineExchange: () => ({ mutate: vi.fn(), isPending: false }),
-  useCancelExchange: () => ({ mutate: vi.fn(), isPending: false }),
-  useAcceptConditions: () => ({ mutate: vi.fn(), isPending: false }),
-  useConfirmSwap: () => ({ mutate: vi.fn(), isPending: false }),
-  useRequestReturn: () => ({ mutate: vi.fn(), isPending: false }),
-  useConfirmReturn: () => ({ mutate: vi.fn(), isPending: false }),
-  useCreateExchange: () => ({ mutate: vi.fn(), isPending: false }),
-  useCounterExchange: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 const { default: IncomingRequestsPage } = await import('../pages/IncomingRequestsPage');

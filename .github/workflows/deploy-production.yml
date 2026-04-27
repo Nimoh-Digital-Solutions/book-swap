@@ -3,6 +3,12 @@ name: Deploy — Production
 on:
   push:
     branches: [production]
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: "Force deploy all layers (backend + frontend + mobile OTA)"
+        type: boolean
+        default: true
 
 concurrency:
   group: deploy-production
@@ -13,44 +19,56 @@ jobs:
     name: "Pi 5 → production"
     runs-on: [self-hosted, pi5]
     environment: production
-    # All `run:` steps default to the Pi app directory so git commands in
-    # "Detect changed layers" operate on the real repo history, not the empty
-    # GITHUB_WORKSPACE (no actions/checkout is used in this workflow).
     defaults:
       run:
-        working-directory: /home/gnimoh001/apps/speak-linka
+        working-directory: /home/gnimoh001/apps/bookswap
 
     steps:
-      # Pull latest code into the canonical app directory on the Pi.
-      # No actions/checkout needed — the Pi already has ~/speak-linka cloned.
       - name: Pull latest code
         run: |
           git fetch origin
           git reset --hard origin/production
 
+      - name: Verify CI passed for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          STATUS=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '.state' 2>/dev/null || echo "unknown")
+          echo "CI status for $SHA: $STATUS"
+          if [ "$STATUS" != "success" ]; then
+            echo "::error::CI has not passed for this commit ($STATUS). Aborting production deploy."
+            exit 1
+          fi
+
       # ── Detect which layers changed ───────────────────────────────────────────
-      # Compares the push's before/after SHAs to decide whether to rebuild the
-      # backend, the frontend, or both.  Falls back to a full deploy when the
-      # before SHA is unavailable (force-push, first push to branch).
       - name: Detect changed layers
         id: detect
         run: |
-          BEFORE="${{ github.event.before }}"
-          AFTER="${{ github.sha }}"
-
-          # Force-push or new branch — can't diff; deploy everything safely.
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.deploy_all }}" = "true" ]; then
             echo "backend=true"  >> $GITHUB_OUTPUT
             echo "frontend=true" >> $GITHUB_OUTPUT
-            echo "First push / force-push → deploying both layers."
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "Manual full deploy requested."
             exit 0
           fi
 
-          # If BEFORE isn't in local history (shallow clone edge-case), full deploy.
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "backend=true"  >> $GITHUB_OUTPUT
+            echo "frontend=true" >> $GITHUB_OUTPUT
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "First push / force-push → deploying all layers."
+            exit 0
+          fi
+
           if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
             echo "backend=true"  >> $GITHUB_OUTPUT
             echo "frontend=true" >> $GITHUB_OUTPUT
-            echo "Before SHA not in local history → deploying both layers."
+            echo "mobile=true"   >> $GITHUB_OUTPUT
+            echo "Before SHA not in local history → deploying all layers."
             exit 0
           fi
 
@@ -64,59 +82,111 @@ jobs:
             echo "backend=false" >> $GITHUB_OUTPUT
           fi
 
-          if echo "$CHANGED" | grep -qE '^frontend/'; then
+          # Frontend redeploy is also triggered by changes in packages/shared,
+          # because the Vite build inlines those types via the @shared alias.
+          if echo "$CHANGED" | grep -qE '^frontend/|^packages/shared/'; then
             echo "frontend=true"  >> $GITHUB_OUTPUT
           else
             echo "frontend=false" >> $GITHUB_OUTPUT
           fi
 
+          if echo "$CHANGED" | grep -qE '^mobile/|^packages/shared/'; then
+            echo "mobile=true"  >> $GITHUB_OUTPUT
+          else
+            echo "mobile=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Nothing to deploy
-        if: steps.detect.outputs.backend != 'true' && steps.detect.outputs.frontend != 'true'
+        if: steps.detect.outputs.backend != 'true' && steps.detect.outputs.frontend != 'true' && steps.detect.outputs.mobile != 'true'
         run: |
-          echo "No backend or frontend files changed in this push — skipping deploy."
+          echo "No backend, frontend, or mobile files changed in this push — skipping deploy."
 
       # ── Backend ──────────────────────────────────────────────────────────────
       - name: Copy backend env file
         if: steps.detect.outputs.backend == 'true'
-        run: cp ~/envs/speaklinka.backend.prod.env ~/apps/speak-linka/backend/.env.production
+        run: cp ~/envs/bookswap.backend.prod.env ~/apps/bookswap/backend/.env.production
 
       - name: Build backend image
         if: steps.detect.outputs.backend == 'true'
-        working-directory: /home/gnimoh001/apps/speak-linka/backend
+        working-directory: /home/gnimoh001/apps/bookswap/backend
         run: |
-          DOCKER_BUILDKIT=1 docker compose -p sl_prod \
+          DOCKER_BUILDKIT=1 docker compose -p bs_prod \
             -f docker-compose.prod.yml build --no-cache
+
+      - name: Remove old backend containers
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          docker rm -f bookswap-be-web bookswap-be-celery bookswap-be-celery-email \
+            bookswap-be-celery-maintenance bookswap-be-celery-beat bookswap-be-redis \
+            2>/dev/null || true
 
       - name: Deploy backend
         if: steps.detect.outputs.backend == 'true'
-        working-directory: /home/gnimoh001/apps/speak-linka/backend
+        working-directory: /home/gnimoh001/apps/bookswap/backend
         run: |
-          docker compose -p sl_prod -f docker-compose.prod.yml \
-            up -d --force-recreate web celery_worker celery_beat
+          docker compose -p bs_prod -f docker-compose.prod.yml \
+            up -d --force-recreate web celery celery-email celery-maintenance celery-beat
 
       # ── Frontend ─────────────────────────────────────────────────────────────
       - name: Build frontend image
         if: steps.detect.outputs.frontend == 'true'
-        working-directory: /home/gnimoh001/apps/speak-linka/frontend
+        working-directory: /home/gnimoh001/apps/bookswap/frontend
         run: |
-          DOCKER_BUILDKIT=1 docker compose -p sl_frontend_prod \
+          DOCKER_BUILDKIT=1 docker compose -p bs_frontend_prod \
             -f docker-compose.prod.yml build --no-cache \
             --build-arg VITE_SENTRY_DSN="${{ secrets.VITE_SENTRY_DSN_PROD }}"
 
+      - name: Remove old frontend container
+        if: steps.detect.outputs.frontend == 'true'
+        run: docker rm -f bookswap-fe-prod 2>/dev/null || true
+
       - name: Deploy frontend
         if: steps.detect.outputs.frontend == 'true'
-        working-directory: /home/gnimoh001/apps/speak-linka/frontend
+        working-directory: /home/gnimoh001/apps/bookswap/frontend
         run: |
-          docker compose -p sl_frontend_prod -f docker-compose.prod.yml \
+          docker compose -p bs_frontend_prod -f docker-compose.prod.yml \
             up -d --force-recreate
+
+      # ── Mobile OTA update ──────────────────────────────────────────────────────
+      - name: Set up Node.js for mobile OTA
+        if: steps.detect.outputs.mobile == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install mobile dependencies for EAS update
+        if: steps.detect.outputs.mobile == 'true'
+        working-directory: /home/gnimoh001/apps/bookswap/mobile
+        run: npm ci
+
+      - name: Publish mobile OTA update
+        if: steps.detect.outputs.mobile == 'true'
+        working-directory: /home/gnimoh001/apps/bookswap/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL_PRODUCTION }}
+          EXPO_PUBLIC_ENV: production
+          CI: "1"
+        run: |
+          ARCH=$(uname -m)
+          if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "amd64" ]; then
+            echo "⚠️  Skipping mobile OTA — hermesc requires x86_64 (current: $ARCH)"
+            echo "   Run 'npx eas-cli update --branch production' from an x86_64 machine instead."
+            exit 0
+          fi
+          npx eas-cli update \
+            --branch production \
+            --message "deploy: production $(date -u +'%Y-%m-%d %H:%M') — ${GITHUB_SHA::8}" \
+            --no-bytecode
 
       # ── Health checks ─────────────────────────────────────────────────────────
       - name: Health check — backend
         if: steps.detect.outputs.backend == 'true'
         run: |
-          echo "Waiting for sl_web_prod to become healthy..."
+          echo "Waiting for bookswap-be-web to become healthy..."
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:8104/api/v1/health/ > /dev/null 2>&1; then
+            if curl -sf http://localhost:8071/api/v1/health/ > /dev/null 2>&1; then
               echo "Backend healthy ✓"; break
             fi
             [ $i -eq 30 ] && echo "ERROR: Backend health check timed out." && exit 1
@@ -127,23 +197,44 @@ jobs:
         if: steps.detect.outputs.frontend == 'true'
         run: |
           for i in $(seq 1 12); do
-            if curl -sf http://localhost:3100/ > /dev/null 2>&1; then
+            if curl -sf http://localhost:3071/ > /dev/null 2>&1; then
               echo "Frontend healthy ✓"; break
             fi
             [ $i -eq 12 ] && echo "ERROR: Frontend health check timed out." && exit 1
             sleep 5
           done
 
+      # ── Smoke test — critical API endpoints ───────────────────────────────────
+      - name: Smoke test — API endpoints
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          BASE="http://localhost:8071/api/v1"
+          FAIL=0
+          for endpoint in \
+            "$BASE/health/" \
+            "$BASE/books/" \
+            "$BASE/exchanges/"; do
+            HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" "$endpoint" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+              echo "  ✓ $endpoint ($HTTP_CODE)"
+            else
+              echo "  ✗ $endpoint ($HTTP_CODE)"
+              FAIL=1
+            fi
+          done
+          [ $FAIL -eq 1 ] && echo "WARNING: Some smoke tests failed" || echo "All smoke tests passed ✓"
+
       # ── Summary ───────────────────────────────────────────────────────────────
       - name: Container status
         if: always()
-        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "sl_|NAMES" || true
+        run: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "bookswap-|NAMES" || true
 
       - name: Deployment summary
-        if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true'
+        if: steps.detect.outputs.backend == 'true' || steps.detect.outputs.frontend == 'true' || steps.detect.outputs.mobile == 'true'
         run: |
           echo "================================================="
-          echo " SpeakLinka Production — deployed successfully!"
-          [ "${{ steps.detect.outputs.backend }}"  = "true" ] && echo " Backend  : https://api.speaklinka.com  ✓"
-          [ "${{ steps.detect.outputs.frontend }}" = "true" ] && echo " Frontend : https://speaklinka.com      ✓"
+          echo " BookSwap Production — deployed successfully!"
+          [ "${{ steps.detect.outputs.backend }}"  = "true" ] && echo " Backend  : https://api.bookswap.app    ✓"
+          [ "${{ steps.detect.outputs.frontend }}" = "true" ] && echo " Frontend : https://bookswap.app        ✓"
+          [ "${{ steps.detect.outputs.mobile }}"   = "true" ] && echo " Mobile   : OTA update published (prod)  ✓"
           echo "================================================="

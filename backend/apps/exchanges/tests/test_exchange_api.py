@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.books.models import BookStatus
+from apps.books.models import BookStatus, SwapType
 from apps.books.tests.factories import BookFactory
 from apps.exchanges.models import (
     VALID_TRANSITIONS,
@@ -238,13 +238,31 @@ class TestAcceptExchange:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "accepted"
 
-    def test_auto_decline_other_pending(self):
+        exchange.requested_book.refresh_from_db()
+        exchange.offered_book.refresh_from_db()
+        assert exchange.requested_book.status == BookStatus.IN_EXCHANGE
+        assert exchange.offered_book.status == BookStatus.IN_EXCHANGE
+
+    def test_auto_decline_other_pending_for_requested_book(self):
         owner = UserFactory(with_location=True, onboarded=True)
         book = BookFactory(owner=owner)
         e1 = ExchangeRequestFactory(owner=owner, requested_book=book)
         e2 = ExchangeRequestFactory(owner=owner, requested_book=book)
 
         client = api_client(owner)
+        client.post(exchange_url(pk=e1.pk, action="accept"))
+
+        e2.refresh_from_db()
+        assert e2.status == ExchangeStatus.DECLINED
+        assert e2.decline_reason == DeclineReason.RESERVED
+
+    def test_auto_decline_other_pending_for_offered_book(self):
+        requester = UserFactory(with_location=True, onboarded=True)
+        offered = BookFactory(owner=requester)
+        e1 = ExchangeRequestFactory(requester=requester, offered_book=offered)
+        e2 = ExchangeRequestFactory(requester=requester, offered_book=offered)
+
+        client = api_client(e1.owner)
         client.post(exchange_url(pk=e1.pk, action="accept"))
 
         e2.refresh_from_db()
@@ -301,24 +319,64 @@ class TestDeclineExchange:
 
 
 class TestCounterPropose:
-    def test_counter_creates_new_exchange(self):
-        exchange = ExchangeRequestFactory()
-        alt_book = BookFactory(owner=exchange.requester)
-
-        client = api_client(exchange.owner)
-        response = client.post(
+    def counter_with(self, exchange, user, book):
+        return api_client(user).post(
             exchange_url(pk=exchange.pk, action="counter"),
-            {"offered_book_id": str(alt_book.pk)},
+            {"offered_book_id": str(book.pk)},
         )
 
-        assert response.status_code == status.HTTP_201_CREATED
+    def test_counter_updates_in_place(self):
+        exchange = ExchangeRequestFactory()
+        original_offered = exchange.offered_book
+        alt_book = BookFactory(owner=exchange.requester)
+
+        response = self.counter_with(exchange, exchange.owner, alt_book)
+
+        assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["counter_to"] == str(exchange.pk)
         assert data["status"] == "pending"
+        assert data["offered_book"]["id"] == str(alt_book.pk)
+        assert data["original_offered_book"]["id"] == str(original_offered.pk)
+        assert data["last_counter_by"] == str(exchange.owner.pk)
+        assert data["owner_counter_count"] == 1
+        assert data["requester_counter_count"] == 0
+        assert data["max_counter_offers"] == 2
+        assert data["counter_offers_remaining_by_me"] == 1
 
         exchange.refresh_from_db()
-        assert exchange.status == ExchangeStatus.DECLINED
-        assert exchange.decline_reason == DeclineReason.COUNTER_PROPOSED
+        assert exchange.status == ExchangeStatus.PENDING
+        assert exchange.offered_book_id == alt_book.pk
+        assert exchange.original_offered_book_id == original_offered.pk
+        assert exchange.owner_counter_count == 1
+        assert exchange.requester_counter_count == 0
+
+    def test_counter_preserves_original_on_second_counter(self):
+        """Second counter keeps the very first original_offered_book."""
+        exchange = ExchangeRequestFactory()
+        original_offered = exchange.offered_book
+        alt_book_1 = BookFactory(owner=exchange.requester)
+        alt_book_2 = BookFactory(owner=exchange.owner)
+
+        self.counter_with(exchange, exchange.owner, alt_book_1)
+
+        response = self.counter_with(exchange, exchange.requester, alt_book_2)
+
+        assert response.status_code == status.HTTP_200_OK
+        exchange.refresh_from_db()
+        assert exchange.offered_book_id == alt_book_2.pk
+        assert exchange.original_offered_book_id == original_offered.pk
+        assert exchange.last_counter_by_id == exchange.requester_id
+        assert exchange.owner_counter_count == 1
+        assert exchange.requester_counter_count == 1
+
+    def test_cannot_counter_twice_in_a_row(self):
+        exchange = ExchangeRequestFactory()
+        alt_book_1 = BookFactory(owner=exchange.requester)
+        alt_book_2 = BookFactory(owner=exchange.requester)
+
+        self.counter_with(exchange, exchange.owner, alt_book_1)
+        response = self.counter_with(exchange, exchange.owner, alt_book_2)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_counter_must_pick_different_book(self):
         exchange = ExchangeRequestFactory()
@@ -328,6 +386,119 @@ class TestCounterPropose:
             {"offered_book_id": str(exchange.offered_book.pk)},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_counter_resets_approval(self):
+        exchange = ExchangeRequestFactory()
+        alt_book = BookFactory(owner=exchange.requester)
+
+        self.counter_with(exchange, exchange.owner, alt_book)
+        exchange.refresh_from_db()
+        assert exchange.counter_approved_at is None
+
+    def test_accept_blocked_while_counter_unapproved(self):
+        exchange = ExchangeRequestFactory()
+        alt_book = BookFactory(owner=exchange.requester)
+
+        self.counter_with(exchange, exchange.owner, alt_book)
+        response = api_client(exchange.owner).post(
+            exchange_url(pk=exchange.pk, action="accept"),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_approve_counter_then_accept(self):
+        exchange = ExchangeRequestFactory()
+        alt_book = BookFactory(owner=exchange.requester)
+
+        self.counter_with(exchange, exchange.owner, alt_book)
+
+        response = api_client(exchange.requester).post(
+            exchange_url(pk=exchange.pk, action="approve-counter"),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["counter_approved_at"] is not None
+
+        response = api_client(exchange.owner).post(
+            exchange_url(pk=exchange.pk, action="accept"),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == "accepted"
+
+    def test_cannot_approve_own_counter(self):
+        exchange = ExchangeRequestFactory()
+        alt_book = BookFactory(owner=exchange.requester)
+
+        self.counter_with(exchange, exchange.owner, alt_book)
+        response = api_client(exchange.owner).post(
+            exchange_url(pk=exchange.pk, action="approve-counter"),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_owner_cannot_make_more_than_two_counter_offers(self):
+        exchange = ExchangeRequestFactory()
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+        owner_third = BookFactory(owner=exchange.requester)
+
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+
+        response = self.counter_with(exchange, exchange.owner, owner_third)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "maximum of 2 counter offers" in response.json()["detail"]
+        exchange.refresh_from_db()
+        assert exchange.owner_counter_count == 2
+        assert exchange.offered_book_id == requester_second.pk
+        assert exchange.status == ExchangeStatus.PENDING
+
+    def test_requester_cannot_make_more_than_two_counter_offers(self):
+        exchange = ExchangeRequestFactory()
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_third = BookFactory(owner=exchange.owner)
+
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+
+        response = self.counter_with(exchange, exchange.requester, requester_third)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "maximum of 2 counter offers" in response.json()["detail"]
+        exchange.refresh_from_db()
+        assert exchange.requester_counter_count == 2
+        assert exchange.offered_book_id == owner_second.pk
+
+    def test_latest_offer_remains_approvable_after_both_sides_hit_counter_cap(self):
+        exchange = ExchangeRequestFactory()
+        owner_first = BookFactory(owner=exchange.requester)
+        requester_first = BookFactory(owner=exchange.owner)
+        owner_second = BookFactory(owner=exchange.requester)
+        requester_second = BookFactory(owner=exchange.owner)
+
+        assert self.counter_with(exchange, exchange.owner, owner_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_first).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.owner, owner_second).status_code == status.HTTP_200_OK
+        assert self.counter_with(exchange, exchange.requester, requester_second).status_code == status.HTTP_200_OK
+
+        response = api_client(exchange.owner).post(
+            exchange_url(pk=exchange.pk, action="approve-counter"),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "pending"
+        assert data["counter_approved_at"] is not None
+        assert data["owner_counter_count"] == 2
+        assert data["requester_counter_count"] == 2
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -486,11 +657,6 @@ class TestReturnFlow:
 
     def test_both_confirm_return(self):
         exchange = ExchangeRequestFactory(return_requested=True)
-        # Set books to in_exchange for the return test
-        exchange.requested_book.status = BookStatus.IN_EXCHANGE
-        exchange.requested_book.save(update_fields=["status"])
-        exchange.offered_book.status = BookStatus.IN_EXCHANGE
-        exchange.offered_book.save(update_fields=["status"])
 
         api_client(exchange.requester).post(
             exchange_url(pk=exchange.pk, action="confirm-return"),
@@ -514,6 +680,108 @@ class TestReturnFlow:
             exchange_url(pk=exchange.pk, action="request-return"),
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Swap type (temporary vs permanent)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TestSwapTypeExchange:
+    def test_exchange_inherits_swap_type_from_requested_book(self):
+        owner = UserFactory(with_location=True, onboarded=True)
+        requester = UserFactory(with_location=True, onboarded=True)
+        requested_book = BookFactory(owner=owner, swap_type=SwapType.PERMANENT)
+        offered_book = BookFactory(owner=requester)
+
+        client = api_client(requester)
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(offered_book.pk),
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["swap_type"] == SwapType.PERMANENT
+
+    def test_create_exchange_with_swap_type_override(self):
+        owner = UserFactory(with_location=True, onboarded=True)
+        requester = UserFactory(with_location=True, onboarded=True)
+        requested_book = BookFactory(owner=owner, swap_type=SwapType.PERMANENT)
+        offered_book = BookFactory(owner=requester)
+
+        client = api_client(requester)
+        response = client.post(
+            exchange_url(),
+            {
+                "requested_book_id": str(requested_book.pk),
+                "offered_book_id": str(offered_book.pk),
+                "swap_type": SwapType.TEMPORARY,
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["swap_type"] == SwapType.TEMPORARY
+
+    def test_request_return_blocked_for_permanent_swap(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.PERMANENT)
+        client = api_client(exchange.requester)
+        response = client.post(
+            exchange_url(pk=exchange.pk, action="request-return"),
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "permanent" in response.json()["detail"].lower()
+
+    def test_request_return_works_for_temporary_swap(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.TEMPORARY)
+        assert exchange.swap_type == SwapType.TEMPORARY
+        client = api_client(exchange.owner)
+        response = client.post(
+            exchange_url(pk=exchange.pk, action="request-return"),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == ExchangeStatus.RETURN_REQUESTED
+
+    def test_complete_permanent_swap_transfers_book_ownership(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.PERMANENT)
+        requested = exchange.requested_book
+        offered = exchange.offered_book
+        orig_requested_owner = requested.owner_id
+        orig_offered_owner = offered.owner_id
+        assert orig_requested_owner == exchange.owner_id
+        assert orig_offered_owner == exchange.requester_id
+
+        client = api_client(exchange.requester)
+        response = client.post(exchange_url(pk=exchange.pk, action="complete"))
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == ExchangeStatus.COMPLETED
+
+        requested.refresh_from_db()
+        offered.refresh_from_db()
+        assert requested.owner_id == exchange.requester_id
+        assert offered.owner_id == exchange.owner_id
+        assert requested.status == BookStatus.AVAILABLE
+        assert offered.status == BookStatus.AVAILABLE
+
+    def test_complete_temporary_swap_does_not_transfer_ownership(self):
+        exchange = ExchangeRequestFactory(swap_confirmed=True, swap_type=SwapType.TEMPORARY)
+        requested = exchange.requested_book
+        offered = exchange.offered_book
+        orig_requested_owner = requested.owner_id
+        orig_offered_owner = offered.owner_id
+
+        client = api_client(exchange.owner)
+        response = client.post(exchange_url(pk=exchange.pk, action="complete"))
+        assert response.status_code == status.HTTP_200_OK
+
+        requested.refresh_from_db()
+        offered.refresh_from_db()
+        assert requested.owner_id == orig_requested_owner
+        assert offered.owner_id == orig_offered_owner
+        assert requested.status == BookStatus.AVAILABLE
+        assert offered.status == BookStatus.AVAILABLE
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -591,3 +859,8 @@ class TestCeleryTasks:
 
         exchange.refresh_from_db()
         assert exchange.status == ExchangeStatus.EXPIRED
+
+        exchange.requested_book.refresh_from_db()
+        exchange.offered_book.refresh_from_db()
+        assert exchange.requested_book.status == BookStatus.AVAILABLE
+        assert exchange.offered_book.status == BookStatus.AVAILABLE

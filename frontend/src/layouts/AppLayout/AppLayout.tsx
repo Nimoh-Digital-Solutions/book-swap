@@ -8,7 +8,7 @@ const AppLayout = (): ReactElement => {
   useRouteAnnouncer();
 
   return (
-    <div className="min-h-screen bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#152018] text-[#8C9C92] font-sans selection:bg-[#E4B643] selection:text-[#152018]">
       {/* Skip navigation — satisfies WCAG 2.1 SC 2.4.1 (Bypass Blocks, Level A) */}
       <a
         href="#main-content"

@@ -3,7 +3,7 @@
  *
  * Tests cover: BrowseBookCard, RadiusSelector, SearchBar, FilterPanel,
  * FilterChips, BrowseEmptyState, SetLocationPrompt, ViewToggle, and
- * BrowsePage integration with MSW.
+ * CataloguePage integration with MSW.
  */
 import { renderWithProviders } from '@test/renderWithProviders';
 import { screen, waitFor } from '@testing-library/react';
@@ -96,7 +96,7 @@ describe('BrowseBookCard', () => {
     const book = makeBrowseBook({ id: 'book_123' });
     renderWithProviders(<BrowseBookCard book={book} />);
     const links = screen.getAllByRole('link');
-    expect(links.some(l => l.getAttribute('href') === '/books/book_123')).toBe(true);
+    expect(links.some(l => l.getAttribute('href') === '/en/books/book_123')).toBe(true);
   });
 
   it('shows owner neighborhood', () => {
@@ -407,7 +407,7 @@ describe('ViewToggle', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BrowsePage Integration
+// CataloguePage Integration
 // ═══════════════════════════════════════════════════════════════════════════
 
 // We mock useProfile to control location state per test
@@ -421,17 +421,17 @@ vi.mock('@features/profile', () => ({
   useProfile: () => mockUseProfile(),
 }));
 
-// Lazy import BrowsePage after mock is set up
-const { BrowsePage } = await import('../pages/BrowsePage/BrowsePage');
+// Lazy import CataloguePage after mock is set up
+const { CataloguePage } = await import('../pages/CataloguePage/CataloguePage');
 
-describe('BrowsePage', () => {
+describe('CataloguePage', () => {
   it('renders main layout even when user has no location (seed books always shown)', async () => {
     mockUseProfile.mockReturnValue({
       data: { ...mockProfileData, location: null },
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByText(/browse books/i)).toBeInTheDocument();
@@ -441,7 +441,7 @@ describe('BrowsePage', () => {
   it('shows loading spinner while profile loads', () => {
     mockUseProfile.mockReturnValue({ data: undefined, isLoading: true });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
     // Spinner should be present (Loader2 renders an SVG)
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
@@ -452,7 +452,7 @@ describe('BrowsePage', () => {
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByText(/browse books/i)).toBeInTheDocument();
@@ -465,7 +465,7 @@ describe('BrowsePage', () => {
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByRole('searchbox')).toBeInTheDocument();
@@ -479,7 +479,7 @@ describe('BrowsePage', () => {
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Fiction' })).toBeInTheDocument();
@@ -492,7 +492,7 @@ describe('BrowsePage', () => {
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByText('The Alchemist')).toBeInTheDocument();
@@ -506,7 +506,7 @@ describe('BrowsePage', () => {
       isLoading: false,
     });
 
-    renderWithProviders(<BrowsePage />);
+    renderWithProviders(<CataloguePage />);
 
     await waitFor(() => {
       expect(screen.getByText(/genre/i)).toBeInTheDocument();

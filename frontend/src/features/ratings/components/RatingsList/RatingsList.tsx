@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { type ReactElement,useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useUserRatings } from '../../hooks/useUserRatings';
@@ -10,7 +10,22 @@ interface RatingsListProps {
 
 export function RatingsList({ userId }: RatingsListProps): ReactElement {
   const { t } = useTranslation('ratings');
-  const { data, isLoading, isError } = useUserRatings(userId);
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useUserRatings(userId);
+
+  // Flatten infinite-query pages into a single render list. Memoised so the
+  // map below doesn't traverse every page on every parent re-render.
+  const ratings = useMemo(
+    () => data?.pages.flatMap((page) => page.results) ?? [],
+    [data],
+  );
+  const totalCount = data?.pages[0]?.count ?? 0;
 
   if (isLoading) {
     return (
@@ -26,7 +41,7 @@ export function RatingsList({ userId }: RatingsListProps): ReactElement {
     );
   }
 
-  if (!data || data.results.length === 0) {
+  if (ratings.length === 0) {
     return (
       <p className="text-sm text-[#8C9C92]">{t('noRatings', 'No ratings yet.')}</p>
     );
@@ -35,11 +50,23 @@ export function RatingsList({ userId }: RatingsListProps): ReactElement {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-[#8C9C92] uppercase tracking-wider">
-        {t('ratingsTitle', 'Ratings')} ({data.count})
+        {t('ratingsTitle', 'Ratings')} ({totalCount})
       </h3>
-      {data.results.map(rating => (
+      {ratings.map((rating) => (
         <RatingCard key={rating.id} rating={rating} />
       ))}
+      {hasNextPage && (
+        <button
+          type="button"
+          onClick={() => void fetchNextPage()}
+          disabled={isFetchingNextPage}
+          className="mt-2 w-full rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
+        >
+          {isFetchingNextPage
+            ? t('loadingMore', 'Loading…')
+            : t('loadMore', 'Load more')}
+        </button>
+      )}
     </div>
   );
 }

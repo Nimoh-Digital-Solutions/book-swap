@@ -4,7 +4,8 @@
     "home": "Accueil",
     "components": "Composants",
     "profile": "Mon profil",
-    "myShelf": "Mon étagère"
+    "myShelf": "Mon étagère",
+    "exchanges": "Échanges"
   },
   "theme": {
     "switchToDim": "Passer en mode tamisé",
@@ -45,7 +46,9 @@
       "browse": "Parcourir",
       "howItWorks": "Comment ça marche",
       "community": "Communauté",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "openMenu": "Ouvrir le menu",
+      "menuLabel": "Menu principal"
     },
     "hero": {
       "badge": "La communauté d'échange de livres d'Amsterdam",
@@ -154,7 +157,22 @@
     "heading": "Paramètres",
     "dangerZone": "Zone de danger",
     "deleteDescription": "Une fois votre compte supprimé, il n'y a pas de retour en arrière. Vous aurez un délai de grâce de 30 jours pour annuler.",
-    "deleteAccount": "Supprimer le compte"
+    "deleteAccount": "Supprimer le compte",
+    "location": {
+      "heading": "Localisation",
+      "current": "Actuelle : {{neighborhood}}",
+      "inputLabel": "Ville, quartier ou code postal",
+      "placeholder": "ex. Paris 11e, 75011",
+      "setBtn": "Définir la position",
+      "useGps": "Utiliser le GPS",
+      "updated": "Position définie à {{neighborhood}}",
+      "updatedGeneric": "Votre position a été mise à jour.",
+      "notFound": "Impossible de trouver cet emplacement. Veuillez vérifier et réessayer.",
+      "noGps": "La géolocalisation n'est pas prise en charge par votre navigateur.",
+      "gpsError": "Échec de la mise à jour de la position via GPS.",
+      "denied": "Accès à la localisation refusé. Vérifiez les paramètres de votre navigateur.",
+      "privacyNote": "Votre adresse exacte n'est jamais partagée — nous l'utilisons uniquement pour calculer les distances vers les livres disponibles."
+    }
   },
   "common": {
     "loading": "Chargement…",
@@ -274,11 +292,13 @@
       "addError": "Échec de l'ajout à la liste.",
       "removeError": "Échec du retrait de la liste."
     },
-    "card": {
-      "by": "par {{author}}",
+    "status": {
       "available": "Disponible",
       "in_exchange": "En échange",
       "returned": "Retourné"
+    },
+    "card": {
+      "by": "par {{author}}"
     },
     "photo": {
       "uploadSuccess": "Photo téléchargée.",

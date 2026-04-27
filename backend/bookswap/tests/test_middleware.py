@@ -1,0 +1,148 @@
+"""Tests for BookSwapSecurityHeadersMiddleware."""
+
+import pytest
+from django.http import HttpResponse
+from django.test import RequestFactory
+
+from bookswap.middleware import BookSwapSecurityHeadersMiddleware
+
+
+def _make_response_with_headers(**headers):
+    """Simulate a response that already has headers set by nimoh_base."""
+    resp = HttpResponse("OK")
+    for k, v in headers.items():
+        resp[k] = v
+    return resp
+
+
+NIMOH_BASE_CSP = (
+    "default-src 'self'; script-src 'self' 'nonce-abc123'; "
+    "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
+    "font-src 'self'; connect-src 'self'"
+)
+# Simulates the production enforced CSP where nimoh_base replaces
+# 'unsafe-inline' with a nonce for style-src (the actual trigger).
+NIMOH_BASE_CSP_PROD = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    "style-src 'self' 'nonce-abc123'; img-src 'self' data: blob:; "
+    "font-src 'self'; connect-src 'self'"
+)
+NIMOH_BASE_CSP_RO = (
+    "default-src 'none'; script-src 'self' 'nonce-abc123'; "
+    "style-src 'self'; img-src 'self' data:; font-src 'self'; "
+    "connect-src 'self'; report-uri /api/v1/security/csp-report/"
+)
+
+
+@pytest.fixture
+def make_middleware():
+    def _factory(frontend_url="", csp=NIMOH_BASE_CSP, csp_ro=NIMOH_BASE_CSP_RO):
+        def get_response(request):
+            return _make_response_with_headers(
+                **{
+                    "Content-Security-Policy": csp,
+                    "Content-Security-Policy-Report-Only": csp_ro,
+                }
+            )
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr("bookswap.middleware.settings", type("S", (), {"FRONTEND_URL": frontend_url})())
+            mw = BookSwapSecurityHeadersMiddleware(get_response)
+        return mw
+
+    return _factory
+
+
+@pytest.fixture
+def rf():
+    return RequestFactory()
+
+
+class TestAdminCspRelaxation:
+    """Both enforced and report-only CSP must be relaxed for Django admin."""
+
+    def test_admin_report_only_gets_unsafe_inline_style(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp_ro = response["Content-Security-Policy-Report-Only"]
+        assert "'unsafe-inline'" in csp_ro
+
+    def test_admin_report_only_gets_unsafe_eval_script(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp_ro = response["Content-Security-Policy-Report-Only"]
+        assert "'unsafe-eval'" in csp_ro
+
+    def test_admin_report_only_removes_nonce(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/admin/login/"))
+        csp_ro = response["Content-Security-Policy-Report-Only"]
+        assert "'nonce-" not in csp_ro
+
+    def test_non_admin_report_only_unchanged(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/api/v1/books/"))
+        csp_ro = response["Content-Security-Policy-Report-Only"]
+        assert csp_ro == NIMOH_BASE_CSP_RO
+
+    def test_admin_enforced_csp_gets_unsafe_inline_style(self, make_middleware, rf):
+        """Production enforced CSP uses a nonce for style-src; admin needs unsafe-inline."""
+        mw = make_middleware(csp=NIMOH_BASE_CSP_PROD)
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp = response["Content-Security-Policy"]
+        assert "'unsafe-inline'" in self._extract_directive(csp, "style-src")
+
+    def test_admin_enforced_csp_preserves_existing_unsafe_inline(self, make_middleware, rf):
+        """Dev CSP already has unsafe-inline in style-src — no duplicate."""
+        mw = make_middleware()
+        response = mw(rf.get("/admin/bookswap/user/"))
+        csp = response["Content-Security-Policy"]
+        style_src = self._extract_directive(csp, "style-src")
+        assert style_src.count("'unsafe-inline'") == 1
+
+    def test_non_admin_enforced_csp_unchanged(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/api/v1/books/"))
+        assert response["Content-Security-Policy"] == NIMOH_BASE_CSP
+
+    @staticmethod
+    def _extract_directive(csp: str, directive: str) -> str:
+        for part in csp.split(";"):
+            part = part.strip()
+            if part.startswith(directive):
+                return part
+        return ""
+
+
+class TestFrontendOriginConnect:
+    """The frontend origin must be appended to connect-src."""
+
+    def test_frontend_url_added_to_csp(self, make_middleware, rf):
+        mw = make_middleware(frontend_url="https://app.bookswap.nl")
+        response = mw(rf.get("/api/v1/books/"))
+        assert "https://app.bookswap.nl" in response["Content-Security-Policy"]
+
+    def test_frontend_url_added_to_report_only(self, make_middleware, rf):
+        mw = make_middleware(frontend_url="https://app.bookswap.nl")
+        response = mw(rf.get("/api/v1/books/"))
+        assert "https://app.bookswap.nl" in response["Content-Security-Policy-Report-Only"]
+
+    def test_no_frontend_url_no_change(self, make_middleware, rf):
+        mw = make_middleware(frontend_url="")
+        response = mw(rf.get("/api/v1/books/"))
+        assert response["Content-Security-Policy"] == NIMOH_BASE_CSP
+
+    def test_no_duplicate_if_already_present(self, make_middleware, rf):
+        csp_with_origin = NIMOH_BASE_CSP.replace("connect-src 'self'", "connect-src 'self' https://app.bookswap.nl")
+        mw = make_middleware(frontend_url="https://app.bookswap.nl", csp=csp_with_origin)
+        response = mw(rf.get("/api/v1/books/"))
+        assert response["Content-Security-Policy"].count("https://app.bookswap.nl") == 1
+
+
+class TestEnforcedCspPassthrough:
+    """The enforced CSP is set by nimoh_base; non-admin paths are untouched."""
+
+    def test_enforced_csp_preserved_for_non_admin(self, make_middleware, rf):
+        mw = make_middleware()
+        response = mw(rf.get("/api/v1/books/"))
+        assert response["Content-Security-Policy"] == NIMOH_BASE_CSP

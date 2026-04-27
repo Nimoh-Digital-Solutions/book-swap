@@ -51,7 +51,6 @@ export const API = {
     register: `${AUTH}/register/`,
     logout: `${AUTH}/logout/`,
     refresh: `${AUTH}/token/refresh/`,
-    verify: `${AUTH}/token/verify/`,
     csrf: `${AUTH}/csrf/`,
     emailVerify: `${AUTH}/email/verify/`,
     emailResend: `${AUTH}/email/resend/`,
@@ -60,10 +59,6 @@ export const API = {
     passwordChange: `${AUTH}/password/change/`,
     exchangeToken: `${AUTH}/exchange-token/`,
     socialLoginStart: (backend: string) => `${AUTH}/social/login/${backend}/`,
-    sessions: {
-      list: `${AUTH}/sessions/`,
-      detail: (id: string) => `${AUTH}/sessions/${id}/`,
-    },
   },
 
   users: {
@@ -100,6 +95,7 @@ export const API = {
     list: `${BOOKS}/browse/`,
     radiusCounts: `${BOOKS}/browse/radius-counts/`,
     nearbyCount: `${BOOKS}/nearby-count/`,
+    communityStats: `${BOOKS}/community-stats/`,
   },
 
   exchanges: {
@@ -109,6 +105,7 @@ export const API = {
     accept: (id: string) => `${EXCHANGES}/${id}/accept/`,
     decline: (id: string) => `${EXCHANGES}/${id}/decline/`,
     counter: (id: string) => `${EXCHANGES}/${id}/counter/`,
+    approveCounter: (id: string) => `${EXCHANGES}/${id}/approve-counter/`,
     cancel: (id: string) => `${EXCHANGES}/${id}/cancel/`,
     acceptConditions: (id: string) => `${EXCHANGES}/${id}/accept-conditions/`,
     conditions: (id: string) => `${EXCHANGES}/${id}/conditions/`,
@@ -144,8 +141,6 @@ export const API = {
 
   reports: {
     create: `${V1}/reports/`,
-    adminList: `${V1}/reports/admin/`,
-    adminUpdate: (id: string) => `${V1}/reports/admin/${id}/`,
   },
 
   dataExport: `${USERS}/me/data-export/`,

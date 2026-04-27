@@ -90,9 +90,10 @@ class Rating(TimeStampedModel):
                 f"Ratings are only allowed for exchanges with status: {', '.join(sorted(RATABLE_STATUSES))}."
             )
 
-        # 30-day window check
+        # 30-day window check (ADV-309: use completed_at, not updated_at)
         if exchange.status in RATABLE_STATUSES:
-            deadline = exchange.updated_at + timedelta(days=RATING_WINDOW_DAYS)
+            anchor = getattr(exchange, "completed_at", None) or exchange.updated_at
+            deadline = anchor + timedelta(days=RATING_WINDOW_DAYS)
             if timezone.now() > deadline:
                 errors["exchange"] = "The 30-day rating window has expired."
 

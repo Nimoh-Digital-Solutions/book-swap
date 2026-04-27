@@ -1,23 +1,28 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
+import { BrandedLoader, SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
 import { useAuthStore } from '@features/auth/stores/authStore';
+import type { BookListItem } from '@features/books';
+import { useBooks } from '@features/books';
 import { ChatPanel } from '@features/messaging/components/ChatPanel/ChatPanel';
 import { RatingPrompt } from '@features/ratings';
-import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
-import { ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRightLeft, BookOpen, Check, Clock, RefreshCw, X } from 'lucide-react';
 
 import { ExchangeStatusBadge } from '../components/ExchangeStatusBadge/ExchangeStatusBadge';
 import { useExchange } from '../hooks/useExchange';
 import {
   useAcceptConditions,
   useAcceptExchange,
+  useApproveCounter,
   useCancelExchange,
   useConfirmReturn,
   useConfirmSwap,
+  useCounterExchange,
   useDeclineExchange,
   useRequestReturn,
 } from '../hooks/useExchangeMutations';
@@ -90,15 +95,25 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
 
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
+  const counterMutation = useCounterExchange();
+  const approveCounterMutation = useApproveCounter();
   const cancelMutation = useCancelExchange();
   const acceptConditionsMutation = useAcceptConditions();
   const confirmSwapMutation = useConfirmSwap();
   const requestReturnMutation = useRequestReturn();
   const confirmReturnMutation = useConfirmReturn();
+  const [showCounterPicker, setShowCounterPicker] = useState(false);
+  const [selectedCounterBookId, setSelectedCounterBookId] = useState('');
 
   const isOwner = currentUserId === exchange.owner.id;
   const isRequester = currentUserId === exchange.requester.id;
+  const otherUser = isOwner ? exchange.requester : exchange.owner;
+  const { data: counterShelf, isLoading: counterShelfLoading } = useBooks(
+    { owner: otherUser.id, status: 'available', page_size: 50 },
+    showCounterPicker && exchange.status === 'pending' && (isOwner || isRequester),
+  );
   const busy = acceptMutation.isPending || declineMutation.isPending || cancelMutation.isPending
+    || counterMutation.isPending || approveCounterMutation.isPending
     || acceptConditionsMutation.isPending || confirmSwapMutation.isPending
     || requestReturnMutation.isPending || confirmReturnMutation.isPending;
 
@@ -112,32 +127,202 @@ function DetailActions({ exchange }: { exchange: ExchangeDetail }): ReactElement
   const btnPrimary = 'px-5 py-2.5 bg-[#E4B643] hover:bg-[#d9b93e] text-[#152018] font-bold text-sm rounded-full transition-colors disabled:opacity-50';
   const btnSecondary = 'px-5 py-2.5 bg-[#28382D] hover:bg-[#344a3a] text-white font-medium text-sm rounded-full transition-colors disabled:opacity-50';
   const btnDanger = 'px-5 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium text-sm rounded-full transition-colors disabled:opacity-50';
+  const btnOutline = 'px-5 py-2.5 border border-[#E4B643] hover:bg-[#E4B643]/10 text-[#E4B643] font-medium text-sm rounded-full transition-colors disabled:opacity-50';
 
-  // Pending — owner can accept/decline, requester can cancel
+  const counterBooks = (counterShelf?.results ?? []).filter((book: BookListItem) => (
+    book.status === 'available' && book.id !== exchange.offered_book.id
+  ));
+  const submitCounter = () => {
+    if (!selectedCounterBookId) return;
+    counterMutation.mutate(
+      { id: exchange.id, payload: { offered_book_id: selectedCounterBookId } },
+      {
+        onSuccess: () => {
+          setShowCounterPicker(false);
+          setSelectedCounterBookId('');
+          addNotification(t('counter.sent', 'Counter offer sent.'), { variant: 'success' });
+        },
+        onError: () => addNotification(t('error.action', 'Action failed. Please try again.'), { variant: 'error' }),
+      },
+    );
+  };
+
+  const renderCounterPicker = () => (
+    <div className="space-y-3 rounded-lg border border-[#28382D] bg-[#152018] p-4">
+      <p className="text-sm font-medium text-white">
+        {t('counter.selectBook', { name: otherUser.username, defaultValue: `Choose a book from ${otherUser.username}'s shelf` })}
+      </p>
+      {counterShelfLoading ? (
+        <p className="text-sm text-[#8C9C92]">{t('common.loading', 'Loading...')}</p>
+      ) : counterBooks.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {counterBooks.map((book: BookListItem) => {
+            const selected = selectedCounterBookId === book.id;
+            return (
+              <button
+                key={book.id}
+                type="button"
+                onClick={() => setSelectedCounterBookId(book.id)}
+                className={`text-left rounded-lg border p-3 transition-colors ${
+                  selected
+                    ? 'border-[#E4B643] bg-[#E4B643]/10'
+                    : 'border-[#28382D] bg-[#1A251D] hover:border-[#8C9C92]'
+                }`}
+              >
+                <span className="block text-sm font-medium text-white truncate">{book.title}</span>
+                <span className="block text-xs text-[#8C9C92] truncate">{book.author}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-[#8C9C92]">
+          {t('counter.noBooks', 'No available books to counter with.')}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={!selectedCounterBookId || busy}
+          className={btnPrimary}
+          onClick={submitCounter}
+        >
+          {t('counter.send', 'Send Counter Offer')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          className={btnSecondary}
+          onClick={() => {
+            setShowCounterPicker(false);
+            setSelectedCounterBookId('');
+          }}
+        >
+          {t('common.cancel', 'Cancel')}
+        </button>
+      </div>
+    </div>
+  );
+
+  // Pending — participants can counter in-place until each side reaches the cap.
   if (exchange.status === 'pending') {
+    const hasBeenCountered = !!exchange.last_counter_by;
+    const counterApproved = !!exchange.counter_approved_at;
+    const iMadeLastCounter = exchange.last_counter_by === currentUserId;
+    const pendingApproval = hasBeenCountered && !counterApproved;
+    const maxCounterOffers = exchange.max_counter_offers;
+    const myCounterCount = isRequester ? exchange.requester_counter_count : exchange.owner_counter_count;
+    const counterLimitReached = exchange.counter_offers_remaining_by_me <= 0;
+    const canAccept = !pendingApproval;
+    const canOwnerCounter = (!hasBeenCountered || !iMadeLastCounter) && !pendingApproval && !counterLimitReached;
+    const canRequesterCounter = hasBeenCountered && !iMadeLastCounter && !pendingApproval && !counterLimitReached;
+    const limitMessage = t('counter.limitReached', {
+      count: myCounterCount,
+      max: maxCounterOffers,
+      defaultValue: `Counter offer limit reached (${myCounterCount}/${maxCounterOffers}).`,
+    });
+
     if (isOwner) {
       return (
-        <div className="flex gap-3">
-          <button type="button" disabled={busy} className={btnPrimary}
-            onClick={() => mutate(acceptMutation, t('action.accepted', 'Exchange accepted!'))}>
-            {t('incoming.accept', 'Accept')}
-          </button>
-          <button type="button" disabled={busy} className={btnDanger}
-            onClick={() => declineMutation.mutate({ id: exchange.id }, {
-              onSuccess: () => addNotification(t('action.declined', 'Exchange declined.'), { variant: 'success' }),
-              onError: () => addNotification(t('error.action', 'Action failed.'), { variant: 'error' }),
-            })}>
-            {t('incoming.decline', 'Decline')}
-          </button>
+        <div className="space-y-3">
+          {pendingApproval && !iMadeLastCounter && (
+            <button type="button" disabled={busy} className={btnPrimary}
+              onClick={() => mutate(approveCounterMutation, t('counter.approved', 'Counter offer accepted!'))}>
+              {t('counter.approve', 'Accept Counter')}
+            </button>
+          )}
+          {pendingApproval && iMadeLastCounter && (
+            <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {t('counter.waitingApprovalByName', {
+                name: otherUser.username,
+                defaultValue: `Waiting for ${otherUser.username} to approve your counter offer.`,
+              })}
+            </p>
+          )}
+          {canAccept ? (
+            <div className="flex flex-wrap gap-3">
+              <button type="button" disabled={busy} className={btnPrimary}
+                onClick={() => mutate(acceptMutation, t('action.accepted', 'Exchange accepted!'))}>
+                {t('incoming.accept', 'Accept')}
+              </button>
+              <button type="button" disabled={busy} className={btnDanger}
+                onClick={() => declineMutation.mutate({ id: exchange.id }, {
+                  onSuccess: () => addNotification(t('action.declined', 'Exchange declined.'), { variant: 'success' }),
+                  onError: () => addNotification(t('error.action', 'Action failed.'), { variant: 'error' }),
+                })}>
+                {t('incoming.decline', 'Decline')}
+              </button>
+            </div>
+          ) : (
+            <button type="button" disabled={busy} className={btnDanger}
+              onClick={() => declineMutation.mutate({ id: exchange.id }, {
+                onSuccess: () => addNotification(t('action.declined', 'Exchange declined.'), { variant: 'success' }),
+                onError: () => addNotification(t('error.action', 'Action failed.'), { variant: 'error' }),
+              })}>
+              {t('incoming.decline', 'Decline')}
+            </button>
+          )}
+          {canOwnerCounter && (
+            <button type="button" disabled={busy} className={btnOutline}
+              onClick={() => setShowCounterPicker(value => !value)}>
+              <RefreshCw className="inline-block w-4 h-4 mr-1" />
+              {t('counter.offer', 'Counter Offer')}
+            </button>
+          )}
+          {counterLimitReached && !pendingApproval && (
+            <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {limitMessage}
+            </p>
+          )}
+          {showCounterPicker && canOwnerCounter ? renderCounterPicker() : null}
         </div>
       );
     }
     if (isRequester) {
       return (
-        <button type="button" disabled={busy} className={btnDanger}
-          onClick={() => mutate(cancelMutation, t('action.cancelled', 'Request cancelled.'))}>
-          {t('request.cancel', 'Cancel Request')}
-        </button>
+        <div className="space-y-3">
+          {pendingApproval && !iMadeLastCounter && (
+            <button type="button" disabled={busy} className={btnPrimary}
+              onClick={() => mutate(approveCounterMutation, t('counter.approved', 'Counter offer accepted!'))}>
+              {t('counter.approve', 'Accept Counter')}
+            </button>
+          )}
+          {pendingApproval && iMadeLastCounter && (
+            <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {t('counter.waitingApprovalByName', {
+                name: otherUser.username,
+                defaultValue: `Waiting for ${otherUser.username} to approve your counter offer.`,
+              })}
+            </p>
+          )}
+          {canRequesterCounter && (
+            <button type="button" disabled={busy} className={btnOutline}
+              onClick={() => setShowCounterPicker(value => !value)}>
+              <RefreshCw className="inline-block w-4 h-4 mr-1" />
+              {t('counter.offer', 'Counter Offer')}
+            </button>
+          )}
+          {counterLimitReached && !pendingApproval && (
+            <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {limitMessage}
+            </p>
+          )}
+          {showCounterPicker && canRequesterCounter ? renderCounterPicker() : null}
+          <button type="button" disabled={busy} className={btnDanger}
+            onClick={() => mutate(cancelMutation, t('action.cancelled', 'Request cancelled.'))}>
+            {t('request.cancel', 'Cancel Request')}
+          </button>
+          {!hasBeenCountered && (
+            <p className="text-sm text-[#8C9C92] flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {t('request.waitingOwner', 'Waiting for the owner to respond.')}
+            </p>
+          )}
+        </div>
       );
     }
   }
@@ -276,17 +461,15 @@ function isChatReadOnly(status: string): boolean {
 
 export default function ExchangeDetailPage(): ReactElement {
   const { t } = useTranslation('exchanges');
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const { data: exchange, isLoading, isError } = useExchange(id!);
   const currentUserId = useAuthStore(s => s.user?.id);
 
-  useDocumentTitle(routeMetadata[PATHS.EXCHANGE_DETAIL].title);
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -302,7 +485,13 @@ export default function ExchangeDetailPage(): ReactElement {
   const isOwner = currentUserId === exchange.owner.id;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8" style={{ marginInline: 'auto' }}>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.EXCHANGE_DETAIL].title}
+        description={routeMetadata[PATHS.EXCHANGE_DETAIL].description}
+        path={PATHS.EXCHANGE_DETAIL}
+        noIndex
+      />
       <button
         type="button"
         onClick={() => navigate(-1)}
@@ -313,8 +502,14 @@ export default function ExchangeDetailPage(): ReactElement {
       </button>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left — Timeline */}
-        <div className="md:col-span-1">
+        {/* Left — Timeline.
+          *
+          * RESP-019 (Sprint C): on mobile the most action-relevant block is
+          * the actions card (Accept/Decline/Counter or Mark Completed), not
+          * the status timeline. We push the timeline to `order-2` below `md:`
+          * so the right column (which contains the title, books, and
+          * actions) appears first. Desktop is unchanged via `md:order-1`. */}
+        <div className="md:col-span-1 order-2 md:order-1">
           <h2 className="text-sm font-medium text-[#8C9C92] uppercase tracking-wider mb-4">
             {t('detail.progress', 'Progress')}
           </h2>
@@ -322,7 +517,7 @@ export default function ExchangeDetailPage(): ReactElement {
         </div>
 
         {/* Right — Detail */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-6 order-1 md:order-2">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">{t('detail.title', 'Exchange Details')}</h1>
             <ExchangeStatusBadge status={exchange.status} />

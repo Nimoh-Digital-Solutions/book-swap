@@ -92,7 +92,7 @@ export function RatingPrompt({ exchangeId }: RatingPromptProps): ReactElement | 
       </div>
 
       <textarea
-        className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-sm text-white placeholder-[#8C9C92] resize-none focus:border-[#E4B643] focus:outline-none"
+        className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-base sm:text-sm text-white placeholder-[#8C9C92] resize-none focus:border-[#E4B643] focus:outline-none"
         rows={3}
         maxLength={300}
         placeholder={t('commentPlaceholder', 'Leave an optional comment (max 300 characters)…')}

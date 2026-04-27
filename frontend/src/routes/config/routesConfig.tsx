@@ -1,4 +1,4 @@
-import { lazy, type ReactElement,Suspense } from 'react';
+import { lazy, type ReactElement, Suspense } from 'react';
 import { RouteObject } from 'react-router-dom';
 
 import ProtectedRoute from '@components/common/ProtectedRoute/ProtectedRoute';
@@ -7,8 +7,13 @@ import { AppLayout } from '@layouts';
 
 import { PATHS, routeMetadata } from './paths';
 
-// Re-export PATHS and routeMetadata so existing imports from '@routes' / './config' still work
 export { PATHS, routeMetadata };
+
+// ---------------------------------------------------------------------------
+// Language routing components
+// ---------------------------------------------------------------------------
+import { LanguageRedirect } from '../components/LanguageRedirect';
+import { LanguageSync } from '../components/LanguageSync';
 
 // ---------------------------------------------------------------------------
 // Route-level code splitting
@@ -16,11 +21,13 @@ export { PATHS, routeMetadata };
 // ---------------------------------------------------------------------------
 const HomePage = lazy(() => import('@pages/HomePage/HomePage'));
 
-const ComponentsDemoPage = lazy(() =>
-  import('@pages/ComponentsDemoPage/ComponentsDemoPage').then(m => ({
-    default: m.ComponentsDemoPage,
-  }))
-);
+const ComponentsDemoPage = import.meta.env.DEV
+  ? lazy(() =>
+      import('@pages/ComponentsDemoPage/ComponentsDemoPage').then(m => ({
+        default: m.ComponentsDemoPage,
+      }))
+    )
+  : null;
 
 const NotFoundPage = lazy(() => import('@pages/NotFoundPage/NotFoundPage'));
 
@@ -50,8 +57,8 @@ const PublicProfilePage = lazy(() =>
   import('@features/profile').then(m => ({ default: m.PublicProfilePage }))
 );
 
-const BrowsePage = lazy(() =>
-  import('@features/discovery').then(m => ({ default: m.BrowsePage }))
+const CataloguePage = lazy(() =>
+  import('@features/discovery').then(m => ({ default: m.CataloguePage }))
 );
 
 const MyShelfPage = lazy(() =>
@@ -82,9 +89,19 @@ const IncomingRequestsPage = lazy(() =>
   import('@features/exchanges').then(m => ({ default: m.IncomingRequestsPage }))
 );
 
+const BrowseLandingPage = lazy(() => import('@pages/BrowseLandingPage/BrowseLandingPage'));
+
+const MapPage = lazy(() => import('@pages/MapPage/MapPage'));
+
+const HowItWorksPage = lazy(() => import('@pages/HowItWorksPage/HowItWorksPage'));
+
+const CommunityPage = lazy(() => import('@pages/CommunityPage/CommunityPage'));
+
 const PrivacyPolicyPage = lazy(() => import('@pages/PrivacyPolicyPage/PrivacyPolicyPage'));
 
 const TermsOfServicePage = lazy(() => import('@pages/TermsOfServicePage/TermsOfServicePage'));
+
+const AccountDeletionPage = lazy(() => import('@pages/AccountDeletionPage/AccountDeletionPage'));
 
 const NotificationUnsubscribePage = lazy(() =>
   import('@features/notifications').then(m => ({ default: m.UnsubscribePage }))
@@ -110,6 +127,11 @@ const PasswordResetConfirmPage = lazy(() =>
   import('@features/auth').then(m => ({ default: m.PasswordResetConfirmPage }))
 );
 
+/** Strip leading `/` so a PATHS constant can be used as a relative route path. */
+function rel(path: string): string {
+  return path.startsWith('/') ? path.slice(1) : path;
+}
+
 /** Convenience wrapper: lazy page inside Suspense. */
 const LazyPage = ({ component: Component }: { component: React.LazyExoticComponent<() => ReactElement> }): ReactElement => (
   <Suspense fallback={<PageLoader />}>
@@ -126,151 +148,200 @@ const ProtectedPage = ({ component: Component }: { component: React.LazyExoticCo
   </ProtectedRoute>
 );
 
+// ---------------------------------------------------------------------------
+// Application routes nested under `/:lng` for locale-prefixed URLs.
+//
+// URL examples:
+//   /en          → Home (English)
+//   /fr/login    → Login (French)
+//   /nl/catalogue → Catalogue (Dutch)
+//
+// Bare paths without a language prefix (e.g. `/login`) are caught by the
+// fallback `*` route and redirected to `/{detected-lang}/login`.
+// ---------------------------------------------------------------------------
+
 export const routes: RouteObject[] = [
-  // ---------------------------------------------------------------------------
-  // Auth route group
-  // Full-screen split-panel pages — no AppLayout shell (no Header / Footer).
-  // AuthRoutesWrapper redirects to HOME if the user is already authenticated.
-  // ---------------------------------------------------------------------------
+  // ── Root-level social auth redirects ─────────────────────────────────────
+  // The backend redirects to /auth/verified without a language prefix.
+  // These must sit above :lng so "auth" isn't mistaken for a language code.
   {
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AuthRoutesWrapper />
-      </Suspense>
-    ),
+    path: 'auth/verified',
+    element: <LanguageRedirect />,
+  },
+  {
+    path: 'auth/verify-error',
+    element: <LanguageRedirect />,
+  },
+
+  // ── Language-prefixed routes ──────────────────────────────────────────────
+  {
+    path: ':lng',
+    element: <LanguageSync />,
     children: [
+      // Auth route group — full-screen, no AppLayout shell
       {
-        // AuthPage is a layout route that stays mounted for both /login and
-        // /register, enabling the AuthSplitPanel layout-swap animation.
         element: (
           <Suspense fallback={<PageLoader />}>
-            <AuthPage />
+            <AuthRoutesWrapper />
           </Suspense>
         ),
         children: [
-          { path: PATHS.LOGIN, element: null },
-          { path: PATHS.REGISTER, element: null },
-          { path: PATHS.FORGOT_PASSWORD, element: null },
+          {
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <AuthPage />
+              </Suspense>
+            ),
+            children: [
+              { path: rel(PATHS.LOGIN), element: null },
+              { path: rel(PATHS.REGISTER), element: null },
+              { path: rel(PATHS.FORGOT_PASSWORD), element: null },
+            ],
+          },
+          {
+            path: rel(PATHS.ONBOARDING),
+            element: (
+              <Suspense fallback={<PageLoader />}>
+                <OnboardingPage />
+              </Suspense>
+            ),
+          },
         ],
       },
+
+      // App route group — standard pages with Header + Footer
       {
-        path: PATHS.ONBOARDING,
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <OnboardingPage />
-          </Suspense>
-        ),
+        element: <AppLayout />,
+        children: [
+          {
+            index: true,
+            element: <LazyPage component={HomePage} />,
+          },
+          ...(import.meta.env.DEV && ComponentsDemoPage
+            ? [
+                {
+                  path: rel(PATHS.COMPONENTS_DEMO),
+                  element: <LazyPage component={ComponentsDemoPage} />,
+                },
+              ]
+            : []),
+          {
+            path: rel(PATHS.BROWSE),
+            element: <LazyPage component={BrowseLandingPage} />,
+          },
+          {
+            path: rel(PATHS.HOW_IT_WORKS),
+            element: <LazyPage component={HowItWorksPage} />,
+          },
+          {
+            path: rel(PATHS.COMMUNITY),
+            element: <LazyPage component={CommunityPage} />,
+          },
+          {
+            path: rel(PATHS.CATALOGUE),
+            element: <LazyPage component={CataloguePage} />,
+          },
+          {
+            path: rel(PATHS.MAP),
+            element: <LazyPage component={MapPage} />,
+          },
+          {
+            path: rel(PATHS.SETTINGS),
+            element: <ProtectedPage component={SettingsPage} />,
+          },
+          {
+            path: rel(PATHS.PROFILE),
+            element: <ProtectedPage component={ProfilePage} />,
+          },
+          {
+            path: rel(PATHS.PROFILE_EDIT),
+            element: <ProtectedPage component={EditProfilePage} />,
+          },
+          {
+            path: rel(PATHS.PUBLIC_PROFILE),
+            element: <ProtectedPage component={PublicProfilePage} />,
+          },
+          {
+            path: rel(PATHS.MY_SHELF),
+            element: <ProtectedPage component={MyShelfPage} />,
+          },
+          {
+            path: rel(PATHS.ADD_BOOK),
+            element: <ProtectedPage component={AddBookPage} />,
+          },
+          {
+            path: rel(PATHS.BOOK_DETAIL),
+            element: <ProtectedPage component={BookDetailPage} />,
+          },
+          {
+            path: rel(PATHS.EDIT_BOOK),
+            element: <ProtectedPage component={EditBookPage} />,
+          },
+          {
+            path: rel(PATHS.INCOMING_REQUESTS),
+            element: <ProtectedPage component={IncomingRequestsPage} />,
+          },
+          {
+            path: rel(PATHS.EXCHANGE_DETAIL),
+            element: <ProtectedPage component={ExchangeDetailPage} />,
+          },
+          {
+            path: rel(PATHS.EXCHANGES),
+            element: <ProtectedPage component={ExchangesPage} />,
+          },
+          {
+            path: rel(PATHS.PRIVACY_POLICY),
+            element: <LazyPage component={PrivacyPolicyPage} />,
+          },
+          {
+            path: rel(PATHS.TERMS_OF_SERVICE),
+            element: <LazyPage component={TermsOfServicePage} />,
+          },
+          {
+            path: rel(PATHS.ACCOUNT_DELETION),
+            element: <LazyPage component={AccountDeletionPage} />,
+          },
+          {
+            path: rel(PATHS.NOTIFICATION_UNSUBSCRIBE),
+            element: <LazyPage component={NotificationUnsubscribePage} />,
+          },
+        ],
+      },
+
+      // Standalone routes within the language context
+      {
+        path: rel(PATHS.SOCIAL_AUTH_CALLBACK),
+        element: <LazyPage component={SocialAuthCallbackPage} />,
+      },
+      {
+        path: rel(PATHS.SOCIAL_AUTH_ERROR),
+        element: <LazyPage component={SocialAuthErrorPage} />,
+      },
+      {
+        path: rel(PATHS.EMAIL_VERIFY_PENDING),
+        element: <LazyPage component={EmailVerifyPendingPage} />,
+      },
+      {
+        path: rel(PATHS.EMAIL_VERIFY_CONFIRM),
+        element: <LazyPage component={EmailVerifyConfirmPage} />,
+      },
+      {
+        path: rel(PATHS.PASSWORD_RESET_CONFIRM),
+        element: <LazyPage component={PasswordResetConfirmPage} />,
+      },
+
+      // Catch-all 404 within the language context
+      {
+        path: '*',
+        element: <LazyPage component={NotFoundPage} />,
       },
     ],
   },
-  // ---------------------------------------------------------------------------
-  // App route group
-  // Standard pages wrapped in AppLayout (Header + Footer + skip link).
-  // ---------------------------------------------------------------------------
+
+  // ── Bare-path fallback ────────────────────────────────────────────────────
+  // Redirects any URL without a language prefix to `/{detected-lang}/...`
   {
-    path: PATHS.HOME,
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: <LazyPage component={HomePage} />,
-      },
-      {
-        path: PATHS.COMPONENTS_DEMO,
-        element: <LazyPage component={ComponentsDemoPage} />,
-      },
-      {
-        path: PATHS.CATALOGUE,
-        element: <LazyPage component={BrowsePage} />,
-      },
-      // -- Protected routes -------------------------------------------------
-      // Add your authenticated routes here using the ProtectedPage wrapper:
-      //
-      //   {
-      //     path: PATHS.DASHBOARD,
-      //     element: <ProtectedPage component={DashboardPage} />,
-      //   },
-      {
-        path: PATHS.SETTINGS,
-        element: <ProtectedPage component={SettingsPage} />,
-      },
-      {
-        path: PATHS.PROFILE,
-        element: <ProtectedPage component={ProfilePage} />,
-      },
-      {
-        path: PATHS.PROFILE_EDIT,
-        element: <ProtectedPage component={EditProfilePage} />,
-      },
-      {
-        path: PATHS.PUBLIC_PROFILE,
-        element: <ProtectedPage component={PublicProfilePage} />,
-      },
-      {
-        path: PATHS.MY_SHELF,
-        element: <ProtectedPage component={MyShelfPage} />,
-      },
-      {
-        path: PATHS.ADD_BOOK,
-        element: <ProtectedPage component={AddBookPage} />,
-      },
-      {
-        path: PATHS.BOOK_DETAIL,
-        element: <ProtectedPage component={BookDetailPage} />,
-      },
-      {
-        path: PATHS.EDIT_BOOK,
-        element: <ProtectedPage component={EditBookPage} />,
-      },
-      {
-        path: PATHS.INCOMING_REQUESTS,
-        element: <ProtectedPage component={IncomingRequestsPage} />,
-      },
-      {
-        path: PATHS.EXCHANGE_DETAIL,
-        element: <ProtectedPage component={ExchangeDetailPage} />,
-      },
-      {
-        path: PATHS.EXCHANGES,
-        element: <ProtectedPage component={ExchangesPage} />,
-      },
-      {
-        path: PATHS.PRIVACY_POLICY,
-        element: <LazyPage component={PrivacyPolicyPage} />,
-      },
-      {
-        path: PATHS.TERMS_OF_SERVICE,
-        element: <LazyPage component={TermsOfServicePage} />,
-      },
-      {
-        path: PATHS.NOTIFICATION_UNSUBSCRIBE,
-        element: <LazyPage component={NotificationUnsubscribePage} />,
-      },
-    ],
-  },
-  {
-    path: PATHS.NOT_FOUND,
-    element: <LazyPage component={NotFoundPage} />,
-  },
-  {
-    path: PATHS.SOCIAL_AUTH_CALLBACK,
-    element: <LazyPage component={SocialAuthCallbackPage} />,
-  },
-  {
-    path: PATHS.SOCIAL_AUTH_ERROR,
-    element: <LazyPage component={SocialAuthErrorPage} />,
-  },
-  {
-    path: PATHS.EMAIL_VERIFY_PENDING,
-    element: <LazyPage component={EmailVerifyPendingPage} />,
-  },
-  {
-    path: PATHS.EMAIL_VERIFY_CONFIRM,
-    element: <LazyPage component={EmailVerifyConfirmPage} />,
-  },
-  {
-    path: PATHS.PASSWORD_RESET_CONFIRM,
-    element: <LazyPage component={PasswordResetConfirmPage} />,
+    path: '*',
+    element: <LanguageRedirect />,
   },
 ];
-

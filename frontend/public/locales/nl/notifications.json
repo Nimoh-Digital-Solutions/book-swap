@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Meldingen",
+    "empty": "Nog geen meldingen",
+    "markAllRead": "Alles als gelezen markeren",
+    "unreadCount": "{{count}} ongelezen",
+    "unreadCount_one": "{{count}} ongelezen",
+    "unreadCount_other": "{{count}} ongelezen"
+  },
+  "types": {
+    "new_request": "Nieuw ruilverzoek",
+    "request_accepted": "Verzoek geaccepteerd",
+    "request_declined": "Verzoek geweigerd",
+    "request_expired": "Verzoek verlopen",
+    "exchange_completed": "Ruil voltooid",
+    "new_message": "Nieuw bericht",
+    "rating_received": "Beoordeling ontvangen"
+  },
+  "preferences": {
+    "title": "E-mailmeldingen",
+    "description": "Kies welke e-mails je van BookSwap wilt ontvangen.",
+    "email_new_request": "Nieuwe ruilverzoeken",
+    "email_request_accepted": "Verzoek geaccepteerd",
+    "email_request_declined": "Verzoek geweigerd",
+    "email_new_message": "Nieuwe berichten",
+    "email_exchange_completed": "Ruil voltooid",
+    "email_rating_received": "Beoordelingen ontvangen",
+    "saveSuccess": "Voorkeuren opgeslagen",
+    "saveError": "Kan voorkeuren niet opslaan"
+  },
+  "unsubscribe": {
+    "loading": "Verwerken…",
+    "success": "Je bent uitgeschreven van alle BookSwap e-mails.",
+    "successDetail": "Je kunt meldingen op elk moment opnieuw inschakelen via je accountinstellingen.",
+    "error": "Deze uitschrijflink is ongeldig of is al gebruikt.",
+    "goHome": "Terug naar BookSwap"
+  }
+}

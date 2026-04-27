@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
-import { useDocumentTitle } from '@hooks';
+import { BrandedLoader, SEOHead } from '@components';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { BookOpen, Calendar, Edit2, Globe, MapPin, Star } from 'lucide-react';
 
@@ -18,17 +18,13 @@ import { useProfile } from '../hooks/useProfile';
  */
 export function ProfilePage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { data: profile, isLoading, isError } = useProfile();
-
-  useDocumentTitle(routeMetadata[PATHS.PROFILE].title);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-text-secondary">
-          {t('common.loading', 'Loading…')}
-        </div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -48,6 +44,11 @@ export function ProfilePage(): ReactElement {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <SEOHead
+        title={routeMetadata[PATHS.PROFILE].title}
+        description={routeMetadata[PATHS.PROFILE].description}
+        path={PATHS.PROFILE}
+      />
       {/* Header card */}
       <div className="bg-surface-dark rounded-2xl border border-border-dark p-8">
         <div className="flex flex-col sm:flex-row gap-6">
@@ -75,13 +76,19 @@ export function ProfilePage(): ReactElement {
                 </h1>
                 <p className="text-text-secondary">@{profile.username}</p>
               </div>
+              {/* RESP-025 (Sprint C): the right column is cramped on `sm:`
+                * with username + email + bio + a wide "Edit Profile" CTA.
+                * On `<md` we collapse to icon-only with an `aria-label`,
+                * giving the bio room to breathe; the full label returns at
+                * `md:`. */}
               <button
                 type="button"
                 onClick={() => navigate(PATHS.PROFILE_EDIT)}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-border-dark rounded-xl text-sm font-medium text-primary hover:bg-border-dark/50 transition-colors"
+                aria-label={t('profile.editButton', 'Edit Profile')}
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] gap-2 md:px-4 md:py-2 border border-border-dark rounded-xl text-sm font-medium text-primary hover:bg-border-dark/50 transition-colors"
               >
                 <Edit2 className="w-4 h-4" aria-hidden="true" />
-                {t('profile.editButton', 'Edit Profile')}
+                <span className="hidden md:inline">{t('profile.editButton', 'Edit Profile')}</span>
               </button>
             </div>
 

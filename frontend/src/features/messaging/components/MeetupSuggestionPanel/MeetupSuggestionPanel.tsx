@@ -38,7 +38,7 @@ export function MeetupSuggestionPanel({
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors"
+          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-1 rounded-full hover:bg-[#28382D] text-[#8C9C92] transition-colors"
           aria-label={t('meetup.close')}
         >
           <X className="w-4 h-4" />

@@ -87,6 +87,22 @@ export function useCounterExchange() {
 }
 
 // ---------------------------------------------------------------------------
+// Approve counter-proposal
+// ---------------------------------------------------------------------------
+
+export function useApproveCounter() {
+  const qc = useQueryClient();
+  return useMutation<ExchangeDetail, Error, string>({
+    mutationFn: (id) => exchangeService.approveCounter(id),
+    onSuccess: (_data, id) => {
+      void qc.invalidateQueries({ queryKey: exchangeKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: exchangeKeys.incoming() });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Cancel
 // ---------------------------------------------------------------------------
 

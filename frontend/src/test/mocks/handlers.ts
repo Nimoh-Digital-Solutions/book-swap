@@ -208,6 +208,7 @@ export const TEST_BOOK_LIST_ITEM = {
   condition: 'good' as const,
   language: 'en' as const,
   status: 'available' as const,
+  swap_type: 'temporary' as const,
   primary_photo: null,
   owner: TEST_BOOK_OWNER,
   created_at: '2025-07-10T10:00:00Z',
@@ -477,6 +478,7 @@ const MOCK_EXCHANGE_BOOK_REQUESTED = {
   cover_url: 'https://example.com/gatsby.jpg',
   condition: 'good',
   primary_photo: null,
+  primary_thumbnail: null,
 };
 
 const MOCK_EXCHANGE_BOOK_OFFERED = {
@@ -486,11 +488,13 @@ const MOCK_EXCHANGE_BOOK_OFFERED = {
   cover_url: 'https://example.com/1984.jpg',
   condition: 'like_new',
   primary_photo: null,
+  primary_thumbnail: null,
 };
 
 const MOCK_EXCHANGE_LIST_ITEM = {
   id: 'exch_001',
   status: 'pending' as const,
+  swap_type: 'temporary' as const,
   message: 'Would love to swap!',
   requester: MOCK_EXCHANGE_PARTICIPANT_REQUESTER,
   owner: MOCK_EXCHANGE_PARTICIPANT_OWNER,
@@ -498,12 +502,22 @@ const MOCK_EXCHANGE_LIST_ITEM = {
   offered_book: MOCK_EXCHANGE_BOOK_OFFERED,
   created_at: '2025-07-15T10:00:00Z',
   updated_at: '2025-07-15T10:00:00Z',
+  unread_count: 0,
+  last_message_at: null,
+  last_message_preview: '',
 };
 
 const MOCK_EXCHANGE_DETAIL = {
   ...MOCK_EXCHANGE_LIST_ITEM,
   decline_reason: null,
   counter_to: null,
+  original_offered_book: null,
+  last_counter_by: null,
+  counter_approved_at: null,
+  requester_counter_count: 0,
+  owner_counter_count: 0,
+  max_counter_offers: 2,
+  counter_offers_remaining_by_me: 2,
   requester_confirmed_at: null,
   owner_confirmed_at: null,
   return_requested_at: null,
@@ -855,19 +869,15 @@ const trustSafetyHandlers = [
     );
   }),
 
-  /** GET /api/v1/users/me/data-export/ — GDPR data export */
-  http.get('*/api/v1/users/me/data-export/', () => {
-    return HttpResponse.json({
-      profile: { id: 'usr_test_001', email: 'test@example.com', first_name: 'Test' },
-      books: [],
-      exchanges: [],
-      messages_sent: [],
-      ratings_given: [],
-      ratings_received: [],
-      blocks: [],
-      reports_filed: [],
-      exported_at: new Date().toISOString(),
-    });
+  /** POST /api/v1/users/me/data-export/ — GDPR data export (AUD-B-704: now async) */
+  http.post('*/api/v1/users/me/data-export/', () => {
+    return HttpResponse.json(
+      {
+        queued: true,
+        detail: 'Your data export will be emailed to you shortly.',
+      },
+      { status: 202 },
+    );
   }),
 ];
 

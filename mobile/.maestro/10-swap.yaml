@@ -1,0 +1,47 @@
+# Flow 10: Request a swap with another user's book.
+#
+# Pre-conditions:
+#   - logged in via EMAIL / PASSWORD
+#   - the test account already owns at least one available book
+#   - SEARCH_QUERY matches a book that belongs to ANOTHER user
+#
+# Variables:
+#   - EMAIL
+#   - PASSWORD
+#   - SEARCH_QUERY  (e.g. a book title or ISBN known to exist in staging)
+appId: com.bookswap.mobile
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Log In"
+- tapOn: "Email or username"
+- inputText: ${EMAIL}
+- tapOn: "Password"
+- inputText: ${PASSWORD}
+- tapOn: "Log In"
+- assertVisible:
+    text: "Home|Recently Added"
+    optional: true
+- tapOn: "Browse"
+- tapOn:
+    text: "Search|Search books"
+    optional: true
+- inputText: ${SEARCH_QUERY}
+- tapOn:
+    index: 0
+    text: ${SEARCH_QUERY}
+- assertVisible:
+    text: "Request Swap|Request"
+- tapOn:
+    text: "Request Swap"
+- assertVisible:
+    text: "Choose a book|Send Request"
+    optional: true
+- tapOn:
+    index: 0
+    text: ".*"
+- tapOn: "Send Request"
+- assertVisible:
+    text: "Request sent|Pending|Exchanges"
+    optional: true
+- back

@@ -1,8 +1,8 @@
-import { type ReactElement,useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { LuCheck, LuDownload, LuHeart, LuTrash2, LuX } from 'react-icons/lu';
 
-import { Badge, Button, Card, Input, Modal, Spinner, Textarea, ToastContainer } from '@components';
-import { useDocumentTitle, useToast } from '@hooks';
+import { Badge, Button, Card, Input, Modal, SEOHead, Spinner, Textarea, ToastContainer } from '@components';
+import { useToast } from '@hooks';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 
 import styles from './ComponentsDemoPage.module.scss';
@@ -14,8 +14,6 @@ import styles from './ComponentsDemoPage.module.scss';
  * Showcases design patterns, usage examples, and interactive features.
  */
 export const ComponentsDemoPage = (): ReactElement => {
-  useDocumentTitle(routeMetadata[PATHS.COMPONENTS_DEMO].title);
-
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [inputValue, setInputValue] = useState('');
   const [textareaValue, setTextareaValue] = useState('');
@@ -49,6 +47,12 @@ export const ComponentsDemoPage = (): ReactElement => {
 
   return (
     <div className={styles.root}>
+      <SEOHead
+        title={routeMetadata[PATHS.COMPONENTS_DEMO].title}
+        description={routeMetadata[PATHS.COMPONENTS_DEMO].description}
+        path={PATHS.COMPONENTS_DEMO}
+        noIndex
+      />
       <header className={styles.header}>
         <h1>Components Library</h1>
         <p>A comprehensive showcase of all reusable components in the project.</p>

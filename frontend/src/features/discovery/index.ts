@@ -5,7 +5,7 @@
  * into sub-directories directly from outside this feature.
  *
  * @example
- * import { useBrowseBooks, BrowsePage } from '@features/discovery';
+ * import { useBrowseBooks, CataloguePage } from '@features/discovery';
  */
 
 // Components
@@ -27,6 +27,7 @@ export { ViewToggle } from './components/ViewToggle';
 export { discoveryKeys } from './hooks/discoveryKeys';
 export { useBrowseBooks } from './hooks/useBrowseBooks';
 export { useBrowseFilters } from './hooks/useBrowseFilters';
+export { useCommunityStats } from './hooks/useCommunityStats';
 export { useMapBooks } from './hooks/useMapBooks';
 export { useNearbyCount } from './hooks/useNearbyCount';
 export { useRadiusCounts } from './hooks/useRadiusCounts';
@@ -35,15 +36,17 @@ export { useRadiusCounts } from './hooks/useRadiusCounts';
 export { discoveryService } from './services/discovery.service';
 
 // Pages
-export { BrowsePage } from './pages/BrowsePage';
+export { CataloguePage } from './pages/CataloguePage';
 
 // Types
 export type { ViewMode } from './components/ViewToggle';
 export type {
+  ActivityFeedItem,
   BrowseBook,
   BrowseBookOwner,
   BrowseFilters,
   BrowseOrdering,
+  CommunityStats,
   NearbyCount,
   OwnerLocation,
   PaginatedBrowseBooks,

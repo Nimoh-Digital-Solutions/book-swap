@@ -1,9 +1,10 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
+import { BrandedLoader, SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
-import { useDocumentTitle } from '@hooks';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, Loader2, Trash2 } from 'lucide-react';
 
@@ -18,11 +19,9 @@ import type { CreateBookPayload } from '../types/book.types';
 
 export function EditBookPage(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const { id } = useParams<{ id: string }>();
   const addNotification = useAppStore(s => s.addNotification);
-
-  useDocumentTitle(routeMetadata[PATHS.EDIT_BOOK].title);
 
   const { data: book, isLoading, isError } = useBook(id!);
   const updateBook = useUpdateBook(id!);
@@ -81,8 +80,8 @@ export function EditBookPage(): ReactElement {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-pulse text-[#8C9C92]">{t('common.loading', 'Loading…')}</div>
+      <div className="min-h-[50vh]">
+        <BrandedLoader size="md" label={t('common.loading', 'Loading…')} />
       </div>
     );
   }
@@ -97,6 +96,12 @@ export function EditBookPage(): ReactElement {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      <SEOHead
+        title={routeMetadata[PATHS.EDIT_BOOK].title}
+        description={routeMetadata[PATHS.EDIT_BOOK].description}
+        path={id ? `/books/${id}/edit` : PATHS.EDIT_BOOK}
+        noIndex
+      />
       {/* Back link */}
       <button
         type="button"

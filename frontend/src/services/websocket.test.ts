@@ -103,7 +103,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('createWebSocket', () => {
-  it('connects to the URL with token appended as query param', () => {
+  it('connects to the plain URL without token in the query string', () => {
     createWebSocket({
       url: 'wss://api.example.com/ws/stories/42/',
       token: 'jwt-token-123',
@@ -111,21 +111,17 @@ describe('createWebSocket', () => {
     });
 
     expect(mockInstances).toHaveLength(1);
-    expect(mockInstances[0]?.url).toBe(
-      'wss://api.example.com/ws/stories/42/?token=jwt-token-123',
-    );
+    expect(mockInstances[0]?.url).toBe('wss://api.example.com/ws/stories/42/');
   });
 
-  it('appends token with & when URL already has query params', () => {
+  it('does not append token when the URL already has query params', () => {
     createWebSocket({
       url: 'wss://api.example.com/ws/?foo=bar',
       token: 'tok',
       onMessage: vi.fn(),
     });
 
-    expect(mockInstances[0]?.url).toBe(
-      'wss://api.example.com/ws/?foo=bar&token=tok',
-    );
+    expect(mockInstances[0]?.url).toBe('wss://api.example.com/ws/?foo=bar');
   });
 
   it('calls onMessage with parsed WsMessage on valid JSON', () => {
@@ -201,7 +197,7 @@ describe('createWebSocket', () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
-  it('send() serialises data as JSON', () => {
+  it('send() serialises data as JSON after the authenticate handshake', () => {
     const handle = createWebSocket({
       url: 'wss://localhost/ws/',
       token: 'tok',
@@ -212,7 +208,10 @@ describe('createWebSocket', () => {
     ws.simulateOpen();
     handle.send({ action: 'ping' });
 
-    expect(ws.getSentMessages()).toEqual(['{"action":"ping"}']);
+    expect(ws.getSentMessages()).toEqual([
+      '{"type":"authenticate","token":"tok"}',
+      '{"action":"ping"}',
+    ]);
   });
 
   it('close() prevents auto-reconnect', () => {

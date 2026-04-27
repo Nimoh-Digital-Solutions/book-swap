@@ -1,6 +1,7 @@
-import { MemoryRouter } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
-import { render, screen } from '@testing-library/react';
+import { renderWithProviders } from '@test/renderWithProviders';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -26,10 +27,11 @@ vi.mock('../hooks/useISBNLookup', () => ({
 // ---------------------------------------------------------------------------
 
 function renderPage() {
-  return render(
-    <MemoryRouter initialEntries={['/books/add']}>
-      <AddBookPage />
-    </MemoryRouter>,
+  return renderWithProviders(
+    <Routes>
+      <Route path="/:lng/books/add" element={<AddBookPage />} />
+    </Routes>,
+    { routerProps: { initialEntries: ['/en/books/add'] } },
   );
 }
 
@@ -55,8 +57,8 @@ describe('AddBookPage', () => {
 
   it('renders the book form with title and author fields', () => {
     renderPage();
-    expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/author/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Author' })).toBeInTheDocument();
   });
 
   it('renders condition field', () => {

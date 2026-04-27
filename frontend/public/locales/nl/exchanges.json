@@ -1,0 +1,108 @@
+{
+  "page": {
+    "title": "Mijn ruilingen",
+    "description": "Volg en beheer je boekruilen."
+  },
+  "tabs": {
+    "active": "Actief",
+    "pending": "In afwachting",
+    "history": "Geschiedenis"
+  },
+  "empty": {
+    "active": "Geen actieve ruilingen",
+    "pending": "Geen lopende verzoeken",
+    "history": "Nog geen ruilgeschiedenis",
+    "activeHint": "Wanneer je actieve ruilen hebt, verschijnen ze hier.",
+    "pendingHint": "Blader door de catalogus om boeken te vinden en een ruil aan te vragen.",
+    "historyHint": "Je voltooide en eerdere ruilingen verschijnen hier."
+  },
+  "status": {
+    "pending": "In afwachting",
+    "accepted": "Geaccepteerd",
+    "conditions_pending": "Voorwaarden afwachten",
+    "active": "Actief",
+    "swap_confirmed": "Ruil bevestigd",
+    "completed": "Voltooid",
+    "declined": "Geweigerd",
+    "cancelled": "Geannuleerd",
+    "expired": "Verlopen",
+    "return_requested": "Retour aangevraagd",
+    "returned": "Geretourneerd"
+  },
+  "request": {
+    "swap": "Ruil aanvragen",
+    "selectBook": "Selecteer een boek om aan te bieden",
+    "send": "Verzoek versturen",
+    "sent": "Verzoek verstuurd!",
+    "cancel": "Verzoek annuleren",
+    "noBooks": "Voeg eerst een boek toe om te beginnen met ruilen!"
+  },
+  "incoming": {
+    "title": "Inkomende verzoeken",
+    "back": "Terug naar ruilingen",
+    "empty": "Geen inkomende verzoeken",
+    "emptyHint": "Wanneer iemand een van je boeken aanvraagt, verschijnt het hier.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "view": "Bekijken",
+    "theyWant": "Zij willen",
+    "theyOffer": "Zij bieden aan",
+    "swaps": "ruilen",
+    "acceptSuccess": "Verzoek geaccepteerd!",
+    "acceptError": "Kan verzoek niet accepteren.",
+    "declineSuccess": "Verzoek geweigerd.",
+    "declineError": "Kan verzoek niet weigeren."
+  },
+  "conditions": {
+    "confirm": "Ruilvoorwaarden accepteren",
+    "accepted": "Voorwaarden geaccepteerd!",
+    "youAccepted": "Je hebt de voorwaarden geaccepteerd",
+    "waiting": "Wachten tot {{partner}} de ruilvoorwaarden accepteert",
+    "bothAccepted": "Beide partijen hebben de voorwaarden geaccepteerd!"
+  },
+  "swap": {
+    "confirm": "Ruil bevestigen",
+    "confirmed": "Ruil bevestigd!",
+    "youConfirmed": "Je hebt de ruil bevestigd",
+    "partnerConfirmed": "{{partner}} heeft bevestigd",
+    "waiting": "Wachten op {{partner}}"
+  },
+  "return": {
+    "request": "Retour aanvragen",
+    "requested": "Retour aangevraagd.",
+    "confirm": "Retour bevestigen",
+    "confirmed": "Retour bevestigd!",
+    "youConfirmed": "Je hebt de retour bevestigd",
+    "waiting": "Wachten op {{partner}}"
+  },
+  "action": {
+    "accepted": "Ruil geaccepteerd!",
+    "declined": "Ruil geweigerd.",
+    "cancelled": "Verzoek geannuleerd."
+  },
+  "detail": {
+    "back": "Terug",
+    "title": "Ruildetails",
+    "progress": "Voortgang",
+    "requester": "Aanvrager",
+    "owner": "Eigenaar",
+    "message": "Bericht"
+  },
+  "timeline": {
+    "requested": "Aangevraagd",
+    "accepted": "Geaccepteerd",
+    "conditions": "Voorwaarden",
+    "active": "Actief",
+    "swapConfirmed": "Ruil bevestigd",
+    "completed": "Voltooid"
+  },
+  "card": {
+    "with": "met"
+  },
+  "error": {
+    "load": "Kan ruilingen niet laden.",
+    "notFound": "Ruiling niet gevonden.",
+    "action": "Actie mislukt. Probeer het opnieuw.",
+    "create": "Kan verzoek niet versturen."
+  }
+}

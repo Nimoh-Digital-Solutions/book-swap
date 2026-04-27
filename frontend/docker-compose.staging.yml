@@ -1,0 +1,31 @@
+# BookSwap Frontend — Pi 5 Staging
+# Usage: docker compose -p bs_frontend_staging -f docker-compose.staging.yml up -d
+
+services:
+  frontend:
+    build:
+      # Build context is the repo root so packages/shared/ is available
+      # for the @shared/* TS path alias (frontend/Dockerfile expects this).
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: https://api-stag.book-swaps.com
+        VITE_APP_TITLE: BookSwap
+        VITE_SENTRY_ENVIRONMENT: staging
+        VITE_SITE_URL: https://stag.book-swaps.com
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+    container_name: bs_frontend_staging
+    restart: unless-stopped
+    ports:
+      - "3004:8080"
+    environment:
+      CSP_CONNECT_SRC: "https://api-stag.book-swaps.com wss://api-stag.book-swaps.com 'self'"
+      BACKEND_URL: "https://api-stag.book-swaps.com"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true

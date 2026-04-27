@@ -668,9 +668,9 @@ class TestCheckUsernameView:
         response = client.get("/api/v1/users/check-username/", {"q": "bad name!"})
         assert response.status_code == 400
 
-    def test_unauthenticated_rejected(self, api_client):
+    def test_unauthenticated_allowed(self, api_client):
         response = api_client.get("/api/v1/users/check-username/", {"q": "test"})
-        assert response.status_code == 401
+        assert response.status_code == 200
 
 
 class TestAccountDeletionView:

@@ -2,7 +2,8 @@ import type { FieldValues, Resolver } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { ArrowLeft, Mail } from 'lucide-react';
+import { useScrollIntoViewOnFocus } from '@hooks';
+import { ArrowLeft, Mail, MailCheck } from 'lucide-react';
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
@@ -62,10 +63,22 @@ export function ForgotPasswordForm({
     formState: { errors },
   } = useForm<FormValues>({ resolver: makeZodResolver(schema), mode: 'onTouched' });
 
+  // RESP-035 (Sprint C).
+  const formRef = useScrollIntoViewOnFocus<HTMLFormElement>();
+
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center text-center gap-4 py-8" role="status" aria-live="polite">
-        <div className="text-5xl" aria-hidden="true">✉️</div>
+        {/* RESP-030 (Sprint C): replaced the ✉️ emoji with a `lucide-react`
+          * `MailCheck` icon. Emoji rendering varies wildly across OS/font
+          * (notably Android default sans, Windows Mail), and the brand
+          * gold + circle treatment matches the rest of the auth flow. */}
+        <div
+          className="w-16 h-16 rounded-full bg-[#E4B643]/15 border border-[#E4B643]/30 flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <MailCheck className="w-8 h-8 text-[#E4B643]" />
+        </div>
         <h1 className="text-2xl font-extrabold text-white">
           {t('auth.forgotPassword.successTitle', 'Check your email')}
         </h1>
@@ -111,6 +124,7 @@ export function ForgotPasswordForm({
       </p>
 
       <form
+        ref={formRef}
         className="space-y-5"
         onSubmit={handleSubmit(({ email }) => onSubmit(email))}
         noValidate

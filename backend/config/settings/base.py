@@ -19,12 +19,16 @@ from nimoh_base.conf.social import (
 )
 
 # ── Environment variables ─────────────────────────────────────────────────────
+# Dev-only sentinel — production fails fast if SECRET_KEY equals this value
+# (see ``config.settings.production``). Never use this in production.
+DEV_INSECURE_SECRET_KEY = "django-insecure-bookswap-dev-only-DO-NOT-USE-IN-PROD"
+
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     DATABASE_URL=(str, ""),
     REDIS_URL=(str, "redis://localhost:6379/0"),
-    SECRET_KEY=(str, "IG)x_Jcqvsm^0&CCb=NK^oADJII186)0pSZ&=BhWn98XR$O&t_"),
+    SECRET_KEY=(str, DEV_INSECURE_SECRET_KEY),
 )
 
 # Resolve project root (two levels up from config/settings/) and load .env
@@ -46,6 +50,11 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 
+# ── Request body size limits (SEC-003) ────────────────────────────────────────
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+
 # ── NIMOH_BASE configuration ──────────────────────────────────────────────────
 NIMOH_BASE = {
     # Required
@@ -57,7 +66,7 @@ NIMOH_BASE = {
     "PASSWORD_CHECKER_USER_AGENT": "Django-Password-Validator",
     "CELERY_APP_NAME": "bookswap",
     "CACHE_KEY_PREFIX": "bookswap",
-    "MOBILE_APP_IDENTIFIERS": [],
+    "MOBILE_APP_IDENTIFIERS": ["BookSwap-Mobile"],
     "ENABLE_MONITORING_PERSISTENCE": True,
     # Set to False to skip the Celery worker check in /api/v1/health/.
     # Disable when running without a Celery worker (local dev without Docker Celery).
@@ -105,6 +114,7 @@ INSTALLED_APPS = (
     + [
         "django.contrib.gis",
         "django.contrib.postgres",
+        "storages",
         # Project apps
         "bookswap",
         "apps.profiles",
@@ -118,7 +128,11 @@ INSTALLED_APPS = (
 )
 
 # ── Middleware ────────────────────────────────────────────────────────────────
-MIDDLEWARE = NimohBaseSettings.get_base_middleware()
+MIDDLEWARE = [
+    "bookswap.middleware.AuthThrottleMiddleware",
+    "bookswap.middleware.BookSwapSecurityHeadersMiddleware",
+    *NimohBaseSettings.get_base_middleware(),
+]
 
 # ── Database ──────────────────────────────────────────────────────────────────
 
@@ -145,8 +159,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            # Override nimoh_base email templates here, e.g.:
-            # BASE_DIR / 'templates',
+            _PROJECT_ROOT / "templates",
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -166,8 +179,54 @@ STATIC_ROOT = "staticfiles/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "mediafiles/"
 
+# ── Object storage (S3 / MinIO) ──────────────────────────────────────────────
+USE_S3 = env.bool("USE_S3", default=False)
+
+if USE_S3:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="bookswap-media")
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="us-east-1")
+    AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 3600
+
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    elif AWS_S3_ENDPOINT_URL:
+        MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
+
 # ── REST Framework ────────────────────────────────────────────────────────────
 REST_FRAMEWORK = NimohBaseSettings.get_base_rest_framework()
+
+REST_FRAMEWORK.setdefault(
+    "DEFAULT_THROTTLE_CLASSES",
+    [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+)
+REST_FRAMEWORK.setdefault("DEFAULT_THROTTLE_RATES", {})
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"].update(
+    {
+        "anon": "100/hour",
+        "user": "1000/hour",
+        "auth": "20/minute",
+        "auth_sensitive": "5/minute",
+        "enumeration": "10/minute",
+    }
+)
 
 SIMPLE_JWT = NimohBaseSettings.get_base_simple_jwt()
 
@@ -236,6 +295,27 @@ CELERY_BEAT_SCHEDULE["expire-stale-conditions"] = {
 CELERY_BEAT_SCHEDULE["auto-confirm-stale-swaps"] = {
     "task": "exchanges.auto_confirm_stale_swaps",
     "schedule": crontab(hour=4, minute=0, day_of_week=1),
+}
+
+# ── Celery queue routing ─────────────────────────────────────────────────────
+# Three queues: default (general), email (transactional messages),
+# maintenance (scheduled cron-style tasks).
+CELERY_TASK_QUEUES = {
+    "default": {"exchange": "default", "routing_key": "default"},
+    "email": {"exchange": "email", "routing_key": "email"},
+    "maintenance": {"exchange": "maintenance", "routing_key": "maintenance"},
+}
+CELERY_TASK_DEFAULT_QUEUE = "default"
+CELERY_TASK_ROUTES = {
+    # Notification tasks → email queue (they send transactional emails)
+    "notifications.*": {"queue": "email"},
+    # Trust & safety email alerts → email queue
+    "trust_safety.send_report_notification_email": {"queue": "email"},
+    # Scheduled maintenance tasks → maintenance queue
+    "exchanges.expire_stale_requests": {"queue": "maintenance"},
+    "exchanges.expire_stale_conditions": {"queue": "maintenance"},
+    "exchanges.auto_confirm_stale_swaps": {"queue": "maintenance"},
+    "bookswap.anonymize_deleted_accounts": {"queue": "maintenance"},
 }
 
 

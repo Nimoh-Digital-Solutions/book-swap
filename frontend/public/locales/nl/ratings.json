@@ -16,5 +16,7 @@
   },
   "error": {
     "load": "Beoordelingen konden niet worden geladen."
-  }
+  },
+  "loadMore": "Meer laden",
+  "loadingMore": "Laden…"
 }

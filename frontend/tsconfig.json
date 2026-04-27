@@ -10,6 +10,8 @@
       "@components/*": ["components/*"],
       "@configs": ["configs"],
       "@configs/*": ["configs/*"],
+      "@constants": ["constants"],
+      "@constants/*": ["constants/*"],
       "@contexts": ["contexts"],
       "@contexts/*": ["contexts/*"],
       "@data": ["data"],
@@ -33,9 +35,11 @@
       "@features": ["features"],
       "@features/*": ["features/*"],
       "@test": ["test"],
-      "@test/*": ["test/*"]
+      "@test/*": ["test/*"],
+      "@shared": ["../../packages/shared/src"],
+      "@shared/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "../packages/shared/src"],
   "exclude": ["node_modules", "dist"]
 }

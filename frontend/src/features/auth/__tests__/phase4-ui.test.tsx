@@ -37,7 +37,9 @@ describe('AuthSplitPanel', () => {
 
   it('renders branding subtitle and testimonial', () => {
     wrap(<AuthSplitPanel {...panelProps} />);
-    expect(screen.getByText('Test subtitle')).toBeInTheDocument();
+    // Subtitle is rendered twice — once in the desktop branding panel
+    // and once in the condensed mobile brand block (RESP-016).
+    expect(screen.getAllByText('Test subtitle').length).toBeGreaterThan(0);
     expect(screen.getByText(/Great app/)).toBeInTheDocument();
     expect(screen.getByText('Tester')).toBeInTheDocument();
   });

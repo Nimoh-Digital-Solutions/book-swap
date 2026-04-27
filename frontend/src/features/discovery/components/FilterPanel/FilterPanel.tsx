@@ -9,47 +9,9 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CONDITION_OPTIONS, GENRE_OPTIONS, LANGUAGE_OPTIONS } from '@constants/bookOptions';
+
 import type { BrowseFilters } from '../../types/discovery.types';
-
-const GENRE_OPTIONS = [
-  'Fiction',
-  'Non-Fiction',
-  'Sci-Fi',
-  'Fantasy',
-  'Mystery/Thriller',
-  'Romance',
-  'Biography',
-  'History',
-  'Science',
-  'Philosophy',
-  'Self-Help',
-  'Business',
-  'Poetry',
-  'Graphic Novel',
-  "Children's",
-  'Young Adult',
-  'Horror',
-  'Travel',
-  'Cooking',
-  'Art',
-  'Other',
-] as const;
-
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'de', label: 'German' },
-  { value: 'fr', label: 'French' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'other', label: 'Other' },
-] as const;
-
-const CONDITION_OPTIONS = [
-  { value: 'new', label: 'New' },
-  { value: 'like_new', label: 'Like New' },
-  { value: 'good', label: 'Good' },
-  { value: 'acceptable', label: 'Acceptable' },
-] as const;
 
 const MAX_KM = 50;
 

@@ -14,6 +14,7 @@ const MOCK_BOOK: BookListItem = {
   condition: 'good',
   language: 'en',
   status: 'available',
+  swap_type: 'temporary',
   primary_photo: null,
   owner: {
     id: 'usr_001',
@@ -61,7 +62,7 @@ describe('BookCard', () => {
   it('renders a link to the book detail page', () => {
     renderCard();
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/books/book_001');
+    expect(link).toHaveAttribute('href', '/en/books/book_001');
   });
 
   it('shows status overlay for non-available books', () => {

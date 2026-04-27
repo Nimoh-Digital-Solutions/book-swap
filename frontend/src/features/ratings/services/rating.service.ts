@@ -35,11 +35,16 @@ export const ratingService = {
     return data;
   },
 
-  /** List public ratings for a user. */
-  async listUserRatings(userId: string): Promise<PaginatedRatings> {
-    const { data } = await http.get<PaginatedRatings>(
-      API.ratings.userRatings(userId),
-    );
+  /** List public ratings for a user (one page; defaults to backend page size). */
+  async listUserRatings(
+    userId: string,
+    page: number = 1,
+  ): Promise<PaginatedRatings> {
+    const url =
+      page > 1
+        ? `${API.ratings.userRatings(userId)}?page=${page}`
+        : API.ratings.userRatings(userId);
+    const { data } = await http.get<PaginatedRatings>(url);
     return data;
   },
 };

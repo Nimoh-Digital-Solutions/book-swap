@@ -66,7 +66,7 @@ export function NotificationBell({ enabled = true }: NotificationBellProps): Rea
         }
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="relative p-2 rounded-full text-white hover:text-[#E4B643] hover:bg-white/10 transition-colors"
+        className="relative inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-full text-white hover:text-[#E4B643] hover:bg-white/10 transition-colors"
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (

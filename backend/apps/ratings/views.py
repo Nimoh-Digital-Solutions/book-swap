@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.exchanges.models import ExchangeRequest
+from bookswap.pagination import DefaultPagination
 
 from .models import RATABLE_STATUSES, RATING_WINDOW_DAYS, Rating
 from .permissions import IsExchangeParticipantForRating
@@ -67,7 +68,8 @@ class ExchangeRatingViewSet(GenericViewSet):
             .first()
         )
 
-        deadline = exchange.updated_at + timedelta(days=RATING_WINDOW_DAYS)
+        anchor = exchange.completed_at or exchange.updated_at
+        deadline = anchor + timedelta(days=RATING_WINDOW_DAYS)
         can_rate = exchange.status in RATABLE_STATUSES and my_rating is None and timezone.now() <= deadline
 
         data = {
@@ -106,6 +108,7 @@ class UserRatingsViewSet(GenericViewSet):
 
     permission_classes = [IsAuthenticated]  # noqa: RUF012
     serializer_class = RatingSerializer
+    pagination_class = DefaultPagination
 
     def list(self, request, *args, **kwargs):
         """List public ratings received by a user."""

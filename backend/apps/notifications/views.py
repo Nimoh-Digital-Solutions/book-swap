@@ -11,6 +11,7 @@ Endpoints:
 """
 
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -18,8 +19,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Notification, NotificationPreferences
-from .serializers import NotificationPreferencesSerializer, NotificationSerializer
+from .models import MobileDevice, Notification, NotificationPreferences
+from .serializers import MobileDeviceSerializer, NotificationPreferencesSerializer, NotificationSerializer
 
 
 class NotificationListView(APIView):
@@ -72,12 +73,31 @@ class NotificationPreferencesView(RetrieveUpdateAPIView):
         return obj
 
 
+class MobileDeviceView(APIView):
+    """Register or update a mobile device push token."""
+
+    permission_classes = [IsAuthenticated]  # noqa: RUF012
+
+    def post(self, request: Request) -> Response:
+        serializer = MobileDeviceSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request: Request) -> Response:
+        push_token = request.data.get("push_token")
+        if not push_token:
+            return Response({"detail": "push_token is required."}, status=status.HTTP_400_BAD_REQUEST)
+        MobileDevice.objects.filter(user=request.user, push_token=push_token).update(is_active=False)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class UnsubscribeView(APIView):
     """One-click global unsubscribe via token — no authentication required."""
 
     permission_classes = [AllowAny]  # noqa: RUF012
 
-    def get(self, request: Request, token: str) -> Response:
+    def _unsubscribe(self, token: str) -> Response:
         try:
             prefs = NotificationPreferences.objects.get(unsubscribe_token=token)
         except NotificationPreferences.DoesNotExist:
@@ -86,7 +106,6 @@ class UnsubscribeView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Disable all email notifications
         NotificationPreferences.objects.filter(pk=prefs.pk).update(
             email_new_request=False,
             email_request_accepted=False,
@@ -96,3 +115,27 @@ class UnsubscribeView(APIView):
             email_rating_received=False,
         )
         return Response({"detail": "You have been unsubscribed from all BookSwap emails."})
+
+    @extend_schema(
+        summary="One-click email unsubscribe (POST)",
+        description="Disable all email notifications for the user identified by the unsubscribe token.",
+        responses={
+            200: OpenApiResponse(description="Successfully unsubscribed"),
+            404: OpenApiResponse(description="Invalid or expired token"),
+        },
+        tags=["notifications"],
+    )
+    def post(self, request: Request, token: str) -> Response:
+        return self._unsubscribe(token)
+
+    @extend_schema(
+        summary="One-click email unsubscribe (GET — kept for email client compatibility)",
+        description="Disable all email notifications. Prefer POST for programmatic use.",
+        responses={
+            200: OpenApiResponse(description="Successfully unsubscribed"),
+            404: OpenApiResponse(description="Invalid or expired token"),
+        },
+        tags=["notifications"],
+    )
+    def get(self, request: Request, token: str) -> Response:
+        return self._unsubscribe(token)

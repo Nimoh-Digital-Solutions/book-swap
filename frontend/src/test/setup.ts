@@ -39,7 +39,14 @@ Object.defineProperty(window, 'matchMedia', {
 // Spy on console.warn and console.error so individual tests can assert against
 // unexpected output and CI logs are not contaminated by library warnings.
 beforeEach(() => {
-  localStorage.clear();
+  const storage = window.localStorage;
+  if (typeof storage.clear === 'function') {
+    storage.clear();
+  } else {
+    for (const key of Object.keys(storage)) {
+      storage.removeItem(key);
+    }
+  }
   vi.spyOn(console, 'warn');
   vi.spyOn(console, 'error');
 });

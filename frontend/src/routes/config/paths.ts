@@ -24,14 +24,17 @@ export const PATHS = {
   ADD_BOOK: '/books/add',
   BOOK_DETAIL: '/books/:id',
   EDIT_BOOK: '/books/:id/edit',
+  BROWSE: '/browse',
   CATALOGUE: '/catalogue',
+  MAP: '/map',
   EXCHANGES: '/exchanges',
   EXCHANGE_DETAIL: '/exchanges/:id',
   INCOMING_REQUESTS: '/exchanges/incoming',
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_OF_SERVICE: '/terms-of-service',
-  HOW_IT_WORKS: '/#how-it-works',
-  COMMUNITY: '/#community',
+  ACCOUNT_DELETION: '/account-deletion',
+  HOW_IT_WORKS: '/how-it-works',
+  COMMUNITY: '/community',
   NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
   EMAIL_VERIFY_PENDING: '/auth/email/verify-pending',
   EMAIL_VERIFY_CONFIRM: '/auth/email/verify',
@@ -49,12 +52,12 @@ export const PATHS = {
  *
  * @example
  * import { PATHS, routeMetadata } from '@routes/config/paths';
- * useDocumentTitle(routeMetadata[PATHS.HOME].title);
+ * <SEOHead title={...} description={...} path={PATHS.HOME} />
  */
 export const routeMetadata = {
   [PATHS.HOME]: {
     title: 'Home',
-    description: 'Welcome to React Starter Kit',
+    description: 'BookSwap is a free, location-aware book exchange platform. Discover, swap, and share physical books with people in your neighbourhood.',
   },
   [PATHS.COMPONENTS_DEMO]: {
     title: 'Components Library',
@@ -62,98 +65,118 @@ export const routeMetadata = {
   },
   [PATHS.LOGIN]: {
     title: 'Sign in',
-    description: 'Sign in to your account',
+    description: 'Sign in to your BookSwap account to browse, swap, and share books with your community.',
   },
   [PATHS.REGISTER]: {
     title: 'Create Account',
-    description: 'Create a new account',
+    description: 'Join BookSwap for free and start swapping books with readers near you.',
   },
   [PATHS.FORGOT_PASSWORD]: {
     title: 'Forgot Password',
-    description: 'Reset your account password',
+    description: 'Reset your BookSwap account password.',
   },
   [PATHS.PASSWORD_RESET_CONFIRM]: {
     title: 'Set New Password',
-    description: 'Choose a new password for your account',
+    description: 'Choose a new password for your BookSwap account.',
   },
   [PATHS.ONBOARDING]: {
     title: 'Set Your Location',
-    description: 'Complete your account setup by setting your location',
+    description: 'Complete your BookSwap account setup by setting your location so we can show books near you.',
   },
   [PATHS.PROFILE]: {
     title: 'Profile',
-    description: 'View and edit your profile',
+    description: 'View your BookSwap profile, reading stats, and swap history.',
   },
   [PATHS.PROFILE_EDIT]: {
     title: 'Edit Profile',
-    description: 'Edit your profile information',
+    description: 'Update your BookSwap profile information and preferences.',
   },
   [PATHS.PUBLIC_PROFILE]: {
     title: 'User Profile',
-    description: 'View a user\'s public profile',
+    description: 'View this reader\'s public profile, book listings, and community ratings on BookSwap.',
   },
   [PATHS.SETTINGS]: {
     title: 'Settings',
-    description: 'Account settings',
+    description: 'Manage your BookSwap account, notifications, and privacy preferences.',
+  },
+  [PATHS.BROWSE]: {
+    title: 'Browse Books',
+    description: 'Discover books available for swapping in your community. Filter by genre, condition, and distance.',
   },
   [PATHS.CATALOGUE]: {
-    title: 'Catalogue',
-    description: 'Browse all available books in your community',
+    title: 'Book Catalogue',
+    description: 'Browse the full catalogue of books available for swapping on BookSwap.',
+  },
+  [PATHS.MAP]: {
+    title: 'Book Map',
+    description: 'Explore an interactive map of books available for swapping near you. Find readers in your neighbourhood.',
   },
   [PATHS.MY_SHELF]: {
     title: 'My Shelf',
-    description: 'Manage your book listings',
+    description: 'Manage your book listings on BookSwap. Add, edit, or remove books from your shelf.',
   },
   [PATHS.ADD_BOOK]: {
     title: 'Add Book',
-    description: 'List a new book for swapping',
+    description: 'List a new book for swapping on BookSwap. Scan the ISBN or search by title.',
   },
   [PATHS.BOOK_DETAIL]: {
     title: 'Book Details',
-    description: 'View book details and request a swap',
+    description: 'View book details, photos, and condition. Request a swap with the owner.',
   },
   [PATHS.EDIT_BOOK]: {
     title: 'Edit Book',
-    description: 'Edit your book listing',
+    description: 'Update your book listing details, condition, and photos.',
   },
   [PATHS.EXCHANGES]: {
     title: 'My Exchanges',
-    description: 'Manage your book exchange requests',
+    description: 'Track and manage your active book exchange requests on BookSwap.',
   },
   [PATHS.EXCHANGE_DETAIL]: {
     title: 'Exchange Details',
-    description: 'View exchange details and manage the swap',
+    description: 'View exchange details, chat with the other reader, and complete your book swap.',
   },
   [PATHS.INCOMING_REQUESTS]: {
     title: 'Incoming Requests',
-    description: 'Review and respond to incoming swap requests',
+    description: 'Review and respond to incoming swap requests from other BookSwap readers.',
   },
   [PATHS.PRIVACY_POLICY]: {
     title: 'Privacy Policy',
-    description: 'How BookSwap handles your personal data',
+    description: 'Learn how BookSwap collects, uses, and protects your personal data in compliance with GDPR.',
   },
   [PATHS.TERMS_OF_SERVICE]: {
     title: 'Terms of Service',
-    description: 'Rules and conditions for using BookSwap',
+    description: 'Read the rules and conditions for using the BookSwap platform.',
+  },
+  [PATHS.ACCOUNT_DELETION]: {
+    title: 'Account & Data Deletion',
+    description: 'Learn how to delete your BookSwap account and request removal of your personal data.',
+  },
+  [PATHS.HOW_IT_WORKS]: {
+    title: 'How BookSwap Works',
+    description: 'Your complete guide to swapping books on BookSwap: list, discover, request, and meet up.',
+  },
+  [PATHS.COMMUNITY]: {
+    title: 'BookSwap Community',
+    description: 'Meet the BookSwap community. See live stats, recent activity, and what readers near you are sharing.',
   },
   [PATHS.EMAIL_VERIFY_PENDING]: {
     title: 'Verify Your Email',
-    description: 'Check your inbox for a verification link',
+    description: 'Check your inbox for a verification link to activate your BookSwap account.',
   },
   [PATHS.EMAIL_VERIFY_CONFIRM]: {
     title: 'Email Verification',
-    description: 'Confirming your email address',
+    description: 'Confirming your email address for BookSwap.',
   },
   [PATHS.SOCIAL_AUTH_CALLBACK]: {
     title: 'Signing in…',
-    description: 'Completing Google sign-in',
+    description: 'Completing Google sign-in to BookSwap.',
   },
   [PATHS.SOCIAL_AUTH_ERROR]: {
     title: 'Sign-in Failed',
-    description: 'An error occurred during social sign-in',
+    description: 'An error occurred during social sign-in. Please try again.',
   },
   [PATHS.NOT_FOUND]: {
     title: 'Page Not Found',
-    description: 'The page you are looking for does not exist',
+    description: 'The page you are looking for does not exist on BookSwap.',
   },
 } as const;

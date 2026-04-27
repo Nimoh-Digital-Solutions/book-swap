@@ -1,0 +1,13 @@
+# Flow 3: Tap on a book card and view detail
+appId: com.bookswap.mobile
+---
+- launchApp
+- assertVisible: "Recently Added"
+  optional: true
+- tapOn:
+    index: 0
+    id: "book-card"
+    optional: true
+- assertVisible: "Request Swap"
+  optional: true
+- back

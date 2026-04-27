@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
+import { LocaleLink } from '@components/common/LocaleLink/LocaleLink';
 import { BookOpen } from 'lucide-react';
 
 import type { BookListItem } from '../../types/book.types';
@@ -14,14 +14,8 @@ interface BookCardProps {
 export function BookCard({ book }: BookCardProps): ReactElement {
   const { t } = useTranslation();
 
-  const statusLabels: Record<string, string> = {
-    available: t('books.card.available', 'Available'),
-    in_exchange: t('books.card.in_exchange', 'In Exchange'),
-    returned: t('books.card.returned', 'Returned'),
-  };
-
   return (
-    <Link
+    <LocaleLink
       to={`/books/${book.id}`}
       className="group block bg-[#1A251D] rounded-2xl border border-[#28382D] overflow-hidden hover:border-[#E4B643]/50 transition-colors"
     >
@@ -44,7 +38,7 @@ export function BookCard({ book }: BookCardProps): ReactElement {
         {book.status !== 'available' && (
           <div className="absolute top-2 right-2">
             <span className="bg-[#152018]/80 text-[#8C9C92] text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-              {statusLabels[book.status] ?? book.status}
+              {t(`books.status.${book.status}`, book.status)}
             </span>
           </div>
         )}
@@ -67,6 +61,6 @@ export function BookCard({ book }: BookCardProps): ReactElement {
           )}
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

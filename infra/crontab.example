@@ -1,0 +1,17 @@
+# BookSwap database backup schedule for Pi 5
+# Install with: crontab < infra/crontab.example
+# (or merge into existing crontab with: crontab -e)
+#
+# Required environment variables (set in ~/.backup_env):
+#   BOOKSWAP_STAGING_DATABASE_URL
+#   BOOKSWAP_PRODUCTION_DATABASE_URL
+#   BACKUP_GPG_PASSPHRASE
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Daily backups at 03:00 UTC
+0 3 * * * . ~/.backup_env && /home/gnimoh001/apps/bookswap/infra/backup.sh >> /home/gnimoh001/backups/bookswap/backup.log 2>&1
+
+# Disk usage alert (daily at 06:00 UTC) — warns if /home exceeds 85%
+0 6 * * * USAGE=$(df /home --output=pcent | tail -1 | tr -dc '0-9'); [ "$USAGE" -gt 85 ] && echo "BookSwap Pi: /home at ${USAGE}%% — consider pruning Docker images or old backups"

@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
+import { SEOHead } from '@components';
 import { API } from '@configs/apiEndpoints';
-import { PATHS } from '@routes/config/paths';
+import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
+import { PATHS, routeMetadata } from '@routes/config/paths';
 import { http } from '@services';
 
 import { authService } from '../services/auth.service';
@@ -22,7 +24,7 @@ import type { AuthUser } from '../types/auth.types';
  */
 export function SocialAuthCallbackPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const navigate = useLocaleNavigate();
   const setAuth = useAuthStore(s => s.setAuth);
   const hasFired = useRef(false);
 
@@ -55,10 +57,16 @@ export function SocialAuthCallbackPage() {
 
   return (
     <main
-      className="min-h-screen bg-background-dark flex items-center justify-center"
+      className="min-h-[100dvh] bg-background-dark flex items-center justify-center"
       aria-live="polite"
       aria-label="Completing sign-in"
     >
+      <SEOHead
+        title={routeMetadata[PATHS.SOCIAL_AUTH_CALLBACK].title}
+        description={routeMetadata[PATHS.SOCIAL_AUTH_CALLBACK].description}
+        path={PATHS.SOCIAL_AUTH_CALLBACK}
+        noIndex
+      />
       <p className="text-white text-lg">Signing you in…</p>
     </main>
   );

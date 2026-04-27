@@ -2,9 +2,11 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import { server } from '../../test/mocks/server';
 import HomePage from './HomePage';
 
 function makeWrapper() {
@@ -25,6 +27,26 @@ const renderPage = () =>
   render(<HomePage />, { wrapper: makeWrapper() });
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    // HomePage calls nearby-count + community-stats when useUserCity returns coordinates;
+    // default MSW responses omit fields the page reads (user_count, swaps_this_week).
+    server.use(
+      http.get('*/api/v1/books/nearby-count/', () =>
+        HttpResponse.json({
+          count: 42,
+          radius: 10_000,
+          user_count: 12,
+        }),
+      ),
+      http.get('*/api/v1/books/community-stats/', () =>
+        HttpResponse.json({
+          swaps_this_week: 3,
+          activity_feed: [],
+        }),
+      ),
+    );
+  });
+
   it('renders the hero headline', () => {
     renderPage();
     expect(screen.getByText(/find your next/i)).toBeInTheDocument();
@@ -44,10 +66,12 @@ describe('HomePage', () => {
     expect(screen.getByText('Dutch Literature')).toBeInTheDocument();
   });
 
-  it('renders book cards', () => {
+  it('renders book cards', async () => {
     renderPage();
-    expect(screen.getAllByText('The Midnight Library').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Project Hail Mary').length).toBeGreaterThanOrEqual(1);
+    // MSW list handler returns TEST_BOOK_LIST_ITEM ("The Great Gatsby"); cards load after useBooks resolves
+    await waitFor(() => {
+      expect(screen.getAllByText('The Great Gatsby').length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('renders "How It Works" section with steps', () => {
@@ -60,5 +84,24 @@ describe('HomePage', () => {
   it('renders CTA section with Create Free Account link', () => {
     renderPage();
     expect(screen.getByText(/create free account/i)).toBeInTheDocument();
+  });
+
+  // AUD-W-201: explicit error UI when the books query fails so users get
+  // feedback instead of an empty grid.
+  it('shows an error banner with retry when /books/ fails', async () => {
+    server.use(
+      http.get('*/api/v1/books/', () =>
+        HttpResponse.json({ detail: 'boom' }, { status: 500 }),
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText(/couldn't load books/i)).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole('button', { name: /retry/i }),
+    ).toBeInTheDocument();
   });
 });

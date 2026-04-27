@@ -67,6 +67,14 @@ export const exchangeService = {
     return data;
   },
 
+  /** Approve a counter-proposal (original requester action). */
+  async approveCounter(id: string): Promise<ExchangeDetail> {
+    const { data } = await http.post<ExchangeDetail>(
+      API.exchanges.approveCounter(id),
+    );
+    return data;
+  },
+
   /** Cancel a pending exchange request (requester action). */
   async cancel(id: string): Promise<ExchangeDetail> {
     const { data } = await http.post<ExchangeDetail>(API.exchanges.cancel(id));

@@ -40,11 +40,13 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
       APP_VERSION: ${APP_VERSION:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL}
       NOREPLY_EMAIL: ${NOREPLY_EMAIL}
 
     ports:
-      - "8070:8000"
+      - "${BE_HOST_PORT:-8071}:8000"
 
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')"]
@@ -63,14 +65,66 @@ services:
   celery:
     image: ${IMAGE_NAME:-bookswap/web:latest}
     container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info
+    command: celery -A config.celery worker --loglevel=info -Q default
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-email:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery-email
+    command: celery -A config.celery worker --loglevel=info -Q email --concurrency=2
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-maintenance:
+    image: ${IMAGE_NAME:-bookswap/web:latest}
+    container_name: bookswap-be-celery-maintenance
+    command: celery -A config.celery worker --loglevel=info -Q maintenance --concurrency=1
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     depends_on:
       - redis
     restart: unless-stopped
@@ -84,8 +138,15 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     depends_on:
       - redis
     restart: unless-stopped

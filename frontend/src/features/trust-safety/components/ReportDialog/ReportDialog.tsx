@@ -71,7 +71,7 @@ export function ReportDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 pb-safe"
       role="dialog"
       aria-modal="true"
       aria-label={t('report.title')}
@@ -91,7 +91,7 @@ export function ReportDialog({
             id="report-category"
             value={category}
             onChange={(e) => setCategory(e.target.value as ReportCategory)}
-            className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E4B643]"
+            className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E4B643]"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -119,7 +119,7 @@ export function ReportDialog({
             maxLength={500}
             rows={3}
             placeholder={t('report.descriptionPlaceholder')}
-            className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-sm text-white placeholder:text-[#5A6A60] focus:outline-none focus:ring-2 focus:ring-[#E4B643] resize-none"
+            className="w-full bg-[#152018] border border-[#28382D] rounded-lg px-3 py-2 text-base sm:text-sm text-white placeholder:text-[#5A6A60] focus:outline-none focus:ring-2 focus:ring-[#E4B643] resize-none"
           />
           <p className="text-xs text-[#5A6A60] mt-1 text-right">
             {description.length}/500

@@ -13,4 +13,6 @@ export const discoveryKeys = {
   radiusCounts: () => [...discoveryKeys.all, 'radius-counts'] as const,
   nearbyCount: (lat?: number, lng?: number) =>
     [...discoveryKeys.all, 'nearby-count', lat, lng] as const,
+  communityStats: (lat?: number, lng?: number) =>
+    [...discoveryKeys.all, 'community-stats', lat, lng] as const,
 };
