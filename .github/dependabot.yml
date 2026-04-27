@@ -1,5 +1,9 @@
 version: 2
 
+# Tight cap: at most 5 open Dependabot PRs across the whole repo.
+# Each ecosystem opens at most 1 grouped PR, all on the same weekly slot
+# (Monday 08:00 UTC) so review happens once a week, not all week long.
+
 updates:
   - package-ecosystem: "pip"
     directory: "/backend"
@@ -8,7 +12,7 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "UTC"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 1
     groups:
       backend-python:
         patterns:
@@ -21,19 +25,24 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "weekly"
-      day: "tuesday"
+      day: "monday"
       time: "08:00"
       timezone: "UTC"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 1
     groups:
-      frontend-runtime:
-        dependency-type: "production"
+      frontend-npm:
         patterns:
           - "*"
-      frontend-dev:
-        dependency-type: "development"
-        patterns:
-          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "react"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "react-dom"
+        update-types:
+          - "version-update:semver-major"
     labels:
       - "dependencies"
       - "frontend"
@@ -42,20 +51,12 @@ updates:
     directory: "/mobile"
     schedule:
       interval: "weekly"
-      day: "wednesday"
+      day: "monday"
       time: "08:00"
       timezone: "UTC"
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 1
     groups:
-      mobile-runtime-safe:
-        dependency-type: "production"
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      mobile-dev-safe:
-        dependency-type: "development"
+      mobile-npm:
         patterns:
           - "*"
         update-types:
@@ -88,7 +89,7 @@ updates:
     directory: "/packages/shared"
     schedule:
       interval: "weekly"
-      day: "thursday"
+      day: "monday"
       time: "08:00"
       timezone: "UTC"
     open-pull-requests-limit: 1
@@ -104,7 +105,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
+      day: "monday"
       time: "08:00"
       timezone: "UTC"
     open-pull-requests-limit: 1
