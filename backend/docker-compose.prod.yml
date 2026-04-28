@@ -1,162 +1,135 @@
-# bookswap — production Docker Compose
-# Usage: docker compose -f docker-compose.prod.yml up -d
+# BookSwap — Pi 5 Production (Backend)
+# Usage: docker compose -p bs_prod -f docker-compose.prod.yml up -d
 #
-# All secrets must be provided via environment variables (see .env.example).
-# Do NOT set literal secret values here.
+# Mirrors docker-compose.stag.yml so prod and staging share topology
+# (shared Redis container `redis_shared`, host PostgreSQL via
+# host.docker.internal, env file managed outside the repo).
 #
-# ⚠  LOCAL TESTING WITH A FRONTEND STACK
-#   When embedding this BE as a service inside the FE’s docker-compose for
-#   local testing (e.g. pointing FE nginx at `backend:8000`), change
-#   DJANGO_SETTINGS_MODULE to config.settings.development.
-#   Production settings enable SECURE_SSL_REDIRECT=True which causes
-#   301 → HTTPS redirect loops on plain HTTP localhost connections.
-#   Use production settings ONLY when TLS is terminated upstream.
-services:
-  redis:
-    image: redis:7-alpine
-    container_name: bookswap-be-redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    restart: unless-stopped
+# Prerequisites (run once on the Pi):
+#   sudo -u postgres createuser bs_prod && sudo -u postgres createdb -O bs_prod bs_prod
+#   sudo -u postgres psql -d bs_prod -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+#   docker network create shared      # if not already present
+#   sudo mkdir -p /mnt/media/bookswap-prod && sudo chown -R 1000:1000 /mnt/media/bookswap-prod
+#   ln -sf ~/envs/bookswap.backend.prod.env backend/.env.production
 
+services:
   web:
-    # Set IMAGE_NAME to the registry image built by CI, e.g.:
-    #   IMAGE_NAME=ghcr.io/your-org/bookswap:$GIT_SHA make prod
-    # The default value lets you build and test locally without setting IMAGE_NAME.
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-web
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: bs_web_prod
+    restart: unless-stopped
+    command: /app/start.sh
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.production
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      FRONTEND_URL: ${FRONTEND_URL}
-      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
-      APP_VERSION: ${APP_VERSION:-}
+      DJANGO_ENVIRONMENT: production
+      # redis_shared has the default 16 logical DBs (0-15). Staging owns
+      # 11/12/13. Prod uses 14/15 contiguously plus DB 4 for the result
+      # backend (DB 16 would overflow the default range).
+      REDIS_URL: redis://redis_shared:6379/14
+      CELERY_BROKER_URL: redis://redis_shared:6379/15
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
       SENTRY_DSN: ${SENTRY_DSN:-}
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-
+      SENTRY_ENVIRONMENT: production
+      PORT: "8071"
+    volumes:
+      - /mnt/media/bookswap-prod:/app/mediafiles
     ports:
-      - "${BE_HOST_PORT:-8071}:8000"
-
+      - "8071:8071"
+    networks:
+      - bs_network_prod
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')"]
+      test: ["CMD", "python", "-c", "import http.client; c=http.client.HTTPConnection('127.0.0.1',8071); c.request('GET','/api/v1/health/'); r=c.getresponse(); exit(0 if r.status in [200,301,302] else 1)"]
       interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bs_celery_prod
+    restart: unless-stopped
+    command: >
+      celery -A config.celery worker -l info --concurrency=2
+      -Q default,celery,email,maintenance
+      --max-tasks-per-child=500 --time-limit=3600 --soft-time-limit=3300
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.production
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_ENVIRONMENT: production
+      REDIS_URL: redis://redis_shared:6379/14
+      CELERY_BROKER_URL: redis://redis_shared:6379/15
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: production
+    volumes:
+      - /mnt/media/bookswap-prod:/app/mediafiles
+    networks:
+      - bs_network_prod
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+    healthcheck:
+      test: ["CMD", "celery", "-A", "config.celery", "inspect", "ping", "--timeout", "10"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bs_beat_prod
+    restart: unless-stopped
+    command: >
+      celery -A config.celery beat -l info
+      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      --pidfile=/tmp/celerybeat.pid
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: .env.production
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_ENVIRONMENT: production
+      REDIS_URL: redis://redis_shared:6379/14
+      CELERY_BROKER_URL: redis://redis_shared:6379/15
+      CELERY_RESULT_BACKEND: redis://redis_shared:6379/4
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: production
+    networks:
+      - bs_network_prod
+      - shared
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, signal; pid=int(open('/tmp/celerybeat.pid').read()); os.kill(pid, 0)"]
+      interval: 60s
       timeout: 10s
       retries: 3
       start_period: 30s
 
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-
-
-  celery:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery
-    command: celery -A config.celery worker --loglevel=info -Q default
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      FRONTEND_URL: ${FRONTEND_URL}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-      SENTRY_DSN: ${SENTRY_DSN:-}
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  celery-email:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery-email
-    command: celery -A config.celery worker --loglevel=info -Q email --concurrency=2
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-      SENTRY_DSN: ${SENTRY_DSN:-}
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-      FRONTEND_URL: ${FRONTEND_URL}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  celery-maintenance:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery-maintenance
-    command: celery -A config.celery worker --loglevel=info -Q maintenance --concurrency=1
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      FRONTEND_URL: ${FRONTEND_URL}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-      SENTRY_DSN: ${SENTRY_DSN:-}
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  celery-beat:
-    image: ${IMAGE_NAME:-bookswap/web:latest}
-    container_name: bookswap-be-celery-beat
-    command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      FRONTEND_URL: ${FRONTEND_URL}
-      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
-      NOREPLY_EMAIL: ${NOREPLY_EMAIL}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-      SENTRY_DSN: ${SENTRY_DSN:-}
-      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-
-# ── Shared network ────────────────────────────────────────────────────────────
-# Uncomment to link this BE with a FE container stack on the same host.
-# Run `make network-create` first, then reference the same network in the FE
-# docker-compose so nginx can proxy to `web:8000`.
-# networks:
-#   default:
-#     name: bookswap-network
-#     external: true
+networks:
+  bs_network_prod:
+    driver: bridge
+  shared:
+    external: true

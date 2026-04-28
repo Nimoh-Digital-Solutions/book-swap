@@ -1,55 +1,35 @@
-# bookswap frontend — production Docker Compose
-# Usage: docker compose -f docker-compose.prod.yml up -d
+# BookSwap Frontend — Pi 5 Production
+# Usage: docker compose -p bs_frontend_prod -f docker-compose.prod.yml up -d
 #
-# Builds the multi-stage Dockerfile (Vite build → nginx) and runs
-# the resulting image with production CSP, read-only root filesystem,
-# and backend proxy configuration.
-#
-# Required env vars (set via .env or CI secrets):
-#   BACKEND_URL       — Backend origin nginx proxies /api/ and /ws/ to
-#   CSP_CONNECT_SRC   — Extra CSP connect-src origins (API + WS)
-#
-# Optional:
-#   IMAGE_NAME        — Pre-built image tag from CI (skips local build)
-#   APP_NAME          — Container name prefix (default: bookswap)
+# Mirrors docker-compose.staging.yml so prod and staging share topology.
+# Adds production hardening (read-only root fs + tmpfs mounts).
 
 services:
   frontend:
-    image: ${IMAGE_NAME:-bookswap/frontend:latest}
-    container_name: ${APP_NAME:-bookswap}-fe-prod
     build:
       # Build context is the repo root so packages/shared/ is available
       # for the @shared/* TS path alias (frontend/Dockerfile expects this).
       context: ..
       dockerfile: frontend/Dockerfile
-    ports:
-      - "${FE_HOST_PORT:-3071}:8080"
-    environment:
-      - CSP_CONNECT_SRC=${CSP_CONNECT_SRC:-'self'}
-      - BACKEND_URL=${BACKEND_URL:-http://web:8000}
-
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 3s
-      start_period: 10s
-      retries: 3
-
-    read_only: true
-    tmpfs:
-      - /var/cache/nginx
-      - /var/run
-      - /etc/nginx/conf.d
-      - /tmp
+      args:
+        VITE_API_URL: https://api.book-swaps.com
+        VITE_APP_TITLE: BookSwap
+        VITE_SENTRY_ENVIRONMENT: production
+        VITE_SITE_URL: https://book-swaps.com
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    container_name: bs_frontend_prod
     restart: unless-stopped
+    ports:
+      - "3071:8080"
+    environment:
+      CSP_CONNECT_SRC: "https://api.book-swaps.com wss://api.book-swaps.com 'self'"
+      BACKEND_URL: "https://api.book-swaps.com"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     security_opt:
       - no-new-privileges:true
-
-# ── Shared network ────────────────────────────────────────────────────────────
-# Connect to the backend stack so nginx can proxy to `web:8000`.
-# Run `docker network create bookswap-network` first, then reference
-# the same network in the backend docker-compose.prod.yml.
-# networks:
-#   default:
-#     name: bookswap-network
-#     external: true

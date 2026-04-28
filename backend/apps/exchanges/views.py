@@ -281,9 +281,7 @@ class ExchangeRequestViewSet(
             exchange.counter_approved_at = None
             exchange.increment_counter_for(request.user)
             count_field = (
-                "requester_counter_count"
-                if request.user.pk == exchange.requester_id
-                else "owner_counter_count"
+                "requester_counter_count" if request.user.pk == exchange.requester_id else "owner_counter_count"
             )
             exchange.save(
                 update_fields=[

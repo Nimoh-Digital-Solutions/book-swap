@@ -90,11 +90,23 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
-SOCIAL_AUTH_PIPELINE = get_social_auth_pipeline()
+# Replace the upstream ``get_username`` step with our own. The default is
+# incompatible with ``USERNAME_FIELD = 'email'`` (collision check is rewritten
+# to look up by email instead of username) — see bookswap.social_pipeline.
+SOCIAL_AUTH_PIPELINE = tuple(
+    "bookswap.social_pipeline.get_username" if step == "social_core.pipeline.user.get_username" else step
+    for step in get_social_auth_pipeline()
+)
 
 # Social auth redirect settings (frontend host allow-list)
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3070")
 globals().update(get_social_auth_settings(frontend_url=FRONTEND_URL))
+
+# Where to redirect when the PSA pipeline raises a SocialAuthBaseException
+# (e.g. AuthAlreadyAssociated, AuthForbidden). Without this, the user would
+# see a Django 500 page. The frontend route ``/auth/verify-error`` reads
+# ``?reason=`` and shows a tailored message; PSA appends ``&message=...``.
+SOCIAL_AUTH_LOGIN_ERROR_URL = f"{FRONTEND_URL}/auth/verify-error?reason=social_auth_failed"
 
 # Provider credentials — set in .env, leave blank until provisioned
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", default="")
@@ -132,6 +144,10 @@ MIDDLEWARE = [
     "bookswap.middleware.AuthThrottleMiddleware",
     "bookswap.middleware.BookSwapSecurityHeadersMiddleware",
     *NimohBaseSettings.get_base_middleware(),
+    # Catches PSA SocialAuthBaseException subclasses (AuthAlreadyAssociated,
+    # AuthForbidden, …) and redirects to SOCIAL_AUTH_LOGIN_ERROR_URL instead
+    # of returning a 500. Must come AFTER the standard middleware stack.
+    "social_django.middleware.SocialAuthExceptionMiddleware",
 ]
 
 # ── Database ──────────────────────────────────────────────────────────────────
