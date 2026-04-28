@@ -104,23 +104,34 @@ After creation, note the **Client ID**.
 These env vars are read at build time by `app.config.js` and at runtime by
 the Google Sign-In SDK.
 
+Both client IDs are *public* OAuth identifiers (the web client *secret*
+lives only on the backend), so `--visibility plaintext` is correct.
+Repeat the commands for the `preview` and `development` environments so
+internal-test builds and dev-channel device builds also pick them up.
+
 ```bash
 cd mobile
 
 # Web client ID (used by the mobile SDK to verify tokens)
 eas env:create --scope project --name EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID \
-  --value "<WEB-CLIENT-ID>" --environment production
+  --value "<WEB-CLIENT-ID>" --environment production --visibility plaintext
 
 # iOS client ID (used to generate the iosUrlScheme)
 eas env:create --scope project --name EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID \
-  --value "<IOS-CLIENT-ID>" --environment production
+  --value "<IOS-CLIENT-ID>" --environment production --visibility plaintext
 ```
 
 Replace `<WEB-CLIENT-ID>` and `<IOS-CLIENT-ID>` with the actual client IDs
 from Step 2a and 2b.
 
-> **Note:** If `eas env:create` complains the variable already exists, use
+> **Note:** `--visibility` accepts `plaintext`, `sensitive`, or `secret`.
+> The older `plain` value is no longer accepted by the EAS CLI.
+>
+> If `eas env:create` complains the variable already exists, use
 > `eas env:update` instead.
+>
+> Verify with `eas env:list --environment production` (and `preview`,
+> `development`).
 
 ---
 
