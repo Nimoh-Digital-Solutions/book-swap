@@ -50,6 +50,7 @@
     },
     "plugins": [
       "expo-dev-client",
+      "expo-font",
       "expo-secure-store",
       [
         "expo-notifications",
