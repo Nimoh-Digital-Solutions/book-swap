@@ -8,7 +8,6 @@ const STORAGE_KEY = 'bookswap-mutation-queue';
 let mmkv: import('react-native-mmkv').MMKV | null = null;
 if (Platform.OS !== 'web') {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { MMKV } = require('react-native-mmkv');
     mmkv = new MMKV({ id: 'bookswap-mutation-queue' });
   } catch {
