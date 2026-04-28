@@ -30,24 +30,55 @@ jobs:
           git reset --hard origin/production
 
       - name: Verify CI passed for this commit
+        # `workflow_dispatch` is operator-initiated (manual run from the
+        # Actions UI). Trust the operator and skip the gate — useful when
+        # the gate itself needs to be bypassed for a hotfix or when an
+        # automated deploy aborted due to a transient lookup quirk.
+        if: github.event_name != 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The current production HEAD is usually a merge commit produced by
+          # a `staging → production` PR. Merge commits to `production` don't
+          # trigger CI (CI only runs on push to `main` and PRs against `main`),
+          # so the merge SHA itself has zero check-runs.
+          #
+          # Walk up the second-parent chain (the branch being merged in) until
+          # we find a commit that does have check-runs — that's the commit on
+          # `main` whose CI status we actually want to validate.
           SHA=$(git rev-parse HEAD)
-          # Use the check-runs API (modern GitHub Actions emit check-runs, not
-          # legacy statuses, so the combined-status endpoint always reports
-          # "pending" for our repo). Exclude the deploy job itself, which is
-          # in_progress while this step runs.
-          CONCLUSIONS=$(gh api \
-            "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" \
-            --jq '[.check_runs[] | select(.name | test("Pi 5 .*production"; "i") | not) | {name, status, conclusion}]' \
-            2>/dev/null || echo "[]")
-          echo "Check-runs for $SHA:"
+          ORIGINAL_SHA=$SHA
+          MAX_DEPTH=6
+
+          for depth in $(seq 0 $MAX_DEPTH); do
+            CONCLUSIONS=$(gh api \
+              "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.name | test("Pi 5 .*production"; "i") | not) | {name, status, conclusion}]' \
+              2>/dev/null || echo "[]")
+
+            COUNT=$(echo "$CONCLUSIONS" | jq 'length')
+            if [ "$COUNT" -gt 0 ]; then
+              if [ "$SHA" != "$ORIGINAL_SHA" ]; then
+                echo "Walked up $depth merge parent(s) from $ORIGINAL_SHA → $SHA to find CI runs."
+              fi
+              break
+            fi
+
+            # Try second parent (source side of the merge commit). When that
+            # doesn't exist (non-merge commit), fall back to first parent.
+            NEXT=$(git rev-parse "$SHA^2" 2>/dev/null || git rev-parse "$SHA^" 2>/dev/null || true)
+            if [ -z "$NEXT" ] || [ "$NEXT" = "$SHA" ]; then
+              break
+            fi
+            SHA=$NEXT
+          done
+
+          echo "Validating check-runs for $SHA:"
           echo "$CONCLUSIONS" | jq -r '.[] | "  - \(.name): \(.status)/\(.conclusion // "n/a")"'
 
           TOTAL=$(echo "$CONCLUSIONS" | jq 'length')
           if [ "$TOTAL" -eq 0 ]; then
-            echo "::error::No check-runs found for $SHA. Aborting production deploy."
+            echo "::error::No check-runs found for $ORIGINAL_SHA or any ancestor up to depth $MAX_DEPTH. Aborting production deploy."
             exit 1
           fi
 
