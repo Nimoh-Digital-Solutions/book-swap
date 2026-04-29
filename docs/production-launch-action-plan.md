@@ -141,7 +141,7 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 
 ### PROD-A5 · Incident response playbook
 
-**Area**: §8 Documentation &nbsp;·&nbsp; **Effort**: Small (2–3h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: Pending
+**Area**: §8 Documentation &nbsp;·&nbsp; **Effort**: Small (2–3h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: ✅ Done — 2026-04-29
 
 **The gap.** No documented roles, severity levels, or communication plan for when something breaks in production.
 
@@ -156,7 +156,7 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 2. Link it from `README.md` and `DEPLOYMENT-RUNBOOK.md`.
 
 **Acceptance criteria**
-- [ ] File exists, committed, ≤ 2 pages.
+- [x] File exists, committed, ≤ 2 pages.
 - [ ] Every Sentry/UptimeRobot alert references this doc.
 
 ---
@@ -297,7 +297,7 @@ These don't block Thursday's launch. Schedule them for the first post-launch spr
 - [ ] Last successful encrypted backup < 24h old (verify with `ls -la /srv/backups`)
 - [ ] UptimeRobot reporting all monitors "Up" for ≥ 24h
 - [ ] Sentry alert rules active in all 3 projects
-- [ ] `docs/INCIDENT-RESPONSE-PLAYBOOK.md` merged
+- [x] `docs/INCIDENT-RESPONSE-PLAYBOOK.md` merged
 - [ ] Rollback procedure rehearsed and timed ≤ 10 min
 - [ ] Smoke load test results acceptable (or Track B skipped with awareness)
 - [ ] Team sign-off in issue comment or channel
@@ -335,3 +335,5 @@ These don't block Thursday's launch. Schedule them for the first post-launch spr
 Update this section as items complete. Format: `YYYY-MM-DD HH:MM — PROD-XX — <status>`.
 
 - 2026-04-26 21:20 — Plan created. Starting position: Web 82.2%, Mobile 82.5%.
+- 2026-04-28 — PROD-A1 partial: production builds cut for iOS + Android, submitted to TestFlight + Play Internal Testing. EAS env vars complete. Sentry release 1.0.0 registered (100% crash-free). Device matrix smoke test still pending.
+- 2026-04-29 — PROD-A5 done: docs/INCIDENT-RESPONSE-PLAYBOOK.md created (severity matrix, on-call, first-15-min checklist, fix procedures, rollback, comms template, postmortem template).
