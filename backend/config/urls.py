@@ -4,15 +4,34 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import RedirectView
 from nimoh_base.auth.views.social import social_login_done_view
 from nimoh_base.conf.urls import nimoh_base_urlpatterns
+from nimoh_base.monitoring.views import health_check
 
 from apps.books.views_og import book_og_view
 from bookswap.views import login_view
 
+
+@csrf_exempt
+@never_cache
+def _health_check_head_get(request):
+    """Wrap nimoh_base health_check to accept HEAD for uptime monitors."""
+    if request.method == "HEAD":
+        request.method = "GET"
+        response = health_check(request)
+        response.content = b""
+        return response
+    return health_check(request)
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Accept HEAD on /health/ for UptimeRobot (nimoh_base restricts to GET only).
+    # Must be placed before nimoh_base_urlpatterns to take precedence.
+    path("api/v1/health/", _health_check_head_get, name="health-check"),
     # US-104 AC4: project-level login view returns 423 for locked accounts.
     # Must be placed before nimoh_base_urlpatterns to take precedence.
     path("api/v1/auth/login/", login_view, name="login"),
