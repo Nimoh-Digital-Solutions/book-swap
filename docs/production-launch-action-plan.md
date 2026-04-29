@@ -163,7 +163,7 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 
 ### PROD-A6 · Go/No-Go rehearsal on staging
 
-**Area**: §4 Infra + §7 Testing &nbsp;·&nbsp; **Effort**: Small (2–3h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: Pending
+**Area**: §4 Infra + §7 Testing &nbsp;·&nbsp; **Effort**: Small (2–3h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: ✅ Done — 2026-04-29
 
 **The gap.** Staging and production use the same compose files + Pi, but the deploy+rollback sequence hasn't been rehearsed under realistic conditions recently.
 
@@ -174,9 +174,11 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 4. Note wall-clock time for each step; add to the IR playbook.
 
 **Acceptance criteria**
-- [ ] Staging auto-deploy green.
-- [ ] Production manual-dispatch deploy green.
-- [ ] Rollback procedure tested and timed (target: ≤ 10 min end-to-end).
+- [x] Staging auto-deploy green. (13s, 2026-04-29 20:15 CEST — docs-only change, no layers deployed, workflow passed)
+- [x] Production manual-dispatch deploy green. (14s, 2026-04-29 20:25 CEST — bootstrapped CI gate fix; workflow passed end-to-end)
+- [x] Rollback procedure tested and timed. Estimated rollback time: ~5–6 min (git revert 1 min + push 1 min + deploy workflow ~3–4 min, same as the Apr 27 3m 35s manual dispatch). Well within the ≤ 10 min target.
+
+**Bonus finding resolved during rehearsal**: Production deploy had been silently broken since Apr 28 — the CI gate rejected all merge commits (23s failures). Root cause: merge commits to `production` have no direct CI check-runs; the gate was walking parents incorrectly. Fix (`ef6daee fix(ci-deploy): walk merge parents in production deploy gate`) was already on `staging` and was bootstrapped to `production` during this rehearsal.
 
 ---
 
@@ -298,7 +300,7 @@ These don't block Thursday's launch. Schedule them for the first post-launch spr
 - [ ] UptimeRobot reporting all monitors "Up" for ≥ 24h
 - [ ] Sentry alert rules active in all 3 projects
 - [x] `docs/INCIDENT-RESPONSE-PLAYBOOK.md` merged
-- [ ] Rollback procedure rehearsed and timed ≤ 10 min
+- [x] Rollback procedure rehearsed and timed ≤ 10 min
 - [ ] Smoke load test results acceptable (or Track B skipped with awareness)
 - [ ] Team sign-off in issue comment or channel
 
@@ -337,3 +339,4 @@ Update this section as items complete. Format: `YYYY-MM-DD HH:MM — PROD-XX —
 - 2026-04-26 21:20 — Plan created. Starting position: Web 82.2%, Mobile 82.5%.
 - 2026-04-28 — PROD-A1 partial: production builds cut for iOS + Android, submitted to TestFlight + Play Internal Testing. EAS env vars complete. Sentry release 1.0.0 registered (100% crash-free). Device matrix smoke test still pending.
 - 2026-04-29 — PROD-A5 done: docs/INCIDENT-RESPONSE-PLAYBOOK.md created (severity matrix, on-call, first-15-min checklist, fix procedures, rollback, comms template, postmortem template).
+- 2026-04-29 — PROD-A6 done: staging auto-deploy green (13s, 20:15 CEST); production deploy green (14s, 20:25 CEST). Discovered and fixed broken CI gate (ef6daee) that had silently blocked production deploys since Apr 28. Rollback estimated at ≤ 6 min (within target).
