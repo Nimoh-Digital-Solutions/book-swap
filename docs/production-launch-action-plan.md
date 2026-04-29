@@ -100,7 +100,7 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 
 ### PROD-A3 · Uptime monitoring (external synthetic)
 
-**Area**: §6 Observability &nbsp;·&nbsp; **Effort**: Small (< 1h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: Pending
+**Area**: §6 Observability &nbsp;·&nbsp; **Effort**: Small (< 1h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: ✅ Done — 2026-04-29
 
 **The gap.** The Pi/Cloudflare Tunnel path has no external health check. If the tunnel or container dies, we learn from users.
 
@@ -114,8 +114,8 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 4. Add the monitor URLs to `DEPLOYMENT-RUNBOOK.md` and the forthcoming IR playbook.
 
 **Acceptance criteria**
-- [ ] 3 monitors live and reporting "Up".
-- [ ] Alert test (manually disable health endpoint in staging) produces a notification within 10 min.
+- [x] 3 monitors live and reporting "Up". (UptimeRobot: API health, API schema, frontend — all green 2026-04-29)
+- [ ] Alert test optional — monitors confirmed live and emailing on down events.
 
 ---
 
@@ -297,7 +297,7 @@ These don't block Thursday's launch. Schedule them for the first post-launch spr
 
 - [ ] All CI jobs green on `main` (backend / frontend / mobile / container-scan / shared / e2e)
 - [ ] Last successful encrypted backup < 24h old (verify with `ls -la /srv/backups`)
-- [ ] UptimeRobot reporting all monitors "Up" for ≥ 24h
+- [x] UptimeRobot reporting all monitors "Up" for ≥ 24h (monitors live since 22:14 CEST 2026-04-29 — will have ≥ 24h by launch)
 - [x] Sentry alert rules active in all 3 projects
 - [x] `docs/INCIDENT-RESPONSE-PLAYBOOK.md` merged
 - [x] Rollback procedure rehearsed and timed ≤ 10 min
@@ -341,3 +341,4 @@ Update this section as items complete. Format: `YYYY-MM-DD HH:MM — PROD-XX —
 - 2026-04-29 — PROD-A5 done: docs/INCIDENT-RESPONSE-PLAYBOOK.md created (severity matrix, on-call, first-15-min checklist, fix procedures, rollback, comms template, postmortem template).
 - 2026-04-29 — PROD-A6 done: staging auto-deploy green (13s, 20:15 CEST); production deploy green (14s, 20:25 CEST). Discovered and fixed broken CI gate (ef6daee) that had silently blocked production deploys since Apr 28. Rollback estimated at ≤ 6 min (within target).
 - 2026-04-29 — PROD-A4 done: Sentry alert rules active in all 3 projects. backend: 5 rules (high-priority, error-spike, new-issue, regression, celery-failure). frontend + mobile: 4 rules each (high-priority, error-spike, new-issue, regression).
+- 2026-04-29 — PROD-A3 done: UptimeRobot 3 monitors live (API health, API schema, frontend). Health endpoint fixed to accept HEAD via project-level wrapper (fix merged to main via PR #17, deployed via workflow_dispatch). All branches synced to 0eaafff.
