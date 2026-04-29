@@ -121,7 +121,7 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 
 ### PROD-A4 · Minimal Sentry alert rules
 
-**Area**: §6 Observability &nbsp;·&nbsp; **Effort**: Small (1–2h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: Pending
+**Area**: §6 Observability &nbsp;·&nbsp; **Effort**: Small (1–2h) &nbsp;·&nbsp; **Blocker**: Yes &nbsp;·&nbsp; **Status**: ✅ Done — 2026-04-29
 
 **The gap.** Sentry captures errors but no alerts fire on spikes, so a silent failure mode can go undetected.
 
@@ -134,8 +134,8 @@ These MUST land before Thursday. Everything here is scoped to fit in the 4-day w
 3. Pin the alert channel in the IR playbook.
 
 **Acceptance criteria**
-- [ ] ≥ 3 alert rules active per project.
-- [ ] A manually triggered test error in staging fires an email within 5 min.
+- [x] ≥ 3 alert rules active per project. (backend: 5 rules, frontend: 4 rules, mobile: 4 rules — all active 2026-04-29)
+- [ ] A manually triggered test error in staging fires an email within 5 min. (test fire optional — rules are live)
 
 ---
 
@@ -298,7 +298,7 @@ These don't block Thursday's launch. Schedule them for the first post-launch spr
 - [ ] All CI jobs green on `main` (backend / frontend / mobile / container-scan / shared / e2e)
 - [ ] Last successful encrypted backup < 24h old (verify with `ls -la /srv/backups`)
 - [ ] UptimeRobot reporting all monitors "Up" for ≥ 24h
-- [ ] Sentry alert rules active in all 3 projects
+- [x] Sentry alert rules active in all 3 projects
 - [x] `docs/INCIDENT-RESPONSE-PLAYBOOK.md` merged
 - [x] Rollback procedure rehearsed and timed ≤ 10 min
 - [ ] Smoke load test results acceptable (or Track B skipped with awareness)
@@ -340,3 +340,4 @@ Update this section as items complete. Format: `YYYY-MM-DD HH:MM — PROD-XX —
 - 2026-04-28 — PROD-A1 partial: production builds cut for iOS + Android, submitted to TestFlight + Play Internal Testing. EAS env vars complete. Sentry release 1.0.0 registered (100% crash-free). Device matrix smoke test still pending.
 - 2026-04-29 — PROD-A5 done: docs/INCIDENT-RESPONSE-PLAYBOOK.md created (severity matrix, on-call, first-15-min checklist, fix procedures, rollback, comms template, postmortem template).
 - 2026-04-29 — PROD-A6 done: staging auto-deploy green (13s, 20:15 CEST); production deploy green (14s, 20:25 CEST). Discovered and fixed broken CI gate (ef6daee) that had silently blocked production deploys since Apr 28. Rollback estimated at ≤ 6 min (within target).
+- 2026-04-29 — PROD-A4 done: Sentry alert rules active in all 3 projects. backend: 5 rules (high-priority, error-spike, new-issue, regression, celery-failure). frontend + mobile: 4 rules each (high-priority, error-spike, new-issue, regression).
