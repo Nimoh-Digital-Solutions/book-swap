@@ -215,11 +215,11 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 **Gaps**
 
-- **No incident response playbook** — roles, comms, severity, postmortem template.
+- ~~**No incident response playbook**~~ — **Done 2026-04-29**: `docs/INCIDENT-RESPONSE-PLAYBOOK.md` created (severity matrix, on-call, first-15-min checklist, fix procedures, rollback, comms template, postmortem template).
 
 **Next steps (this area)**
 
-- Add lightweight IR playbook linked from `README` or `docs/`.
+- Link the IR playbook from `README.md` and ensure Sentry/UptimeRobot alert emails reference it.
 
 ---
 
