@@ -180,7 +180,7 @@ export function OnboardingScreen() {
 
         {locationSet ? (
           /* ── Location confirmed ── */
-          <Animated.View entering={FadeIn.duration(300)} style={s.successSection}>
+          <Animated.View entering={FadeIn.duration(300)} style={[s.successSection, { width: '100%' }]}>
             <View
               style={[
                 s.successCard,
@@ -223,7 +223,7 @@ export function OnboardingScreen() {
           </Animated.View>
         ) : (
           /* ── Location input ── */
-          <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal * 4)}>
+          <Animated.View entering={FadeInUp.duration(300).delay(ANIMATION.stagger.normal * 4)} style={{ width: '100%' }}>
             {/* GPS button */}
             <Pressable
               onPress={handleGps}

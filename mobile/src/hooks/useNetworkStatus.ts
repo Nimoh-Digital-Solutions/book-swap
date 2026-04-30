@@ -17,11 +17,15 @@ const STALE_QUERY_KEYS = [
   'profile', 'publicProfile',
 ] as const;
 
+/** Only show "back online" toast if device was offline for longer than this. */
+const OFFLINE_TOAST_THRESHOLD_MS = 10_000;
+
 export function useNetworkStatus() {
   const queryClient = useQueryClient();
   const [isConnected, setIsConnected] = useState<boolean | null>(true);
   const [isInternetReachable, setIsInternetReachable] = useState<boolean | null>(true);
   const previousConnectedRef = useRef<boolean | null>(null);
+  const wentOfflineAtRef = useRef<number | null>(null);
 
   const invalidateStale = useCallback(() => {
     for (const key of STALE_QUERY_KEYS) {
@@ -39,11 +43,18 @@ export function useNetworkStatus() {
         setIsConnected(true);
         setIsInternetReachable(true);
         invalidateStale();
-        showSuccessToast(i18n.t('network.backOnline'));
+        const offlineDuration = wentOfflineAtRef.current
+          ? Date.now() - wentOfflineAtRef.current
+          : 0;
+        if (offlineDuration >= OFFLINE_TOAST_THRESHOLD_MS) {
+          showSuccessToast(i18n.t('network.backOnline'));
+        }
+        wentOfflineAtRef.current = null;
       };
       const handleOffline = () => {
         setIsConnected(false);
         setIsInternetReachable(false);
+        wentOfflineAtRef.current = Date.now();
       };
 
       window.addEventListener('online', handleOnline);
@@ -64,9 +75,19 @@ export function useNetworkStatus() {
         return;
       }
 
+      if (previousConnectedRef.current && !next) {
+        wentOfflineAtRef.current = Date.now();
+      }
+
       if (!previousConnectedRef.current && next) {
         invalidateStale();
-        showSuccessToast(i18n.t('network.backOnline'));
+        const offlineDuration = wentOfflineAtRef.current
+          ? Date.now() - wentOfflineAtRef.current
+          : 0;
+        if (offlineDuration >= OFFLINE_TOAST_THRESHOLD_MS) {
+          showSuccessToast(i18n.t('network.backOnline'));
+        }
+        wentOfflineAtRef.current = null;
       }
       previousConnectedRef.current = !!next;
     });

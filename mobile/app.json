@@ -27,6 +27,7 @@
     },
     "android": {
       "package": "com.gnimoh.bookswap",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1a2f23"
