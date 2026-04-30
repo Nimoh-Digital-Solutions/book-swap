@@ -268,7 +268,7 @@ LOGGING = NimohBaseSettings.get_base_logging(log_level="INFO")
 DEFAULT_FROM_EMAIL = NIMOH_BASE["NOREPLY_EMAIL"]
 SERVER_EMAIL = NIMOH_BASE["NOREPLY_EMAIL"]
 
-EMAIL_BACKEND = "nimoh_base.core.email_backends.SendGridEmailBackend"
+EMAIL_BACKEND = "nimoh_base.core.email_backends.SendGridWebAPIBackend"
 SENDGRID_API_KEY = env("SENDGRID_API_KEY", default="")
 
 
