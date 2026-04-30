@@ -58,7 +58,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
 # ── NIMOH_BASE configuration ──────────────────────────────────────────────────
 NIMOH_BASE = {
     # Required
-    "SITE_NAME": "bookswap",
+    "SITE_NAME": "BookSwap",
     "SUPPORT_EMAIL": env("SUPPORT_EMAIL", default="support@bookswap.example"),
     "NOREPLY_EMAIL": env("NOREPLY_EMAIL", default="noreply@bookswap.example"),
     # Optional

@@ -19,4 +19,4 @@
 
 ---
 © {% now "Y" %} BookSwap. {% trans "All rights reserved." %}
-{% trans "Contact:" %} info@bookswap.com
+{% trans "Contact:" %} {{ support_email|default:"info@book-swaps.com" }}

@@ -1,0 +1,27 @@
+{% load i18n %}{% trans "Suspicious Login Detected" %} — BookSwap
+
+{% blocktrans with name=user.first_name|default:user.username %}Hi {{ name }},{% endblocktrans %}
+
+{% trans "We detected suspicious activity on your BookSwap account. A sign-in occurred that doesn't match your usual pattern." %}
+
+{% trans "SUSPICIOUS LOGIN DETAILS:" %}
+{% trans "Time:" %} {{ login_time|date:"N j, Y, g:i A T" }}
+{% trans "Location:" %} {{ location }}
+{% trans "Device:" %} {{ device }}
+
+{% if anomalies %}{% trans "WHY THIS LOOKS SUSPICIOUS:" %}
+{% for anomaly in anomalies %}- {{ anomaly }}
+{% endfor %}{% endif %}
+
+{% trans "Was this you?" %}
+{% trans "If you don't recognise this activity, your account may be compromised. Reset your password immediately and contact us." %}
+
+{% trans "If this was you, no action is needed." %}
+
+{% trans "Stay safe," %}
+{% trans "The BookSwap Team" %}
+
+---
+{% trans "This email was sent to" %} {{ user.email }}
+© {% now "Y" %} BookSwap. {% trans "All rights reserved." %}
+{% trans "Contact:" %} {{ support_email|default:"info@book-swaps.com" }}

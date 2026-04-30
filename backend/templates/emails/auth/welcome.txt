@@ -1,0 +1,19 @@
+{% load i18n %}{% blocktrans with name=user.first_name|default:user.username %}Welcome to BookSwap, {{ name }}!{% endblocktrans %}
+
+{% trans "Your email has been verified and your BookSwap account is ready to go." %}
+
+{% trans "Here's what you can do:" %}
+- {% trans "List your books for swapping" %}
+- {% trans "Browse books available near you" %}
+- {% trans "Propose exchanges with other readers" %}
+- {% trans "Rate your swaps to build trust" %}
+
+{% trans "Start swapping:" %}
+{{ login_url }}
+
+{% trans "Happy swapping!" %}
+{% trans "The BookSwap Team" %}
+
+---
+© {% now "Y" %} BookSwap. {% trans "All rights reserved." %}
+{% trans "Contact:" %} {{ support_email|default:"info@book-swaps.com" }}

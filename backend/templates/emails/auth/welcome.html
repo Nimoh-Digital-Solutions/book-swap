@@ -1,0 +1,48 @@
+{% extends "emails/base_email.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Welcome to BookSwap!" %}{% endblock %}
+
+{% block preheader_text %}{% trans "You're all set — start discovering and swapping books in your community." %}{% endblock %}
+
+{% block content %}
+<p style="margin:0 0 24px; font-size:18px; font-weight:600; color:#1a2f23;">
+  {% blocktrans with name=user.first_name|default:user.username %}Welcome, {{ name }}! 🎉{% endblocktrans %}
+</p>
+
+<p style="margin:0 0 28px; font-size:16px; color:#3d4a40; line-height:1.7;">
+  {% trans "Your email has been verified and your BookSwap account is ready to go. You're now part of a community of readers who love discovering new books through swapping." %}
+</p>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f7f8f7; border-radius:8px; margin-bottom:28px;">
+  <tr>
+    <td style="padding:20px 24px;">
+      <p style="margin:0 0 12px; font-size:14px; font-weight:600; color:#1a2f23;">{% trans "Here's what you can do:" %}</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+        <tr><td style="padding:5px 0; font-size:14px; color:#3d4a40;">📚&nbsp; {% trans "List your books for swapping" %}</td></tr>
+        <tr><td style="padding:5px 0; font-size:14px; color:#3d4a40;">🔍&nbsp; {% trans "Browse books available near you" %}</td></tr>
+        <tr><td style="padding:5px 0; font-size:14px; color:#3d4a40;">🤝&nbsp; {% trans "Propose exchanges with other readers" %}</td></tr>
+        <tr><td style="padding:5px 0; font-size:14px; color:#3d4a40;">⭐&nbsp; {% trans "Rate your swaps to build trust" %}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr>
+    <td align="center" style="padding:8px 0 32px;">
+      <a href="{{ login_url }}" style="display:inline-block; background-color:#6B8F71; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:8px; font-weight:600; font-size:15px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+        {% trans "Start Swapping" %}
+      </a>
+    </td>
+  </tr>
+</table>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr><td style="padding:20px 0 0; border-top:1px solid #e5e8e5;"></td></tr>
+</table>
+<p style="margin:0; font-size:13px; color:#8C9C92; line-height:1.6;">
+  {% trans "Happy swapping!" %}<br>
+  {% trans "The BookSwap Team" %}
+</p>
+{% endblock %}
