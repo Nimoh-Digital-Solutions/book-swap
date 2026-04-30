@@ -24,8 +24,12 @@ export const usesMmkv = mmkvInstance !== null;
 
 const kv = {
   get(key: string): string | null {
-    if (Platform.OS === 'web') return sessionStorage.getItem(key);
-    return SecureStore.getItem(key);
+    if (Platform.OS === 'web') return sessionStorage.getItem(key) || null;
+    // Treat empty string as absent — clearTokens() writes '' synchronously
+    // instead of using the async deleteItemAsync to avoid a race where a
+    // pending delete fires after a subsequent setItem and wipes the new value.
+    const val = SecureStore.getItem(key);
+    return val || null;
   },
   set(key: string, value: string) {
     if (Platform.OS === 'web') {
@@ -38,7 +42,14 @@ const kv = {
     if (Platform.OS === 'web') {
       sessionStorage.removeItem(key);
     } else {
-      void SecureStore.deleteItemAsync(key);
+      // Overwrite synchronously with an empty sentinel so that any subsequent
+      // setItem call on the same key (e.g. immediately after logout → re-login)
+      // is not silently wiped by a still-pending deleteItemAsync.
+      try {
+        SecureStore.setItem(key, '');
+      } catch {
+        void SecureStore.deleteItemAsync(key);
+      }
     }
   },
 };

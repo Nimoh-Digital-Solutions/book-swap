@@ -82,14 +82,15 @@ class MobileDeviceSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         token = validated_data["push_token"]
 
-        # Prevent token hijack: deactivate other users' registration of this token
-        MobileDevice.objects.filter(push_token=token).exclude(user=user).update(
-            is_active=False,
-        )
-
+        # Look up by push_token only (it's globally unique). This handles all cases:
+        # - Same user, same token (e.g. reinstall): updates the existing record.
+        # - Different user, same token (device handed off): reassigns the token
+        #   to the new owner, removing the previous user's registration atomically.
+        # Using (user, push_token) as the lookup key would trigger a UniqueViolation
+        # when the token already belongs to another user and we try to INSERT a
+        # second row with the same push_token.
         device, _ = MobileDevice.objects.update_or_create(
-            user=user,
             push_token=token,
-            defaults={**validated_data, "is_active": True},
+            defaults={**validated_data, "user": user, "is_active": True},
         )
         return device

@@ -128,8 +128,13 @@ class FirstMessageAuthMixin:
         await asyncio.sleep(AUTH_TIMEOUT_SECONDS)
         if not self._ws_authenticated:
             logger.debug("WS auth timeout — closing connection.")
-            await self.send_json({"type": "auth.failed", "reason": "Authentication timeout."})
-            await self.close(code=4001)
+            try:
+                await self.send_json({"type": "auth.failed", "reason": "Authentication timeout."})
+                await self.close(code=4001)
+            except RuntimeError:
+                # Connection was already closed (e.g. client disconnected during
+                # the timeout window). Nothing to do — suppress the ASGI error.
+                pass
 
     async def ensure_authenticated(self, content: dict) -> bool:
         """Call at the top of ``receive_json``. Returns True if the message
