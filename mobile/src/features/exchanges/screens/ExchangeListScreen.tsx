@@ -289,6 +289,7 @@ export function ExchangeListScreen() {
           data={filtered}
           keyExtractor={(e) => e.id}
           renderItem={renderItem}
+          extraData={activeTab}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
           onRefresh={refetch}
