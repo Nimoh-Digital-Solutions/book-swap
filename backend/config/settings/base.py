@@ -93,10 +93,18 @@ AUTHENTICATION_BACKENDS = (
 # Replace the upstream ``get_username`` step with our own. The default is
 # incompatible with ``USERNAME_FIELD = 'email'`` (collision check is rewritten
 # to look up by email instead of username) — see bookswap.social_pipeline.
-SOCIAL_AUTH_PIPELINE = tuple(
+# Also inject ``save_google_avatar`` right after ``user_details`` so the
+# Google profile photo is downloaded and stored on first social sign-in.
+_pipeline: list[str] = [
     "bookswap.social_pipeline.get_username" if step == "social_core.pipeline.user.get_username" else step
     for step in get_social_auth_pipeline()
-)
+]
+try:
+    _idx = _pipeline.index("social_core.pipeline.user.user_details")
+    _pipeline.insert(_idx + 1, "bookswap.social_pipeline.save_google_avatar")
+except ValueError:
+    _pipeline.append("bookswap.social_pipeline.save_google_avatar")
+SOCIAL_AUTH_PIPELINE = tuple(_pipeline)
 
 # Social auth redirect settings (frontend host allow-list)
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3070")

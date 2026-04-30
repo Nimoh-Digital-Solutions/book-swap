@@ -11,6 +11,10 @@ with a duplicate ``username`` and the database raises
 This module provides a drop-in replacement that queries the ``username``
 column directly so collisions are actually detected and resolved by
 appending a short random suffix.
+
+It also provides ``save_google_avatar``, a pipeline step that downloads the
+Google profile photo and stores it on ``User.avatar`` the first time a user
+signs in via Google (web OAuth path).
 """
 
 from __future__ import annotations
@@ -65,3 +69,22 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs) -> dict
         candidate = f"{truncated}-{suffix}"
 
     return {"username": candidate}
+
+
+def save_google_avatar(backend, user, response, *args, **kwargs) -> None:
+    """PSA pipeline step — persist the Google profile photo on first sign-in.
+
+    Runs after ``user_details`` so ``user`` is guaranteed to be populated.
+    Only fires for the Google backend and only when the user has no avatar yet,
+    so manually-uploaded photos are never overwritten on subsequent logins.
+    """
+    if backend.name != "google-oauth2":
+        return
+    if not user or user.avatar:
+        return
+
+    picture_url = response.get("picture", "")
+    if picture_url:
+        from .utils import set_avatar_from_url
+
+        set_avatar_from_url(user, picture_url)

@@ -125,6 +125,14 @@ class GoogleMobileAuthView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        # Download the Google profile photo on first sign-in (fire-and-forget;
+        # set_avatar_from_url never raises and skips if avatar already exists).
+        picture_url = idinfo.get("picture", "")
+        if picture_url and not user.avatar:
+            from ..utils import set_avatar_from_url
+
+            set_avatar_from_url(user, picture_url)
+
         refresh = RefreshToken.for_user(user)
         access_token = refresh.access_token
         user_data = UserPrivateSerializer(user).data
