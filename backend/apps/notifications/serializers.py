@@ -43,6 +43,11 @@ class MobileDeviceSerializer(serializers.ModelSerializer):
         model = MobileDevice
         fields = ["id", "push_token", "platform", "device_name", "is_active", "created_at"]  # noqa: RUF012
         read_only_fields = ["id", "is_active", "created_at"]  # noqa: RUF012
+        # Suppress the auto-generated UniqueValidator for push_token — the field
+        # is unique at the DB level, but the view intentionally uses update_or_create
+        # so re-registering an existing token (e.g. after reinstall) must be allowed.
+        # Format validation is handled by validate_push_token() below.
+        extra_kwargs = {"push_token": {"validators": []}}  # noqa: RUF012
 
     def validate_push_token(self, value: str) -> str:
         """SEC-010: Validate push token format (Expo, FCM, or APNs)."""
