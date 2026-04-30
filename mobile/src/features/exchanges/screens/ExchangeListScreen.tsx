@@ -12,12 +12,7 @@ import {
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { radius, spacing } from '@/constants/theme';
 import { ANIMATION } from '@/constants/animation';
@@ -58,7 +53,6 @@ export function ExchangeListScreen() {
   const c = useColors();
   const isDark = useIsDark();
   const navigation = useNavigation<Nav>();
-  const currentUserId = useAuthStore((st) => st.user?.id);
 
   useExchangeWsRefresh();
   const { data: exchanges, isLoading, isError, isRefetching, refetch } = useExchanges();
