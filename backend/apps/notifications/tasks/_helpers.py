@@ -33,21 +33,51 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
 
         from ..models import MobileDevice
 
-        tokens = list(MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", flat=True))
-        if not tokens:
+        devices = list(
+            MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", "platform")
+        )
+        if not devices:
+            logger.debug("No active devices for user %s — skipping push.", user.pk)
             return
 
+        tokens = [d[0] for d in devices]
+        platforms = {d[0]: d[1] for d in devices}
+        logger.info(
+            "Sending push to %d device(s) for user %s: %s",
+            len(tokens),
+            user.pk,
+            [t[:20] for t in tokens],
+        )
+
         client = PushClient()
-        messages = [PushMessage(to=token, title=title, body=body, data=data or {}, sound="default") for token in tokens]
+        messages = [
+            PushMessage(
+                to=token,
+                title=title,
+                body=body,
+                data=data or {},
+                sound="default",
+                # channel_id is required on Android 8+ (API 26+) to avoid silent drops.
+                channel_id="default" if platforms.get(token) == "android" else None,
+            )
+            for token in tokens
+        ]
         responses = client.publish_multiple(messages)
         for token, response in zip(tokens, responses, strict=False):
             try:
                 response.validate_response()
+                logger.info("Push ticket OK for token %s (id=%s)", token[:20], getattr(response, "id", "?"))
             except DeviceNotRegisteredError:
                 MobileDevice.objects.filter(push_token=token).update(is_active=False)
                 logger.info("Deactivated stale push token: %s", token[:20])
             except Exception as exc:
-                logger.warning("Push error for token %s: %s", token[:20], exc)
+                logger.warning(
+                    "Push error for token %s: %s (status=%s details=%s)",
+                    token[:20],
+                    exc,
+                    getattr(response, "status", "?"),
+                    getattr(response, "details", "?"),
+                )
     except ImportError:
         logger.debug("exponent_server_sdk not installed — skipping device push.")
     except Exception as exc:

@@ -13,6 +13,7 @@
     "test:watch": "jest --watch",
     "prebuild:check": "bash scripts/check-env.sh",
     "build:prod:all": "npm run prebuild:check && eas build --profile production --platform all",
+    "submit:prod:all": "eas submit --platform all --profile production --latest",
     "build:android": "npm run prebuild:check && eas build --profile development:device --platform android",
     "build:ios": "npm run prebuild:check && eas build --profile development:device --platform ios",
     "build:ios:local": "npm run prebuild:check && eas build --profile development:device --platform ios --local",
