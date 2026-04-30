@@ -29,6 +29,10 @@ const mockRequireVerified = jest.fn((cb: () => void) => cb());
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: { exchangeId: 'exch_001', partnerName: 'bookworm' } }),
   useNavigation: () => ({ goBack: jest.fn(), navigate: jest.fn() }),
+  useFocusEffect: (cb: () => void) => {
+    const React = require('react');
+    React.useEffect(cb, [cb]);
+  },
 }));
 
 jest.mock('@/hooks/useColors', () => ({
@@ -235,6 +239,7 @@ describe('ChatScreen', () => {
       isFetching: false,
     });
     const { getByText } = render(<ChatScreen />);
+    refetch.mockClear();
     fireEvent.press(getByText('common.retry'));
     expect(refetch).toHaveBeenCalledTimes(1);
   });

@@ -59,15 +59,15 @@ export function useChatWebSocket({ exchangeId, enabled = true }: Options) {
 
     const unsubs: (() => void)[] = [];
 
-    let wasConnected = false;
-
     unsubs.push(
       wsManager.on('__connected__', () => {
         setIsConnected(true);
-        if (wasConnected) {
-          qc.invalidateQueries({ queryKey: ['messages', exchangeId] });
-        }
-        wasConnected = true;
+        // Always refetch on every (re)connect. Any chat.message or
+        // chat.read_all event broadcast while the WS was mid-reconnect is
+        // lost forever (channel layer does not replay), so we self-heal by
+        // pulling the latest server state. TanStack dedupes if a fetch is
+        // already in flight, so the cost is negligible.
+        qc.invalidateQueries({ queryKey: ['messages', exchangeId] });
       }),
     );
     unsubs.push(

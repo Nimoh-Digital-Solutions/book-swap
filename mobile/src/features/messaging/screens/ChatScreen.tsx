@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRoute, type RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useRoute, type RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MessageCircle } from 'lucide-react-native';
 
@@ -106,6 +106,16 @@ export function ChatScreen() {
       markRead.mutate(params.exchangeId);
     }
   }, [params.exchangeId, messages.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refetch messages whenever the chat regains focus. Catches up on any
+  // events the WS missed while the screen was backgrounded or navigated away
+  // (channel layer does not replay broadcasts, so a missed chat.message or
+  // chat.read_all stays missed until we explicitly pull from the REST API).
+  useFocusEffect(
+    useCallback(() => {
+      void refetchMessages();
+    }, [refetchMessages]),
+  );
 
   const handleSend = useCallback(
     (content: string, imageUri?: string) => {
