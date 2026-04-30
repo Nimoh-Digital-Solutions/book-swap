@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AlertTriangle, ArrowLeftRight, Bell, BookOpen, MessageCircle } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeftRight, Bell, BookOpen } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,13 +16,12 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  FadeIn,
+
 } from 'react-native-reanimated';
 
 import { radius, spacing } from '@/constants/theme';
 import { ANIMATION } from '@/constants/animation';
 import { useColors, useIsDark } from '@/hooks/useColors';
-import { useAuthStore } from '@/stores/authStore';
 import { SkeletonCard } from '@/components/Skeleton';
 import { EmptyState } from '@/components/EmptyState';
 import type { MessagesStackParamList } from '@/navigation/types';
@@ -42,26 +41,16 @@ import {
 } from '../hooks/useExchanges';
 
 type Nav = NativeStackNavigationProp<MessagesStackParamList, 'ExchangeList'>;
-type Tab = 'chats' | 'active' | 'pending' | 'history';
+type Tab = 'active' | 'pending' | 'history';
 
-const TAB_FILTERS: Record<Exclude<Tab, 'chats'>, string[]> = {
+const TAB_FILTERS: Record<Tab, string[]> = {
   active: ACTIVE_STATUSES,
   pending: PENDING_STATUSES,
   history: HISTORY_STATUSES,
 };
 
 function filterByTab(items: ExchangeListItem[], tab: Tab): ExchangeListItem[] {
-  if (tab === 'chats') {
-    return items
-      .filter((e) => !!e.last_message_at)
-      .sort((a, b) => {
-        const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
-        const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
-        return tb - ta;
-      });
-  }
-  const statuses = TAB_FILTERS[tab];
-  return items.filter((e) => statuses.includes(e.status));
+  return items.filter((e) => TAB_FILTERS[tab].includes(e.status));
 }
 
 export function ExchangeListScreen() {
@@ -74,7 +63,7 @@ export function ExchangeListScreen() {
   useExchangeWsRefresh();
   const { data: exchanges, isLoading, isError, isRefetching, refetch } = useExchanges();
   const { data: incomingCount } = useIncomingCount();
-  const [activeTab, setActiveTab] = useState<Tab>('chats');
+  const [activeTab, setActiveTab] = useState<Tab>('active');
 
   useFocusEffect(
     useCallback(() => {
@@ -88,22 +77,11 @@ export function ExchangeListScreen() {
   const all = exchanges ?? [];
   const filtered = useMemo(() => filterByTab(all, activeTab), [all, activeTab]);
 
-  const totalUnread = useMemo(
-    () => all.reduce((sum, e) => sum + (e.unread_count ?? 0), 0),
-    [all],
-  );
-
-  const chatsCount = useMemo(
-    () => all.filter((e) => !!e.last_message_at).length,
-    [all],
-  );
-
   const tabs: { key: Tab; label: string; count: number }[] = useMemo(() => [
-    { key: 'chats', label: t('exchanges.chats', 'Chats'), count: totalUnread },
     { key: 'active', label: t('exchanges.active', 'Active'), count: filterByTab(all, 'active').length },
     { key: 'pending', label: t('exchanges.pending', 'Pending'), count: filterByTab(all, 'pending').length },
     { key: 'history', label: t('exchanges.history', 'History'), count: filterByTab(all, 'history').length },
-  ], [t, totalUnread, all]);
+  ], [t, all]);
 
   const tabIndicatorX = useSharedValue(0);
   const tabIndicatorW = useSharedValue(0);
@@ -150,20 +128,6 @@ export function ExchangeListScreen() {
     [navigation],
   );
 
-  const goToChat = useCallback(
-    (item: ExchangeListItem) => {
-      const isOwner = currentUserId === item.owner.id;
-      const other = isOwner ? item.requester : item.owner;
-      navigation.navigate('Chat', {
-        exchangeId: item.id,
-        partnerName: other.username,
-        partnerAvatar: other.avatar,
-        exchangeStatus: item.status,
-      });
-    },
-    [navigation, currentUserId],
-  );
-
   const goToIncoming = useCallback(
     () => navigation.navigate('IncomingRequests'),
     [navigation],
@@ -173,20 +137,13 @@ export function ExchangeListScreen() {
     ({ item }: { item: ExchangeListItem }) => (
       <ExchangeCard
         exchange={item}
-        onPress={() => activeTab === 'chats' ? goToChat(item) : goToDetail(item.id)}
+        onPress={() => goToDetail(item.id)}
       />
     ),
-    [goToDetail, goToChat, activeTab],
+    [goToDetail],
   );
 
   const emptyProps = useMemo(() => {
-    if (activeTab === 'chats') {
-      return {
-        icon: MessageCircle,
-        title: t('exchanges.noChats', 'No conversations yet'),
-        subtitle: t('exchanges.noChatsHint', 'Start a swap and chat with your exchange partner.'),
-      };
-    }
     if (activeTab === 'history') {
       return {
         icon: BookOpen,
@@ -234,7 +191,6 @@ export function ExchangeListScreen() {
         />
         {tabs.map(({ key, label, count }, index) => {
           const isActive = activeTab === key;
-          const showDot = key === 'chats' && totalUnread > 0 && !isActive;
           return (
             <Pressable
               key={key}
@@ -254,9 +210,6 @@ export function ExchangeListScreen() {
                     {count}
                   </Text>
                 </View>
-              )}
-              {showDot && (
-                <View style={[s.unreadDot, { backgroundColor: accent }]} />
               )}
             </Pressable>
           );
@@ -289,7 +242,6 @@ export function ExchangeListScreen() {
           data={filtered}
           keyExtractor={(e) => e.id}
           renderItem={renderItem}
-          extraData={activeTab}
           contentContainerStyle={s.list}
           showsVerticalScrollIndicator={false}
           onRefresh={refetch}
@@ -354,14 +306,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 5,
   },
   tabBadgeText: { fontSize: 10, fontWeight: '700' },
-  unreadDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    position: 'absolute',
-    top: 4,
-    right: 4,
-  },
 
   list: { paddingHorizontal: spacing.lg, gap: spacing.sm },
 });
