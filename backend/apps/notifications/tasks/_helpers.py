@@ -33,9 +33,7 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
 
         from ..models import MobileDevice
 
-        devices = list(
-            MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", "platform")
-        )
+        devices = list(MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", "platform"))
         if not devices:
             logger.debug("No active devices for user %s — skipping push.", user.pk)
             return
