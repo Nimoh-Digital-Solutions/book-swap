@@ -7,31 +7,60 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0004_alter_notification_notification_type'),
+        ("notifications", "0004_alter_notification_notification_type"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PushTicket',
+            name="PushTicket",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('push_token', models.CharField(db_index=True, max_length=255)),
-                ('ticket_id', models.CharField(max_length=64, unique=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending receipt'), ('ok', 'Delivered'), ('error', 'Error'), ('expired', 'Receipt expired')], default='pending', max_length=10)),
-                ('error_code', models.CharField(blank=True, default='', max_length=64)),
-                ('error_message', models.CharField(blank=True, default='', max_length=512)),
-                ('notification_type', models.CharField(blank=True, default='', max_length=64)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('checked_at', models.DateTimeField(blank=True, null=True)),
-                ('device', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='push_tickets', to='notifications.mobiledevice')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='push_tickets', to=settings.AUTH_USER_MODEL)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("push_token", models.CharField(db_index=True, max_length=255)),
+                ("ticket_id", models.CharField(max_length=64, unique=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending receipt"),
+                            ("ok", "Delivered"),
+                            ("error", "Error"),
+                            ("expired", "Receipt expired"),
+                        ],
+                        default="pending",
+                        max_length=10,
+                    ),
+                ),
+                ("error_code", models.CharField(blank=True, default="", max_length=64)),
+                ("error_message", models.CharField(blank=True, default="", max_length=512)),
+                ("notification_type", models.CharField(blank=True, default="", max_length=64)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("checked_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "device",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="push_tickets",
+                        to="notifications.mobiledevice",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="push_tickets",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['status', 'created_at'], name='notificatio_status_b02d20_idx')],
+                "ordering": ["-created_at"],
+                "indexes": [models.Index(fields=["status", "created_at"], name="notificatio_status_b02d20_idx")],
             },
         ),
     ]

@@ -66,20 +66,17 @@ def check_push_receipts() -> dict:
     # First, age out anything older than 24h that we never managed to check.
     # These receipts are gone from Expo's side, no value in keeping them
     # pending forever.
-    aged_count = (
-        PushTicket.objects.filter(
-            status=PushTicket.Status.PENDING,
-            created_at__lt=expired_cutoff,
-        ).update(status=PushTicket.Status.EXPIRED, checked_at=now)
-    )
+    aged_count = PushTicket.objects.filter(
+        status=PushTicket.Status.PENDING,
+        created_at__lt=expired_cutoff,
+    ).update(status=PushTicket.Status.EXPIRED, checked_at=now)
 
     pending = list(
         PushTicket.objects.filter(
             status=PushTicket.Status.PENDING,
             created_at__lte=ready_cutoff,
             created_at__gte=expired_cutoff,
-        )
-        .order_by("created_at")[:MAX_TICKETS_PER_RUN]
+        ).order_by("created_at")[:MAX_TICKETS_PER_RUN]
     )
 
     if not pending:
