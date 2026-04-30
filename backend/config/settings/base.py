@@ -321,6 +321,15 @@ CELERY_BEAT_SCHEDULE["auto-confirm-stale-swaps"] = {
     "schedule": crontab(hour=4, minute=0, day_of_week=1),
 }
 
+# Push notification receipt reconciliation: poll Expo for the actual
+# delivery outcome of each accepted ticket. Runs every 15 minutes — Expo
+# recommends waiting at least that long before checking, and storing the
+# ticket-id-to-receipt mapping for at most ~24h after submission.
+CELERY_BEAT_SCHEDULE["check-push-receipts"] = {
+    "task": "notifications.check_push_receipts",
+    "schedule": crontab(minute="*/15"),
+}
+
 # ── Celery queue routing ─────────────────────────────────────────────────────
 # Three queues: default (general), email (transactional messages),
 # maintenance (scheduled cron-style tasks).
@@ -340,6 +349,7 @@ CELERY_TASK_ROUTES = {
     "exchanges.expire_stale_conditions": {"queue": "maintenance"},
     "exchanges.auto_confirm_stale_swaps": {"queue": "maintenance"},
     "bookswap.anonymize_deleted_accounts": {"queue": "maintenance"},
+    "notifications.check_push_receipts": {"queue": "maintenance"},
 }
 
 

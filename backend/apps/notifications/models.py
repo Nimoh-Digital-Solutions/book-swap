@@ -138,3 +138,65 @@ class MobileDevice(models.Model):
 
     def __str__(self) -> str:
         return f"{self.platform} — {self.user_id} ({self.push_token[:20]}…)"
+
+
+class PushTicket(models.Model):
+    """A single push notification submitted to Expo, tracked through receipt.
+
+    Expo's two-phase delivery model means a successful response from
+    ``publish_multiple`` only confirms the ticket was *accepted* by Expo's
+    server. Actual delivery to APNs/FCM happens asynchronously and the
+    final outcome is only available by polling the receipt endpoint
+    (recommended ~15 minutes after submission, kept by Expo for ~24 hours).
+
+    We persist one row per accepted ticket so the periodic Celery task
+    ``notifications.check_push_receipts`` can pull the receipts, surface
+    delivery failures, and deactivate stale device tokens that were valid
+    at ticket time but rejected later by APNs/FCM.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending receipt"
+        OK = "ok", "Delivered"
+        ERROR = "error", "Error"
+        EXPIRED = "expired", "Receipt expired"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Snapshot the FK *and* the raw token so an orphaned receipt (device row
+    # deleted while a ticket is still pending) is still useful for debugging.
+    device = models.ForeignKey(
+        MobileDevice,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="push_tickets",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="push_tickets",
+    )
+    push_token = models.CharField(max_length=255, db_index=True)
+    ticket_id = models.CharField(max_length=64, unique=True)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    error_code = models.CharField(max_length=64, blank=True, default="")
+    error_message = models.CharField(max_length=512, blank=True, default="")
+    notification_type = models.CharField(max_length=64, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    checked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]  # noqa: RUF012
+        indexes = [  # noqa: RUF012
+            # The receipt poller scans (status='pending', created_at <= cutoff).
+            models.Index(fields=["status", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"PushTicket({self.ticket_id[:8]}… {self.status})"

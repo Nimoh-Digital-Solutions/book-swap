@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import MobileDevice, Notification, NotificationPreferences
+from .models import MobileDevice, Notification, NotificationPreferences, PushTicket
 
 
 @admin.register(Notification)
@@ -31,3 +31,16 @@ class MobileDeviceAdmin(admin.ModelAdmin):
     list_filter = ("platform", "is_active")
     search_fields = ("user__email", "device_name", "push_token")
     readonly_fields = ("id", "created_at", "updated_at")
+
+
+@admin.register(PushTicket)
+class PushTicketAdmin(admin.ModelAdmin):
+    list_display = ("ticket_id_short", "user", "status", "error_code", "notification_type", "created_at", "checked_at")
+    list_filter = ("status", "notification_type")
+    search_fields = ("ticket_id", "user__email", "push_token", "error_code")
+    readonly_fields = ("id", "ticket_id", "push_token", "created_at", "checked_at")
+    ordering = ("-created_at",)
+
+    @admin.display(description="Ticket id")
+    def ticket_id_short(self, obj: PushTicket) -> str:
+        return f"{obj.ticket_id[:12]}…" if obj.ticket_id else "—"

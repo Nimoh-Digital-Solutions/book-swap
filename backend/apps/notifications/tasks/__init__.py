@@ -23,9 +23,11 @@ from .exchange import (
     send_swap_confirmed_notification,
 )
 from .messaging import send_new_message_notification
+from .push_receipts import check_push_receipts
 from .ratings import send_rating_received_notification
 
 __all__ = [
+    "check_push_receipts",
     "send_account_deletion_email",
     "send_counter_approved_notification",
     "send_counter_proposed_notification",

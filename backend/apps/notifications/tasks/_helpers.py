@@ -23,7 +23,12 @@ def _frontend_url() -> str:
 
 
 def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> None:
-    """Send Expo push notifications to all of a user's registered devices."""
+    """Send Expo push notifications to all of a user's registered devices.
+
+    Persists a ``PushTicket`` for every accepted ticket so the periodic
+    ``check_push_receipts`` task can confirm actual delivery and deactivate
+    stale tokens that APNs/FCM reject later.
+    """
     try:
         from exponent_server_sdk import (
             DeviceNotRegisteredError,
@@ -31,15 +36,19 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
             PushMessage,
         )
 
-        from ..models import MobileDevice
+        from ..models import MobileDevice, PushTicket
 
-        devices = list(MobileDevice.objects.filter(user=user, is_active=True).values_list("push_token", "platform"))
-        if not devices:
+        device_rows = list(
+            MobileDevice.objects.filter(user=user, is_active=True).values("id", "push_token", "platform")
+        )
+        if not device_rows:
             logger.debug("No active devices for user %s — skipping push.", user.pk)
             return
 
-        tokens = [d[0] for d in devices]
-        platforms = {d[0]: d[1] for d in devices}
+        tokens = [d["push_token"] for d in device_rows]
+        platforms = {d["push_token"]: d["platform"] for d in device_rows}
+        device_ids = {d["push_token"]: d["id"] for d in device_rows}
+        notification_type = (data or {}).get("type", "")
         logger.info(
             "Sending push to %d device(s) for user %s: %s",
             len(tokens),
@@ -61,10 +70,23 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
             for token in tokens
         ]
         responses = client.publish_multiple(messages)
+        tickets_to_create: list[PushTicket] = []
         for token, response in zip(tokens, responses, strict=False):
             try:
                 response.validate_response()
-                logger.info("Push ticket OK for token %s (id=%s)", token[:20], getattr(response, "id", "?"))
+                ticket_id = getattr(response, "id", None) or ""
+                logger.info("Push ticket OK for token %s (id=%s)", token[:20], ticket_id[:8] or "?")
+                if ticket_id:
+                    tickets_to_create.append(
+                        PushTicket(
+                            device_id=device_ids.get(token),
+                            user_id=user.pk,
+                            push_token=token,
+                            ticket_id=ticket_id,
+                            notification_type=notification_type,
+                            status=PushTicket.Status.PENDING,
+                        )
+                    )
             except DeviceNotRegisteredError:
                 MobileDevice.objects.filter(push_token=token).update(is_active=False)
                 logger.info("Deactivated stale push token: %s", token[:20])
@@ -76,6 +98,11 @@ def _push_to_devices(user, title: str, body: str, data: dict | None = None) -> N
                     getattr(response, "status", "?"),
                     getattr(response, "details", "?"),
                 )
+
+        if tickets_to_create:
+            # ignore_conflicts: in the unlikely event Expo returns a ticket id we
+            # have already seen (retry, network re-deliver), don't crash the push.
+            PushTicket.objects.bulk_create(tickets_to_create, ignore_conflicts=True)
     except ImportError:
         logger.debug("exponent_server_sdk not installed — skipping device push.")
     except Exception as exc:
