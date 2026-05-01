@@ -10,7 +10,8 @@ The BookSwap-specific monitoring stack on the Pi5: what it watches, where it sen
 
 ## TL;DR
 
-- **Two Telegram channels** in use. The pre-existing operator channel keeps getting Pi-wide alerts. A new BookSwap-only channel (bot id `8717082972`) gets BookSwap-specific signals plus a mirrored copy of any Pi-wide alert that affects BookSwap availability.
+- **Two Telegram channels** in use. The pre-existing operator channel keeps getting Pi-wide alerts. A new BookSwap-only channel (bot id `8717082972`) gets BookSwap-**production**-specific signals plus a mirrored copy of any Pi-wide alert that affects BookSwap availability.
+- **Staging is intentionally excluded** from this channel. `bs_*_staging` containers, the `bs_staging` database, and `environment:staging` Sentry issues all stay on the operator channel via the existing pi-wide monitors. The BookSwap channel only ever pings for things that affect end-users in production.
 - **Five new cron monitors** run BookSwap-specific checks (containers, endpoints, backups, Sentry, abuse signals).
 - **One read-only bot** (`bookswap-bot.service`, systemd) lets the operator query state on demand from the BookSwap channel: `/status`, `/digest`, `/abuse`, `/sentry`, `/health`, `/containers`, `/help`. No mutating commands.
 - All credentials live in `~/.bookswap-monitor-env` on the Pi (mode 600). The bot token is rotatable via BotFather without touching the repo.
@@ -65,8 +66,8 @@ The BookSwap-specific monitoring stack on the Pi5: what it watches, where it sen
 |---|---|---|---|
 | `bookswap-container-monitor.sh` | 5 min | bs_*_prod down / unhealthy / restart loop / mem > 85% of cgroup cap / CPU > 200% sustained | BookSwap |
 | `bookswap-endpoint-monitor.sh` | 5 min | book-swaps.com or api.book-swaps.com non-2xx, latency > 3 s, TLS cert < 14 d | BookSwap |
-| `bookswap-backup-check.sh` | daily 06:30 UTC | bs_prod or bs_staging dump missing for today, < 10 KB, fails `pg_restore --list`, or NVMe ↔ external size mismatch | BookSwap |
-| `bookswap-sentry-check.sh` | every 4 h (offset :17) | new unresolved issue across `bookswap-{frontend,backend,mobile}` Sentry projects (at-most-once per issue ID via `seen-issues.txt`) | BookSwap |
+| `bookswap-backup-check.sh` | daily 06:30 UTC | bs_prod dump missing for today, < 10 KB, fails `pg_restore --list`, or NVMe ↔ external size mismatch | BookSwap |
+| `bookswap-sentry-check.sh` | every 4 h (offset :17) | new unresolved `environment:production` issue across `bookswap-{frontend,backend,mobile}` Sentry projects (at-most-once per issue ID via `seen-issues.txt`) | BookSwap |
 | `bookswap-abuse-monitor.sh` | hourly (offset :23) | T&S report filed, account lockout, signup spike (> 3× 7-day baseline AND > 10 absolute), or open-report queue ≥ 5 | BookSwap |
 | `bookswap-ops-digest.sh` | every 4 h (offset :15) | full ops digest (users / books / exchanges / T&S queue / Pi snapshot) — re-routed from operator channel as of 2026-05-01 | BookSwap |
 | `pi-health.sh` (existing) | 15 min | CRITICAL subset (OOM, NVMe full, reboot, memory cgroup disabled) mirrors to BookSwap; rest stays operator-only | Both |

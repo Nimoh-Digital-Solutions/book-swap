@@ -263,11 +263,14 @@ def handle_sentry(_args: str, env: dict[str, str]) -> str:
         "bookswap-frontend,bookswap-backend,bookswap-mobile",
     ).split(",")
 
-    lines: list[str] = ["*BookSwap Sentry — recent unresolved*"]
+    lines: list[str] = ["*BookSwap Sentry — recent unresolved (prod only)*"]
+    # Filter to environment:production so /sentry doesn't surface staging
+    # noise in the BookSwap operator channel.
+    query = urllib.parse.quote("is:unresolved environment:production")
     for project in projects:
         url = (
             f"https://sentry.io/api/0/projects/{org}/{project.strip()}/issues/"
-            f"?query=is:unresolved&sort=date&limit=5"
+            f"?query={query}&sort=date&limit=5"
         )
         req = urllib.request.Request(
             url, headers={"Authorization": f"Bearer {sentry_token}"}
@@ -313,7 +316,7 @@ def handle_health(_args: str, env: dict[str, str]) -> str:
 
 
 def handle_containers(_args: str, env: dict[str, str]) -> str:
-    """Verbose docker stats for bs_* containers."""
+    """Verbose docker stats for bs_*_prod containers (staging excluded)."""
     rc, out = run(
         [
             "docker", "stats", "--no-stream",
@@ -324,16 +327,19 @@ def handle_containers(_args: str, env: dict[str, str]) -> str:
     if rc != 0:
         return f"❌ docker stats failed:\n```\n{out[:400]}\n```"
 
-    rows = ["*BookSwap containers — live stats*", ""]
+    rows = ["*BookSwap prod containers — live stats*", ""]
     for line in out.splitlines():
-        if not line.startswith("bs_"):
+        # Filter to production containers only — bs_*_staging containers
+        # also live on this Pi but we deliberately exclude them from
+        # /containers because the BookSwap channel is prod-only.
+        if not (line.startswith("bs_") and "_prod" in line.split("|", 1)[0]):
             continue
         try:
             name, cpu, mem_use, mem_pct = line.split("|", 3)
         except ValueError:
             continue
         rows.append(f"`{name}`\n  CPU {cpu} · Mem {mem_use} ({mem_pct})")
-    return "\n".join(rows) if len(rows) > 2 else "_no bs_* containers running_"
+    return "\n".join(rows) if len(rows) > 2 else "_no bs_*_prod containers running_"
 
 
 def handle_help(_args: str, env: dict[str, str]) -> str:

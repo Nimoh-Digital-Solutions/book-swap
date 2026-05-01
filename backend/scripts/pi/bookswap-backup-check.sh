@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # BookSwap Backup Verification — runs daily at 06:30 UTC, 30 min after the
 # pi-wide backup-monitor.sh which actually performs the dumps. This script
-# does NOT redo the dump — it cross-checks that the bs_prod / bs_staging
-# files exist on both NVMe and external SSD, are the right shape, and pass
+# does NOT redo the dump — it cross-checks that the bs_prod dump file
+# exists on both NVMe and external SSD, is the right shape, and passes
 # pg_restore --list integrity checks. Reports to the BookSwap channel.
+#
+# Staging is intentionally excluded — the BookSwap channel is for prod
+# operational signals only. Pi-wide backup-monitor.sh still snapshots
+# bs_staging, but its alerts route to the operator channel.
 #
 # Cron entry:
 #   30 6 * * * /home/gnimoh001/scripts/bookswap-backup-check.sh \
@@ -21,7 +25,7 @@ set +e
 NVME_DIR="$HOME/backups/db"
 EXTERNAL_DIR="/mnt/media/backups/db"
 TODAY=$(date -u '+%Y-%m-%d')
-DATABASES=("bs_prod" "bs_staging")
+DATABASES=("bs_prod")
 
 # Soft warning floor — anything smaller than this is *worth a comment* but
 # not a failure. BookSwap launched 2026-04-30; the prod database is < 1 MB

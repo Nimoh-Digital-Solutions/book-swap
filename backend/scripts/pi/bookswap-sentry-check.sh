@@ -42,9 +42,14 @@ NOW=$(date -u +"%Y-%m-%d %H:%M UTC")
 NEW_COUNT=0
 
 for PROJECT in "${PROJECTS[@]}"; do
+  # `environment:production` keeps staging / preview / dev issues out of
+  # the BookSwap operator channel. The same Sentry projects are shared
+  # across environments, so without this filter we'd ping for every
+  # staging exception too.
+  QUERY=$(printf '%s' 'is:unresolved environment:production' | jq -sRr @uri)
   RESPONSE=$(curl -sf \
     -H "Authorization: Bearer $SENTRY_TOKEN" \
-    "$API/projects/$ORG/$PROJECT/issues/?query=is:unresolved&sort=date&limit=25" \
+    "$API/projects/$ORG/$PROJECT/issues/?query=${QUERY}&sort=date&limit=25" \
     2>/dev/null || echo "[]")
 
   COUNT=$(echo "$RESPONSE" | jq 'length' 2>/dev/null || echo "0")
