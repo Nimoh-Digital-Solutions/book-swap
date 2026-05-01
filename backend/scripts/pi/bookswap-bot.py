@@ -95,34 +95,64 @@ def load_env() -> dict[str, str]:
 # ─── telegram primitives ───────────────────────────────────────────────────
 
 
-def telegram_call(token: str, method: str, params: dict[str, Any]) -> dict[str, Any]:
-    """POST to the Telegram bot API and return the parsed JSON body.
+def telegram_call(
+    token: str,
+    method: str,
+    params: dict[str, Any],
+) -> tuple[bool, dict[str, Any]]:
+    """POST to the Telegram bot API.
 
-    Returns ``{}`` on any error (network, timeout, parse). Called by the
-    polling loop which re-tries on its own cadence; we don't raise.
+    Returns (ok, body). ``ok`` is True only when the HTTP request
+    succeeded AND Telegram's own ``ok`` flag is True. The polling loop
+    retries on its own cadence; we don't raise.
     """
     url = f"https://api.telegram.org/bot{token}/{method}"
     data = urllib.parse.urlencode(params).encode("utf-8")
     req = urllib.request.Request(url, data=data, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_SEC) as resp:
-            body = resp.read().decode("utf-8")
-            return json.loads(body)
+            body = json.loads(resp.read().decode("utf-8"))
+            return bool(body.get("ok")), body
+    except urllib.error.HTTPError as exc:
+        try:
+            body = json.loads(exc.read().decode("utf-8"))
+        except Exception:
+            body = {"description": str(exc)}
+        log.warning("telegram %s rejected: %s", method, body.get("description"))
+        return False, body
     except Exception as exc:
         log.warning("telegram %s failed: %s", method, exc)
-        return {}
+        return False, {}
 
 
 def send_message(token: str, chat_id: str, text: str) -> None:
     if len(text) > TELEGRAM_MAX_LEN:
         text = text[: TELEGRAM_MAX_LEN - 30] + "\n…\n_(message truncated)_"
-    telegram_call(
+
+    # First try with Markdown — most replies are formatted. If Telegram
+    # rejects it (typically a 400 over an unbalanced `_` or `*`), retry
+    # as plain text so the operator at least sees the content rather
+    # than a silently-dropped reply.
+    ok, _ = telegram_call(
         token,
         "sendMessage",
         {
             "chat_id": chat_id,
             "text": text,
             "parse_mode": "Markdown",
+            "disable_web_page_preview": "true",
+        },
+    )
+    if ok:
+        return
+
+    log.warning("falling back to plain-text send for chat=%s", chat_id)
+    telegram_call(
+        token,
+        "sendMessage",
+        {
+            "chat_id": chat_id,
+            "text": text,
             "disable_web_page_preview": "true",
         },
     )
@@ -305,10 +335,13 @@ def handle_containers(_args: str, env: dict[str, str]) -> str:
 
 
 def handle_help(_args: str, env: dict[str, str]) -> str:
+    # Wrap container globs in backticks so Telegram's legacy Markdown
+    # parses `bs_*` as a code span instead of trying to balance the
+    # underscore/asterisk as italic+bold (which fails with HTTP 400).
     return (
         "*BookSwap bot — read-only commands*\n\n"
-        "/status — bs_* container summary + build SHA\n"
-        "/containers — verbose docker stats for bs_*\n"
+        "/status — `bs_*` container summary + build SHA\n"
+        "/containers — verbose docker stats for `bs_*`\n"
         "/health — run endpoint probes on demand\n"
         "/digest — full ops digest (users, books, exchanges, T&S queue)\n"
         "/abuse — last 24h trust-safety + lockout signals\n"
@@ -400,8 +433,8 @@ def poll_loop(env: dict[str, str]) -> None:
             "timeout": POLL_TIMEOUT_SEC,
             "allowed_updates": json.dumps(["message"]),
         }
-        result = telegram_call(token, "getUpdates", params)
-        if not result.get("ok"):
+        ok, result = telegram_call(token, "getUpdates", params)
+        if not ok:
             log.warning("getUpdates failed; backing off %ss", backoff_sec)
             time.sleep(backoff_sec)
             backoff_sec = min(backoff_sec * 2, 60)
