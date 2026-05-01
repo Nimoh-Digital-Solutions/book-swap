@@ -1,0 +1,38 @@
+[Unit]
+Description=Pi monitor bot — operator-wide read-only Telegram queries
+Documentation=file:///home/gnimoh001/scripts/pi-monitor-bot.py
+# Network up before long-polling; docker.service before us because every
+# handler shells out to `docker` or `docker exec`.
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+# Telegram occasionally has minute-long outages; keep restarting.
+StartLimitIntervalSec=600
+StartLimitBurst=20
+
+[Service]
+Type=simple
+User=gnimoh001
+Group=gnimoh001
+ExecStart=/usr/bin/python3 /home/gnimoh001/scripts/pi-monitor-bot.py
+Restart=always
+RestartSec=10
+
+# Logs to journald. Inspect with `journalctl -u pi-monitor-bot -f`.
+StandardOutput=journal
+StandardError=journal
+
+# Hardening — same modest sandbox as bookswap-bot. The bot reads
+# ~/.monitor-env and shells out to ~/scripts/*, so we can't go fully
+# locked down, but NoNewPrivileges + ProtectSystem are the safe wins.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/gnimoh001/monitor-state
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+
+[Install]
+WantedBy=multi-user.target

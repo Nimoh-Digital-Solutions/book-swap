@@ -10,7 +10,7 @@ The BookSwap-specific monitoring stack on the Pi5: what it watches, where it sen
 
 ## TL;DR
 
-- **Two Telegram channels** in use. The pre-existing operator channel keeps getting Pi-wide alerts. A new BookSwap-only channel (bot id `8717082972`) gets BookSwap-**production**-specific signals plus a mirrored copy of any Pi-wide alert that affects BookSwap availability.
+- **Two Telegram channels, two read-only bots.** The operator channel still gets Pi-wide alerts AND now has its own bot (`pi-monitor-bot.service`) for cross-tenant queries. The BookSwap channel gets BookSwap-**production**-specific signals plus mirrored critical Pi-wide alerts, served by `bookswap-bot.service`.
 - **Staging is intentionally excluded** from this channel. `bs_*_staging` containers, the `bs_staging` database, and `environment:staging` Sentry issues all stay on the operator channel via the existing pi-wide monitors. The BookSwap channel only ever pings for things that affect end-users in production.
 - **Five new cron monitors** run BookSwap-specific checks (containers, endpoints, backups, Sentry, abuse signals).
 - **One read-only bot** (`bookswap-bot.service`, systemd) lets the operator query state on demand from the BookSwap channel: `/status`, `/digest`, `/abuse`, `/sentry`, `/health`, `/containers`, `/help`. No mutating commands.
@@ -76,18 +76,38 @@ Cron offset minutes are deliberately spread (`:15`, `:17`, `:23`, etc.) so they 
 
 ---
 
-## The bot
+## The bots
+
+There are now **two** read-only bots, one per channel. They share the same architecture (Python 3 stdlib, long-polling, systemd, inline-keyboard `/help`, callback_query dispatch) and deliberately duplicate a few Telegram primitives so each can be deployed independently.
+
+| Service | Channel | Scope | Source file |
+|---|---|---|---|
+| `bookswap-bot.service` | BookSwap (bot `8717082972`) | BookSwap prod only — `bs_*_prod`, `bs_prod` DB, `book-swaps.com` | `backend/scripts/pi/bookswap-bot.py` |
+| `pi-monitor-bot.service` | Operator-wide | Every tenant on the Pi (bs / sl / vgf / nimoh / npz / …) | `backend/scripts/pi/pi-monitor-bot.py` |
+
+**Pi monitor bot commands**: `/status` (all-tenant container summary, grouped by prefix), `/containers` (verbose docker stats), `/digest` (Pi resource snapshot), `/disk` (docker df + filesystem), `/uptime` (kernel + last boot + free), `/health` (run pi-health.sh on demand), `/help`.
+
+**BookSwap bot commands**: `/status`, `/containers`, `/health`, `/digest`, `/abuse`, `/sentry`, `/help`.
+
+**Keep-in-sync rule**: any change to the Telegram primitive layer (`telegram_call`, `send_message`, `answer_callback`, `dispatch`, `dispatch_callback`, `_dispatch_command`, `poll_loop`) must be applied to BOTH `.py` files. Handler code is tenant-specific and diverges intentionally.
 
 `bookswap-bot.service` is a Python 3 stdlib long-polling daemon. Approximately 350 lines, no pip dependencies. RAM footprint ~14 MiB.
 
-**Operate the service**
+**Operate either service**
 
 ```bash
 ssh piserver
-sudo systemctl status bookswap-bot       # current state
-sudo systemctl restart bookswap-bot      # after editing the .py or .service
-journalctl -u bookswap-bot -f            # tail logs (everything goes to journald)
-journalctl -u bookswap-bot --since '1h ago' | grep dispatch  # see which commands ran
+# BookSwap bot
+sudo systemctl status bookswap-bot
+sudo systemctl restart bookswap-bot
+journalctl -u bookswap-bot -f
+journalctl -u bookswap-bot --since '1h ago' | grep dispatch
+
+# Pi monitor bot (operator-wide)
+sudo systemctl status pi-monitor-bot
+sudo systemctl restart pi-monitor-bot
+journalctl -u pi-monitor-bot -f
+journalctl -u pi-monitor-bot --since '1h ago' | grep dispatch
 ```
 
 **Update the bot code**
