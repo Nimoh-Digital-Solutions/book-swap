@@ -1,0 +1,42 @@
+[Unit]
+Description=BookSwap Telegram bot — read-only operational queries
+Documentation=file:///home/gnimoh001/scripts/bookswap-bot.py
+# Requires network up before we start long-polling; ordered after docker
+# because every handler shells out to `docker` or `docker exec`.
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+# Telegram occasionally has minute-long outages; we don't want systemd
+# to give up after a few rapid restarts. (StartLimit* live in [Unit] in
+# modern systemd; older docs sometimes place them in [Service] which
+# results in a "Unknown key" warning at load time.)
+StartLimitIntervalSec=600
+StartLimitBurst=20
+
+[Service]
+Type=simple
+User=gnimoh001
+Group=gnimoh001
+ExecStart=/usr/bin/python3 /home/gnimoh001/scripts/bookswap-bot.py
+Restart=always
+RestartSec=10
+
+# Logs go to journald only (no log file noise on disk). Inspect with:
+#   journalctl -u bookswap-bot -f
+StandardOutput=journal
+StandardError=journal
+
+# Hardening — modest set, the script needs to read ~/.sentryclirc and
+# call `docker exec`, so we can't sandbox it as aggressively as a pure
+# stdlib service. NoNewPrivileges + ProtectSystem are the safe wins.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/gnimoh001/monitor-state
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+
+[Install]
+WantedBy=multi-user.target

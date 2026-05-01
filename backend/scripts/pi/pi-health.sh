@@ -27,7 +27,18 @@ ALERT_DOCKER_WASTE=$((2 * 1024 * 1024 * 1024))  # 2 GB
 REBOOT_WINDOW=600      # seconds
 
 ALERTS=""
+# Subset of alerts that also get mirrored to the BookSwap Telegram
+# channel because they affect BookSwap availability (OOM risk, disk full,
+# unexpected reboot, missing mem cgroup). Routine operational signals
+# (CPU temp, docker disk waste, builder cache, external media) stay
+# operator-only — those don't move the needle for an end-user.
+BOOKSWAP_ALERTS=""
+
 add_alert() { ALERTS="${ALERTS}${1}\n\n"; }
+add_alert_critical() {
+  ALERTS="${ALERTS}${1}\n\n"
+  BOOKSWAP_ALERTS="${BOOKSWAP_ALERTS}${1}\n\n"
+}
 
 # --- CPU Temperature ---
 TEMP_RAW=$(vcgencmd measure_temp 2>/dev/null | grep -oP '[0-9.]+' || echo "0")
@@ -50,7 +61,8 @@ MEM_AVAIL=$(awk '/MemAvailable/ {printf "%.0f", $2/1024}' /proc/meminfo)
 if (( MEM_AVAIL < ALERT_MEM_AVAIL )); then
   MEM_TOTAL=$(awk '/MemTotal/ {printf "%.0f", $2/1024}' /proc/meminfo)
   MEM_USED=$(( MEM_TOTAL - MEM_AVAIL ))
-  add_alert "💾 Memory is running low
+  # Mirrored to BookSwap channel: low memory will OOM-kill bs_* containers.
+  add_alert_critical "💾 Memory is running low
    ${MEM_AVAIL} MB available out of ${MEM_TOTAL} MB (${MEM_USED} MB in use)
    Threshold: < ${ALERT_MEM_AVAIL} MB free"
 fi
@@ -61,7 +73,8 @@ SWAP_FREE=$(awk '/SwapFree/ {print $2}' /proc/meminfo)
 if (( SWAP_TOTAL > 0 )); then
   SWAP_PCT=$(( (SWAP_TOTAL - SWAP_FREE) * 100 / SWAP_TOTAL ))
   if (( SWAP_PCT > ALERT_SWAP_PCT )); then
-    add_alert "🔄 Swap usage is at ${SWAP_PCT}%
+    # Mirrored: sustained swap pressure tanks request latency app-wide.
+    add_alert_critical "🔄 Swap usage is at ${SWAP_PCT}%
    Threshold: ${ALERT_SWAP_PCT}% — sustained swap means a tenant is leaking
    or the box is over-committed; check \`docker stats\` for the culprit"
   fi
@@ -72,7 +85,8 @@ NVME_PCT=$(df / | awk 'NR==2 {gsub(/%/,""); print $5}')
 if (( NVME_PCT > ALERT_NVME_PCT )); then
   NVME_AVAIL=$(df -h / | awk 'NR==2 {print $4}')
   NVME_TOTAL=$(df -h / | awk 'NR==2 {print $2}')
-  add_alert "💿 NVMe disk is ${NVME_PCT}% full
+  # Mirrored: a full NVMe stops Postgres writes, kills logs, breaks deploys.
+  add_alert_critical "💿 NVMe disk is ${NVME_PCT}% full
    ${NVME_AVAIL} remaining of ${NVME_TOTAL}
    Threshold: ${ALERT_NVME_PCT}%"
 fi
@@ -141,7 +155,8 @@ fi
 UPTIME_SEC=$(awk '{printf "%.0f", $1}' /proc/uptime)
 if (( UPTIME_SEC < REBOOT_WINDOW )); then
   UPTIME_HUMAN=$(seconds_to_human "$UPTIME_SEC")
-  add_alert "🔁 Pi just rebooted
+  # Mirrored: a Pi reboot means BookSwap was down for ~2 min.
+  add_alert_critical "🔁 Pi just rebooted
    Uptime is only ${UPTIME_HUMAN} — this may be an unexpected restart"
 fi
 
@@ -166,7 +181,8 @@ elif grep -q '^memory' /proc/cgroups 2>/dev/null; then
   MEMORY_CGROUP_OK=1
 fi
 if (( MEMORY_CGROUP_OK == 0 )); then
-  add_alert "🧱 Memory cgroup is disabled
+  # Mirrored: without memory cgroup, BookSwap's mem_limit caps don't apply.
+  add_alert_critical "🧱 Memory cgroup is disabled
    Docker mem_limit directives are not being enforced — a single tenant
    leaking RAM can take the Pi down. Check /boot/firmware/cmdline.txt for
    'cgroup_enable=memory cgroup_memory=1' and reboot if missing.
@@ -178,7 +194,17 @@ if [[ -n "$ALERTS" ]]; then
   HEADER="⚠️ Pi Health Alert"
   MESSAGE="${HEADER}\n\n${ALERTS}$(footer)"
   send_telegram "$(printf '%b' "$MESSAGE")"
-  log_msg "ALERT" "Health alert sent"
+
+  # Critical subset → BookSwap channel too. Don't mirror the boring
+  # operational stuff (temp, docker waste, builder cache) — those
+  # don't move the needle for an end-user.
+  if [[ -n "$BOOKSWAP_ALERTS" ]]; then
+    BS_HEADER="⚠️ *Pi-wide alert affecting BookSwap*"
+    BS_MESSAGE="${BS_HEADER}\n\n${BOOKSWAP_ALERTS}$(footer)"
+    send_telegram_bookswap "$(printf '%b' "$BS_MESSAGE")"
+  fi
+
+  log_msg "ALERT" "Health alert sent (op + bookswap=$([ -n "$BOOKSWAP_ALERTS" ] && echo yes || echo no))"
 else
   log_msg "OK" "temp=${TEMP_RAW}°C load=${LOAD5} mem_avail=${MEM_AVAIL}MB nvme=${NVME_PCT}% uptime=${UPTIME_SEC}s"
 fi

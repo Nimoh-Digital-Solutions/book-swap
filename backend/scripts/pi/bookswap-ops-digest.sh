@@ -30,7 +30,7 @@ Exit code: ${EXIT_CODE}
 First line: $(echo "$DIGEST" | head -n 1)
 
 $(footer)"
-  send_telegram "$(printf '%b' "$ERR_MESSAGE")"
+  send_telegram_bookswap "$(printf '%b' "$ERR_MESSAGE")"
   log_msg "ERROR" "Digest command exited ${EXIT_CODE}"
   exit 1
 fi
@@ -76,5 +76,5 @@ ${PI_SECTION}
 
 $(footer)"
 
-send_telegram "$(printf '%b' "$MESSAGE")"
-log_msg "OK" "BookSwap digest sent"
+send_telegram_bookswap "$(printf '%b' "$MESSAGE")"
+log_msg "OK" "BookSwap digest sent to BookSwap channel"
