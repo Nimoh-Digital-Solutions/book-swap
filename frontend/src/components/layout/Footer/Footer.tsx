@@ -36,6 +36,9 @@ export const Footer = ({ className }: { className?: string | undefined }): React
         </p>
         <span className="hidden sm:inline text-[#28382D]" aria-hidden="true">|</span>
         <nav className="flex items-center gap-3 sm:gap-4" aria-label={t('footer.legal', 'Legal')}>
+          <LocaleLink to={PATHS.SUPPORT} className="hover:text-[#8C9C92] transition-colors">
+            {t('footer.support', 'Support')}
+          </LocaleLink>
           <LocaleLink to={PATHS.PRIVACY_POLICY} className="hover:text-[#8C9C92] transition-colors">
             {t('footer.privacy', 'Privacy Policy')}
           </LocaleLink>

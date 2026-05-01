@@ -16,7 +16,12 @@
   },
   "footer": {
     "rights": "Alle rechten voorbehouden.",
-    "tagline": "Gemaakt voor lezers."
+    "tagline": "Gemaakt voor lezers.",
+    "legal": "Juridisch",
+    "privacy": "Privacybeleid",
+    "terms": "Voorwaarden",
+    "accountDeletion": "Account verwijderen",
+    "support": "Ondersteuning"
   },
   "notFound": {
     "code": "404",

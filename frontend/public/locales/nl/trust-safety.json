@@ -91,5 +91,73 @@
     "contact": "Neem voor vragen over gegevensverwijdering contact met ons op via",
     "seeAlso": "Zie ook ons",
     "privacyLink": "Privacybeleid"
+  },
+  "support": {
+    "title": "Ondersteuning",
+    "lastUpdated": "Laatst bijgewerkt: {{date}}",
+    "intro": "BookSwap is een gratis boekenruil-community. Als iets niet werkt, je een vraag hebt of hulp nodig hebt met je account, is deze pagina de snelste manier om geholpen te worden. De meeste vragen worden hieronder beantwoord; voor al het andere kun je ons mailen — we reageren binnen 48 uur.",
+    "contact": {
+      "title": "Contact",
+      "generalTitle": "Algemene vraag",
+      "generalBody": "Over ruilen, advertenties of hoe de app werkt.",
+      "bugTitle": "Een bug melden",
+      "bugBody": "Iets is gecrasht, kapot of gedraagt zich vreemd.",
+      "accountTitle": "Hulp met je account",
+      "accountBody": "Inloggen, wachtwoord resetten, e-mail wijzigen of verwijderen.",
+      "directIntro": "Je kunt ons ook direct mailen op",
+      "responseTime": "We streven ernaar binnen 48 uur te reageren, maandag tot en met vrijdag."
+    },
+    "faq": {
+      "title": "Veelgestelde vragen",
+      "cost": {
+        "q": "Is BookSwap gratis?",
+        "a": "Ja — BookSwap is volledig gratis. Geen kosten, geen abonnementen, geen in-app aankopen, geen advertenties. We verdienen niets aan de ruilen zelf."
+      },
+      "howItWorks": {
+        "q": "Hoe werkt het ruilen?",
+        "a": "Plaats een boek dat je wilt delen, bekijk boeken die in jouw buurt beschikbaar zijn, vraag een ruil aan en chat met de andere lezer om een ontmoeting af te spreken. Er wisselt geen geld van eigenaar. De volledige uitleg vind je in onze",
+        "link": "“Hoe het werkt”-gids",
+        "suffix": "."
+      },
+      "location": {
+        "q": "Waarom zie ik geen boeken in mijn buurt?",
+        "a": "BookSwap toont boeken binnen een instelbare straal rond jouw locatie. Als de kaart leeg lijkt, is jouw gebied simpelweg nog rustig bij de lancering — probeer een grotere straal in de kaartfilters, of plaats zelf een boek om je buurt te activeren. Controleer dat je de locatiestap tijdens onboarding hebt voltooid."
+      },
+      "push": {
+        "q": "Ik krijg geen pushmeldingen.",
+        "a": "Controleer op iOS en Android of meldingen voor BookSwap zijn toegestaan in de instellingen van je apparaat. Ga in de app naar Instellingen → Meldingen en bevestig dat de gewenste categorieën zijn ingeschakeld. Als je op een nieuwe telefoon inlogt, worden push-tokens automatisch ververst; als de bezorging onregelmatig blijft, neem contact met ons op zodat we de registratie aan onze kant kunnen controleren."
+      },
+      "signin": {
+        "q": "Ik kan niet inloggen.",
+        "a": "Gebruik de link “Wachtwoord vergeten?” op het inlogscherm om je wachtwoord per e-mail te resetten. Als je je hebt aangemeld met Google of Apple, gebruik dan dezelfde providerknop om weer in te loggen. Heb je geen toegang meer tot het e-mailadres van het account? Schrijf ons en we helpen je het te herstellen."
+      },
+      "devices": {
+        "q": "Welke apparaten worden ondersteund?",
+        "a": "BookSwap is beschikbaar op iPhone (iOS 16 en hoger), Android (8.0 en hoger) en op het web in elke moderne browser. De mobiele app en de website delen hetzelfde account."
+      },
+      "delete": {
+        "q": "Hoe verwijder ik mijn account?",
+        "a": "Ga in de app naar Instellingen en tik op “Account verwijderen”, of volg de instructies op onze pagina",
+        "link": "Account- & gegevensverwijdering",
+        "suffix": "."
+      }
+    },
+    "report": {
+      "title": "Gebruikers of inhoud rapporteren",
+      "body": "Als een gebruiker zich misdraagt, een nepboek plaatst of onze communityregels overtreedt, tik dan op de knop Rapporteren op hun profiel of op de advertentie. Ons trust & safety-team beoordeelt rapporten binnen 48 uur. Bij dringende veiligheidskwesties: mail ons ook, zodat we snel kunnen handelen."
+    },
+    "links": {
+      "title": "Handige links",
+      "howItWorks": "Hoe BookSwap werkt",
+      "privacy": "Privacybeleid",
+      "terms": "Servicevoorwaarden",
+      "accountDeletion": "Verwijder je account"
+    },
+    "operator": {
+      "title": "Beheerder",
+      "body": "BookSwap is gebouwd en wordt beheerd door",
+      "suffix": ", geregistreerd in Nederland. Voor privacy- of gegevensbeschermingsverzoeken, zie het contactgedeelte van ons",
+      "privacyLink": "Privacybeleid"
+    }
   }
 }

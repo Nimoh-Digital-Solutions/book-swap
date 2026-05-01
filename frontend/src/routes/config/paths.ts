@@ -33,6 +33,7 @@ export const PATHS = {
   PRIVACY_POLICY: '/privacy-policy',
   TERMS_OF_SERVICE: '/terms-of-service',
   ACCOUNT_DELETION: '/account-deletion',
+  SUPPORT: '/support',
   HOW_IT_WORKS: '/how-it-works',
   COMMUNITY: '/community',
   NOTIFICATION_UNSUBSCRIBE: '/notifications/unsubscribe/:token',
@@ -150,6 +151,10 @@ export const routeMetadata = {
   [PATHS.ACCOUNT_DELETION]: {
     title: 'Account & Data Deletion',
     description: 'Learn how to delete your BookSwap account and request removal of your personal data.',
+  },
+  [PATHS.SUPPORT]: {
+    title: 'Support',
+    description: 'Get help with BookSwap: contact support, FAQ, common issues, and links to privacy, terms, and account deletion.',
   },
   [PATHS.HOW_IT_WORKS]: {
     title: 'How BookSwap Works',

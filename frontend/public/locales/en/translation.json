@@ -16,7 +16,12 @@
   },
   "footer": {
     "rights": "All rights reserved.",
-    "tagline": "Built for readers."
+    "tagline": "Built for readers.",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "accountDeletion": "Delete Account",
+    "support": "Support"
   },
   "notFound": {
     "code": "404",

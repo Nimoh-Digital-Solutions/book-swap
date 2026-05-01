@@ -7,6 +7,12 @@ base-app/
 .claude/
 app-audit.md
 
+# Local-only App Store / Play Store submission assets (screenshots, icons,
+# preview videos). Generated artefacts that get uploaded to the store
+# consoles directly and should not bloat the repo.
+mobile/assets/apple-submission/
+mobile/assets/play-submission/
+
 # =============================================================================
 # Secrets & environment variables  ⚠️  NEVER commit real .env files
 # =============================================================================

@@ -91,5 +91,73 @@
     "contact": "Pour toute question sur la suppression des données, contactez-nous à",
     "seeAlso": "Voir aussi notre",
     "privacyLink": "Politique de confidentialité"
+  },
+  "support": {
+    "title": "Assistance",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "intro": "BookSwap est une communauté gratuite d'échange de livres. Si quelque chose ne fonctionne pas, si vous avez une question ou besoin d'aide avec votre compte, cette page est le moyen le plus rapide d'obtenir de l'aide. La plupart des problèmes sont traités ci-dessous ; pour le reste, écrivez-nous et nous répondrons sous 48 heures.",
+    "contact": {
+      "title": "Nous contacter",
+      "generalTitle": "Question générale",
+      "generalBody": "À propos des échanges, des annonces ou du fonctionnement de l'app.",
+      "bugTitle": "Signaler un bug",
+      "bugBody": "Quelque chose a planté, est cassé ou se comporte bizarrement.",
+      "accountTitle": "Aide sur le compte",
+      "accountBody": "Connexion, réinitialisation de mot de passe, changement d'e-mail ou suppression.",
+      "directIntro": "Vous pouvez aussi nous écrire directement à",
+      "responseTime": "Nous répondons sous 48 heures, du lundi au vendredi."
+    },
+    "faq": {
+      "title": "Questions fréquentes",
+      "cost": {
+        "q": "BookSwap est-il gratuit ?",
+        "a": "Oui — BookSwap est entièrement gratuit. Pas de frais, pas d'abonnement, pas d'achat intégré, pas de publicité. Nous ne gagnons rien sur les échanges eux-mêmes."
+      },
+      "howItWorks": {
+        "q": "Comment fonctionnent les échanges ?",
+        "a": "Ajoutez un livre que vous souhaitez partager, parcourez les livres disponibles près de chez vous, demandez un échange et discutez avec l'autre lecteur pour organiser la remise. Aucun argent ne change de mains. Le tutoriel complet se trouve dans notre",
+        "link": "guide « Comment ça marche »",
+        "suffix": "."
+      },
+      "location": {
+        "q": "Pourquoi est-ce que je ne vois aucun livre près de chez moi ?",
+        "a": "BookSwap affiche les livres dans un rayon configurable autour de votre localisation. Si la carte semble vide, votre zone est peut-être simplement calme au lancement — essayez un rayon plus large dans les filtres de la carte, ou ajoutez vous-même un livre pour démarrer votre quartier. Vérifiez bien que vous avez complété l'étape de localisation pendant l'onboarding."
+      },
+      "push": {
+        "q": "Je ne reçois pas de notifications push.",
+        "a": "Sur iOS et Android, vérifiez que les notifications sont autorisées pour BookSwap dans les Paramètres de votre téléphone. Dans l'app, allez dans Paramètres → Notifications et confirmez que les catégories souhaitées sont activées. Si vous vous êtes connecté sur un nouveau téléphone, les jetons push sont rafraîchis automatiquement ; si la livraison reste irrégulière, contactez-nous et nous vérifierons l'enregistrement de notre côté."
+      },
+      "signin": {
+        "q": "Je n'arrive pas à me connecter.",
+        "a": "Utilisez le lien « Mot de passe oublié ? » sur l'écran de connexion pour réinitialiser votre mot de passe par e-mail. Si vous vous êtes inscrit avec Google ou Apple, utilisez le même bouton de fournisseur pour vous reconnecter. Si vous n'avez plus accès à l'e-mail du compte, écrivez-nous et nous vous aiderons à le récupérer."
+      },
+      "devices": {
+        "q": "Quels appareils sont pris en charge ?",
+        "a": "BookSwap est disponible sur iPhone (iOS 16 et plus), Android (8.0 et plus) et sur le web depuis n'importe quel navigateur moderne. Les apps mobiles et web partagent le même compte."
+      },
+      "delete": {
+        "q": "Comment supprimer mon compte ?",
+        "a": "Allez dans Paramètres dans l'app et appuyez sur « Supprimer le compte », ou suivez les instructions sur notre page",
+        "link": "Suppression du compte et des données",
+        "suffix": "."
+      }
+    },
+    "report": {
+      "title": "Signaler des utilisateurs ou du contenu",
+      "body": "Si un utilisateur se comporte de manière abusive, publie une fausse annonce ou enfreint nos règles communautaires, appuyez sur le bouton Signaler sur son profil ou sur l'annonce. Notre équipe Confiance & Sécurité examine les signalements sous 48 heures. Pour toute préoccupation urgente, écrivez-nous aussi par e-mail afin que nous puissions agir rapidement."
+    },
+    "links": {
+      "title": "Liens utiles",
+      "howItWorks": "Comment fonctionne BookSwap",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation",
+      "accountDeletion": "Supprimer votre compte"
+    },
+    "operator": {
+      "title": "Opérateur",
+      "body": "BookSwap est conçu et exploité par",
+      "suffix": ", enregistrée aux Pays-Bas. Pour toute demande relative à la confidentialité ou à la protection des données, consultez la section contact de notre",
+      "privacyLink": "Politique de confidentialité"
+    }
   }
 }

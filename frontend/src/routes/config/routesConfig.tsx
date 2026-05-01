@@ -103,6 +103,8 @@ const TermsOfServicePage = lazy(() => import('@pages/TermsOfServicePage/TermsOfS
 
 const AccountDeletionPage = lazy(() => import('@pages/AccountDeletionPage/AccountDeletionPage'));
 
+const SupportPage = lazy(() => import('@pages/SupportPage/SupportPage'));
+
 const NotificationUnsubscribePage = lazy(() =>
   import('@features/notifications').then(m => ({ default: m.UnsubscribePage }))
 );
@@ -300,6 +302,10 @@ export const routes: RouteObject[] = [
           {
             path: rel(PATHS.ACCOUNT_DELETION),
             element: <LazyPage component={AccountDeletionPage} />,
+          },
+          {
+            path: rel(PATHS.SUPPORT),
+            element: <LazyPage component={SupportPage} />,
           },
           {
             path: rel(PATHS.NOTIFICATION_UNSUBSCRIBE),

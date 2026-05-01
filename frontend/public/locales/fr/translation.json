@@ -16,7 +16,12 @@
   },
   "footer": {
     "rights": "Tous droits réservés.",
-    "tagline": "Conçu pour les lecteurs."
+    "tagline": "Conçu pour les lecteurs.",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "accountDeletion": "Supprimer le compte",
+    "support": "Assistance"
   },
   "notFound": {
     "code": "404",

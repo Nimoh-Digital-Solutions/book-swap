@@ -91,5 +91,73 @@
     "contact": "For questions about data deletion, contact us at",
     "seeAlso": "See also our",
     "privacyLink": "Privacy Policy"
+  },
+  "support": {
+    "title": "Support",
+    "lastUpdated": "Last updated: {{date}}",
+    "intro": "BookSwap is a free book-exchange community. If something is not working, you have a question, or you need help with your account, this page is the fastest way to get unstuck. Most issues are answered below; for anything else, email us and we will reply within 48 hours.",
+    "contact": {
+      "title": "Contact us",
+      "generalTitle": "General question",
+      "generalBody": "About swaps, listings, or how the app works.",
+      "bugTitle": "Report a bug",
+      "bugBody": "Something crashed, broke, or behaves strangely.",
+      "accountTitle": "Account help",
+      "accountBody": "Sign-in, password reset, email change, or deletion.",
+      "directIntro": "You can also email us directly at",
+      "responseTime": "We aim to reply within 48 hours, Monday to Friday."
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "cost": {
+        "q": "Is BookSwap free?",
+        "a": "Yes — BookSwap is completely free. There are no fees, no subscriptions, no in-app purchases, and no ads. We earn nothing from the swaps themselves."
+      },
+      "howItWorks": {
+        "q": "How does swapping work?",
+        "a": "List a book you want to share, browse books available near you, request a swap, and chat with the other reader to arrange a meetup. No money changes hands. The full walkthrough is in our",
+        "link": "How It Works",
+        "suffix": "guide."
+      },
+      "location": {
+        "q": "Why am I not seeing any books near me?",
+        "a": "BookSwap shows books within a configurable radius of your set location. If the map looks empty, your area may simply be quiet at launch — try a wider radius from the map filters, or list a book yourself to seed your neighbourhood. Make sure you completed the location step during onboarding."
+      },
+      "push": {
+        "q": "I am not getting push notifications.",
+        "a": "On iOS and Android, check that notifications are allowed for BookSwap in your device Settings. Inside the app, go to Settings → Notifications and confirm the categories you want are enabled. If you signed in on a new phone, push tokens are refreshed automatically; if delivery is still inconsistent, contact support and we can verify the registration on our side."
+      },
+      "signin": {
+        "q": "I cannot sign in.",
+        "a": "Use the “Forgot password?” link on the sign-in screen to reset your password by email. If you signed up with Google or Apple, use the same provider button to sign back in. If you no longer have access to the email on the account, write to us and we can help recover it."
+      },
+      "devices": {
+        "q": "Which devices are supported?",
+        "a": "BookSwap is available on iPhone (iOS 16 and later), Android (8.0 and later), and on the web in any modern browser. The mobile and web apps share the same account."
+      },
+      "delete": {
+        "q": "How do I delete my account?",
+        "a": "Go to Settings in the app and tap “Delete account”, or follow the instructions on our",
+        "link": "Account & Data Deletion",
+        "suffix": "page."
+      }
+    },
+    "report": {
+      "title": "Reporting users or content",
+      "body": "If a user behaves abusively, lists a fake book, or violates our community guidelines, tap the Report button on their profile or on the listing. Our trust & safety team reviews reports within 48 hours. For urgent safety concerns, also email us so we can act quickly."
+    },
+    "links": {
+      "title": "Helpful links",
+      "howItWorks": "How BookSwap works",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service",
+      "accountDeletion": "Delete your account"
+    },
+    "operator": {
+      "title": "Operator",
+      "body": "BookSwap is built and operated by",
+      "suffix": ", registered in the Netherlands. For privacy or data-protection requests, see the contact section of our",
+      "privacyLink": "Privacy Policy"
+    }
   }
 }
