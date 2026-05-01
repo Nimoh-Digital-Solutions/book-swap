@@ -144,10 +144,24 @@ if command -v docker &>/dev/null; then
     AFTER_RECLAIM=$(docker_reclaimable_bytes)
     FREED=$(( RECLAIMABLE_BYTES - ${AFTER_RECLAIM:-0} ))
     FREED_HUMAN=$(bytes_to_human "$FREED")
-    add_alert "🐳 Docker auto-cleanup ran
+
+    # Only Telegram-alert when the prune actually accomplished something.
+    # On this Pi most of the "reclaimable" bytes are old TAGGED images
+    # held for rollback (not dangling) and active build cache that's
+    # locked — neither gets touched by a default prune. A 100 MB floor
+    # is generous enough to skip the noise but catches anything that
+    # would matter to an operator.
+    MIN_FREED=$((100 * 1024 * 1024))
+    if (( FREED >= MIN_FREED )); then
+      add_alert "🐳 Docker auto-cleanup ran
    ${RECLAIM_HUMAN} of reclaimable space detected (threshold: 2 GB)
    Freed ${FREED_HUMAN} by pruning images, stopped containers, and old build cache.
    Volumes were not touched (tenant data-loss risk)."
+    else
+      log_msg "INFO" "Auto-prune freed ${FREED_HUMAN} (< 100 MB) — silent run; \
+remaining reclaimable is mostly old tagged images and locked build cache. \
+Run docker-cleanup.sh manually with --aggressive if you need that space back."
+    fi
   fi
 fi
 

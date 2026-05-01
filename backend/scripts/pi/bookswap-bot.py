@@ -129,9 +129,44 @@ def telegram_call(
         return False, {}
 
 
-def send_message(token: str, chat_id: str, text: str) -> None:
+def _help_keyboard() -> dict[str, Any]:
+    """2-column grid of inline buttons mapping to read-only commands.
+
+    `callback_data` is the slash command itself — the dispatch path
+    treats it identically to a typed message, so adding/removing a
+    handler in the COMMANDS dict automatically flows through here too
+    (see HELP_BUTTONS for the layout).
+    """
+    rows: list[list[dict[str, str]]] = []
+    pair: list[dict[str, str]] = []
+    for label, cmd in HELP_BUTTONS:
+        pair.append({"text": label, "callback_data": cmd})
+        if len(pair) == 2:
+            rows.append(pair)
+            pair = []
+    if pair:
+        rows.append(pair)
+    return {"inline_keyboard": rows}
+
+
+def send_message(
+    token: str,
+    chat_id: str,
+    text: str,
+    reply_markup: dict[str, Any] | None = None,
+) -> None:
     if len(text) > TELEGRAM_MAX_LEN:
         text = text[: TELEGRAM_MAX_LEN - 30] + "\n…\n_(message truncated)_"
+
+    base_params: dict[str, Any] = {
+        "chat_id": chat_id,
+        "text": text,
+        "disable_web_page_preview": "true",
+    }
+    if reply_markup is not None:
+        # Telegram expects the keyboard as a JSON-encoded string in the
+        # form-encoded body, not a nested object.
+        base_params["reply_markup"] = json.dumps(reply_markup)
 
     # First try with Markdown — most replies are formatted. If Telegram
     # rejects it (typically a 400 over an unbalanced `_` or `*`), retry
@@ -140,25 +175,27 @@ def send_message(token: str, chat_id: str, text: str) -> None:
     ok, _ = telegram_call(
         token,
         "sendMessage",
-        {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "Markdown",
-            "disable_web_page_preview": "true",
-        },
+        {**base_params, "parse_mode": "Markdown"},
     )
     if ok:
         return
 
     log.warning("falling back to plain-text send for chat=%s", chat_id)
+    telegram_call(token, "sendMessage", base_params)
+
+
+def answer_callback(token: str, callback_query_id: str, text: str = "") -> None:
+    """Dismiss the spinner on a tapped inline-keyboard button.
+
+    Telegram requires this within 30s of the callback or the user's
+    client shows "loading…" indefinitely. We pass an empty `text` for
+    the silent case (no banner), and a short toast-style message when
+    we want to confirm something at the tap location.
+    """
     telegram_call(
         token,
-        "sendMessage",
-        {
-            "chat_id": chat_id,
-            "text": text,
-            "disable_web_page_preview": "true",
-        },
+        "answerCallbackQuery",
+        {"callback_query_id": callback_query_id, "text": text},
     )
 
 
@@ -372,12 +409,26 @@ def handle_containers(_args: str, env: dict[str, str]) -> str:
     return "\n".join(rows) if len(rows) > 2 else "_no bs_*_prod containers running_"
 
 
+# Inline-keyboard layout for the /help reply. Each tuple is
+# (button label, callback command). New handlers added to the COMMANDS
+# dict should also be added here so the keyboard advertises them.
+HELP_BUTTONS: list[tuple[str, str]] = [
+    ("📊 Status", "/status"),
+    ("🐳 Containers", "/containers"),
+    ("🌐 Health", "/health"),
+    ("📚 Digest", "/digest"),
+    ("🛡 Abuse", "/abuse"),
+    ("🚨 Sentry", "/sentry"),
+]
+
+
 def handle_help(_args: str, env: dict[str, str]) -> str:
     # Wrap container globs in backticks so Telegram's legacy Markdown
     # parses `bs_*` as a code span instead of trying to balance the
     # underscore/asterisk as italic+bold (which fails with HTTP 400).
     return (
         "*BookSwap bot — read-only commands*\n\n"
+        "Tap a button below or type the command directly.\n\n"
         "/status — `bs_*` container summary + build SHA\n"
         "/containers — verbose docker stats for `bs_*`\n"
         "/health — run endpoint probes on demand\n"
@@ -440,7 +491,43 @@ def dispatch(message: dict[str, Any], env: dict[str, str]) -> None:
     cmd = text.split("@", 1)[0].split()[0] if text else ""
     if not cmd:
         return
+    _dispatch_command(cmd, chat_id, env, source="message")
 
+
+def dispatch_callback(cb: dict[str, Any], env: dict[str, str]) -> None:
+    """Handle a tap on an inline-keyboard button.
+
+    Telegram delivers callback queries as a separate update type, with
+    `message` referring to the bot's own original reply (the one with
+    the keyboard) and `from` being the user who tapped. We answer the
+    callback first to dismiss the spinner, then re-dispatch through the
+    same handler path used for typed commands.
+    """
+    token = env["BOOKSWAP_TELEGRAM_BOT_TOKEN"]
+    cb_id = cb.get("id", "")
+    from_user_id = str((cb.get("from") or {}).get("id", ""))
+    chat_id = str(((cb.get("message") or {}).get("chat") or {}).get("id", ""))
+    data = (cb.get("data") or "").strip()
+
+    # Authorisation check — the keyboard is only ever sent to the
+    # whitelisted chat, but a determined attacker who knew the chat id
+    # could try to forge a callback_query. Re-validate the originating
+    # user id here, not just the chat id.
+    if from_user_id != env["BOOKSWAP_TELEGRAM_CHAT_ID"]:
+        log.info("ignoring callback from unauthorised user_id=%s", from_user_id)
+        answer_callback(token, cb_id)
+        return
+
+    # Always answer the callback first (silently) so the user's tap
+    # animation completes even if the dispatched handler is slow.
+    answer_callback(token, cb_id)
+    if not data.startswith("/"):
+        return
+    _dispatch_command(data, chat_id, env, source="tap")
+
+
+def _dispatch_command(cmd: str, chat_id: str, env: dict[str, str], *, source: str) -> None:
+    """Shared command-dispatch path for both typed and tapped commands."""
     handler = COMMANDS.get(cmd)
     if not handler:
         send_message(
@@ -450,13 +537,17 @@ def dispatch(message: dict[str, Any], env: dict[str, str]) -> None:
         )
         return
 
-    log.info("dispatch %s", cmd)
+    log.info("dispatch %s (via %s)", cmd, source)
     try:
         reply = handler("", env)
     except Exception as exc:
         log.exception("handler %s crashed", cmd)
         reply = f"❌ handler crashed: `{exc}`"
-    send_message(env["BOOKSWAP_TELEGRAM_BOT_TOKEN"], chat_id, reply)
+
+    # Attach the inline-keyboard only to /help replies — every other
+    # response is content-heavy and the buttons would just clutter it.
+    keyboard = _help_keyboard() if cmd in ("/help", "/start") else None
+    send_message(env["BOOKSWAP_TELEGRAM_BOT_TOKEN"], chat_id, reply, reply_markup=keyboard)
 
 
 def poll_loop(env: dict[str, str]) -> None:
@@ -469,7 +560,9 @@ def poll_loop(env: dict[str, str]) -> None:
         params = {
             "offset": offset,
             "timeout": POLL_TIMEOUT_SEC,
-            "allowed_updates": json.dumps(["message"]),
+            # Subscribe to both event types: typed commands arrive as
+            # `message`, button taps arrive as `callback_query`.
+            "allowed_updates": json.dumps(["message", "callback_query"]),
         }
         ok, result = telegram_call(token, "getUpdates", params)
         if not ok:
@@ -484,6 +577,8 @@ def poll_loop(env: dict[str, str]) -> None:
             offset = max(offset, update_id + 1)
             if "message" in update:
                 dispatch(update["message"], env)
+            elif "callback_query" in update:
+                dispatch_callback(update["callback_query"], env)
             save_offset(offset)
 
 
