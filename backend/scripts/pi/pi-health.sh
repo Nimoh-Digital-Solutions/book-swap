@@ -153,7 +153,20 @@ fi
 # rely on it staying there. If a kernel update or accidental edit ever
 # removes it, container memory caps stop being enforced — exactly the kind
 # of regression we'd never notice without an explicit check.
-if ! grep -q '^memory' /proc/cgroups 2>/dev/null; then
+#
+# Detection has to handle both cgroup versions:
+#   - v2 (this Pi, unified hierarchy): controllers in /sys/fs/cgroup/cgroup.controllers
+#   - v1 (legacy split hierarchy):     controllers in /proc/cgroups
+# A v2 system reports v1 names in /proc/cgroups too, but `memory` only shows
+# up there on actual v1 systems — so checking v2 first is the correct order.
+MEMORY_CGROUP_OK=0
+if [[ -f /sys/fs/cgroup/cgroup.controllers ]] \
+   && grep -qw memory /sys/fs/cgroup/cgroup.controllers 2>/dev/null; then
+  MEMORY_CGROUP_OK=1
+elif grep -q '^memory' /proc/cgroups 2>/dev/null; then
+  MEMORY_CGROUP_OK=1
+fi
+if (( MEMORY_CGROUP_OK == 0 )); then
   add_alert "🧱 Memory cgroup is disabled
    Docker mem_limit directives are not being enforced — a single tenant
    leaking RAM can take the Pi down. Check /boot/firmware/cmdline.txt for
