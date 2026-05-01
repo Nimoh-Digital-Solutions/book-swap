@@ -146,6 +146,21 @@ if (( UPTIME_SEC < REBOOT_WINDOW )); then
    Uptime is only ${UPTIME_HUMAN} — this may be an unexpected restart"
 fi
 
+# --- Memory cgroup sanity ---
+# Raspberry Pi OS ships with the memory cgroup disabled by default, which
+# silently neuters every Docker `mem_limit:` directive. We added
+# `cgroup_enable=memory cgroup_memory=1` to /boot/firmware/cmdline.txt and
+# rely on it staying there. If a kernel update or accidental edit ever
+# removes it, container memory caps stop being enforced — exactly the kind
+# of regression we'd never notice without an explicit check.
+if ! grep -q '^memory' /proc/cgroups 2>/dev/null; then
+  add_alert "🧱 Memory cgroup is disabled
+   Docker mem_limit directives are not being enforced — a single tenant
+   leaking RAM can take the Pi down. Check /boot/firmware/cmdline.txt for
+   'cgroup_enable=memory cgroup_memory=1' and reboot if missing.
+   See docs/SCALING-PLAYBOOK.md → Step 1.1."
+fi
+
 # --- Send alerts or log quiet ---
 if [[ -n "$ALERTS" ]]; then
   HEADER="⚠️ Pi Health Alert"

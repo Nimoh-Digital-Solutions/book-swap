@@ -61,24 +61,15 @@ This is the document I wished I had on day one. It captures **what BookSwap curr
 
 ## Bottleneck inventory (in priority order)
 
-### 1. Noisy-neighbour starvation — _addressed Step 1_
+### 1. Noisy-neighbour starvation — _CPU done; memory pending reboot_
 
-**The problem.** Until today, only CPU caps were in effect; **memory was unbounded** because Compose's `deploy.resources.limits.memory` is silently ignored in standalone (non-Swarm) mode. Verified with `docker inspect bs_web_prod --format '{{.HostConfig.Memory}}'` → returned `0`. If SpeakLinka leaked, it could have OOM-killed BookSwap and there was nothing stopping it.
+**The problem.** Compose's `deploy.resources.limits.memory` is silently ignored in standalone (non-Swarm) mode. Verified with `docker inspect bs_web_prod --format '{{.HostConfig.Memory}}'` → returned `0`. If SpeakLinka leaked, it could have OOM-killed BookSwap and there was nothing stopping it.
 
-**The fix (Step 1.1).** Replaced every `deploy.resources.limits` block in BookSwap compose files with the top-level keys (`cpus`, `mem_limit`, `mem_reservation`) which **do** apply in standalone mode. After redeploy: `docker inspect` shows real byte values.
+**The fix (Step 1.1) — partial.** Replaced every `deploy.resources.limits` block in BookSwap compose files with the top-level keys (`cpus`, `mem_limit`, `mem_reservation`). CPU caps activated immediately. Memory caps surfaced a deeper issue: the Pi's kernel had the **memory cgroup disabled** (Raspberry Pi OS default — `/proc/cgroups` listed only `cpuset/cpu/cpuacct`, and `docker info` printed `WARNING: No memory limit support`). The `cgroup_enable=memory cgroup_memory=1` boot args have been added to `/boot/firmware/cmdline.txt`; they activate after the next reboot, after which memory caps take effect across the whole Pi (every project benefits, not just BookSwap).
 
-**Sized for the workload.**
+See Step 1.1 in "What we did today" below for the exact reboot procedure and rollback.
 
-| Container         | CPU  | Memory  | Why                                                                  |
-| ----------------- | ---- | ------- | -------------------------------------------------------------------- |
-| `bs_web_prod`     | 2.0  | 1536 MB | 8 gunicorn workers × ~150 MB peak ≈ 1.2 GB; cap leaves ~25% headroom |
-| `bs_celery_prod`  | 1.5  | 1024 MB | concurrency=4 (was 2); each worker ~150 MB + buffer for fan-outs     |
-| `bs_beat_prod`    | 0.25 | 256 MB  | Beat is a single small process                                       |
-| `bs_frontend_prod`| 0.5  | 256 MB  | nginx serving static SPA — sized to be shockingly small              |
-
-Total prod budget: **4.25 CPU-shares, 3.0 GB**. Pi has 16 GB and 4 cores — plenty of room for the other tenants. CPU values are caps, not reservations; if BookSwap is the only thing busy it can use more.
-
-**The trigger to revisit.** If a Sentry "transaction p95 latency > 1.5 s" alert fires AND `docker stats bs_web_prod` shows MemUsage at the cap, raise `mem_limit` first; if CPU is also pinned, that's your signal to look at Step 2 (move Postgres) or Step 3 (separate VM).
+**The trigger to revisit.** Once memory caps are live: if a Sentry "transaction p95 latency > 1.5 s" alert fires AND `docker stats bs_web_prod` shows MemUsage at the cap, raise `mem_limit` first; if CPU is also pinned, that's your signal to look at Step 2 (move Postgres) or Step 3 (separate VM).
 
 ---
 
@@ -166,9 +157,44 @@ The five immediate, low-cost actions, with what was changed and how it's verifie
 ### 1.1 Resource caps that actually apply
 
 - **Files**: `backend/docker-compose.{prod,stag}.yml`, `frontend/docker-compose.{prod,staging}.yml`
-- **Change**: replaced `deploy.resources.limits` (silently ignored) with `cpus`/`mem_limit`/`mem_reservation` (enforced).
-- **Verify**: `ssh piserver "docker inspect bs_web_prod --format '{{.HostConfig.Memory}}'"` should return a non-zero byte value (1610612736 for 1.5 GB).
-- **Reversible?** Yes — git revert; redeploy.
+- **Change**: replaced `deploy.resources.limits` (silently ignored in standalone Compose) with `cpus`/`mem_limit`/`mem_reservation` (top-level, the modern v2 idiom).
+
+**Status today: CPU caps are live; memory caps are PENDING A REBOOT.** Deep-dive details:
+
+- `docker inspect bs_web_prod --format '{{.HostConfig.NanoCpus}}'` returns `2000000000` (2 CPU) — CPU caps applied ✓.
+- `docker inspect bs_web_prod --format '{{.HostConfig.Memory}}'` returns `0` despite the compose value being correct.
+- Root cause: `docker info` reports `WARNING: No memory limit support`. The memory cgroup is disabled at the **kernel** level — `cat /proc/cgroups` only lists `cpuset`, `cpu`, `cpuacct`, no `memory`. This is the Raspberry Pi OS default.
+- Fix applied (no reboot performed yet): appended `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` (backup saved at `/boot/firmware/cmdline.txt.bak-YYYYMMDD`). Memory caps will activate **on the next reboot**.
+
+**Pending operator action — schedule a reboot.** Do this when nobody's actively using the Pi (Mon early morning is good):
+
+```bash
+ssh piserver
+# 1. quick visual confirmation the boot arg is there
+grep cgroup_enable /boot/firmware/cmdline.txt
+# 2. graceful reboot
+sudo reboot
+# 3. (after ~90s) verify memory cgroup is active
+ssh piserver
+grep memory /proc/cgroups
+docker info 2>&1 | grep -i memory  # should NOT say 'No memory limit support'
+docker inspect bs_web_prod --format '{{.HostConfig.Memory}}'  # should be 1610612736
+```
+
+If after the reboot some containers fail to come up, roll back: `sudo cp /boot/firmware/cmdline.txt.bak-* /boot/firmware/cmdline.txt && sudo reboot`. The compose `mem_limit` directives stay valid either way — they just become inert again until cgroups are re-enabled.
+
+**Sized for the workload (applies after the reboot).**
+
+| Container         | CPU  | Memory  | Why                                                                  |
+| ----------------- | ---- | ------- | -------------------------------------------------------------------- |
+| `bs_web_prod`     | 2.0  | 1536 MB | 8 gunicorn workers × ~150 MB peak ≈ 1.2 GB; cap leaves ~25% headroom |
+| `bs_celery_prod`  | 1.5  | 1024 MB | concurrency=4 (was 2); each worker ~150 MB + buffer for fan-outs     |
+| `bs_beat_prod`    | 0.25 | 256 MB  | Beat is a single small process                                       |
+| `bs_frontend_prod`| 0.5  | 256 MB  | nginx serving static SPA — sized to be shockingly small              |
+
+Total prod budget: **4.25 CPU-shares, 3.0 GB**. Pi has 16 GB and 4 cores — plenty of room for the other tenants. CPU values are caps, not reservations; if BookSwap is the only thing busy it can use more.
+
+**Reversible?** Yes — git revert; redeploy. The cgroup boot arg is also reversible via the saved backup.
 
 ### 1.2 Celery concurrency 2 → 4
 
@@ -225,7 +251,11 @@ docker exec bs_celery_prod celery -A config.celery inspect stats \
 
 # Are the cgroup limits actually in effect?
 docker inspect bs_web_prod --format '{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}}'
-# expect: 1610612736 2000000000   (1.5 GB, 2 CPU)
+# expect (after the cgroup-memory reboot):  1610612736 2000000000   (1.5 GB, 2 CPU)
+# until the reboot:                         0 2000000000             (CPU only)
+# If Memory shows 0 long-term, double-check the kernel:
+#   grep memory /proc/cgroups            # must show a `memory` row
+#   docker info 2>&1 | grep -i memory   # must NOT say 'No memory limit support'
 
 # Is Cloudflare caching what we think it's caching?
 curl -sI "https://book-swaps.com/assets/$(curl -s https://book-swaps.com/ \

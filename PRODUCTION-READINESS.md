@@ -316,6 +316,8 @@ Priority reflects risk and unlocks for a calm production launch; reorder as busi
 | ~~P1~~ | ~~Mobile device matrix + store submission~~ | ~~§10~~ | **Done 2026-04-30** — iOS TestFlight live, Android promoted to Play production |
 | ~~P1~~ | ~~Push notification delivery reconciliation~~ | ~~§6 / §10~~ | **Done 2026-05-01** — Expo receipt poller every 15 min + dead-token deactivation |
 | ~~P1~~ | ~~Ops digest (catalogue + funnel snapshot)~~ | ~~§6~~ | **Done 2026-05-01** — `bookswap-ops-digest.sh` every 4h to Telegram |
+| ~~P1~~ | ~~Pi5 step-1 scaling tuning~~ | ~~§4 / §9~~ | **Done 2026-05-01** — cgroup limits, Celery=4, `pg_stat_statements`, lower pi-health thresholds, Pi snapshot in ops digest. See `docs/SCALING-PLAYBOOK.md` |
+| **P0** | **Reboot Pi to activate memory cgroup** | §4 | Pending — `cgroup_enable=memory cgroup_memory=1` added to `/boot/firmware/cmdline.txt` 2026-05-01; takes effect on next reboot. Until then `mem_limit:` is inert. Schedule a low-traffic window |
 | P1 | Wire Playwright E2E into `ci.yml` | §5 / §7 | Pending — 8 specs runnable locally, no automated gate (post-launch polish) |
 | P2 | Soak window: Sentry crash-free session rate ≥ 99.5% | §10 | In progress — 24h soak after 2026-04-30 store release |
 | P2 | Verify store privacy labels match DPIA | §10 | Pending |
