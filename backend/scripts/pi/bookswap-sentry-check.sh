@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 # BookSwap Sentry Issue Monitor — runs every 4 hours via cron.
 # Polls Sentry for new unresolved issues across the BookSwap projects.
-# For each first-time-seen issue: log it, send Telegram. Mirrors the
-# proven pattern from the SpeakLinka sentry-check.sh, but routed to the
-# BookSwap channel. No GitHub-issue side effect by default — keep noise
-# low; flip GH_REPO on if you ever want it.
+# For each first-time-seen issue: log it, send Telegram, AND open a
+# GitHub tracking issue (via `gh issue create`) so triage has a
+# permanent home outside Sentry's auto-resolve window.
+#
+# Idempotency: `seen-issues.txt` dedup is the source of truth for "first
+# detection" — Sentry's `lastSeen` field bumps on every recurrence, but
+# we only ever ping/file once per Sentry shortId. If the alert recurs
+# you'll see it in the Sentry event count, not as a new GitHub issue.
+#
+# To disable the GitHub side-effect, unset BOOKSWAP_GH_REPO in
+# ~/.bookswap-monitor-env — the Telegram path keeps running.
 #
 # Cron entry (offset from top-of-hour to spread cron load):
 #   17 */4 * * * /home/gnimoh001/scripts/bookswap-sentry-check.sh \
@@ -30,6 +37,71 @@ fi
 ORG="${BOOKSWAP_SENTRY_ORG:-nimoh-digital-solutions}"
 PROJECTS_CSV="${BOOKSWAP_SENTRY_PROJECTS:-bookswap-frontend,bookswap-backend,bookswap-mobile}"
 IFS=',' read -ra PROJECTS <<< "$PROJECTS_CSV"
+
+# GitHub repo for auto-filed issues. Empty disables the side-effect.
+GH_REPO="${BOOKSWAP_GH_REPO:-}"
+
+# Open a GitHub issue for a fresh Sentry alert. Best-effort: any failure
+# (no `gh` on PATH, auth expired, repo not reachable) logs a warning and
+# returns 0 so the Telegram path still completes. Idempotency lives at
+# the SEEN_FILE layer above — by the time we get here we know this
+# short_id has never been processed before.
+file_github_issue() {
+  local SHORT_ID="$1" TITLE="$2" PROJECT="$3" LEVEL="$4"
+  local EVENT_COUNT="$5" USER_COUNT="$6" PERMALINK="$7"
+
+  if [[ -z "$GH_REPO" ]]; then
+    return 0
+  fi
+  if ! command -v gh &>/dev/null; then
+    log_msg "WARN" "gh not on PATH — skipping GitHub issue for $SHORT_ID"
+    return 0
+  fi
+
+  # Truncate title so it fits inside the 256-char GitHub limit even
+  # after we prepend the [Sentry] prefix and the short id.
+  local SAFE_TITLE="${TITLE:0:200}"
+  local ISSUE_TITLE="[Sentry] ${SHORT_ID} — ${SAFE_TITLE}"
+
+  local BODY
+  BODY=$(cat <<EOF
+> Auto-filed by \`bookswap-sentry-check.sh\` on $(human_date).
+> Sentry is the source of truth — close this issue once the underlying
+> alert is resolved (or auto-resolved) in Sentry.
+
+| | |
+|---|---|
+| **Sentry ID** | \`${SHORT_ID}\` |
+| **Project** | \`${PROJECT}\` |
+| **Level** | \`${LEVEL}\` |
+| **Events** | ${EVENT_COUNT} |
+| **Users affected** | ${USER_COUNT} |
+| **First detected by monitor** | $(human_date) |
+
+[Open in Sentry →](${PERMALINK})
+
+---
+
+### Triage checklist
+- [ ] Reproduced locally / on staging
+- [ ] Root cause identified
+- [ ] Fix merged + deployed
+- [ ] Sentry issue marked resolved
+EOF
+)
+
+  if gh issue create \
+      --repo "$GH_REPO" \
+      --title "$ISSUE_TITLE" \
+      --body "$BODY" \
+      --label sentry \
+      --label auto \
+      > /dev/null 2>&1; then
+    log_msg "OK" "filed GitHub issue for $SHORT_ID in $GH_REPO"
+  else
+    log_msg "WARN" "gh issue create failed for $SHORT_ID (auth? rate-limit? repo gone?)"
+  fi
+}
 
 API="https://sentry.io/api/0"
 STATE_DIR="$MONITOR_STATE/bookswap-sentry"
@@ -85,6 +157,12 @@ Level: \`${LEVEL}\` · Events: ${EVENT_COUNT} · Users: ${USER_COUNT}
 [View in Sentry](${PERMALINK})"
 
     send_telegram_bookswap "$TG_MSG"
+
+    # Side-effect: open a tracking issue on GitHub. Runs after the
+    # Telegram send so a flaky `gh` call never blocks the operator
+    # alert; it logs a warning and continues on any failure.
+    file_github_issue "$SHORT_ID" "$TITLE" "$PROJECT" "$LEVEL" \
+      "$EVENT_COUNT" "$USER_COUNT" "$PERMALINK"
   done
 
   # The while loop above runs in a subshell (because of the pipe), so
