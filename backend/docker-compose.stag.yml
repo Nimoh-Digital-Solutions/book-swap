@@ -33,11 +33,11 @@ services:
     networks:
       - bs_network_staging
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
+    # See docker-compose.prod.yml for the rationale on top-level mem_limit
+    # vs. the (silently ignored) `deploy.resources.limits.memory`.
+    cpus: 1.0
+    mem_limit: 1024m
+    mem_reservation: 512m
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; c=http.client.HTTPConnection('127.0.0.1',8110); c.request('GET','/api/v1/health/'); r=c.getresponse(); exit(0 if r.status in [200,301,302] else 1)"]
       interval: 30s
@@ -71,11 +71,9 @@ services:
     networks:
       - bs_network_staging
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
+    cpus: 0.75
+    mem_limit: 512m
+    mem_reservation: 256m
     healthcheck:
       test: ["CMD", "celery", "-A", "config.celery", "inspect", "ping", "--timeout", "10"]
       interval: 60s
@@ -107,11 +105,9 @@ services:
     networks:
       - bs_network_staging
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 256M
+    cpus: 0.25
+    mem_limit: 256m
+    mem_reservation: 128m
     healthcheck:
       test: ["CMD", "python", "-c", "import os, signal; pid=int(open('/tmp/celerybeat.pid').read()); os.kill(pid, 0)"]
       interval: 60s

@@ -42,11 +42,15 @@ services:
     networks:
       - bs_network_prod
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
+    # Resource caps — top-level keys (mem_limit/cpus) instead of `deploy:` so
+    # Compose v2 in standalone (non-Swarm) mode actually applies them. With
+    # `deploy.resources.limits.memory` only the cpus slice was honoured and
+    # memory ran unbounded (verified via `docker inspect`).
+    # Sized for a 16 GB Pi 5 hosting 5 projects: 8 gunicorn workers × ~150 MB
+    # ≈ 1.2 GB peak; 1.5 GB cap leaves headroom. Cpus: 2 of 4 cores.
+    cpus: 2.0
+    mem_limit: 1536m
+    mem_reservation: 768m
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; c=http.client.HTTPConnection('127.0.0.1',8071); c.request('GET','/api/v1/health/'); r=c.getresponse(); exit(0 if r.status in [200,301,302] else 1)"]
       interval: 30s
@@ -60,8 +64,11 @@ services:
       dockerfile: Dockerfile
     container_name: bs_celery_prod
     restart: unless-stopped
+    # concurrency=4 matches the Pi's 4 cores so push/email fan-outs stop
+    # serialising behind 2 workers. With CPU cap of 1.5 the worker can burst
+    # but cannot starve the web tier.
     command: >
-      celery -A config.celery worker -l info --concurrency=2
+      celery -A config.celery worker -l info --concurrency=4
       -Q default,celery,email,maintenance
       --max-tasks-per-child=500 --time-limit=3600 --soft-time-limit=3300
     extra_hosts:
@@ -80,11 +87,9 @@ services:
     networks:
       - bs_network_prod
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 384M
+    cpus: 1.5
+    mem_limit: 1024m
+    mem_reservation: 512m
     healthcheck:
       test: ["CMD", "celery", "-A", "config.celery", "inspect", "ping", "--timeout", "10"]
       interval: 60s
@@ -116,11 +121,9 @@ services:
     networks:
       - bs_network_prod
       - shared
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 256M
+    cpus: 0.25
+    mem_limit: 256m
+    mem_reservation: 128m
     healthcheck:
       test: ["CMD", "python", "-c", "import os, signal; pid=int(open('/tmp/celerybeat.pid').read()); os.kill(pid, 0)"]
       interval: 60s
