@@ -208,6 +208,27 @@ The five immediate, low-cost actions, with what was changed and how it's verifie
 - **Verify**: `ssh piserver "~/scripts/bookswap-ops-digest.sh"` should send a Telegram message that ends with the new "🖥 Pi resource snapshot" block.
 - **Reversible?** Yes — restore from git.
 
+### 1.6 Docker disk hygiene (proactive every 4 h + reactive every 15 min)
+
+The Pi's BuildKit cache and orphaned images grow ~1 GB/day across all five projects (every `--no-cache` rebuild leaves the previous image dangling and seeds new build-cache layers). Without intervention the NVMe fills in a few weeks.
+
+- **New file**: `backend/scripts/pi/docker-cleanup.sh` (host copy at `~/scripts/docker-cleanup.sh`).
+  - Cron: `5 */4 * * *` — every 4 hours on minute 5, offset from the top-of-hour monitors so they don't contend.
+  - Prunes the **safe set**: stopped containers, dangling images, build cache older than the most-recent 2 GB.
+  - Deliberately does **not** touch volumes (a briefly-unused tenant volume during a container restart could be destroyed) or networks (mid-deploy race risk).
+  - Quiet by default — only sends a Telegram message when freed ≥ 100 MB or on error.
+- **Updated file**: `backend/scripts/pi/pi-health.sh` reactive auto-prune (the `>2 GB reclaimable` branch) was also doing `docker volume prune -f`. That has been **removed** — it now uses the same safe set as the cron job. While fixing it I also discovered the `docker system df` parser there had been broken for months: it greedily matched `(71%)` instead of `4.733GB`, silently returning 0 reclaimable bytes every run. Replaced with a `--format`-based parser that's stable across docker versions.
+- **Verify**:
+  ```bash
+  ssh piserver
+  ~/scripts/docker-cleanup.sh                        # one-shot run
+  tail -3 ~/monitor-state/docker-cleanup.log         # see freed count
+  crontab -l | grep docker-cleanup                   # confirm scheduled
+  docker system df --format '{{.Type}}|{{.Reclaimable}}'   # current state
+  ```
+- **First run on the Pi (2026-05-01)** freed ~4.3 GB: images 6.6 GB → 5.5 GB, build cache 5.0 GB → 1.7 GB. Volumes unchanged (174 MB), as designed.
+- **Reversible?** Yes — `crontab -e` to remove the entry; the script itself just calls standard `docker prune` commands which only act on already-orphaned objects.
+
 ---
 
 ## Runbook — quick commands when something feels off
@@ -249,6 +270,12 @@ curl -sI "https://book-swaps.com/assets/$(curl -s https://book-swaps.com/ \
 
 # Reset pg_stat_statements after investigating (so the next look is fresh)
 sudo -u postgres psql -d bs_prod -c "SELECT pg_stat_statements_reset();"
+
+# How much disk would Docker free if we ran cleanup right now?
+ssh piserver "docker system df --format '{{.Type}}|{{.Reclaimable}}'"
+
+# Force a cleanup outside the 4-hourly cron (e.g. during an incident)
+ssh piserver "~/scripts/docker-cleanup.sh"
 ```
 
 ---

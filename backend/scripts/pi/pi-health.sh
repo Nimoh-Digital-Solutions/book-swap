@@ -90,51 +90,50 @@ if mountpoint -q /mnt/media 2>/dev/null; then
 fi
 
 # --- Docker Disk Waste ---
-if command -v docker &>/dev/null; then
-  TOTAL_RECLAIM_RAW=$(docker system df 2>/dev/null \
-    | awk 'NR>1 {
-        match($0, /\(([0-9.]+[kKmMgGtT]?[bB]?)\)/, a);
-        if (a[1] != "") {
-          val = a[1];
-          gsub(/[bB]$/, "", val);
-          unit = substr(val, length(val), 1);
-          num = substr(val, 1, length(val)-1) + 0;
-          if (unit == "G" || unit == "g") num *= 1073741824;
-          else if (unit == "M" || unit == "m") num *= 1048576;
-          else if (unit == "K" || unit == "k") num *= 1024;
-          total += num;
-        }
-      } END {printf "%.0f", total+0}')
+# Sum reclaimable bytes via `docker system df --format` (the human-readable
+# table puts a percentage like "(71%)" inside parentheses; an earlier regex
+# greedily matched THAT instead of the byte value, silently returning 0 and
+# making this whole block dead code for months. The new parser uses --format
+# which gives one "Reclaimable" value per resource on its own line and is
+# stable across docker versions).
+docker_reclaimable_bytes() {
+  docker system df --format '{{.Reclaimable}}' 2>/dev/null \
+    | awk '{
+        size = $1
+        sub(/[bB]$/, "", size)
+        unit = substr(size, length(size), 1)
+        num  = substr(size, 1, length(size) - 1) + 0
+        if      (unit == "G" || unit == "g") num *= 1073741824
+        else if (unit == "M" || unit == "m") num *= 1048576
+        else if (unit == "K" || unit == "k") num *= 1024
+        else if (unit ~ /[0-9]/)              num = size + 0
+        total += num
+      } END { printf "%.0f", total + 0 }'
+}
 
-  RECLAIMABLE_BYTES="${TOTAL_RECLAIM_RAW:-0}"
+if command -v docker &>/dev/null; then
+  RECLAIMABLE_BYTES=$(docker_reclaimable_bytes)
+  RECLAIMABLE_BYTES="${RECLAIMABLE_BYTES:-0}"
 
   if (( RECLAIMABLE_BYTES > ALERT_DOCKER_WASTE )); then
     RECLAIM_HUMAN=$(bytes_to_human "$RECLAIMABLE_BYTES")
     log_msg "WARN" "Docker reclaimable space: ${RECLAIM_HUMAN} — auto-pruning"
 
+    # Safe-set prune only — never touch volumes here. A briefly-unused
+    # tenant volume during a container restart could be destroyed,
+    # taking that project's database with it. Routine cleanup runs in
+    # docker-cleanup.sh every 4 h with the same conservative set.
+    docker container prune -f > /dev/null 2>&1 || true
     docker image prune -f > /dev/null 2>&1 || true
-    docker volume prune -f > /dev/null 2>&1 || true
+    docker builder prune -f --keep-storage 2GB > /dev/null 2>&1 || true
 
-    AFTER_RECLAIM=$(docker system df 2>/dev/null \
-      | awk 'NR>1 {
-          match($0, /\(([0-9.]+[kKmMgGtT]?[bB]?)\)/, a);
-          if (a[1] != "") {
-            val = a[1];
-            gsub(/[bB]$/, "", val);
-            unit = substr(val, length(val), 1);
-            num = substr(val, 1, length(val)-1) + 0;
-            if (unit == "G" || unit == "g") num *= 1073741824;
-            else if (unit == "M" || unit == "m") num *= 1048576;
-            else if (unit == "K" || unit == "k") num *= 1024;
-            total += num;
-          }
-        } END {printf "%.0f", total+0}')
-
+    AFTER_RECLAIM=$(docker_reclaimable_bytes)
     FREED=$(( RECLAIMABLE_BYTES - ${AFTER_RECLAIM:-0} ))
     FREED_HUMAN=$(bytes_to_human "$FREED")
     add_alert "🐳 Docker auto-cleanup ran
    ${RECLAIM_HUMAN} of reclaimable space detected (threshold: 2 GB)
-   Freed ${FREED_HUMAN} by pruning dangling images + unused volumes"
+   Freed ${FREED_HUMAN} by pruning images, stopped containers, and old build cache.
+   Volumes were not touched (tenant data-loss risk)."
   fi
 fi
 
