@@ -27,8 +27,9 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 # ─── config ─────────────────────────────────────────────────────────────────
 
@@ -106,11 +107,14 @@ def telegram_call(
     succeeded AND Telegram's own ``ok`` flag is True. The polling loop
     retries on its own cadence; we don't raise.
     """
+    # URL is hardcoded to a fixed `https://api.telegram.org/...` host —
+    # `method` is one of {"getUpdates", "sendMessage"} and never user-
+    # controlled, so the S310 scheme-audit warning doesn't apply here.
     url = f"https://api.telegram.org/bot{token}/{method}"
     data = urllib.parse.urlencode(params).encode("utf-8")
-    req = urllib.request.Request(url, data=data, method="POST")
+    req = urllib.request.Request(url, data=data, method="POST")  # noqa: S310
     try:
-        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_SEC) as resp:
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_SEC) as resp:  # noqa: S310
             body = json.loads(resp.read().decode("utf-8"))
             return bool(body.get("ok")), body
     except urllib.error.HTTPError as exc:
@@ -168,7 +172,11 @@ def run(cmd: list[str], timeout: int = HANDLER_TIMEOUT_SEC) -> tuple[int, str]:
     so a wedged subprocess can't hang the bot. Returns (rc, output).
     """
     try:
-        proc = subprocess.run(
+        # `cmd` is always a hardcoded list literal in the call sites
+        # (docker / bash / python with constant binary names) — no user
+        # input flows into argv, so the S603 untrusted-input warning
+        # doesn't apply.
+        proc = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             text=True,
@@ -189,18 +197,25 @@ def _bs_containers_status() -> str:
     """Compact status table for bs_*_prod containers."""
     rc, out = run(
         [
-            "docker", "ps", "-a",
-            "--filter", "name=^bs_.*_prod$",
-            "--format", "{{.Names}}|{{.Status}}|{{.RunningFor}}",
+            "docker",
+            "ps",
+            "-a",
+            "--filter",
+            "name=^bs_.*_prod$",
+            "--format",
+            "{{.Names}}|{{.Status}}|{{.RunningFor}}",
         ]
     )
     if rc != 0 or not out:
         return "_could not list containers_"
     rows = []
     for line in out.splitlines():
-        name, status, age = (line.split("|") + ["", "", ""])[:3]
-        emoji = "✅" if status.startswith("Up") and "(healthy)" in status else (
-            "🟡" if status.startswith("Up") else "🔴"
+        # Pad with empty strings so the unpack works even when docker
+        # returns fewer fields than expected. We only use name + status
+        # below — the third slot is intentionally a sink.
+        name, status, _age = [*line.split("|"), "", "", ""][:3]
+        emoji = (
+            "✅" if status.startswith("Up") and "(healthy)" in status else ("🟡" if status.startswith("Up") else "🔴")
         )
         rows.append(f"{emoji} `{name}` — {status}")
     return "\n".join(rows) if rows else "_no bs_*_prod containers found_"
@@ -210,8 +225,11 @@ def handle_status(_args: str, env: dict[str, str]) -> str:
     containers = _bs_containers_status()
     rc, sha = run(
         [
-            "docker", "exec", "bs_web_prod",
-            "python", "-c",
+            "docker",
+            "exec",
+            "bs_web_prod",
+            "python",
+            "-c",
             "import os; print(os.environ.get('GIT_SHA','unknown'))",
         ],
         timeout=10,
@@ -230,8 +248,12 @@ def handle_digest(_args: str, env: dict[str, str]) -> str:
     # newer print_abuse_digest API and only accepts a `--json` boolean.)
     rc, out = run(
         [
-            "docker", "exec", "bs_web_prod",
-            "python", "manage.py", "print_ops_digest",
+            "docker",
+            "exec",
+            "bs_web_prod",
+            "python",
+            "manage.py",
+            "print_ops_digest",
         ]
     )
     if rc != 0:
@@ -242,9 +264,16 @@ def handle_digest(_args: str, env: dict[str, str]) -> str:
 def handle_abuse(_args: str, env: dict[str, str]) -> str:
     rc, out = run(
         [
-            "docker", "exec", "bs_web_prod",
-            "python", "manage.py", "print_abuse_digest",
-            "--hours", "24", "--format", "markdown",
+            "docker",
+            "exec",
+            "bs_web_prod",
+            "python",
+            "manage.py",
+            "print_abuse_digest",
+            "--hours",
+            "24",
+            "--format",
+            "markdown",
         ]
     )
     if rc != 0:
@@ -268,15 +297,15 @@ def handle_sentry(_args: str, env: dict[str, str]) -> str:
     # noise in the BookSwap operator channel.
     query = urllib.parse.quote("is:unresolved environment:production")
     for project in projects:
-        url = (
-            f"https://sentry.io/api/0/projects/{org}/{project.strip()}/issues/"
-            f"?query={query}&sort=date&limit=5"
-        )
-        req = urllib.request.Request(
+        # URL host is hardcoded to `https://sentry.io/...`; `org` and
+        # `project` come from our own env file, never user-controlled.
+        # Suppressed S310 with that as the documented justification.
+        url = f"https://sentry.io/api/0/projects/{org}/{project.strip()}/issues/?query={query}&sort=date&limit=5"
+        req = urllib.request.Request(  # noqa: S310
             url, headers={"Authorization": f"Bearer {sentry_token}"}
         )
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310
                 issues = json.loads(resp.read())
         except Exception as exc:
             lines.append(f"\n_{project}_: ⚠️ {exc}")
@@ -291,7 +320,7 @@ def handle_sentry(_args: str, env: dict[str, str]) -> str:
             title = (issue.get("title") or "")[:80]
             level = issue.get("level", "?")
             count = issue.get("count", "?")
-            lines.append(f"  • `{short}` ({level}, {count}×) — {title}")
+            lines.append(f"  • `{short}` ({level}, {count}x) — {title}")
     return "\n".join(lines)
 
 
@@ -300,27 +329,28 @@ def handle_health(_args: str, env: dict[str, str]) -> str:
     script = SCRIPT_DIR / "bookswap-endpoint-monitor.sh"
     if not script.exists():
         return "_endpoint monitor not deployed_"
-    rc, out = run(["bash", str(script)])
-    # The script logs OK/ALERT to its log file but doesn't print to stdout
-    # in normal operation. Read the last line of the log so the operator
-    # gets a confirmation.
+    # The script logs to its file but produces no stdout in the OK case;
+    # we only need the rc here, so the captured output is intentionally
+    # discarded with `_out`.
+    rc, _out = run(["bash", str(script)])
+    # Read the last line of the log so the operator gets a confirmation
+    # of what the probe actually saw.
     log_path = Path.home() / "monitor-state" / "bookswap-endpoint.log"
     last = ""
     if log_path.exists():
         last = log_path.read_text().splitlines()[-1] if log_path.stat().st_size else ""
-    return (
-        "*BookSwap endpoint probe*\n\n"
-        f"Run rc: `{rc}`\n"
-        f"Last log: `{last or '(empty)'}`"
-    )
+    return f"*BookSwap endpoint probe*\n\nRun rc: `{rc}`\nLast log: `{last or '(empty)'}`"
 
 
 def handle_containers(_args: str, env: dict[str, str]) -> str:
     """Verbose docker stats for bs_*_prod containers (staging excluded)."""
     rc, out = run(
         [
-            "docker", "stats", "--no-stream",
-            "--format", "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}",
+            "docker",
+            "stats",
+            "--no-stream",
+            "--format",
+            "{{.Name}}|{{.CPUPerc}}|{{.MemUsage}}|{{.MemPerc}}",
         ],
         timeout=10,
     )
