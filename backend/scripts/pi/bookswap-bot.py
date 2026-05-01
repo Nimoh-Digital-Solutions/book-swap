@@ -225,11 +225,13 @@ def handle_status(_args: str, env: dict[str, str]) -> str:
 
 
 def handle_digest(_args: str, env: dict[str, str]) -> str:
+    # `print_ops_digest` defaults to Markdown when --json is absent.
+    # (Don't pass `--format markdown` here — that command predates the
+    # newer print_abuse_digest API and only accepts a `--json` boolean.)
     rc, out = run(
         [
             "docker", "exec", "bs_web_prod",
             "python", "manage.py", "print_ops_digest",
-            "--format", "markdown",
         ]
     )
     if rc != 0:
