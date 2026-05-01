@@ -343,3 +343,78 @@ Update this section as items complete. Format: `YYYY-MM-DD HH:MM — PROD-XX —
 - 2026-04-29 — PROD-A4 done: Sentry alert rules active in all 3 projects. backend: 5 rules (high-priority, error-spike, new-issue, regression, celery-failure). frontend + mobile: 4 rules each (high-priority, error-spike, new-issue, regression).
 - 2026-04-29 — PROD-A3 done: UptimeRobot 3 monitors live (API health, API schema, frontend). Health endpoint fixed to accept HEAD via project-level wrapper (fix merged to main via PR #17, deployed via workflow_dispatch). All branches synced to 0eaafff.
 - 2026-04-30 — PROD-A1 done: new production builds (EAS) submitted for both platforms. Push notification credentials configured (FCM v1 for Android, APNs for iOS). UI fixes applied (onboarding GPS button width, network toast debouncing 10s threshold). iOS updated on TestFlight + verified live on device. Android promoted to production. All Track A items now complete.
+- 2026-04-30 — Post-launch polish, all shipped via OTA: SendGrid backend class fixed; transactional email templates created and styled (welcome, password reset, password changed, suspicious login); brand strings standardized; chat self-heal on every WebSocket reconnect + screen focus; logout-on-close race in `expo-secure-store` resolved with synchronous overwrite; WebSocket auth-timeout `RuntimeError` swallowed; mobile push token re-registration 503 fixed (atomic `update_or_create`); Google profile photo auto-saves on first social sign-in.
+
+---
+
+## Final status — 2026-05-01 (T+1 after launch)
+
+### Where we landed
+
+- **Backend**, **frontend**, and **mobile** all on the same SHA: `1bc7561` (`feat(ops): add 4-hourly Telegram digest of BookSwap activity`). `main`, `origin/main`, and `origin/production` are in sync. Last 3 production deploys all green.
+- **Production health right now** (verified live): `/api/v1/health/` returns `healthy` with Postgres 19.87 ms, Redis 1.15 ms, 1 active Celery worker, 8 containers `Up (healthy)`.
+- **Test totals**: backend **598** (+32 since plan, from push-receipt + ops-digest tests), frontend **947**, mobile **137**, shared 0 (no test files yet). **1 682 tests passing locally and in CI.**
+
+### Track A (launch blockers) — 6 / 6 ✅
+
+| ID | Item | Status |
+|----|------|--------|
+| PROD-A1 | Mobile device matrix + store submission | ✅ Done 2026-04-30 |
+| PROD-A2 | Wire Playwright E2E into CI | ⏸ Deferred — post-launch polish, web shipped without it |
+| PROD-A3 | UptimeRobot uptime monitors | ✅ Done 2026-04-29 |
+| PROD-A4 | Sentry alert rules (BE 5 / FE 4 / Mobile 4) | ✅ Done 2026-04-29 |
+| PROD-A5 | Incident response playbook | ✅ Done 2026-04-29 |
+| PROD-A6 | Go/no-go rehearsal on staging | ✅ Done 2026-04-29 (also fixed broken merge-commit deploy gate) |
+
+PROD-A2 was the only Track A item that didn't land before launch. The 8 Playwright specs still run locally; the absence of a CI gate did not block the actual release.
+
+### Track B (ship if time permits) — 0 / 4
+
+| ID | Item | Status |
+|----|------|--------|
+| PROD-B1 | Enable `USE_S3=true` in staging with MinIO | Pending — code scaffolded, env flip remains |
+| PROD-B2 | One-page disaster recovery doc + restore drill | Pending |
+| PROD-B3 | Smoke load test (k6/artillery) | Pending |
+| PROD-B4 | CDN / cache check for static frontend assets | Pending |
+
+None blocked launch. Re-prioritise in post-launch sprint.
+
+### Track C (post-launch hardening) — 1 / 11 already partially done
+
+| ID | Item | Status |
+|----|------|--------|
+| PROD-C1 | Retention enforcement (Celery Beat TTL jobs) | **Mostly done** — `nimoh_base` engine running on prod beat: `enforce-data-retention`, `process-scheduled-deletions`, `cleanup-old-audit-logs`, `cleanup-expired-tokens`, `cleanup-inactive-sessions`, `cleanup-stale-export-requests` + BookSwap's `anonymize_deleted_accounts`. **Gap**: orphaned-media sweep + audit of which entities `enforce-data-retention` touches. |
+| PROD-C2 | Location encryption at rest | Pending |
+| PROD-C3 | Expand DPIA to messaging + uploads | Pending |
+| PROD-C4 | API versioning policy | Pending |
+| PROD-C5 | APM | Pending |
+| PROD-C6 | Structured JSON logs + shipping target | Pending |
+| PROD-C7 | SAST (CodeQL) | Pending |
+| PROD-C8 | Expand E2E for exchange + messaging journeys | Pending |
+| PROD-C9 | Mobile component test coverage ≥ 40 files | Pending |
+| PROD-C10 | DB query optimization audit | Pending |
+| PROD-C11 | Flip `USE_S3=true` in production | Pending |
+
+### Bonus work shipped after the plan was written
+
+Things that weren't in any track but landed anyway because they came up:
+
+- **Push notification delivery reconciliation** (2026-05-01) — `apps/notifications/PushTicket` model + `notifications.check_push_receipts` Celery task every 15 min. Closes the visibility gap that was hiding inconsistent iOS push delivery (one device receiving, other silently rejected by APNs after Expo accepted the ticket). Dead device tokens now auto-deactivate.
+- **4-hourly BookSwap ops digest to Telegram** (2026-05-01) — `bookswap/management/commands/print_ops_digest.py` + `~/scripts/bookswap-ops-digest.sh` cron at `15 */4 * * *`. Reports users (total/verified/active-7d/new-24h), books (user vs seed split, top genres), exchanges (active right now, status breakdown, completed 24h), and trust-safety queue. First run already received in Telegram channel; 4 successful runs logged.
+- **Production deploy gate fix** (2026-04-29) — CI gate now correctly walks merge parents before approving a production deploy; previously merge commits had been silently rejecting all production deploys since 2026-04-28.
+- **Mobile chat reliability** (2026-04-30) — WebSocket reconnects always invalidate the message cache (no more stale read receipts); ChatScreen refetches on focus as a fallback for missed events.
+- **Logout-on-close fix** (2026-04-30) — synchronous `SecureStore.setItem(key, "")` replaces the race-prone `deleteItemAsync`; mobile users no longer auto-logged-out on cold start.
+
+### Open items as we exit the launch window
+
+The only still-open launch-window items are soak-time observations, not work to do:
+
+1. **Sentry crash-free session rate ≥ 99.5%** — needs a 24-hour observation post-store-release (release was 2026-04-30; soak completes ~2026-05-01 evening).
+2. **Privacy labels in App Store Connect + Play Console match the DPIA** — manual cross-check.
+
+Everything else is post-launch hardening. The four highest-leverage post-launch items, in order of payoff:
+
+1. **DPIA expansion (messaging + uploads)** + orphaned-media TTL sweep — closes the only material privacy gap (small effort, large compliance win).
+2. **One-page DR doc + tested restore drill** (PROD-B2) — turns the existing encrypted backups into something we know we can restore from.
+3. **Wire Playwright into CI** (PROD-A2) — only Track A item that didn't ship; small PR.
+4. **Smoke load test** (PROD-B3) — actually validates the performance claims under realistic concurrency before user count grows.
