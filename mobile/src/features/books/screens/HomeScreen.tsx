@@ -37,13 +37,17 @@ export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const queryClient = useQueryClient();
   const preferredRadius = useAuthStore((s) => s.user?.preferred_radius ?? 5000);
+  const profileNeighborhood = useAuthStore((s) => s.user?.neighborhood);
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-  const [city, setCity] = useState("");
+  const [gpsCity, setGpsCity] = useState("");
   const [locationDenied, setLocationDenied] = useState(false);
+
+  // Prefer the profile neighbourhood (set from settings); fall back to GPS reverse-geocode
+  const city = profileNeighborhood || gpsCity;
 
   useEffect(() => {
     (async () => {
@@ -56,7 +60,7 @@ export function HomeScreen() {
       setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
       try {
         const [geo] = await Location.reverseGeocodeAsync(loc.coords);
-        if (geo?.city) setCity(geo.city);
+        if (geo?.city) setGpsCity(geo.city);
       } catch {
         /* ignore */
       }
@@ -102,7 +106,7 @@ export function HomeScreen() {
         setLocationDenied(false);
         try {
           const [geo] = await Location.reverseGeocodeAsync(loc.coords);
-          if (geo?.city) setCity(geo.city);
+          if (geo?.city) setGpsCity(geo.city);
         } catch { /* ignore */ }
       }
     } catch { /* ignore */ }
