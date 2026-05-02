@@ -16,14 +16,17 @@ import { useTranslation } from 'react-i18next';
 import { BrandedLoader, EmptyPlaceholder } from '@components/common';
 import { useAuth } from '@features/auth';
 import { useProfile } from '@features/profile';
-import { useUserCity } from '@hooks';
+import { useCurrentLocation, useLocationMismatch, useUserCity } from '@hooks';
 import { AlertTriangle } from 'lucide-react';
 
 import { BrowseBookCard } from '../../components/BrowseBookCard';
 import { BrowseEmptyState } from '../../components/BrowseEmptyState';
+import { CurrentLocationToggle } from '../../components/CurrentLocationToggle';
 import { FilterPanel } from '../../components/FilterPanel';
+import { LocationMismatchBanner } from '../../components/LocationMismatchBanner';
 import { MobileFilterSheet } from '../../components/MobileFilterSheet';
 import { SearchBar } from '../../components/SearchBar';
+import { SetLocationPrompt } from '../../components/SetLocationPrompt/SetLocationPrompt';
 import { SwapFlowModal } from '../../components/SwapFlowModal';
 import { useBrowseBooks } from '../../hooks/useBrowseBooks';
 import { useBrowseFilters } from '../../hooks/useBrowseFilters';
@@ -53,7 +56,16 @@ export function CataloguePage(): ReactElement {
   const { isAuthenticated } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(isAuthenticated);
   const { filters, setFilters, clearFilters } = useBrowseFilters();
-  const { lat, lng } = useUserCity();
+  const { city: detectedCity, lat: gpsLat, lng: gpsLng } = useUserCity();
+  const currentLocation = useCurrentLocation();
+
+  const mismatch = useLocationMismatch(
+    gpsLat,
+    gpsLng,
+    detectedCity,
+    profile?.location,
+    profile?.neighborhood,
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -63,9 +75,16 @@ export function CataloguePage(): ReactElement {
   const baseRadius = filters.radius ?? profile?.preferred_radius ?? DEFAULT_RADIUS;
   const activeRadius = filters.search && !hasExplicitRadius ? 50_000 : baseRadius;
 
-  const locationParams = !isAuthenticated && lat != null && lng != null
-    ? { lat, lng }
-    : {};
+  // Build location params:
+  // 1. If the "use my current location" toggle is active → send GPS coords.
+  // 2. For unauthenticated users → send detected city coords.
+  // 3. Otherwise → omit (backend uses profile location).
+  const locationParams =
+    currentLocation.active && currentLocation.lat != null && currentLocation.lng != null
+      ? { lat: currentLocation.lat, lng: currentLocation.lng }
+      : !isAuthenticated && gpsLat != null && gpsLng != null
+        ? { lat: gpsLat, lng: gpsLng }
+        : {};
 
   const { data, isLoading, isError } = useBrowseBooks(
     { ...filters, ...locationParams, radius: activeRadius, page: currentPage, page_size: PAGE_SIZE },
@@ -139,6 +158,15 @@ export function CataloguePage(): ReactElement {
     );
   }
 
+  // Gate: authenticated user has no location set — show prompt instead of empty grid
+  if (isAuthenticated && profile && !profile.location) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <SetLocationPrompt />
+      </div>
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Main layout
   // ---------------------------------------------------------------------------
@@ -175,6 +203,28 @@ export function CataloguePage(): ReactElement {
           />
         </div>
       </div>
+
+      {/* Location mismatch banner */}
+      {isAuthenticated && mismatch.showMismatch && mismatch.detectedCity && mismatch.profileNeighborhood && (
+        <LocationMismatchBanner
+          detectedCity={mismatch.detectedCity}
+          profileNeighborhood={mismatch.profileNeighborhood}
+          distanceKm={mismatch.distanceKm ?? 0}
+          onDismiss={mismatch.dismiss}
+        />
+      )}
+
+      {/* Current location toggle (authenticated users only) */}
+      {isAuthenticated && profile?.location && (
+        <div className="mb-6">
+          <CurrentLocationToggle
+            active={currentLocation.active}
+            detecting={currentLocation.detecting}
+            error={currentLocation.error}
+            onToggle={currentLocation.toggle}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* ── Sidebar (desktop) ── */}

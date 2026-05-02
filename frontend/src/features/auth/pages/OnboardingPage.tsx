@@ -31,7 +31,7 @@ export function OnboardingPage() {
     e.preventDefault();
     setError(null);
     try {
-      await setLocationMutation.mutateAsync({ postcode: location });
+      await setLocationMutation.mutateAsync({ query: location });
       await completeOnboardingMutation.mutateAsync();
       void navigate(PATHS.HOME, { replace: true });
     } catch {

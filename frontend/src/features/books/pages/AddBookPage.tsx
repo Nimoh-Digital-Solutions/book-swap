@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { SEOHead } from '@components';
 import { useAppStore } from '@data/useAppStore';
+import { useAuth } from '@features/auth';
+import { LocationMismatchBanner } from '@features/discovery/components/LocationMismatchBanner';
+import { useProfile } from '@features/profile';
 import { useLocaleNavigate } from '@hooks/useLocaleNavigate';
+import { useLocationMismatch } from '@hooks/useLocationMismatch';
+import { useUserCity } from '@hooks/useUserCity';
 import { PATHS, routeMetadata } from '@routes/config/paths';
 import { ArrowLeft, Camera, Loader2, Search } from 'lucide-react';
 
@@ -19,6 +24,16 @@ export function AddBookPage(): ReactElement {
   const navigate = useLocaleNavigate();
   const addNotification = useAppStore(s => s.addNotification);
   const createBook = useCreateBook();
+  const { isAuthenticated } = useAuth();
+  const { data: profile } = useProfile(isAuthenticated);
+  const { city: detectedCity, lat: gpsLat, lng: gpsLng } = useUserCity();
+  const mismatch = useLocationMismatch(
+    gpsLat,
+    gpsLng,
+    detectedCity,
+    profile?.location,
+    profile?.neighborhood,
+  );
 
   // ISBN lookup state
   const [isbnInput, setIsbnInput] = useState('');
@@ -122,6 +137,16 @@ export function AddBookPage(): ReactElement {
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
         {t('books.addBook.backToShelf', 'Back to My Shelf')}
       </button>
+
+      {/* Location mismatch warning */}
+      {mismatch.showMismatch && mismatch.detectedCity && mismatch.profileNeighborhood && (
+        <LocationMismatchBanner
+          detectedCity={mismatch.detectedCity}
+          profileNeighborhood={mismatch.profileNeighborhood}
+          distanceKm={mismatch.distanceKm ?? 0}
+          onDismiss={mismatch.dismiss}
+        />
+      )}
 
       <div className="bg-[#1A251D] rounded-2xl border border-[#28382D] p-8 space-y-8">
         <h1 className="text-2xl font-bold text-white">
