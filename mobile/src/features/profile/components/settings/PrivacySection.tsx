@@ -4,6 +4,7 @@ import { Switch, Text, View, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { hapticSelection } from "@/lib/haptics";
 
 import { settingsStyles as s } from "./styles";
 
@@ -60,7 +61,7 @@ export function PrivacySection({
           </View>
           <Switch
             value={profilePublic}
-            onValueChange={onToggleProfilePublic}
+            onValueChange={(v) => { void hapticSelection(); onToggleProfilePublic(v); }}
             disabled={profilePublicPending}
             trackColor={{
               true: c.auth.golden,
@@ -92,7 +93,7 @@ export function PrivacySection({
           </View>
           <Switch
             value={analyticsOptedOut}
-            onValueChange={onToggleAnalytics}
+            onValueChange={(v) => { void hapticSelection(); onToggleAnalytics(v); }}
             trackColor={{
               true: c.auth.golden,
               false: isDark ? c.auth.cardBorder : c.neutral[200],

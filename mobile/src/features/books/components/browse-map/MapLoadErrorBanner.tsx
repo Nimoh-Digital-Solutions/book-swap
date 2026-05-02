@@ -47,7 +47,7 @@ export function MapLoadErrorBanner({
         ]}
       >
         {busy ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color={c.text.inverse} size="small" />
         ) : (
           <Text style={s.loadErrorRetryText}>
             {t("common.retry", "Retry")}

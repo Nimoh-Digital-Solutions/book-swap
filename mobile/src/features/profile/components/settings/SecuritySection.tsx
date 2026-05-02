@@ -6,6 +6,7 @@ import { Switch, Text, View, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { hapticSelection } from "@/lib/haptics";
 import type { ProfileStackParamList } from "@/navigation/types";
 import type { User } from "@/types";
 
@@ -70,7 +71,7 @@ export function SecuritySection({
               </View>
               <Switch
                 value={biometricEnabled}
-                onValueChange={onToggleBiometric}
+                onValueChange={(v) => { void hapticSelection(); onToggleBiometric(v); }}
                 trackColor={{
                   true: c.auth.golden,
                   false: isDark ? c.auth.cardBorder : c.neutral[200],

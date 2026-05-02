@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { hapticSelection } from '@/lib/haptics';
 import { spacing, radius } from '@/constants/theme';
 import { EmptyState } from '@/components/EmptyState';
 import { BrandedLoader } from '@/components/BrandedLoader';
@@ -174,9 +175,10 @@ export function NotificationPreferencesScreen() {
                   </View>
                   <Switch
                     value={checked}
-                    onValueChange={(value) =>
-                      patch.mutate({ [row.key]: value })
-                    }
+                    onValueChange={(value) => {
+                      void hapticSelection();
+                      patch.mutate({ [row.key]: value });
+                    }}
                     accessibilityRole="switch"
                     accessibilityLabel={t(row.labelKey, row.fallback)}
                     trackColor={{

@@ -131,7 +131,7 @@ export function ManualLocationSheet({
             ]}
           >
             {submitting ? (
-              <ActivityIndicator size="small" color="#152018" />
+              <ActivityIndicator size="small" color={c.auth.bgDeep} />
             ) : (
               <Text style={s.sheetBtnText}>
                 {t("settings.setLocationBtn", "Set location")}

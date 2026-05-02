@@ -90,6 +90,29 @@ jest.mock('@/components/EmptyState', () => {
   };
 });
 
+// SuccessCheckmark is a Reanimated-heavy modal animation. The component
+// drives navigation indirectly by calling onDone after the animation
+// completes. For the success-flow test, fire onDone synchronously when
+// `visible` flips true so the test reaches the post-animation state
+// without waiting for timers.
+jest.mock('@/components/SuccessCheckmark', () => {
+  const React = require('react');
+  return {
+    SuccessCheckmark: ({
+      visible,
+      onDone,
+    }: {
+      visible: boolean;
+      onDone: () => void;
+    }) => {
+      React.useEffect(() => {
+        if (visible) onDone();
+      }, [visible, onDone]);
+      return null;
+    },
+  };
+});
+
 // Import AFTER mocks
 import { RequestSwapScreen } from '../screens/RequestSwapScreen';
 

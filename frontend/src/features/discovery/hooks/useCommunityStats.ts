@@ -15,7 +15,7 @@ export function useCommunityStats(
   radius = 10000,
 ): UseQueryResult<CommunityStats> {
   return useQuery({
-    queryKey: discoveryKeys.communityStats(lat, lng),
+    queryKey: discoveryKeys.communityStats(lat, lng, radius),
     queryFn: () => discoveryService.communityStats(lat!, lng!, radius),
     enabled: lat != null && lng != null,
     staleTime: 60_000,

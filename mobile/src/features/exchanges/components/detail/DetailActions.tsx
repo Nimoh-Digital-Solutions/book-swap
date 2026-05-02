@@ -14,6 +14,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { SuccessCheckmark } from '@/components/SuccessCheckmark';
+
 import { radius, spacing } from '@/constants/theme';
 import { useColors } from '@/hooks/useColors';
 import { hapticNotification } from '@/lib/haptics';
@@ -59,6 +61,7 @@ export function DetailActions({ exchange }: Props) {
 
   const [conditionsVisible, setConditionsVisible] = useState(false);
   const [declineSheetVisible, setDeclineSheetVisible] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
 
   const acceptMutation = useAcceptExchange();
   const declineMutation = useDeclineExchange();
@@ -361,7 +364,9 @@ export function DetailActions({ exchange }: Props) {
             onPress={() => doConfirm(
               t('exchanges.confirmSwapTitle', 'Confirm Swap'),
               t('exchanges.confirmSwapMsg', 'Confirm that you have physically swapped the books.'),
-              () => confirmSwap.mutate(exchange.id),
+              () => confirmSwap.mutate(exchange.id, {
+                onSuccess: () => setShowCheck(true),
+              }),
             )}
           >
             <ArrowLeftRight size={16} color="#fff" />
@@ -376,6 +381,7 @@ export function DetailActions({ exchange }: Props) {
         {!partnerConfirmed && myConfirmed && (
           <InfoRow icon={Clock} text={t('exchanges.waitingPartner', 'Waiting for your partner to confirm...')} color={c.text.secondary} />
         )}
+        <SuccessCheckmark visible={showCheck} onDone={() => setShowCheck(false)} />
       </View>
     );
   }

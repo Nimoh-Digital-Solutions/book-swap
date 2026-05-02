@@ -468,7 +468,7 @@ export function EditBookScreen() {
           ]}
         >
           {updateBook.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={c.text.inverse} />
           ) : (
             <Save size={18} color="#152018" />
           )}

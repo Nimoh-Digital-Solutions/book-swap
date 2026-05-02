@@ -10,6 +10,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -27,6 +28,7 @@ import {
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { spacing, radius, shadows } from "@/constants/theme";
+import { ANIMATION } from "@/constants/animation";
 import { SkeletonCard } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { AddBookModal } from "@/features/books/components/AddBookModal";
@@ -159,12 +161,14 @@ export function MyBooksScreen() {
   );
 
   const renderBook = useCallback(
-    ({ item }: { item: Book }) => {
+    ({ item, index }: { item: Book; index: number }) => {
       const statusKey = item.status ?? "available";
       const coverUri = item.primary_thumbnail || item.cover_url || item.primary_photo || item.photos?.[0]?.image;
       const condition = item.condition;
+      const staggerDelay = index < 10 ? index * ANIMATION.stagger.fast : 0;
 
       return (
+        <Animated.View entering={FadeInUp.duration(250).delay(staggerDelay)}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("books.myBooks.bookCardA11y", "{{title}} by {{author}}", {
@@ -255,6 +259,7 @@ export function MyBooksScreen() {
             </View>
           </View>
         </Pressable>
+        </Animated.View>
       );
     },
     [cardBg, cardBorder, accent, c, goToDetail, handleDelete, t],

@@ -198,7 +198,7 @@ export function DeleteAccountSheet({ visible, onClose }: DeleteAccountSheetProps
               accessibilityLabel={t('accountDeletion.a11y.confirmDelete', 'Delete my account')}
             >
               {deleteAccount.isPending ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={c.text.inverse} />
               ) : (
                 <>
                   <Trash2 size={16} color="#fff" />

@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import Animated, { FadeOut, Layout } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOut, Layout } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { AlertTriangle, Heart, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { EmptyState } from '@/components/EmptyState';
 import { BrandedLoader } from '@/components/BrandedLoader';
+import { ANIMATION } from '@/constants/animation';
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius, shadows } from '@/constants/theme';
 import { hapticImpact } from '@/lib/haptics';
@@ -30,10 +31,12 @@ const COVER_COLORS = ['#2D5F3F', '#3B4F7A', '#6B3A5E', '#7A5C2E', '#2B4E5F'];
 
 function WishlistCard({
   item,
+  index,
   onRemove,
   onOpen,
 }: {
   item: WishlistItem;
+  index: number;
   onRemove: (id: string) => void;
   onOpen: (bookId: string) => void;
 }) {
@@ -48,9 +51,11 @@ function WishlistCard({
 
   const canOpen = !!item.book_id;
   const a11yLabel = `${item.title || t('books.untitled', 'Untitled')}${item.author ? `, ${item.author}` : ''}`;
+  const staggerDelay = index < 10 ? index * ANIMATION.stagger.fast : 0;
 
   return (
     <Animated.View
+      entering={FadeInUp.duration(250).delay(staggerDelay)}
       exiting={FadeOut.duration(200)}
       layout={Layout.springify().damping(18).stiffness(180)}
       style={[s.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
@@ -165,8 +170,8 @@ export function WishlistScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: WishlistItem }) => (
-      <WishlistCard item={item} onRemove={handleRemove} onOpen={handleOpen} />
+    ({ item, index }: { item: WishlistItem; index: number }) => (
+      <WishlistCard item={item} index={index} onRemove={handleRemove} onOpen={handleOpen} />
     ),
     [handleRemove, handleOpen],
   );

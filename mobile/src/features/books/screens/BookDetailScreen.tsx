@@ -8,7 +8,7 @@ import axios from "axios";
 import { AlertTriangle, Pencil } from "lucide-react-native";
 import React, { useCallback, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -221,6 +221,13 @@ export function BookDetailScreen() {
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={refetch}
+            tintColor={accent}
+          />
+        }
       >
         <CoverGallery
           bookId={book.id}

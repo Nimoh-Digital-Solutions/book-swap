@@ -8,6 +8,7 @@ import Animated, {
 
 import { ANIMATION } from '@/constants/animation';
 import { useColors } from '@/hooks/useColors';
+import { hapticSelection } from '@/lib/haptics';
 
 const ICON_SIZE = 20;
 const ICON_SPRING = ANIMATION.spring.snappy;
@@ -54,10 +55,15 @@ export function TabItem({
     [visibleIndex, onLayout],
   );
 
+  const handlePress = useCallback(() => {
+    void hapticSelection();
+    onPress();
+  }, [onPress]);
+
   return (
     <Pressable
       style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
-      onPress={onPress}
+      onPress={handlePress}
       onLongPress={onLongPress}
       onLayout={handleLayout}
       accessibilityRole="tab"

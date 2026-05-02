@@ -24,7 +24,7 @@ import {
 
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { EmptyState } from "@/components/EmptyState";
-import { BrandedLoader } from "@/components/BrandedLoader";
+import { Skeleton } from "@/components/Skeleton";
 import { ANIMATION } from "@/constants/animation";
 import { radius, spacing } from "@/constants/theme";
 import {
@@ -179,8 +179,21 @@ export function NotificationListScreen() {
 
   if (isLoading) {
     return (
-      <View style={[s.center, { backgroundColor: bg }]}>
-        <BrandedLoader size="lg" />
+      <View style={[s.safe, { backgroundColor: bg }]}>
+        <View style={s.list}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <View key={i} style={[s.row, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={s.iconCol}>
+                <Skeleton width={36} height={36} borderRadius={18} />
+              </View>
+              <View style={[s.textCol, { gap: 6 }]}>
+                <Skeleton width="70%" height={14} />
+                <Skeleton width="90%" height={12} />
+              </View>
+              <Skeleton width={40} height={10} />
+            </View>
+          ))}
+        </View>
       </View>
     );
   }

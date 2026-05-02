@@ -475,7 +475,15 @@
     "locationUnavailable": "—",
     "locationDeniedRecentTitle": "Turn on location to see nearby books",
     "locationDeniedRecentBody": "We use your approximate area to show fresh listings and community activity.",
-    "queryError": "Could not load some data. Tap to retry."
+    "queryError": "Could not load some data. Tap to retry.",
+    "gettingStarted": {
+      "title": "Getting Started",
+      "addBook": "Add your first book",
+      "browse": "Browse nearby books",
+      "swap": "Make your first swap request",
+      "dismiss": "Dismiss",
+      "complete": "You're all set!"
+    }
   },
   "messaging": {
     "connected": "Connected",
@@ -520,7 +528,8 @@
       "exchangeCompletedDesc": "When a swap is successfully completed",
       "ratingReceived": "Rating received",
       "ratingReceivedDesc": "When someone rates you after a swap",
-      "footerHint": "You can also unsubscribe from emails using the link at the bottom of any notification email."
+      "footerHint": "You can also unsubscribe from emails using the link at the bottom of any notification email.",
+      "updateError": "Failed to update preferences"
     }
   },
   "onboarding": {

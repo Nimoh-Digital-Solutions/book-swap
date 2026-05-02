@@ -162,7 +162,7 @@ export function CounterOfferScreen() {
         ]}
       >
         {counterMutation.isPending ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color={c.text.inverse} size="small" />
         ) : (
           <>
             <RefreshCw size={16} color="#fff" />

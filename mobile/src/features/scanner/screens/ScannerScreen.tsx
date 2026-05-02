@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Camera, PenLine, RotateCcw, Search } from 'lucide-react-native';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
+import { hapticNotification } from '@/lib/haptics';
 import { spacing, radius } from '@/constants/theme';
 import type { ScanStackParamList } from '@/navigation/types';
 
@@ -84,6 +85,7 @@ export function ScannerScreen() {
 
       const isbn = result.data;
       if (/^(97[89])?\d{9}[\dX]$/i.test(isbn.replace(/-/g, ''))) {
+        void hapticNotification('success');
         navigation.navigate('ScanResult', { isbn: isbn.replace(/-/g, '') });
       } else {
         setScanned(false);

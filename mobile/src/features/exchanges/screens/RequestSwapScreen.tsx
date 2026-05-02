@@ -6,7 +6,7 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Image } from "expo-image";
 import { AlertTriangle, BookOpen, Check, MessageSquare, Send } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -23,6 +23,7 @@ import {
 
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonCard } from "@/components/Skeleton";
+import { SuccessCheckmark } from "@/components/SuccessCheckmark";
 import { radius, shadows, spacing } from "@/constants/theme";
 import { useMyBooks } from "@/features/books/hooks/useBooks";
 import { useColors, useIsDark } from "@/hooks/useColors";
@@ -45,6 +46,7 @@ export function RequestSwapScreen() {
 
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [showCheck, setShowCheck] = useState(false);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -54,6 +56,15 @@ export function RequestSwapScreen() {
   const availableBooks = (myBooks ?? []).filter(
     (b) => b.status === "available",
   );
+
+  const handleCheckDone = useCallback(() => {
+    setShowCheck(false);
+    Alert.alert(
+      t("exchanges.requestSent", "Request Sent!"),
+      t("exchanges.requestSentMsg", "The owner will be notified of your swap request."),
+      [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
+    );
+  }, [navigation, t]);
 
   const handleSubmit = () => {
     if (!selectedBookId) {
@@ -74,14 +85,7 @@ export function RequestSwapScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert(
-            t("exchanges.requestSent", "Request Sent!"),
-            t(
-              "exchanges.requestSentMsg",
-              "The owner will be notified of your swap request.",
-            ),
-            [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
-          );
+          setShowCheck(true);
         },
         onError: (err: unknown) => {
           const ax = err as { response?: { data?: Record<string, string | string[]> } };
@@ -217,7 +221,7 @@ export function RequestSwapScreen() {
         ]}
       >
         {createExchange.isPending ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color={c.text.inverse} size="small" />
         ) : (
           <>
             <Send size={16} color="#fff" />
@@ -287,6 +291,7 @@ export function RequestSwapScreen() {
           ListFooterComponent={listFooter}
         />
       )}
+      <SuccessCheckmark visible={showCheck} onDone={handleCheckDone} />
     </KeyboardAvoidingView>
   );
 }

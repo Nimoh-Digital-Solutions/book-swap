@@ -9,6 +9,7 @@ import { ScanStack } from '@/navigation/stacks/ScanStack';
 import { MessagesStack } from '@/navigation/stacks/MessagesStack';
 import { ProfileStack } from '@/navigation/stacks/ProfileStack';
 import { FloatingTabBar } from '@/components/FloatingTabBar';
+import { useIncomingCount } from '@/features/exchanges/hooks/useExchanges';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -34,6 +35,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
  */
 export function MainTabs() {
   const { t } = useTranslation();
+  const { data: incomingCount } = useIncomingCount();
   return (
     <Tab.Navigator
       tabBar={(props) => <FloatingTabBar {...props} />}
@@ -69,6 +71,7 @@ export function MainTabs() {
         options={{
           title: t('tabs.exchanges'),
           tabBarIcon: ({ color, size }) => <ArrowLeftRight size={size} color={color} />,
+          tabBarBadge: incomingCount ? incomingCount : undefined,
         }}
       />
       <Tab.Screen
