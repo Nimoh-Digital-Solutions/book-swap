@@ -59,6 +59,7 @@ export interface UpdateProfilePayload {
 }
 
 export interface SetLocationPayload {
+  query?: string | undefined;
   postcode?: string | undefined;
   latitude?: number | undefined;
   longitude?: number | undefined;

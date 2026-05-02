@@ -13,19 +13,19 @@ export function LocationSection(): ReactElement {
   const setLocation = useSetLocation();
   const addNotification = useAppStore((s) => s.addNotification);
 
-  const [postcode, setPostcode] = useState('');
+  const [locationInput, setLocationInput] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
 
   const handleManualSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const trimmed = postcode.trim();
+    const trimmed = locationInput.trim();
     if (!trimmed || setLocation.isPending) return;
 
     setLocation.mutate(
-      { postcode: trimmed },
+      { query: trimmed },
       {
         onSuccess: (data) => {
-          setPostcode('');
+          setLocationInput('');
           addNotification(
             data.neighborhood
               ? t('settings.location.updated', 'Location set to {{neighborhood}}', {
@@ -125,8 +125,8 @@ export function LocationSection(): ReactElement {
         <input
           id="location-input"
           type="text"
-          value={postcode}
-          onChange={(e) => setPostcode(e.target.value)}
+          value={locationInput}
+          onChange={(e) => setLocationInput(e.target.value)}
           placeholder={t('settings.location.placeholder', 'e.g. Amsterdam West, 1054')}
           disabled={isBusy}
           className="w-full px-4 py-2.5 rounded-xl text-base sm:text-sm bg-[#152018] border border-[#28382D] text-white placeholder-[#5A6E60] focus:outline-none focus:ring-2 focus:ring-[#E4B643] disabled:opacity-50"
@@ -134,7 +134,7 @@ export function LocationSection(): ReactElement {
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={isBusy || !postcode.trim()}
+            disabled={isBusy || !locationInput.trim()}
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[#E4B643] text-[#152018] hover:bg-[#d4a633] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {setLocation.isPending && !gpsLoading ? (

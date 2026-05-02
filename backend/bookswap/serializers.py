@@ -145,8 +145,9 @@ class UserPublicSerializer(serializers.ModelSerializer):
 
 
 class SetLocationSerializer(serializers.Serializer):
-    """Accept either postcode or lat/lng pair for location setup."""
+    """Accept a free-text query, postcode, or lat/lng pair for location setup."""
 
+    query = serializers.CharField(required=False, allow_blank=True)
     postcode = serializers.CharField(required=False, allow_blank=True)
     latitude = serializers.FloatField(required=False)
     longitude = serializers.FloatField(required=False)
@@ -167,15 +168,17 @@ class SetLocationSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
+        query = attrs.get("query", "").strip()
         postcode = attrs.get("postcode")
         lat = attrs.get("latitude")
         lng = attrs.get("longitude")
 
+        has_query = bool(query)
         has_postcode = bool(postcode)
         has_coords = lat is not None and lng is not None
 
-        if not has_postcode and not has_coords:
-            raise serializers.ValidationError("Provide either 'postcode' or both 'latitude' and 'longitude'.")
+        if not has_query and not has_postcode and not has_coords:
+            raise serializers.ValidationError("Provide 'query', 'postcode', or both 'latitude' and 'longitude'.")
 
         if has_coords and (lat is None or lng is None):
             raise serializers.ValidationError("Both 'latitude' and 'longitude' are required when using coordinates.")
@@ -184,13 +187,19 @@ class SetLocationSerializer(serializers.Serializer):
 
     def save(self, user):
         """Resolve location and update user."""
+        query = self.validated_data.get("query", "").strip()
         postcode = self.validated_data.get("postcode")
         lat = self.validated_data.get("latitude")
         lng = self.validated_data.get("longitude")
 
         geocoder = NominatimGeocodingService()
 
-        if postcode:
+        if query:
+            try:
+                point = geocoder.geocode_query(query)
+            except GeocodingError as exc:
+                raise serializers.ValidationError({"query": str(exc)}) from exc
+        elif postcode:
             try:
                 point = geocoder.geocode_postcode(postcode)
             except GeocodingError as exc:

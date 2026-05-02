@@ -146,7 +146,7 @@ export function SettingsScreen() {
       <ManualLocationSheet
         visible={manualSheetVisible}
         onClose={() => setManualSheetVisible(false)}
-        onSubmit={locationManager.updateFromPostcode}
+        onSubmit={locationManager.updateFromQuery}
         onUseGps={locationManager.updateFromGps}
       />
     </SafeAreaView>

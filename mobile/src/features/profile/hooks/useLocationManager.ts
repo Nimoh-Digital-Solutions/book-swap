@@ -67,9 +67,21 @@ export function useLocationManager() {
     [setUser],
   );
 
+  const updateFromQuery = useCallback(
+    async (query: string) => {
+      const { data } = await http.post<User>(API.users.meLocation, {
+        query,
+      });
+      await setUser(data);
+      return data;
+    },
+    [setUser],
+  );
+
   return {
     gpsUpdating,
     updateFromGps,
     updateFromPostcode,
+    updateFromQuery,
   };
 }
