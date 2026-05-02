@@ -113,17 +113,27 @@ if [[ -z "$JWT" ]]; then
   exit 1
 fi
 
-# Ask ASC for the most recent app store version of our app. The 'state'
-# field on appStoreVersions is the review state we care about. We sort
-# DESC by createdDate and take the top hit so this works regardless of
-# how many historical versions exist.
-RESPONSE=$(curl -sf --max-time 15 \
+# Ask ASC for all app store versions of our app. The 'state' field on
+# appStoreVersions is the review state we care about. ASC returns the
+# versions in chronological order (newest last); we filter to the most
+# recent createdDate client-side because ASC rejects `sort` and
+# `fields[appStoreVersions]` on the nested /apps/{id}/appStoreVersions
+# endpoint with PARAMETER_ERROR.ILLEGAL.
+RESPONSE=$(curl -s --max-time 15 \
   -H "Authorization: Bearer ${JWT}" \
-  "https://api.appstoreconnect.apple.com/v1/apps/${ASC_APP_ID}/appStoreVersions?sort=-createdDate&limit=1&fields[appStoreVersions]=versionString,appStoreState,createdDate,releaseType" \
-  2>/dev/null || echo "")
+  "https://api.appstoreconnect.apple.com/v1/apps/${ASC_APP_ID}/appStoreVersions" \
+  2>/dev/null)
 
 if [[ -z "$RESPONSE" ]]; then
-  log_msg "ERROR" "ASC API returned empty (auth failure or network)"
+  log_msg "ERROR" "ASC API returned empty (network failure?)"
+  exit 1
+fi
+
+# Surface API errors instead of swallowing them — easier to diagnose
+# revoked keys, expired tokens, or schema changes from Apple.
+if echo "$RESPONSE" | jq -e '.errors' >/dev/null 2>&1; then
+  log_msg "ERROR" "ASC API returned errors:"
+  echo "$RESPONSE" | jq '.errors' >&2
   exit 1
 fi
 
@@ -140,9 +150,13 @@ fi
 #   REMOVED_FROM_SALE              — operator pulled the app
 #   DEVELOPER_REJECTED             — operator cancelled the submission
 #   INVALID_BINARY                 — binary failed validation
-VERSION=$(echo "$RESPONSE" | jq -r '.data[0].attributes.versionString // "unknown"')
-STATE=$(echo "$RESPONSE" | jq -r '.data[0].attributes.appStoreState // "unknown"')
-RELEASE_TYPE=$(echo "$RESPONSE" | jq -r '.data[0].attributes.releaseType // "unknown"')
+# Pick the version with the latest createdDate (sort client-side because
+# ASC won't accept `sort` server-side on this endpoint). `sort_by` returns
+# ascending; `[-1]` grabs the newest entry.
+LATEST=$(echo "$RESPONSE" | jq '[.data[] | {versionString: .attributes.versionString, appStoreState: .attributes.appStoreState, createdDate: .attributes.createdDate, releaseType: .attributes.releaseType}] | sort_by(.createdDate) | last')
+VERSION=$(echo "$LATEST" | jq -r '.versionString // "unknown"')
+STATE=$(echo "$LATEST" | jq -r '.appStoreState // "unknown"')
+RELEASE_TYPE=$(echo "$LATEST" | jq -r '.releaseType // "unknown"')
 
 if [[ "$STATE" == "unknown" ]]; then
   log_msg "ERROR" "could not parse appStoreState from ASC response"
