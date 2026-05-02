@@ -23,8 +23,8 @@
     "build:ios:preview": "npm run prebuild:check && eas build --profile preview --platform ios",
     "build:android:prod": "npm run prebuild:check && eas build --profile production --platform android",
     "build:ios:prod": "npm run prebuild:check && eas build --profile production --platform ios",
-    "update:staging": "eas update --branch staging --message",
-    "update:production": "eas update --branch production --message",
+    "update:staging": "eas update --branch staging --clear-cache --message",
+    "update:production": "EXPO_PUBLIC_API_URL=https://api.book-swaps.com/api/v1 EXPO_PUBLIC_ENV=production eas update --branch production --clear-cache --message \"Release $(date +'%Y-%m-%d %H:%M:%S')\"",
     "submit:ios": "eas submit --platform ios --profile production --latest",
     "submit:android": "eas submit --platform android --profile production --latest"
   },

@@ -12,11 +12,21 @@ import { discoveryKeys } from './discoveryKeys';
 
 const MAP_PAGE_SIZE = 200;
 
+/** Round to 3 decimal places (~111 m) to stabilise query keys across GPS drift. */
+function roundCoord(v?: number): number | undefined {
+  return v != null ? Math.round(v * 1e3) / 1e3 : undefined;
+}
+
 export function useMapBooks(filters: BrowseFilters, enabled = true) {
+  const stableFilters: BrowseFilters = {
+    ...filters,
+    lat: roundCoord(filters.lat),
+    lng: roundCoord(filters.lng),
+  };
   return useQuery({
-    queryKey: [...discoveryKeys.browseList(filters), 'map'],
+    queryKey: [...discoveryKeys.browseList(stableFilters), 'map'],
     queryFn: () =>
-      discoveryService.browse({ ...filters, page_size: MAP_PAGE_SIZE }),
+      discoveryService.browse({ ...stableFilters, page_size: MAP_PAGE_SIZE }),
     enabled,
   });
 }

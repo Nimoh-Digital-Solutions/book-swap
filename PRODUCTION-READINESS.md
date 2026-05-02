@@ -13,7 +13,7 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 | [7. Testing](#7-testing) | **4 / 5** | Backend **598**, frontend **947**, mobile **137** — all green. E2E 8 specs runnable locally; not in CI |
 | [8. Documentation](#8-documentation) | **5 / 5** | Architecture, ADRs, deployment runbook, OpenAPI, DPIA (location), store submission EN/FR/NL, mobile audit (97/100), **incident response playbook**, deep audit, gap analyses |
 | [9. Performance](#9-performance) | **3 / 5** | Sensible defaults + bundle splitting; load testing & CDN audit still pending |
-| [10. Mobile Readiness](#10-mobile-readiness) | **5 / 5** | **Live in stores** (iOS TestFlight + Play production, 2026-04-30). Sentry release+dist+PII scrub, FCM v1 + APNs, push receipt reconciliation, OTA pipeline. Crash-free session monitoring in soak |
+| [10. Mobile Readiness](#10-mobile-readiness) | **5 / 5** | iOS 1.0.0 (8) **Submitted to App Store Review 2026-05-01 22:52 CEST** (no iPad support, ~169 countries, EN/FR/NL listings). Android already on Play production track 2026-04-30. Sentry release+dist+PII scrub, FCM v1 + APNs, push receipt reconciliation, OTA pipeline |
 
 **Overall score (unweighted mean):** **4.4 / 5**
 
@@ -270,7 +270,9 @@ Living document. Update scores, gaps, and dates as the system evolves. Scoring u
 
 **In place**
 
-- **Live in stores (2026-04-30)** — iOS available on TestFlight + verified live on device; Android promoted to Play production track.
+- **iOS submitted to App Store Review (2026-05-01 22:52 CEST)** — build `1.0.0 (8)`, status: *Waiting for Review*. Manual release configured (operator clicks *Release This Version* once Apple approves). Available on TestFlight throughout submission window. See `docs/RELEASE-DAY-RUNBOOK.md` for the post-approval flow.
+- **Android already on Play production track (2026-04-30)** — no changes needed for the iOS launch.
+- **iOS submission scope** — iPhone-only (`supportsTablet: false`), ~169 countries with China / Korea / Russia deselected, full EN / FR / NL store listings, 9 iPhone screenshots @ 1284×2778, dedicated reviewer test account `reviewer@bookswaps.com` with seeded book listing, DSA trader disclosure with `book-swaps.com`, privacy policy at `book-swaps.com/en/privacy-policy`, encryption declared exempt via `ITSAppUsesNonExemptEncryption: false` baked into Info.plist.
 - **Full Expo app** with SpeakLinka-parity architecture — Expo SDK 54, React Native 0.81, ~99 TSX files, ~35 registered screens.
 - **Sentry mobile production-grade** (`mobile/src/lib/sentry.ts`):
   - Release tracking: `com.gnimoh.bookswap@${APP_VERSION}` from `expo.version`.
@@ -314,6 +316,7 @@ Priority reflects risk and unlocks for a calm production launch; reorder as busi
 | ~~P1~~ | ~~External uptime monitoring + error-rate alerting~~ | ~~§6~~ | **Done 2026-04-29** — UptimeRobot 3 monitors + Sentry rules (5/4/4) + Telegram digests |
 | ~~P1~~ | ~~Incident response playbook~~ | ~~§8~~ | **Done 2026-04-29** — `docs/INCIDENT-RESPONSE-PLAYBOOK.md` |
 | ~~P1~~ | ~~Mobile device matrix + store submission~~ | ~~§10~~ | **Done 2026-04-30** — iOS TestFlight live, Android promoted to Play production |
+| ~~P0~~ | ~~Submit iOS app to App Store Review~~ | ~~§10~~ | **Done 2026-05-01** — `1.0.0 (8)` in Apple's queue. Release runbook in `docs/RELEASE-DAY-RUNBOOK.md` |
 | ~~P1~~ | ~~Push notification delivery reconciliation~~ | ~~§6 / §10~~ | **Done 2026-05-01** — Expo receipt poller every 15 min + dead-token deactivation |
 | ~~P1~~ | ~~Ops digest (catalogue + funnel snapshot)~~ | ~~§6~~ | **Done 2026-05-01** — `bookswap-ops-digest.sh` every 4h to Telegram |
 | ~~P1~~ | ~~Pi5 step-1 scaling tuning~~ | ~~§4 / §9~~ | **Done 2026-05-01** — cgroup CPU + memory limits, Celery=4, `pg_stat_statements`, lower pi-health thresholds, Pi snapshot in ops digest. See `docs/SCALING-PLAYBOOK.md` |
@@ -321,8 +324,10 @@ Priority reflects risk and unlocks for a calm production launch; reorder as busi
 | ~~P1~~ | ~~BookSwap-dedicated monitoring + bot~~ | ~~§6~~ | **Done 2026-05-01** — separate Telegram channel + 5 cron monitors (container/endpoint/backup/sentry/abuse) + read-only systemd bot for `/status`/`/digest`/`/sentry`/`/abuse`/`/health`/`/containers`. Critical Pi-wide alerts mirror to the BookSwap channel. See `docs/MONITORING-PLAYBOOK.md` |
 | **P0** | **Rotate the BookSwap bot token via BotFather** | §6 | Pending — token was pasted into chat during setup. `BOOKSWAP_TELEGRAM_BOT_TOKEN` in `~/.bookswap-monitor-env` on Pi. Run `/revoke` in BotFather, update the env file, `sudo systemctl restart bookswap-bot`. ~2 min, no downtime |
 | P1 | Wire Playwright E2E into `ci.yml` | §5 / §7 | Pending — 8 specs runnable locally, no automated gate (post-launch polish) |
+| **P0** | **Click *Release This Version* once Apple approves iOS 1.0.0 (8)** | §10 | Pending Apple review (24–48h typical). Release flow + rollback in `docs/RELEASE-DAY-RUNBOOK.md` |
+| P1 | Set up ASC API monitoring (review-state Telegram pings) | §6 / §10 | Pending — needs ASC API key + .p8 file from operator. Public-store appearance check (`bookswap-asc-public-check.sh`) handles the "is it live yet" half |
 | P2 | Soak window: Sentry crash-free session rate ≥ 99.5% | §10 | In progress — 24h soak after 2026-04-30 store release |
-| P2 | Verify store privacy labels match DPIA | §10 | Pending |
+| P2 | Verify store privacy labels match DPIA | §10 | **Done 2026-05-01** — App Privacy reviewed during submission: 8 data types correctly classified (App Functionality / Analytics, no Other Purposes), privacy URL fixed to `book-swaps.com/en/privacy-policy` |
 | P2 | Expand DPIA to cover messaging + image uploads | §2 | Pending |
 | P2 | Orphaned-media TTL sweep | §2 | Pending — `enforce-data-retention` covers users/tokens/sessions/audit, not yet media |
 | P2 | Enable `USE_S3=true` in staging using bundled MinIO | §4 | Pending — code scaffolded, only env flip + smoke remains |
