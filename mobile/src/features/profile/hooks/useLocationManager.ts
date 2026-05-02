@@ -7,11 +7,20 @@ import { API } from "@/configs/apiEndpoints";
 import { http } from "@/services/http";
 import { useAuthStore } from "@/stores/authStore";
 import type { User } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useLocationManager() {
   const { t } = useTranslation();
   const setUser = useAuthStore((s) => s.setUser);
+  const queryClient = useQueryClient();
   const [gpsUpdating, setGpsUpdating] = useState(false);
+
+  /** Invalidate discovery queries so the homescreen refreshes after a location change. */
+  const invalidateDiscovery = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["nearbyCount"] });
+    void queryClient.invalidateQueries({ queryKey: ["recentBooks"] });
+    void queryClient.invalidateQueries({ queryKey: ["communityStats"] });
+  }, [queryClient]);
 
   const updateFromGps = useCallback(async () => {
     setGpsUpdating(true);
@@ -35,6 +44,7 @@ export function useLocationManager() {
         longitude: pos.coords.longitude,
       });
       await setUser(data);
+      invalidateDiscovery();
       Alert.alert(
         t("settings.locationUpdated", "Location updated"),
         data.neighborhood
@@ -54,7 +64,7 @@ export function useLocationManager() {
     } finally {
       setGpsUpdating(false);
     }
-  }, [setUser, t]);
+  }, [setUser, invalidateDiscovery, t]);
 
   const updateFromPostcode = useCallback(
     async (postcode: string) => {
@@ -62,9 +72,10 @@ export function useLocationManager() {
         postcode,
       });
       await setUser(data);
+      invalidateDiscovery();
       return data;
     },
-    [setUser],
+    [setUser, invalidateDiscovery],
   );
 
   const updateFromQuery = useCallback(
@@ -73,9 +84,10 @@ export function useLocationManager() {
         query,
       });
       await setUser(data);
+      invalidateDiscovery();
       return data;
     },
-    [setUser],
+    [setUser, invalidateDiscovery],
   );
 
   return {
