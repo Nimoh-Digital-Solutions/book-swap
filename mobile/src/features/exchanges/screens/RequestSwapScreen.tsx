@@ -57,6 +57,15 @@ export function RequestSwapScreen() {
     (b) => b.status === "available",
   );
 
+  const handleCheckDone = useCallback(() => {
+    setShowCheck(false);
+    Alert.alert(
+      t("exchanges.requestSent", "Request Sent!"),
+      t("exchanges.requestSentMsg", "The owner will be notified of your swap request."),
+      [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
+    );
+  }, [navigation, t]);
+
   const handleSubmit = () => {
     if (!selectedBookId) {
       Alert.alert(
@@ -238,15 +247,6 @@ export function RequestSwapScreen() {
       </View>
     );
   }
-
-  const handleCheckDone = useCallback(() => {
-    setShowCheck(false);
-    Alert.alert(
-      t("exchanges.requestSent", "Request Sent!"),
-      t("exchanges.requestSentMsg", "The owner will be notified of your swap request."),
-      [{ text: t("common.ok", "OK"), onPress: () => navigation.goBack() }],
-    );
-  }, [navigation, t]);
 
   return (
     <KeyboardAvoidingView

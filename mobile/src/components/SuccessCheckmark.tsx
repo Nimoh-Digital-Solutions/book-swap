@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Modal, StyleSheet } from 'react-native';
 import Animated, {
   BounceIn,
   FadeIn,
