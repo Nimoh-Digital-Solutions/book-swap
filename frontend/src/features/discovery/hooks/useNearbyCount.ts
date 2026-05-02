@@ -15,8 +15,9 @@ export function useNearbyCount(
   radius = 5000,
 ): UseQueryResult<NearbyCount> {
   return useQuery({
-    queryKey: discoveryKeys.nearbyCount(lat, lng),
+    queryKey: discoveryKeys.nearbyCount(lat, lng, radius),
     queryFn: () => discoveryService.nearbyCount(lat!, lng!, radius),
     enabled: lat != null && lng != null,
+    staleTime: 5 * 60 * 1000,
   });
 }

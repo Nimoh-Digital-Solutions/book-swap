@@ -244,7 +244,9 @@ class NearbyCountView(APIView):
             owner__location__isnull=False,
             owner__location__distance_lte=(point, D(m=radius)),
         )
-        count = nearby_qs.count()
-        user_count = nearby_qs.values("owner").distinct().count()
+        stats = nearby_qs.aggregate(
+            count=Count("id"),
+            user_count=Count("owner", distinct=True),
+        )
 
-        return Response({"count": count, "user_count": user_count, "radius": radius})
+        return Response({"count": stats["count"], "user_count": stats["user_count"], "radius": radius})

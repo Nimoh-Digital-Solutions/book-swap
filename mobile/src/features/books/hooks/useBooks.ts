@@ -18,6 +18,11 @@ import {
 
 export type { CreateBookPayload, UpdateBookPayload } from '@/features/books/bookApi';
 
+/** Round to 3 decimal places (~111 m) to stabilise query keys across GPS drift. */
+function roundCoord(v?: number): number | undefined {
+  return v != null ? Math.round(v * 1e3) / 1e3 : undefined;
+}
+
 export interface BrowseParams {
   lat?: number;
   lng?: number;
@@ -28,8 +33,8 @@ export interface BrowseParams {
 
 export function useBrowseBooks(params: BrowseParams) {
   const apiParams: Record<string, string | number | undefined> = {
-    lat: params.lat,
-    lng: params.lng,
+    lat: roundCoord(params.lat),
+    lng: roundCoord(params.lng),
     radius: params.radius,
   };
   if (params.search) apiParams.search = params.search;
@@ -63,15 +68,17 @@ export interface RadiusCounts {
 }
 
 export function useRadiusCounts(lat?: number, lng?: number) {
+  const rLat = roundCoord(lat);
+  const rLng = roundCoord(lng);
   return useQuery<RadiusCounts>({
-    queryKey: ['radiusCounts', lat, lng],
+    queryKey: ['radiusCounts', rLat, rLng],
     queryFn: async () => {
       const { data } = await http.get<RadiusCounts>(API.browse.radiusCounts, {
-        params: { lat, lng },
+        params: { lat: rLat, lng: rLng },
       });
       return data;
     },
-    enabled: !!lat && !!lng,
+    enabled: !!rLat && !!rLng,
     staleTime: 30_000,
   });
 }
@@ -278,29 +285,35 @@ export interface BrowseBook {
 }
 
 export function useRecentBooks(lat?: number, lng?: number, radiusM = 5000) {
+  const rLat = roundCoord(lat);
+  const rLng = roundCoord(lng);
   return useQuery({
-    queryKey: ['recentBooks', lat, lng, radiusM],
+    queryKey: ['recentBooks', rLat, rLng, radiusM],
     queryFn: async () => {
       const { data } = await http.get<PaginatedResponse<BrowseBook>>(
         API.browse.list,
-        { params: { lat, lng, radius: radiusM, ordering: '-created_at' } },
+        { params: { lat: rLat, lng: rLng, radius: radiusM, ordering: '-created_at' } },
       );
       return data.results;
     },
-    enabled: lat != null && lng != null,
+    enabled: rLat != null && rLng != null,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useNearbyCount(lat?: number, lng?: number, radius = 5000) {
+  const rLat = roundCoord(lat);
+  const rLng = roundCoord(lng);
   return useQuery({
-    queryKey: ['nearbyCount', lat, lng, radius],
+    queryKey: ['nearbyCount', rLat, rLng, radius],
     queryFn: async () => {
       const { data } = await http.get<NearbyCount>(API.browse.nearbyCount, {
-        params: { lat, lng, radius },
+        params: { lat: rLat, lng: rLng, radius },
       });
       return data;
     },
-    enabled: lat != null && lng != null,
+    enabled: rLat != null && rLng != null,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -322,15 +335,17 @@ export interface CommunityStats {
 }
 
 export function useCommunityStats(lat?: number, lng?: number, radius = 5000) {
+  const rLat = roundCoord(lat);
+  const rLng = roundCoord(lng);
   return useQuery<CommunityStats>({
-    queryKey: ['communityStats', lat, lng, radius],
+    queryKey: ['communityStats', rLat, rLng, radius],
     queryFn: async () => {
       const { data } = await http.get<CommunityStats>(API.browse.communityStats, {
-        params: { lat, lng, radius },
+        params: { lat: rLat, lng: rLng, radius },
       });
       return data;
     },
-    enabled: lat != null && lng != null,
+    enabled: rLat != null && rLng != null,
     staleTime: 60_000,
   });
 }
