@@ -473,6 +473,14 @@
     "locationDeniedBannerBody": "Activez la localisation dans les Réglages pour voir les livres, les compteurs et l'activité à proximité.",
     "openSettings": "Ouvrir les réglages",
     "queryError": "Impossible de charger certaines données. Appuyez pour réessayer.",
+    "gettingStarted": {
+      "title": "Premiers pas",
+      "addBook": "Ajoutez votre premier livre",
+      "browse": "Parcourez les livres à proximité",
+      "swap": "Faites votre première demande d'échange",
+      "dismiss": "Fermer",
+      "complete": "Vous êtes prêt !"
+    },
     "locationUnavailable": "—",
     "locationDeniedRecentTitle": "Activez la localisation pour voir les livres à proximité",
     "locationDeniedRecentBody": "Nous utilisons votre zone approximative pour afficher les annonces et l'activité récentes."

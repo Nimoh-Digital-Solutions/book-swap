@@ -5,6 +5,7 @@ import ToastMessage from 'react-native-toast-message';
 import type { ToastConfigParams } from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { hapticNotification } from '@/lib/haptics';
 
 interface BannerToastProps {
   text1?: string;
@@ -97,9 +98,11 @@ const styles = StyleSheet.create({
 });
 
 export function showSuccessToast(message: string, description?: string) {
+  void hapticNotification('success');
   ToastMessage.show({ type: 'success', text1: message, text2: description, visibilityTime: 3000 });
 }
 export function showErrorToast(message: string, description?: string) {
+  void hapticNotification('error');
   ToastMessage.show({ type: 'error', text1: message, text2: description, visibilityTime: 5000 });
 }
 export function showInfoToast(message: string, description?: string) {

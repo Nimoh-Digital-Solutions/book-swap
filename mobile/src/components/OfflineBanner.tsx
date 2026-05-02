@@ -43,6 +43,10 @@ export function OfflineBanner() {
         ]}
       >
         <View
+          accessible
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          accessibilityLabel={label}
           style={[
             styles.banner,
             {

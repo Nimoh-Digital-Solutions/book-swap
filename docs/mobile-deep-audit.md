@@ -374,25 +374,25 @@ The `EmptyState` component uses Lucide icons (BookOpen, Inbox, Heart, etc.). Cus
 
 ## 11. Prioritised Action Plan
 
-### P0 — High Impact, Low Effort
+### P0 — High Impact, Low Effort ✅ DONE (c37e901)
 
-| # | Item | Files | Effort |
+| # | Item | Files | Status |
 |---|------|-------|--------|
-| 1 | A11Y-01: Add `accessibilityLiveRegion` to Toast | `components/Toast.tsx` | 30 min |
-| 2 | FG-04: Add unread badge to Messages tab | `navigation/MainTabs.tsx` | 1 hr |
-| 3 | DM-01: Replace hardcoded hex in OnboardingScreen | `features/onboarding/screens/OnboardingScreen.tsx` | 1 hr |
-| 4 | DM-01: Replace hardcoded hex in EmptyState | `components/EmptyState.tsx` | 15 min |
-| 5 | I18N-01: Fix hardcoded string in notification prefs | `features/notifications/hooks/useNotificationPreferences.ts` | 5 min |
+| 1 | A11Y-01: Add `accessibilityLiveRegion` to Toast | `components/Toast.tsx` | ✅ Done |
+| 2 | FG-04: Add unread badge to Messages tab | `navigation/MainTabs.tsx` | ✅ Done |
+| 3 | DM-01: Replace hardcoded hex in OnboardingScreen | `features/onboarding/screens/OnboardingScreen.tsx` | ✅ Done |
+| 4 | DM-01: Replace hardcoded hex in EmptyState | `components/EmptyState.tsx` | ✅ Done |
+| 5 | I18N-01: Fix hardcoded string in notification prefs | `features/notifications/hooks/useNotificationPreferences.ts` | ✅ Done |
 
-### P1 — High Impact, Medium Effort
+### P1 — High Impact, Medium Effort ✅ DONE
 
-| # | Item | Files | Effort |
+| # | Item | Files | Status |
 |---|------|-------|--------|
-| 6 | PR-07: Add pull-to-refresh to BookDetailScreen | `features/books/screens/BookDetailScreen.tsx` | 1 hr |
-| 7 | PR-08: Add pull-to-refresh to BrowseMap bottom sheet | `features/books/screens/BrowseMapScreen.tsx` | 1 hr |
-| 8 | A11Y-02: Add a11y to OfflineBanner | `components/OfflineBanner.tsx` | 30 min |
-| 9 | HF-01: Add haptics to tab bar + toggles + scan success | `components/TabItem.tsx`, scanner, settings | 2 hr |
-| 10 | FG-01: Add getting started checklist card | `features/books/components/home/` + new component | 4 hr |
+| 6 | PR-07: Add pull-to-refresh to BookDetailScreen | `features/books/screens/BookDetailScreen.tsx` | ✅ Done |
+| 7 | PR-08: Add pull-to-refresh to BrowseMap bottom sheet | `features/books/screens/BrowseMapScreen.tsx` | ✅ Done |
+| 8 | A11Y-02: Add a11y to OfflineBanner | `components/OfflineBanner.tsx` | ✅ Done |
+| 9 | HF-01: Add haptics to tab bar + toggles + scan + toasts | `TabItem.tsx`, `Toast.tsx`, scanner, settings, notif prefs | ✅ Done |
+| 10 | FG-01: Add getting started checklist card | `HomeGettingStarted.tsx` + `HomeScreen.tsx` + storage + i18n | ✅ Done |
 
 ### P2 — Medium Impact, Variable Effort
 

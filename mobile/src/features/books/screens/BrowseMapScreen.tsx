@@ -12,6 +12,7 @@ import { FlatList, Platform, Text, View } from "react-native";
 
 import { EmptyState } from "@/components/EmptyState";
 import { LocationMismatchBanner } from "@/components/LocationMismatchBanner";
+import { gettingStartedStorage } from "@/lib/storage";
 import { SkeletonCard } from "@/components/Skeleton";
 import { darkGreenMapStyle, lightMapStyle } from "@/constants/mapStyle";
 import {
@@ -62,6 +63,9 @@ export function BrowseMapScreen() {
   const user = useAuthStore((s) => s.user);
   const mismatch = useLocationMismatch();
   const { gpsUpdating, updateFromGps } = useLocationManager();
+
+  // Mark "browsed" for the Getting Started checklist
+  useEffect(() => { gettingStartedStorage.markBrowsed(); }, []);
 
   const initialSearch = route.params?.initialSearch ?? "";
   const [searchText, setSearchText] = useState(initialSearch);
@@ -406,6 +410,8 @@ export function BrowseMapScreen() {
           onEndReachedThreshold={0.5}
           contentContainerStyle={s.sheetListContent}
           showsVerticalScrollIndicator={false}
+          refreshing={browseRefetching}
+          onRefresh={() => { void refetchBrowse(); void refetchRadius(); }}
         />
       </BottomSheet>
     </View>
