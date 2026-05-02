@@ -5,6 +5,15 @@
 **Focus:** UX polish, flow gaps, feature completeness, improvement suggestions  
 **Audited against:** App Store quality bar (not PRD/user stories)
 
+**Verification status (2026-05-02 22:20 CEST):** All P0 / P1 / P2 items
+manually re-verified against the live codebase. Every "✅ Done" line in
+§ 11 maps to working code in `main` (commits c37e901 / 5cadf40 / 77cf404
+/ 813b517). Mobile CI runs 137/137 tests green, type-check + lint clean.
+One minor caveat: P2 #11 (ActivityIndicator colour audit) intentionally
+keeps `color="#000"` in `AppleAuthButton.tsx` and `SocialAuthSection.tsx`
+because the dark sign-in button background needs that contrast — these
+are Apple-mandated styling and not theme-tokenised on purpose.
+
 ---
 
 ## Executive Summary
