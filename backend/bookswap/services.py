@@ -76,7 +76,7 @@ def _nominatim_query(query: str) -> Point:
     response.raise_for_status()
     results = response.json()
     if not results:
-        raise GeocodingError(f"No results for \"{query}\"")
+        raise GeocodingError(f'No results for "{query}"')
     lat = float(results[0]["lat"])
     lng = float(results[0]["lon"])
     return Point(lng, lat, srid=4326)
@@ -161,7 +161,7 @@ class NominatimGeocodingService:
             raise GeocodingError("Geocoding service is temporarily unavailable.") from exc
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("Nominatim geocode failed for query %r: %s", query, exc)
-            raise GeocodingError(f"Could not find location \"{query}\"") from exc
+            raise GeocodingError(f'Could not find location "{query}"') from exc
 
     @staticmethod
     def reverse_geocode_neighborhood(point: Point) -> str:

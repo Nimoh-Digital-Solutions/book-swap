@@ -178,9 +178,7 @@ class SetLocationSerializer(serializers.Serializer):
         has_coords = lat is not None and lng is not None
 
         if not has_query and not has_postcode and not has_coords:
-            raise serializers.ValidationError(
-                "Provide 'query', 'postcode', or both 'latitude' and 'longitude'."
-            )
+            raise serializers.ValidationError("Provide 'query', 'postcode', or both 'latitude' and 'longitude'.")
 
         if has_coords and (lat is None or lng is None):
             raise serializers.ValidationError("Both 'latitude' and 'longitude' are required when using coordinates.")
