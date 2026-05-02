@@ -1,23 +1,34 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import ToastMessage from 'react-native-toast-message';
 import type { ToastConfigParams } from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { hapticNotification } from '@/lib/haptics';
 
 interface BannerToastProps {
   text1?: string;
   text2?: string;
   backgroundColor: string;
   textColor: string;
+  liveRegion?: 'polite' | 'assertive';
 }
 
-function BannerToast({ text1, text2, backgroundColor, textColor }: BannerToastProps) {
+function BannerToast({ text1, text2, backgroundColor, textColor, liveRegion = 'polite' }: BannerToastProps) {
+  // Announce to screen readers on both platforms
+  React.useEffect(() => {
+    const message = [text1, text2].filter(Boolean).join('. ');
+    if (message) AccessibilityInfo.announceForAccessibility(message);
+  }, [text1, text2]);
+
   return (
     <Animated.View
       entering={FadeInUp.springify().damping(16).stiffness(140)}
       exiting={FadeOutUp.duration(200)}
+      accessible
+      accessibilityRole="alert"
+      accessibilityLiveRegion={liveRegion}
       style={[styles.banner, { backgroundColor }]}
     >
       {text1 ? <Text style={[styles.title, { color: textColor }]}>{text1}</Text> : null}
@@ -48,6 +59,7 @@ export function ToastRoot() {
           text2={text2}
           backgroundColor={c.status.error}
           textColor={c.text.inverse}
+          liveRegion="assertive"
         />
       ),
       info: ({ text1, text2 }: ToastConfigParams<unknown>) => (
@@ -86,9 +98,11 @@ const styles = StyleSheet.create({
 });
 
 export function showSuccessToast(message: string, description?: string) {
+  void hapticNotification('success');
   ToastMessage.show({ type: 'success', text1: message, text2: description, visibilityTime: 3000 });
 }
 export function showErrorToast(message: string, description?: string) {
+  void hapticNotification('error');
   ToastMessage.show({ type: 'error', text1: message, text2: description, visibilityTime: 5000 });
 }
 export function showInfoToast(message: string, description?: string) {

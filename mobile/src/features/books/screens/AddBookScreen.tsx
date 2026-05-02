@@ -3,7 +3,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { TFunction } from "i18next";
 import { BookOpen } from "lucide-react-native";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,6 +19,7 @@ import {
 import { z } from "zod";
 
 import { LocationMismatchBanner } from "@/components/LocationMismatchBanner";
+import { SuccessCheckmark } from "@/components/SuccessCheckmark";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { useLocationMismatch } from "@/hooks/useLocationMismatch";
 
@@ -94,6 +95,8 @@ export function AddBookScreen() {
   const schema = useMemo(() => createAddBookSchema(t), [t]);
   const mismatch = useLocationMismatch();
   const { gpsUpdating, updateFromGps } = useLocationManager();
+  const [showCheck, setShowCheck] = useState(false);
+  const successDataRef = useRef<{ id: string } | null>(null);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -161,38 +164,8 @@ export function AddBookScreen() {
 
     createBook.mutate(payload, {
       onSuccess: (data) => {
-        const goToMyBooks = () => {
-          navigation.popToTop();
-          const tabNav = navigation.getParent<MainTabNavigationProp>();
-          tabNav?.navigate("ProfileTab", { screen: "MyBooks" });
-        };
-        const goToPhotos = () => {
-          navigation.popToTop();
-          const tabNav = navigation.getParent<MainTabNavigationProp>();
-          tabNav?.navigate("ProfileTab", {
-            screen: "EditBook",
-            params: { bookId: data.id },
-          });
-        };
-
-        Alert.alert(
-          t("books.addBook.successTitle", "Book listed!"),
-          t(
-            "books.addBook.successMsg",
-            "Your book is now available for swapping.",
-          ),
-          [
-            {
-              text: t("books.addBook.addPhotos", "Add Photos"),
-              onPress: goToPhotos,
-            },
-            {
-              text: t("books.addBook.skipPhotos", "Done"),
-              style: "cancel",
-              onPress: goToMyBooks,
-            },
-          ],
-        );
+        successDataRef.current = data;
+        setShowCheck(true);
       },
       onError: () => {
         Alert.alert(
@@ -230,6 +203,35 @@ export function AddBookScreen() {
       })),
     [t],
   );
+
+  const handleCheckDone = useCallback(() => {
+    setShowCheck(false);
+    const data = successDataRef.current;
+    if (!data) return;
+
+    const goToMyBooks = () => {
+      navigation.popToTop();
+      const tabNav = navigation.getParent<MainTabNavigationProp>();
+      tabNav?.navigate("ProfileTab", { screen: "MyBooks" });
+    };
+    const goToPhotos = () => {
+      navigation.popToTop();
+      const tabNav = navigation.getParent<MainTabNavigationProp>();
+      tabNav?.navigate("ProfileTab", {
+        screen: "EditBook",
+        params: { bookId: data.id },
+      });
+    };
+
+    Alert.alert(
+      t("books.addBook.successTitle", "Book listed!"),
+      t("books.addBook.successMsg", "Your book is now available for swapping."),
+      [
+        { text: t("books.addBook.addPhotos", "Add Photos"), onPress: goToPhotos },
+        { text: t("books.addBook.skipPhotos", "Done"), style: "cancel", onPress: goToMyBooks },
+      ],
+    );
+  }, [navigation, t]);
 
   return (
     <KeyboardAvoidingView
@@ -521,7 +523,7 @@ export function AddBookScreen() {
           ]}
         >
           {createBook.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={c.text.inverse} />
           ) : (
             <BookOpen size={18} color="#152018" />
           )}
@@ -532,6 +534,7 @@ export function AddBookScreen() {
           </Text>
         </Pressable>
       </ScrollView>
+      <SuccessCheckmark visible={showCheck} onDone={handleCheckDone} />
     </KeyboardAvoidingView>
   );
 }

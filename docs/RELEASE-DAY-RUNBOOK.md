@@ -284,11 +284,109 @@ Lives at `backend/scripts/pi/bookswap-asc-public-check.sh` in the repo;
 deployed copy in `~/scripts/` on the Pi. Cron schedule: every 30 min until
 fired, then disabled.
 
-### Future: full review-state monitoring
+### `bookswap-asc-review-monitor.sh`
 
-Requires generating an App Store Connect API Key from
-ASC → Users and Access → Integrations → App Store Connect API.
-Tracked in `PRODUCTION-READINESS.md` "Next Actions" as a P1.
+Polls App Store Connect's authenticated API every 15 minutes for the
+current state of the latest iOS submission. Pings Telegram on every
+state transition (Waiting for Review → In Review → Pending Developer
+Release → Processing → Ready for Sale → or any rejection state). Stays
+silent when nothing changed.
+
+```bash
+~/scripts/bookswap-asc-review-monitor.sh
+```
+
+Lives at `backend/scripts/pi/bookswap-asc-review-monitor.sh` in the repo;
+deployed copy in `~/scripts/` on the Pi. Cron schedule: every 15 min,
+all the time (it self-quiets when state hasn't changed).
+
+#### One-time ASC API key setup (5 min)
+
+The review monitor needs a private key to sign JWT tokens for the ASC
+API. Generate one as follows:
+
+1. **App Store Connect** → top-right gear → **Users and Access** →
+   **Integrations** → **App Store Connect API** tab
+2. Click **+ Generate API Key** (or **Request Access** if this is the
+   first key for the team — Apple gates the page on first use)
+3. Name: `BookSwap Review Monitor`. Access: **Developer** (read-only is
+   sufficient — we only call `GET /v1/apps/.../appStoreVersions`)
+4. Click **Generate**. Apple gives you exactly **one chance** to
+   download the `.p8` private key — save it immediately
+5. Note three values from the page:
+   - **Issuer ID** (UUID at the top of the page — same for all keys
+     belonging to your team)
+   - **Key ID** (10-char alphanumeric next to your new key)
+   - **.p8 file** (the download)
+
+#### Install on the Pi
+
+```bash
+# 1. Copy the .p8 from your Mac to the Pi
+scp ~/Downloads/AuthKey_<KEY_ID>.p8 piserver:~/.appstoreconnect/private_keys/
+
+# 2. Lock down permissions on the Pi
+ssh piserver
+mkdir -p ~/.appstoreconnect/private_keys
+chmod 700 ~/.appstoreconnect ~/.appstoreconnect/private_keys
+chmod 600 ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8
+
+# 3. Add credentials to ~/.bookswap-monitor-env (which is ALREADY
+#    sourced by every bookswap-* script via _monitor-lib.sh)
+cat >> ~/.bookswap-monitor-env <<EOF
+# App Store Connect API — review state monitoring
+BOOKSWAP_ASC_KEY_ID="<10-char-key-id>"
+BOOKSWAP_ASC_ISSUER_ID="<issuer-uuid>"
+BOOKSWAP_ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8"
+EOF
+
+# 4. Install the monitor script
+scp backend/scripts/pi/bookswap-asc-review-monitor.sh piserver:~/scripts/
+
+# 5. Smoke-test once
+ssh piserver
+~/scripts/bookswap-asc-review-monitor.sh
+# Expect on first run: "TRANSITION — <none> → 1.0|WAITING_FOR_REVIEW"
+# AND a Telegram ping with the current state.
+
+# 6. Add cron entry (every 15 min)
+crontab -e
+# Add:
+# */15 * * * * /home/gnimoh001/scripts/bookswap-asc-review-monitor.sh \
+#     >> /home/gnimoh001/monitor-state/bookswap-asc-review.log 2>&1
+```
+
+#### Security notes
+
+- The `.p8` private key grants **read-only** ASC API access (Developer
+  role). It cannot push builds, modify metadata, or alter pricing.
+- The key is kept on the Pi only — never committed to git, never echoed
+  to logs, never sent over Telegram.
+- Rotate via ASC → Users and Access → Integrations → click the key →
+  **Revoke** → generate a new one and update `~/.bookswap-monitor-env`.
+- If the `.p8` is ever exposed, revoke immediately. The blast radius is
+  read-only metadata/state — no destructive operations possible.
+
+### Together: review-monitor + public-check
+
+The two monitors complement each other:
+
+| Signal | Source | Latency | What it tells you |
+|---|---|---|---|
+| State transition | ASC API (auth) | ≤ 15 min | "Apple just changed the status to X" |
+| Public visibility | iTunes Lookup (no auth) | ≤ 30 min | "The app is downloadable from a real device in BE/NL/FR/LU/US" |
+
+You'll typically see this sequence after clicking *Release This Version*:
+
+```
+T+0     :: review-monitor pings → "Released — Processing"
+T+~30m  :: review-monitor pings → "LIVE on the App Store" (ASC says READY_FOR_SALE)
+T+~45m  :: public-check pings   → "BookSwap is LIVE on the App Store" (CDN propagated)
+```
+
+The gap between the two pings is your CDN propagation window — useful
+to know when the rest of the world (not just your fastest CDN edge) can
+download the app.
 
 ---
 

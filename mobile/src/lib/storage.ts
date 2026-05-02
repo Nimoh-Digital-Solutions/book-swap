@@ -62,6 +62,8 @@ const Keys = {
   BIOMETRIC_ENABLED: 'biometric_enabled',
   ADD_BOOK_PREFERENCE: 'add_book_preference',
   DELETION_CANCEL_TOKEN: 'deletion_cancel_token',
+  GETTING_STARTED_DISMISSED: 'getting_started_dismissed',
+  GETTING_STARTED_BROWSED: 'getting_started_browsed',
 } as const;
 
 export type AddBookPreference = 'scan' | 'manual';
@@ -109,6 +111,13 @@ export const prefsStorage = {
   clearAddBookPref: () => {
     kv.remove(Keys.ADD_BOOK_PREFERENCE);
   },
+};
+
+export const gettingStartedStorage = {
+  isDismissed: (): boolean => kv.get(Keys.GETTING_STARTED_DISMISSED) === 'true',
+  dismiss: () => kv.set(Keys.GETTING_STARTED_DISMISSED, 'true'),
+  hasBrowsed: (): boolean => kv.get(Keys.GETTING_STARTED_BROWSED) === 'true',
+  markBrowsed: () => kv.set(Keys.GETTING_STARTED_BROWSED, 'true'),
 };
 
 export const syncQueryStorage = mmkvInstance

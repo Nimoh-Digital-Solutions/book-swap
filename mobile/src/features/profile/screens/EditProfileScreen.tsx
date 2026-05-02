@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AxiosError } from "axios";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
@@ -89,6 +89,26 @@ export function EditProfileScreen() {
     "";
 
   const hasChanges = isDirty || !!avatarLocal || avatarRemoved;
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!hasChanges) return;
+      e.preventDefault();
+      Alert.alert(
+        t('profile.edit.unsavedTitle', 'Discard changes?'),
+        t('profile.edit.unsavedMsg', 'You have unsaved changes. Are you sure you want to leave?'),
+        [
+          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+          {
+            text: t('common.discard', 'Discard'),
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
+    });
+    return unsubscribe;
+  }, [navigation, hasChanges, t]);
 
   const onSubmit = useCallback(
     (values: EditProfileFormValues) => {

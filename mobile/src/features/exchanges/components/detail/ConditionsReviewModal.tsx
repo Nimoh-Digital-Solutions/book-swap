@@ -108,7 +108,7 @@ export function ConditionsReviewModal({ visible, loading, onClose, onAccept }: P
             accessibilityLabel={t('exchanges.iAcceptConditions', 'I Accept')}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={c.text.inverse} />
             ) : (
               <>
                 <ShieldCheck size={16} color="#fff" />

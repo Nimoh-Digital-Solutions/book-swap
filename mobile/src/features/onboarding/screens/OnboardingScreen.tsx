@@ -213,9 +213,9 @@ export function OnboardingScreen() {
               ]}
             >
               {submitLoading ? (
-                <ActivityIndicator size="small" color="#152018" />
+                <ActivityIndicator size="small" color={c.auth.bgDeep} />
               ) : (
-                <Text style={s.primaryBtnText}>
+                <Text style={[s.primaryBtnText, { color: c.auth.bgDeep }]}>
                   {t('onboarding.complete', 'Get Started')}
                 </Text>
               )}
@@ -243,11 +243,11 @@ export function OnboardingScreen() {
               ]}
             >
               {gpsLoading ? (
-                <ActivityIndicator size="small" color="#152018" />
+                <ActivityIndicator size="small" color={c.auth.bgDeep} />
               ) : (
-                <Navigation size={18} color="#152018" />
+                <Navigation size={18} color={c.auth.bgDeep} />
               )}
-              <Text style={s.gpsBtnText}>
+              <Text style={[s.gpsBtnText, { color: c.auth.bgDeep }]}>
                 {gpsLoading
                   ? t('onboarding.detectingLocation', 'Detecting location...')
                   : t('onboarding.useMyLocation', 'Use My Location')}
@@ -324,7 +324,7 @@ export function OnboardingScreen() {
 
         {/* Error */}
         {error && (
-          <Text style={[s.error, { color: '#EF4444' }]}>{error}</Text>
+          <Text style={[s.error, { color: c.status.error }]}>{error}</Text>
         )}
 
         {/* Privacy note */}
@@ -417,7 +417,6 @@ const s = StyleSheet.create({
     borderRadius: radius.xl,
   },
   gpsBtnText: {
-    color: '#152018',
     fontWeight: '700',
     fontSize: 16,
   },
@@ -511,7 +510,6 @@ const s = StyleSheet.create({
     borderRadius: radius.xl,
   },
   primaryBtnText: {
-    color: '#152018',
     fontWeight: '700',
     fontSize: 16,
   },

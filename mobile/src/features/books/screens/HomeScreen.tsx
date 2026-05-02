@@ -20,9 +20,12 @@ import { useColors, useIsDark } from "@/hooks/useColors";
 import { useAuthStore } from "@/stores/authStore";
 import { ANIMATION } from "@/constants/animation";
 import type { HomeStackParamList, MainTabNavigationProp } from "@/navigation/types";
-import { useCommunityStats, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
+import { useCommunityStats, useMyBooks, useNearbyCount, useRecentBooks } from "../hooks/useBooks";
+import { useExchanges } from "@/features/exchanges/hooks/useExchanges";
+import { gettingStartedStorage } from "@/lib/storage";
 
 import { HomeCommunitySection } from "../components/home/HomeCommunitySection";
+import { HomeGettingStarted } from "../components/home/HomeGettingStarted";
 import { HomeNearbyBadge } from "../components/home/HomeNearbyBadge";
 import { HomeQuickActions } from "../components/home/HomeQuickActions";
 import { HomeRecentlyAdded } from "../components/home/HomeRecentlyAdded";
@@ -76,6 +79,12 @@ export function HomeScreen() {
   const { data: recentBooks, isLoading: booksLoading, isError: booksError } = useRecentBooks(coords?.lat, coords?.lng, preferredRadius);
   const { data: communityData, isError: communityError } = useCommunityStats(coords?.lat, coords?.lng, preferredRadius);
   const hasQueryError = nearbyError || booksError || communityError;
+
+  const { data: myBooks } = useMyBooks();
+  const { data: exchanges } = useExchanges();
+  const hasBooks = (myBooks?.length ?? 0) > 0;
+  const hasBrowsed = gettingStartedStorage.hasBrowsed();
+  const hasExchange = (exchanges?.length ?? 0) > 0;
 
   const tabNav = navigation.getParent<MainTabNavigationProp>();
   const goToBrowse = useCallback(
@@ -213,6 +222,16 @@ export function HomeScreen() {
               "home.searchPlaceholder",
               "Search by title, author, or ISBN...",
             )}
+          />
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.duration(250).delay(ANIMATION.stagger.slow * 1.5)}>
+          <HomeGettingStarted
+            hasBooks={hasBooks}
+            hasBrowsed={hasBrowsed}
+            hasExchange={hasExchange}
+            onAddBook={goToScan}
+            onBrowse={goToBrowse}
           />
         </Animated.View>
 

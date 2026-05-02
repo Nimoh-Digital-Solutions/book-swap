@@ -473,6 +473,14 @@
     "locationDeniedBannerBody": "Schakel locatie in via Instellingen om boeken, aantallen en activiteit in de buurt te zien.",
     "openSettings": "Instellingen openen",
     "queryError": "Sommige gegevens konden niet geladen worden. Tik om opnieuw te proberen.",
+    "gettingStarted": {
+      "title": "Aan de slag",
+      "addBook": "Voeg je eerste boek toe",
+      "browse": "Ontdek boeken in de buurt",
+      "swap": "Doe je eerste ruilverzoek",
+      "dismiss": "Sluiten",
+      "complete": "Je bent helemaal klaar!"
+    },
     "locationUnavailable": "—",
     "locationDeniedRecentTitle": "Schakel locatie in om boeken in de buurt te zien",
     "locationDeniedRecentBody": "We gebruiken je geschatte locatie om recente aanbiedingen en activiteit te tonen."
@@ -520,7 +528,8 @@
       "exchangeCompletedDesc": "Wanneer een ruil succesvol is afgerond",
       "ratingReceived": "Beoordeling ontvangen",
       "ratingReceivedDesc": "Wanneer iemand je na een ruil beoordeelt",
-      "footerHint": "Je kunt je ook uitschrijven via de link onderaan elke meldingsmail."
+      "footerHint": "Je kunt je ook uitschrijven via de link onderaan elke meldingsmail.",
+      "updateError": "Voorkeuren bijwerken mislukt"
     }
   },
   "onboarding": {

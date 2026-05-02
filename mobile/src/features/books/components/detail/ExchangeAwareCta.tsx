@@ -12,6 +12,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
+import { useColors } from "@/hooks/useColors";
 import type { ExchangeStatus } from "@/types";
 
 import { bookDetailStyles as s } from "./styles";
@@ -103,6 +104,7 @@ export function ExchangeAwareCta({
   cardBorderColor,
 }: ExchangeAwareCtaProps) {
   const { t } = useTranslation();
+  const c = useColors();
 
   const hasActiveExchange =
     exchangeStatus && !RE_REQUESTABLE_STATUSES.includes(exchangeStatus);
@@ -140,17 +142,17 @@ export function ExchangeAwareCta({
                 style={({ pressed }) => [
                   s.exchangeBtn,
                   {
-                    borderColor: "#EF4444",
+                    borderColor: c.status.error,
                     opacity: pressed || cancelPending ? 0.7 : 1,
                   },
                 ]}
               >
                 {cancelPending ? (
-                  <ActivityIndicator size="small" color="#EF4444" />
+                  <ActivityIndicator size="small" color={c.status.error} />
                 ) : (
                   <>
-                    <XCircle size={16} color="#EF4444" />
-                    <Text style={[s.exchangeBtnText, { color: "#EF4444" }]}>
+                    <XCircle size={16} color={c.status.error} />
+                    <Text style={[s.exchangeBtnText, { color: c.status.error }]}>
                       {t("exchanges.bookCta.cancelRequest", "Cancel Request")}
                     </Text>
                   </>
@@ -193,7 +195,7 @@ export function ExchangeAwareCta({
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
           ]}
         >
-          <ArrowLeftRight size={18} color="#fff" />
+          <ArrowLeftRight size={18} color={c.text.inverse} />
           <Text style={s.ctaBtnText}>
             {t("books.requestSwap", "Request Swap")}
           </Text>
@@ -218,12 +220,12 @@ export function ExchangeAwareCta({
         ]}
       >
         {wishlistBusy ? (
-          <ActivityIndicator size="small" color={isWishlisted ? "#fff" : accent} />
+          <ActivityIndicator size="small" color={isWishlisted ? c.text.inverse : accent} />
         ) : (
           <Heart
             size={18}
-            color={isWishlisted ? "#fff" : accent}
-            fill={isWishlisted ? "#fff" : "none"}
+            color={isWishlisted ? c.text.inverse : accent}
+            fill={isWishlisted ? c.text.inverse : "none"}
           />
         )}
       </Pressable>

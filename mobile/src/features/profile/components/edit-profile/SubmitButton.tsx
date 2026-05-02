@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text } from "react-native";
 
+import { useColors } from "@/hooks/useColors";
 import { editProfileStyles as s } from "./styles";
 
 interface SubmitButtonProps {
@@ -19,6 +20,7 @@ export function SubmitButton({
   accent,
 }: SubmitButtonProps) {
   const { t } = useTranslation();
+  const c = useColors();
 
   return (
     <Pressable
@@ -39,9 +41,9 @@ export function SubmitButton({
       }
     >
       {isPending ? (
-        <ActivityIndicator size="small" color="#152018" />
+        <ActivityIndicator size="small" color={c.auth.bgDeep} />
       ) : (
-        <Save size={18} color="#152018" />
+        <Save size={18} color={c.auth.bgDeep} />
       )}
       <Text style={s.submitBtnText}>
         {isPending

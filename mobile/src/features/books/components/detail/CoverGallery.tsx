@@ -1,7 +1,8 @@
 import { Image } from "expo-image";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, FlatList, Text, View } from "react-native";
+import { Dimensions, FlatList, Pressable, Text, View } from "react-native";
+import ImageViewing from "react-native-image-viewing";
 
 import { spacing } from "@/constants/theme";
 
@@ -28,6 +29,10 @@ export function CoverGallery({
 }: CoverGalleryProps) {
   const { t } = useTranslation();
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const lightboxImages = photoUris.map((uri) => ({ uri }));
 
   const coverUri = photoUris[0] ?? null;
   const hasMultiplePhotos = photoUris.length > 1;
@@ -51,16 +56,25 @@ export function CoverGallery({
               );
               setActivePhotoIdx(idx);
             }}
-            renderItem={({ item }) => (
-              <Image
-                source={{ uri: item }}
-                style={[
-                  s.coverImage,
-                  { width: Dimensions.get("window").width - spacing.sm * 2 },
-                ]}
-                contentFit="cover"
-                transition={200}
-              />
+            renderItem={({ item, index }) => (
+              <Pressable
+                onPress={() => {
+                  setLightboxIndex(index);
+                  setLightboxVisible(true);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t("books.tapToZoom", "Tap to zoom")}
+              >
+                <Image
+                  source={{ uri: item }}
+                  style={[
+                    s.coverImage,
+                    { width: Dimensions.get("window").width - spacing.sm * 2 },
+                  ]}
+                  contentFit="cover"
+                  transition={200}
+                />
+              </Pressable>
             )}
           />
           {isAvailable && (
@@ -84,25 +98,41 @@ export function CoverGallery({
             />
           ))}
         </View>
+        <ImageViewing
+          images={lightboxImages}
+          imageIndex={lightboxIndex}
+          visible={lightboxVisible}
+          onRequestClose={() => setLightboxVisible(false)}
+        />
       </>
     );
   }
 
   return (
+    <>
     <View style={[s.coverHero, { borderColor: cardBorderColor }]}>
       {coverUri ? (
-        <Image
-          source={{ uri: coverUri }}
-          style={s.coverImage}
-          contentFit="cover"
-          transition={200}
-          accessibilityRole="image"
-          accessibilityLabel={t(
-            "books.coverImageA11y",
-            "{{title}} cover image",
-            { title },
-          )}
-        />
+        <Pressable
+          onPress={() => {
+            setLightboxIndex(0);
+            setLightboxVisible(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t("books.tapToZoom", "Tap to zoom")}
+        >
+          <Image
+            source={{ uri: coverUri }}
+            style={s.coverImage}
+            contentFit="cover"
+            transition={200}
+            accessibilityRole="image"
+            accessibilityLabel={t(
+              "books.coverImageA11y",
+              "{{title}} cover image",
+              { title },
+            )}
+          />
+        </Pressable>
       ) : (
         <View style={[s.coverPlaceholder, { backgroundColor: coverBg }]}>
           <Text style={s.coverTitle} numberOfLines={3}>
@@ -119,5 +149,14 @@ export function CoverGallery({
         </View>
       )}
     </View>
+    {coverUri && (
+      <ImageViewing
+        images={lightboxImages}
+        imageIndex={lightboxIndex}
+        visible={lightboxVisible}
+        onRequestClose={() => setLightboxVisible(false)}
+      />
+    )}
+    </>
   );
 }

@@ -50,7 +50,7 @@ export function EmptyState({
             { backgroundColor: accent, opacity: pressed ? 0.9 : 1 },
           ]}
         >
-          <Text style={s.actionText}>{actionLabel}</Text>
+          <Text style={[s.actionText, { color: c.auth.bgDeep }]}>{actionLabel}</Text>
         </Pressable>
       ) : null}
     </Animated.View>
@@ -89,5 +89,5 @@ const s = StyleSheet.create({
     borderRadius: radius.xl,
     marginTop: spacing.sm,
   },
-  actionText: { color: "#152018", fontWeight: "700", fontSize: 14 },
+  actionText: { fontWeight: "700", fontSize: 14 },
 });

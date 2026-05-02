@@ -145,7 +145,7 @@ function ChatImage({ uri, isOwn, bubbleBg }: { uri: string; isOwn: boolean; bubb
     <View style={s.imageContainer}>
       {loading && (
         <View style={[s.imagePlaceholder, s.imageLoading, { backgroundColor: placeholderBg }]}>
-          <ActivityIndicator size="small" color={isOwn ? 'rgba(21,32,24,0.4)' : c.text.placeholder} />
+          <ActivityIndicator size="small" color={isOwn ? c.text.placeholder : c.text.placeholder} />
         </View>
       )}
       <Pressable>

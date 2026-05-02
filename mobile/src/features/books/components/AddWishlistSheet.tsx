@@ -169,7 +169,7 @@ export function AddWishlistSheet({ open, onClose, prefill }: Props) {
           ]}
         >
           {addItem.isPending ? (
-            <ActivityIndicator size="small" color="#152018" />
+            <ActivityIndicator size="small" color={c.auth.bgDeep} />
           ) : (
             <Plus size={18} color="#152018" />
           )}
