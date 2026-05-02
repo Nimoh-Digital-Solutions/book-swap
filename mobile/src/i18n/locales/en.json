@@ -520,7 +520,8 @@
       "exchangeCompletedDesc": "When a swap is successfully completed",
       "ratingReceived": "Rating received",
       "ratingReceivedDesc": "When someone rates you after a swap",
-      "footerHint": "You can also unsubscribe from emails using the link at the bottom of any notification email."
+      "footerHint": "You can also unsubscribe from emails using the link at the bottom of any notification email.",
+      "updateError": "Failed to update preferences"
     }
   },
   "onboarding": {

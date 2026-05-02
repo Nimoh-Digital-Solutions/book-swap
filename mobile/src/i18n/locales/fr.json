@@ -520,7 +520,8 @@
       "exchangeCompletedDesc": "Quand un échange se termine avec succès",
       "ratingReceived": "Note reçue",
       "ratingReceivedDesc": "Quand quelqu'un vous note après un échange",
-      "footerHint": "Vous pouvez aussi vous désabonner via le lien en bas de chaque e-mail de notification."
+      "footerHint": "Vous pouvez aussi vous désabonner via le lien en bas de chaque e-mail de notification.",
+      "updateError": "Échec de la mise à jour des préférences"
     }
   },
   "onboarding": {

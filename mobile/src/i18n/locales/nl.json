@@ -520,7 +520,8 @@
       "exchangeCompletedDesc": "Wanneer een ruil succesvol is afgerond",
       "ratingReceived": "Beoordeling ontvangen",
       "ratingReceivedDesc": "Wanneer iemand je na een ruil beoordeelt",
-      "footerHint": "Je kunt je ook uitschrijven via de link onderaan elke meldingsmail."
+      "footerHint": "Je kunt je ook uitschrijven via de link onderaan elke meldingsmail.",
+      "updateError": "Voorkeuren bijwerken mislukt"
     }
   },
   "onboarding": {

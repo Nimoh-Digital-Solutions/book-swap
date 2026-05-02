@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { http } from '@/services/http';
 import { API } from '@/configs/apiEndpoints';
 import { showErrorToast } from '@/components/Toast';
@@ -22,6 +23,7 @@ export function useNotificationPreferences() {
 
 export function usePatchNotificationPreferences() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation<NotificationPreferences, Error, PatchNotificationPreferences>({
     mutationFn: async (payload) => {
@@ -51,7 +53,7 @@ export function usePatchNotificationPreferences() {
           (context as { previous: NotificationPreferences }).previous,
         );
       }
-      showErrorToast('Failed to update preferences');
+      showErrorToast(t('notifications.pref.updateError'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: prefKeys.all });
