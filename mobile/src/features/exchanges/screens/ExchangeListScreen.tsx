@@ -12,7 +12,7 @@ import {
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInUp, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { radius, spacing } from '@/constants/theme';
 import { ANIMATION } from '@/constants/animation';
@@ -128,12 +128,17 @@ export function ExchangeListScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: ExchangeListItem }) => (
-      <ExchangeCard
-        exchange={item}
-        onPress={() => goToDetail(item.id)}
-      />
-    ),
+    ({ item, index }: { item: ExchangeListItem; index: number }) => {
+      const staggerDelay = index < 10 ? index * ANIMATION.stagger.fast : 0;
+      return (
+        <Animated.View entering={FadeInUp.duration(250).delay(staggerDelay)}>
+          <ExchangeCard
+            exchange={item}
+            onPress={() => goToDetail(item.id)}
+          />
+        </Animated.View>
+      );
+    },
     [goToDetail],
   );
 

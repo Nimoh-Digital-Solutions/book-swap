@@ -145,7 +145,7 @@ export function MessageInput({ onSend, onTyping, disabled = false }: Props) {
           hitSlop={8}
         >
           {disabled ? (
-            <ActivityIndicator size="small" color="#152018" />
+            <ActivityIndicator size="small" color={c.auth.bgDeep} />
           ) : (
             <Send size={20} color={canSend ? '#152018' : c.text.placeholder} />
           )}

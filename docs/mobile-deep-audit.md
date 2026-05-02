@@ -394,17 +394,17 @@ The `EmptyState` component uses Lucide icons (BookOpen, Inbox, Heart, etc.). Cus
 | 9 | HF-01: Add haptics to tab bar + toggles + scan + toasts | `TabItem.tsx`, `Toast.tsx`, scanner, settings, notif prefs | ✅ Done |
 | 10 | FG-01: Add getting started checklist card | `HomeGettingStarted.tsx` + `HomeScreen.tsx` + storage + i18n | ✅ Done |
 
-### P2 — Medium Impact, Variable Effort
+### P2 — Medium Impact, Variable Effort ✅ DONE
 
-| # | Item | Files | Effort |
+| # | Item | Files | Status |
 |---|------|-------|--------|
-| 11 | DM-01: Audit all ActivityIndicator colour props | App-wide grep | 2 hr |
-| 12 | LE-01: Add retry button to BookSearchScreen error | `features/books/screens/BookSearchScreen.tsx` | 30 min |
-| 13 | LE-03: Replace BrandedLoader with skeleton in notifications | `features/notifications/screens/NotificationListScreen.tsx` | 1 hr |
-| 14 | S-02: Add staggered list entry animations | Multiple list screens | 3 hr |
-| 15 | FG-03: Add unsaved changes warning to EditProfile | `features/profile/screens/EditProfileScreen.tsx` | 1 hr |
-| 16 | AN-03: Add success animations for key moments | Exchange + book creation flows | 3 hr |
-| 17 | S-03: Add image zoom to BookDetailScreen gallery | `features/books/components/detail/` | 3 hr |
+| 11 | DM-01: Audit all ActivityIndicator colour props | App-wide (17 files) | ✅ Done |
+| 12 | LE-01: Add retry button to BookSearchScreen error | `features/books/screens/BookSearchScreen.tsx` | ✅ Done |
+| 13 | LE-03: Replace BrandedLoader with skeleton in notifications | `features/notifications/screens/NotificationListScreen.tsx` | ✅ Done |
+| 14 | S-02: Add staggered list entry animations | MyBooksScreen, ExchangeListScreen, WishlistScreen | ✅ Done |
+| 15 | FG-03: Add unsaved changes warning to EditProfile | `features/profile/screens/EditProfileScreen.tsx` | ✅ Done |
+| 16 | AN-03: Add success animations for key moments | AddBookScreen, RequestSwapScreen, DetailRating, DetailActions | ✅ Done |
+| 17 | S-03: Add image zoom to BookDetailScreen gallery | `features/books/components/detail/CoverGallery.tsx` | ✅ Done |
 
 ### P3 — Nice to Have
 

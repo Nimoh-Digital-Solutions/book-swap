@@ -13,7 +13,7 @@ import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Search, BookOpen, X } from 'lucide-react-native';
+import { Search, BookOpen, X, RotateCcw } from 'lucide-react-native';
 
 import { useColors, useIsDark } from '@/hooks/useColors';
 import { spacing, radius } from '@/constants/theme';
@@ -39,7 +39,7 @@ export function BookSearchScreen() {
     return () => clearTimeout(timer);
   }, [text]);
 
-  const { data, isFetching, isError } = useExternalBookSearch(debounced);
+  const { data, isFetching, isError, refetch } = useExternalBookSearch(debounced);
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -179,6 +179,23 @@ export function BookSearchScreen() {
               'Please check your connection and try again.',
             )}
           </Text>
+          <Pressable
+            onPress={() => refetch()}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.retry', 'Retry')}
+            style={({ pressed }) => [
+              s.retryBtn,
+              {
+                backgroundColor: accent,
+                opacity: pressed ? 0.9 : 1,
+              },
+            ]}
+          >
+            <RotateCcw size={16} color={c.text.inverse} />
+            <Text style={[s.retryBtnText, { color: c.text.inverse }]}>
+              {t('common.retry', 'Retry')}
+            </Text>
+          </Pressable>
         </View>
       )}
 
@@ -327,4 +344,14 @@ const s = StyleSheet.create({
     marginTop: spacing.sm,
   },
   manualBtnText: { fontWeight: '600', fontSize: 14 },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: radius.xl,
+    marginTop: spacing.sm,
+  },
+  retryBtnText: { fontWeight: '600', fontSize: 14 },
 });

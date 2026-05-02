@@ -358,7 +358,7 @@ export function ChangePasswordScreen() {
             accessibilityLabel={t("changePassword.submit", "Change Password")}
           >
             {changePassword.isPending ? (
-              <ActivityIndicator size="small" color="#152018" />
+              <ActivityIndicator size="small" color={c.auth.bgDeep} />
             ) : (
               <Text style={s.submitBtnText}>
                 {t("changePassword.submit", "Change Password")}

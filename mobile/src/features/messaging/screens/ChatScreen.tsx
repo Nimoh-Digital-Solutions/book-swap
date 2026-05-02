@@ -207,7 +207,7 @@ export function ChatScreen() {
             accessibilityLabel={t('common.retry', 'Retry')}
           >
             {isFetching ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={c.text.inverse} />
             ) : (
               <Text style={s.retryBtnText}>{t('common.retry', 'Retry')}</Text>
             )}

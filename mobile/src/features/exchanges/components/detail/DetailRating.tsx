@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Star } from "lucide-react-native";
 
+import { SuccessCheckmark } from "@/components/SuccessCheckmark";
 import { useColors, useIsDark } from "@/hooks/useColors";
 import { radius, shadows, spacing } from "@/constants/theme";
 import {
@@ -42,6 +43,7 @@ export function DetailRating({ exchangeId }: Props) {
 
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("");
+  const [showCheck, setShowCheck] = useState(false);
 
   const cardBg = isDark ? c.auth.card : c.surface.white;
   const cardBorder = isDark ? c.auth.cardBorder : c.border.default;
@@ -53,10 +55,7 @@ export function DetailRating({ exchangeId }: Props) {
       { score, comment: comment.trim() || undefined },
       {
         onSuccess: () => {
-          Alert.alert(
-            t("ratings.submitted", "Rating submitted!"),
-            t("ratings.thankYou", "Thanks for sharing your experience."),
-          );
+          setShowCheck(true);
         },
         onError: () => {
           Alert.alert(
@@ -67,6 +66,14 @@ export function DetailRating({ exchangeId }: Props) {
       },
     );
   }, [score, comment, submitMutation, t]);
+
+  const handleCheckDone = useCallback(() => {
+    setShowCheck(false);
+    Alert.alert(
+      t("ratings.submitted", "Rating submitted!"),
+      t("ratings.thankYou", "Thanks for sharing your experience."),
+    );
+  }, [t]);
 
   if (isLoading && !status) {
     return (
@@ -218,13 +225,14 @@ export function DetailRating({ exchangeId }: Props) {
         ]}
       >
         {submitMutation.isPending ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator size="small" color={c.text.inverse} />
         ) : (
           <Text style={s.submitText}>
             {t("ratings.submitButton", "Submit Rating")}
           </Text>
         )}
       </Pressable>
+      <SuccessCheckmark visible={showCheck} onDone={handleCheckDone} />
     </View>
   );
 }
