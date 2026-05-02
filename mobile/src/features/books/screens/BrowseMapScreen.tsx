@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { FlatList, Platform, Text, View } from "react-native";
 
 import { EmptyState } from "@/components/EmptyState";
+import { LocationMismatchBanner } from "@/components/LocationMismatchBanner";
 import { SkeletonCard } from "@/components/Skeleton";
 import { darkGreenMapStyle, lightMapStyle } from "@/constants/mapStyle";
 import {
@@ -18,7 +19,10 @@ import {
   useRadiusCounts,
   type BrowseBook,
 } from "@/features/books/hooks/useBooks";
+import { useLocationManager } from "@/features/profile/hooks/useLocationManager";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { useLocationMismatch } from "@/hooks/useLocationMismatch";
+import { useAuthStore } from "@/stores/authStore";
 import type { BrowseStackParamList } from "@/navigation/types";
 
 import { BookMapMarker } from "../components/BookMapMarker";
@@ -54,6 +58,10 @@ export function BrowseMapScreen() {
   const { region, setRegion, userCoords, mapRef, recenterMap } = useUserLocation({
     mapAvailable: nativeMaps.available,
   });
+
+  const user = useAuthStore((s) => s.user);
+  const mismatch = useLocationMismatch();
+  const { gpsUpdating, updateFromGps } = useLocationManager();
 
   const initialSearch = route.params?.initialSearch ?? "";
   const [searchText, setSearchText] = useState(initialSearch);
@@ -243,6 +251,15 @@ export function BrowseMapScreen() {
 
   const renderHeaderControls = () => (
     <>
+      {mismatch.showMismatch && mismatch.profileNeighborhood && (
+        <LocationMismatchBanner
+          profileNeighborhood={mismatch.profileNeighborhood}
+          distanceKm={mismatch.distanceKm ?? 0}
+          onUpdate={updateFromGps}
+          onDismiss={mismatch.dismiss}
+          updating={gpsUpdating}
+        />
+      )}
       {mapDataError && (
         <MapLoadErrorBanner
           cardBg={cardBg}

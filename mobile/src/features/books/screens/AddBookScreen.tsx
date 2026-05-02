@@ -18,7 +18,9 @@ import {
 } from "react-native";
 import { z } from "zod";
 
+import { LocationMismatchBanner } from "@/components/LocationMismatchBanner";
 import { useColors, useIsDark } from "@/hooks/useColors";
+import { useLocationMismatch } from "@/hooks/useLocationMismatch";
 
 import {
   CONDITIONS,
@@ -36,6 +38,7 @@ import {
   useCreateBook,
   type CreateBookPayload,
 } from "@/features/books/hooks/useBooks";
+import { useLocationManager } from "@/features/profile/hooks/useLocationManager";
 import type {
   MainTabNavigationProp,
   ScanStackParamList,
@@ -89,6 +92,8 @@ export function AddBookScreen() {
   const navigation = useNavigation<Nav>();
   const createBook = useCreateBook();
   const schema = useMemo(() => createAddBookSchema(t), [t]);
+  const mismatch = useLocationMismatch();
+  const { gpsUpdating, updateFromGps } = useLocationManager();
 
   const bg = isDark ? c.auth.bg : c.neutral[50];
   const cardBg = isDark ? c.auth.card : c.surface.white;
@@ -243,6 +248,16 @@ export function AddBookScreen() {
           cardBg={cardBg}
           cardBorder={cardBorder}
         />
+
+        {mismatch.showMismatch && mismatch.profileNeighborhood && (
+          <LocationMismatchBanner
+            profileNeighborhood={mismatch.profileNeighborhood}
+            distanceKm={mismatch.distanceKm ?? 0}
+            onUpdate={updateFromGps}
+            onDismiss={mismatch.dismiss}
+            updating={gpsUpdating}
+          />
+        )}
 
         <SectionLabel text={t("books.addBook.titleLabel", "Title")} required />
         <Controller

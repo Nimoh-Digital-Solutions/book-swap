@@ -37,12 +37,17 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     pagination_class = BrowsePagination
 
     def _get_user_location(self):
+        """Resolve the browse location with explicit coords taking priority.
+
+        Priority order:
+        1. Explicit ``lat``/``lng`` query params (supports "use my current
+           location" toggle on both web and mobile).
+        2. Authenticated user's saved profile location.
+        3. ``None`` → ``get_queryset`` returns ``Book.objects.none()``.
+        """
         from django.contrib.gis.geos import Point
 
-        user = self.request.user
-        if user.is_authenticated and user.location is not None:
-            return user.location
-
+        # Priority 1: explicit query-param coordinates (any user, auth or anon)
         try:
             lat = float(self.request.query_params.get("lat", ""))
             lng = float(self.request.query_params.get("lng", ""))
@@ -50,6 +55,11 @@ class BrowseViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
                 return Point(lng, lat, srid=4326)
         except (TypeError, ValueError):
             pass
+
+        # Priority 2: authenticated user's stored profile location
+        user = self.request.user
+        if user.is_authenticated and user.location is not None:
+            return user.location
 
         return None
 
