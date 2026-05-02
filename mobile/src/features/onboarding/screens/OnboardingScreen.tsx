@@ -97,7 +97,7 @@ export function OnboardingScreen() {
     setError(null);
     try {
       const { data } = await http.post<User>(API.users.meLocation, {
-        postcode: postcode.trim(),
+        query: postcode.trim(),
       });
       await setUser(data);
       setLocationSet(true);

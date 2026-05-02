@@ -61,6 +61,27 @@ def _nominatim_forward(postcode: str, country_code: str) -> Point:
     return Point(lng, lat, srid=4326)
 
 
+def _nominatim_query(query: str) -> Point:
+    """Hit Nominatim free-text search for a place name → Point."""
+    response = httpx.get(
+        f"{NOMINATIM_BASE}/search",
+        params={
+            "q": query,
+            "format": "json",
+            "limit": 1,
+        },
+        headers={"User-Agent": USER_AGENT},
+        timeout=NOMINATIM_FORWARD_TIMEOUT,
+    )
+    response.raise_for_status()
+    results = response.json()
+    if not results:
+        raise GeocodingError(f"No results for \"{query}\"")
+    lat = float(results[0]["lat"])
+    lng = float(results[0]["lon"])
+    return Point(lng, lat, srid=4326)
+
+
 def _nominatim_reverse(lat: float, lng: float) -> str:
     """Hit Nominatim once for a point → neighbourhood (no caching, no breaker)."""
     response = httpx.get(
@@ -116,6 +137,31 @@ class NominatimGeocodingService:
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("Nominatim geocode failed for %s: %s", postcode, exc)
             raise GeocodingError(f"Geocoding failed for postcode {postcode}") from exc
+
+    @staticmethod
+    def geocode_query(query: str) -> Point:
+        """Convert a free-text place name to a PostGIS Point.
+
+        Accepts city names, neighbourhoods, areas, or postcodes — anything
+        Nominatim's free-text search can resolve. No country restriction.
+
+        Raises ``GeocodingError`` on network failures, no-result responses,
+        or when the Nominatim circuit breaker is currently open.
+        """
+        normalised = query.strip().lower()
+        cache_key = f"nominatim:query:v1:{normalised}"
+
+        def _do_call() -> Point:
+            return _nominatim_breaker.call(_nominatim_query, query.strip())
+
+        try:
+            return cached_call(cache_key, NOMINATIM_FORWARD_TTL, _do_call)
+        except CircuitOpenError as exc:
+            logger.warning("Nominatim query geocode short-circuited (circuit open).")
+            raise GeocodingError("Geocoding service is temporarily unavailable.") from exc
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.warning("Nominatim geocode failed for query %r: %s", query, exc)
+            raise GeocodingError(f"Could not find location \"{query}\"") from exc
 
     @staticmethod
     def reverse_geocode_neighborhood(point: Point) -> str:

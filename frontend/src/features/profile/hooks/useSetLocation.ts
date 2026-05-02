@@ -11,11 +11,11 @@ import type { SetLocationPayload, SetLocationResponse } from '../types/profile.t
 import { profileKeys } from './profileKeys';
 
 /**
- * Set or update the authenticated user's location via postcode or coordinates.
+ * Set or update the authenticated user's location via query, postcode, or coordinates.
  *
  * @example
  * const setLocation = useSetLocation();
- * setLocation.mutate({ postcode: '1012 AB' });
+ * setLocation.mutate({ query: 'Amsterdam Zuid' });
  * // or
  * setLocation.mutate({ latitude: 52.37, longitude: 4.89 });
  */

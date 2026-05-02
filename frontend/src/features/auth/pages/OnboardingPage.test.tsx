@@ -89,7 +89,7 @@ describe('OnboardingPage', () => {
     await user.click(screen.getByText(/complete setup/i));
 
     await waitFor(() => {
-      expect(mockSetLocation).toHaveBeenCalledWith({ postcode: '1012 AB' });
+      expect(mockSetLocation).toHaveBeenCalledWith({ query: '1012 AB' });
       expect(mockCompleteOnboarding).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith('/en/', { replace: true });
     });
