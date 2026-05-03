@@ -316,24 +316,16 @@ def handle_review(_args: str, env: dict[str, str]) -> str:
     Useful during the App Store review window when the operator wants to
     check status between cron polls without opening App Store Connect.
     """
-    script_path = (
-        Path.home() / "scripts" / "bookswap-asc-review-monitor.sh"
-    )
+    script_path = Path.home() / "scripts" / "bookswap-asc-review-monitor.sh"
     if not script_path.exists():
-        return (
-            "❌ review monitor script not found at "
-            f"`{script_path}` — is the Pi deployment up to date?"
-        )
+        return f"❌ review monitor script not found at `{script_path}` — is the Pi deployment up to date?"
 
     # Hard 30s timeout — ASC API + JWT signing usually < 3s. If it hits
     # the cap something is wrong (revoked key, ASC outage) and the
     # operator should know rather than the bot hanging.
     rc, out = run([str(script_path), "--once"], timeout=30)
     if rc != 0:
-        return (
-            f"❌ review state lookup failed (rc={rc}):\n"
-            f"```\n{out[:600]}\n```"
-        )
+        return f"❌ review state lookup failed (rc={rc}):\n```\n{out[:600]}\n```"
     return out
 
 
