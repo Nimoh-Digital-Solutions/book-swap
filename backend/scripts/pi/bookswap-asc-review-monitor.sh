@@ -30,6 +30,16 @@
 
 set -euo pipefail
 
+# Mode selector. Default is cron mode (compare state to marker file, ping
+# Telegram only on transitions). --once is on-demand mode (print a status
+# report to stdout, no Telegram send, no state file write) — used by
+# the bookswap-bot.py /review handler so the operator can pull the
+# latest state at any time without waiting for the next 15-min cron.
+MODE="cron"
+if [[ "${1:-}" == "--once" ]]; then
+  MODE="once"
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/_monitor-lib.sh"
@@ -162,6 +172,32 @@ if [[ "$STATE" == "unknown" ]]; then
   log_msg "ERROR" "could not parse appStoreState from ASC response"
   echo "$RESPONSE" | jq . >&2 2>/dev/null || echo "$RESPONSE" >&2
   exit 1
+fi
+
+# --once mode: print a Markdown-formatted status report to stdout for
+# the bot to forward to Telegram, then exit. No Telegram send (the bot
+# does that), no state file write (cron mode owns the marker file so
+# transitions aren't lost). Includes the last cron run time so the
+# operator can tell at a glance how fresh the marker file is.
+if [[ "$MODE" == "once" ]]; then
+  STATE_FILE="$MONITOR_STATE/bookswap-asc-review-state.txt"
+  LAST_CRON_KEY=""
+  LAST_CRON_TIME=""
+  if [[ -f "$STATE_FILE" ]]; then
+    LAST_CRON_KEY=$(cat "$STATE_FILE" 2>/dev/null || echo "")
+    LAST_CRON_TIME=$(date -u -r "$STATE_FILE" '+%Y-%m-%d %H:%M UTC' 2>/dev/null || echo "unknown")
+  fi
+  cat <<EOF
+📋 *App Store review — current state*
+
+Version: \`${VERSION}\`
+State: \`${STATE}\`
+Release type: \`${RELEASE_TYPE}\`
+
+Last cron transition: \`${LAST_CRON_KEY:-<none>}\`
+Last marker update: \`${LAST_CRON_TIME:-unknown}\`
+EOF
+  exit 0
 fi
 
 # State transition tracking — only ping when state CHANGES, not every

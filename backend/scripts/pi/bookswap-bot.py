@@ -304,6 +304,39 @@ def handle_digest(_args: str, env: dict[str, str]) -> str:
     return out
 
 
+def handle_review(_args: str, env: dict[str, str]) -> str:
+    """Pull the current App Store review state on demand.
+
+    Wraps `bookswap-asc-review-monitor.sh --once`, which queries the ASC
+    API and prints a Markdown status report. The cron-mode invocation of
+    that same script owns the transition marker file and Telegram pings;
+    --once is read-only and side-effect-free, so calling it from the bot
+    can't disturb the every-15-min transition tracker.
+
+    Useful during the App Store review window when the operator wants to
+    check status between cron polls without opening App Store Connect.
+    """
+    script_path = (
+        Path.home() / "scripts" / "bookswap-asc-review-monitor.sh"
+    )
+    if not script_path.exists():
+        return (
+            "❌ review monitor script not found at "
+            f"`{script_path}` — is the Pi deployment up to date?"
+        )
+
+    # Hard 30s timeout — ASC API + JWT signing usually < 3s. If it hits
+    # the cap something is wrong (revoked key, ASC outage) and the
+    # operator should know rather than the bot hanging.
+    rc, out = run([str(script_path), "--once"], timeout=30)
+    if rc != 0:
+        return (
+            f"❌ review state lookup failed (rc={rc}):\n"
+            f"```\n{out[:600]}\n```"
+        )
+    return out
+
+
 def handle_abuse(_args: str, env: dict[str, str]) -> str:
     rc, out = run(
         [
@@ -425,6 +458,7 @@ HELP_BUTTONS: list[tuple[str, str]] = [
     ("📚 Digest", "/digest"),
     ("🛡 Abuse", "/abuse"),
     ("🚨 Sentry", "/sentry"),
+    ("📋 Review", "/review"),
 ]
 
 
@@ -441,6 +475,7 @@ def handle_help(_args: str, env: dict[str, str]) -> str:
         "/digest — full ops digest (users, books, exchanges, T&S queue)\n"
         "/abuse — last 24h trust-safety + lockout signals\n"
         "/sentry — last 5 unresolved Sentry issues per project\n"
+        "/review — current iOS App Store review state (on demand)\n"
         "/help — this list"
     )
 
@@ -462,6 +497,7 @@ COMMANDS: dict[str, Callable[[str, dict[str, str]], str]] = {
     "/digest": handle_digest,
     "/abuse": handle_abuse,
     "/sentry": handle_sentry,
+    "/review": handle_review,
     "/help": handle_help,
     "/start": handle_help,
 }
