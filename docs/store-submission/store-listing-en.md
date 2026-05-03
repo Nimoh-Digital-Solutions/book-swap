@@ -46,13 +46,13 @@ books,swap,exchange,trade,reading,community,local,barcode,library,free
 - **Google:** Books & Reference
 
 ## Support URL
-https://bookswap.app/support
+https://book-swaps.com/en/support
 
 ## Privacy Policy URL
-https://bookswap.app/en/privacy-policy
+https://book-swaps.com/en/privacy-policy/
 
 ## Marketing URL (optional)
-https://bookswap.app
+https://book-swaps.com
 
 ---
 

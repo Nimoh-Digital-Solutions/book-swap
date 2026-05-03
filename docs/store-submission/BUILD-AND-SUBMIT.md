@@ -16,7 +16,7 @@ Before your first production build, verify:
 - [ ] ASC API key `.p8` file stored or EAS credentials configured
 - [ ] Google Sign-In OAuth client IDs created and set via `eas env:create --environment production`
 - [ ] `mobile/app.json` version number is correct (`1.0.0` for first release)
-- [ ] Privacy policy deployed at https://bookswap.app/en/privacy-policy
+- [ ] Privacy policy deployed at https://book-swaps.com/en/privacy-policy/
 
 ---
 
